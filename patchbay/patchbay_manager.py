@@ -1,7 +1,6 @@
 
 from dataclasses import dataclass
 import sys
-import time
 from typing import Callable, Union
 from PyQt5.QtGui import QCursor, QGuiApplication
 from PyQt5.QtWidgets import QMessageBox, QWidget
