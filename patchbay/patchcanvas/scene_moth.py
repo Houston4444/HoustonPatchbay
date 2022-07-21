@@ -105,8 +105,6 @@ class PatchSceneMoth(QGraphicsScene):
             _logger.critical("Invalid view")
             return
 
-        # self._view.setStyleSheet("QMenu{background-color:#80000090}")
-
         self._cursor_cut = None
         self._cursor_zoom_area = None
 
