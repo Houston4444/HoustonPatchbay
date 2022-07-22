@@ -1,7 +1,7 @@
 
 from dataclasses import dataclass
 import sys
-from typing import Callable, Union
+from typing import Callable, Optional, Union
 from PyQt5.QtGui import QCursor, QGuiApplication
 from PyQt5.QtWidgets import QMessageBox, QWidget
 from PyQt5.QtCore import QTimer, QSettings
@@ -427,7 +427,7 @@ class PatchbayManager:
         
         port = Port(self, self._next_port_id, name, port_type, flags, uuid)
         self._next_port_id += 1
-
+        
         full_port_name = name
         group_name, colon, port_name = full_port_name.partition(':')
 
@@ -745,10 +745,10 @@ class PatchbayManager:
         
         for oq in self.delayed_orders:
             group_id = oq.func(*oq.args, **oq.kwargs)
-            if oq.sort_group and group_id:
+            if oq.sort_group and group_id is not None:
                 group_ids_to_sort.add(group_id)
             if oq.draw_group:
-                if group_id:
+                if group_id is not None:
                     group_ids_to_update.add(group_id)
                 else:
                     some_groups_removed = True

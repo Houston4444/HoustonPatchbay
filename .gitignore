@@ -1,0 +1,22 @@
+#ignore hidden files except git and github
+/.*
+!/.github
+!/.git
+!/.gitignore
+
+#UI builds
+/patchbay/ui/*.py
+
+#resources qt build
+/patchbay/resources_rc.py
+
+/patchbay/.*
+/patchbay/*/.*
+
+#translations
+/locale/*.qm
+
+#python cache
+/patchbay/__pycache__/
+/patchbay/*/__pycache__/
+/patchbay/*/*/__pycache__/
