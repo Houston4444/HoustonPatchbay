@@ -167,6 +167,9 @@ def init(app_name: str, scene: PatchScene, callback: Callable,
 
 @patchbay_api
 def clear():
+    if not canvas.initiated:
+        return
+    
     group_list_ids = [g.group_id for g in canvas.group_list]
     port_list_ids = [(p.group_id, p.port_id) for p in canvas.list_ports()]
     connection_list_ids = [c.connection_id for c in canvas.list_connections()]

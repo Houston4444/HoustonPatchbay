@@ -73,6 +73,20 @@ def later_by_batch(draw_group=False, sort_group=False, clear_conns=False):
     return decorator
 
 
+def in_main_thread():
+    def decorator(func: Callable):
+        def wrapper(*args, **kwargs):
+            mng = args[0]
+            assert isinstance(mng, PatchbayManager)
+            
+            if QThread.currentThread() is QGuiApplication.instance().thread():
+                return func(*args, **kwargs)
+            
+            mng.sg.to_main_thread.emit(func, args, kwargs)
+        return wrapper
+    return decorator
+
+
 class PatchbayManager:
     use_graceful_names = True
     port_types_view = (enum_to_flag(PortType.AUDIO_JACK)
@@ -130,6 +144,10 @@ class PatchbayManager:
             self._delayed_orders_timeout)
 
         self.sg.out_thread_order.connect(self._delayed_orders_timer.start)
+        self.sg.to_main_thread.connect(self._execute_in_main_thread)
+
+    def _execute_in_main_thread(self, func: Callable, args: tuple, kwargs: dict):
+        func(*args, **kwargs)
 
     # --- widgets related methods --- #
 
@@ -649,15 +667,18 @@ class PatchbayManager:
     def disannounce(self):
         self.clear_all()
 
+    @in_main_thread()
     def server_started(self):
         if self._tools_widget is not None:
             self._tools_widget.set_jack_running(True)
 
+    @in_main_thread()
     def server_stopped(self):
         if self._tools_widget is not None:
             self._tools_widget.set_jack_running(False)
         self.clear_all()
 
+    @in_main_thread()
     def server_lose(self):
         if self._tools_widget is not None:
             self._tools_widget.set_jack_running(False)
@@ -670,10 +691,12 @@ class PatchbayManager:
                 _translate('patchbay', "JACK server lose"),
                 _translate('patchbay', "JACK server seems to be totally busy... ;("))
 
+    @in_main_thread()
     def set_dsp_load(self, dsp_load: int):
         if self._tools_widget is not None:
             self._tools_widget.set_dsp_load(dsp_load)
 
+    @in_main_thread()
     def add_xrun(self):
         if self._tools_widget is not None:
             self._tools_widget.add_xrun()
@@ -735,10 +758,12 @@ class PatchbayManager:
     def set_semi_hide_opacity(self, opacity: float):
         patchcanvas.set_semi_hide_opacity(opacity)
 
+    @in_main_thread()
     def buffer_size_changed(self, buffer_size: int):
         if self._tools_widget is not None:
             self._tools_widget.set_buffer_size(buffer_size)
 
+    @in_main_thread()
     def sample_rate_changed(self, samplerate: int):
         if self._tools_widget is not None:
             self._tools_widget.set_samplerate(samplerate)
