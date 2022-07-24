@@ -739,7 +739,7 @@ class PatchbayManager:
         if self._tools_widget is not None:
             self._tools_widget.set_buffer_size(buffer_size)
 
-    def sample_rate_changed(self, samplerate):
+    def sample_rate_changed(self, samplerate: int):
         if self._tools_widget is not None:
             self._tools_widget.set_samplerate(samplerate)
 
