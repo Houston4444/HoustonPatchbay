@@ -1,10 +1,12 @@
 
+from threading import Thread
 from dataclasses import dataclass
 import sys
+import threading
 from typing import Callable, Optional, Union
 from PyQt5.QtGui import QCursor, QGuiApplication
 from PyQt5.QtWidgets import QMessageBox, QWidget
-from PyQt5.QtCore import QTimer, QSettings
+from PyQt5.QtCore import QTimer, QSettings, QThread
 
 from .patchcanvas import patchcanvas, PortType, EyeCandy
 from .patchcanvas.utils import get_new_group_positions
@@ -52,16 +54,20 @@ def later_by_batch(draw_group=False, sort_group=False, clear_conns=False):
         def wrapper(*args, **kwargs):
             mng = args[0]
             assert isinstance(mng, PatchbayManager)
+            
             if mng.very_fast_operation:
                 return func(*args, **kwargs)
-            
+
             mng.delayed_orders.append(
                 DelayedOrder(func, args, kwargs,
                              draw_group or sort_group,
                              sort_group,
                              clear_conns))
-            
-            mng._delayed_orders_timer.start()
+
+            if QThread.currentThread() is QGuiApplication.instance().thread():
+                mng._delayed_orders_timer.start()
+            else:
+                mng.sg.out_thread_order.emit()
             return
         return wrapper
     return decorator
@@ -122,6 +128,8 @@ class PatchbayManager:
         self._delayed_orders_timer.setSingleShot(True)
         self._delayed_orders_timer.timeout.connect(
             self._delayed_orders_timeout)
+
+        self.sg.out_thread_order.connect(self._delayed_orders_timer.start)
 
     # --- widgets related methods --- #
 
@@ -424,7 +432,7 @@ class PatchbayManager:
             port_type = PortType.AUDIO_JACK
         elif port_type_int == PORT_TYPE_MIDI:
             port_type = PortType.MIDI_JACK
-        
+
         port = Port(self, self._next_port_id, name, port_type, flags, uuid)
         self._next_port_id += 1
         
@@ -737,7 +745,6 @@ class PatchbayManager:
 
     def _delayed_orders_timeout(self):
         self.optimize_operation(True)
-        
         group_ids_to_update = set()
         group_ids_to_sort = set()
         some_groups_removed = False

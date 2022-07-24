@@ -3,6 +3,7 @@ from PyQt5.QtCore import QObject, pyqtSignal
 
 # we need a QObject for pyqtSignal
 class SignalsObject(QObject):
+    out_thread_order = pyqtSignal()
     port_types_view_changed = pyqtSignal(int)
     full_screen_toggle_wanted = pyqtSignal()
     filters_bar_toggle_wanted = pyqtSignal()
