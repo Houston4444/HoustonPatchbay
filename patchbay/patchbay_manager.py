@@ -11,8 +11,7 @@ from PyQt5.QtCore import QTimer, QSettings, QThread
 from .patchcanvas import patchcanvas, PortType, EyeCandy
 from .patchcanvas.utils import get_new_group_positions
 from .patchbay_signals import SignalsObject
-from .tools_widgets import (PORT_TYPE_AUDIO, PORT_TYPE_MIDI,
-                            PatchbayToolsWidget, CanvasMenu)
+from .tools_widgets import PatchbayToolsWidget, CanvasMenu
 from .options_dialog import CanvasOptionsDialog
 from .base_elements import (Connection, GroupPos, Port, Portgroup, Group,
                             JackPortFlag, PortgroupMem)
@@ -446,9 +445,9 @@ class PatchbayManager:
         ''' adds port and returns the group_id '''
         port_type = PortType.NULL
 
-        if port_type_int == PORT_TYPE_AUDIO:
+        if port_type_int == PortType.AUDIO_JACK:
             port_type = PortType.AUDIO_JACK
-        elif port_type_int == PORT_TYPE_MIDI:
+        elif port_type_int == PortType.MIDI_JACK:
             port_type = PortType.MIDI_JACK
 
         port = Port(self, self._next_port_id, name, port_type, flags, uuid)

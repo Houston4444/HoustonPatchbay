@@ -15,12 +15,6 @@ from .ui.patchbay_tools import Ui_Form as PatchbayToolsUiForm
 if TYPE_CHECKING:
     from .patchbay_manager import PatchbayManager
 
-
-# Port Type
-PORT_TYPE_NULL = 0
-PORT_TYPE_AUDIO = 1
-PORT_TYPE_MIDI = 2
-
 _translate = QApplication.translate
 
 def is_dark_theme(widget: QWidget) -> bool:
@@ -316,9 +310,12 @@ class CanvasPortInfoDialog(QDialog):
         if self._port is None:
             return
 
-        port_type_str = _translate('patchbay', "Audio")
-        if self._port.type == PORT_TYPE_MIDI:
+        if self._port.type is PortType.AUDIO_JACK:
+            port_type_str = _translate('patchbay', "Audio")
+        elif self._port.type is PortType.MIDI_JACK:
             port_type_str = _translate('patchbay', "MIDI")
+        else:
+            port_type_str = _translate('patchbay', 'NULL')
 
         flags_list = list[str]()
 
