@@ -206,37 +206,6 @@ class PortWidget(ConnectableWidget):
 
     def connect_pos(self) -> QPointF:
         return self.scenePos() + self._connect_pos
-        # # scene_pos = self.scenePos()
-        # phi = 0.75 if self._pg_len > 2 else 0.62
-        
-        # xoff = 0
-        # if self._port_mode is PortMode.OUTPUT:
-        #     xoff = self._port_width + 12
-        
-        # # cx = scene_pos.x()
-        # # if self._port_mode is PortMode.OUTPUT:
-        # #     cx += self._port_width + 12
-        
-        # height = canvas.theme.port_height
-        # y_delta = canvas.theme.port_height / 2
-        
-        # if self._pg_len >= 2:
-        #     first_old_y = height * phi
-        #     last_old_y = height * (self._pg_len - phi)
-        #     delta = (last_old_y - first_old_y) / (self._pg_len -1)
-        #     y_delta = (first_old_y
-        #                + (self._pg_pos * delta)
-        #                - (height * self._pg_pos))
-            
-        # if not self.isVisible():
-        #     # item is hidden port when its box is folded
-        #     y_delta = height - y_delta
-        
-        # # cy = scene_pos.y() + y_delta
-        
-        # return self.scenePos() + QPointF(xoff, y_delta)
-        # # return QPointF(self.scenePos().x() + xoff, cy)
-        # # return QPointF(cx, cy)
 
     def add_line_to_port(self, line: 'LineWidget'):
         self._lines_widgets.append(line)
@@ -306,27 +275,33 @@ class PortWidget(ConnectableWidget):
             menu.addMenu(stereo_menu)
 
             # get list of available mono ports settables as stereo with port
-            port_cousin_list = []
+            port_id_cousin_list = list[int]()
+
             for port in canvas.list_ports(group_id=self._group_id):
-                if (port.port_type == PortType.AUDIO_JACK
-                        and port.port_mode == self._port_mode
-                        and not port.port_subtype is PortSubType.CV):
-                    port_cousin_list.append(port.port_id)
+                if (port.port_mode is self._port_mode
+                        and port.port_type is self._port_type
+                        and port.port_subtype is self._port_subtype):
+                    port_id_cousin_list.append(port.port_id)
 
-            selfport_index = port_cousin_list.index(self._port_id)
-            stereo_able_ids_list = []
-            if selfport_index > 0:
-                stereo_able_ids_list.append(port_cousin_list[selfport_index -1])
-            if selfport_index < len(port_cousin_list) -1:
-                stereo_able_ids_list.append(port_cousin_list[selfport_index +1])
-
+            selfport_index = port_id_cousin_list.index(self._port_id)
             at_least_one = False
-            for port in canvas.list_ports(self._group_id):
-                if port.port_id in stereo_able_ids_list and not port.portgrp_id:
-                    act_x_setasstereo = stereo_menu.addAction(port.port_name)
-                    act_x_setasstereo.setData([self, port.port_id])
-                    act_x_setasstereo.triggered.connect(
-                        canvas.qobject.set_as_stereo_with)
+
+            if selfport_index > 0:
+                previous_port_id = port_id_cousin_list[selfport_index - 1]
+                previous_port = canvas.get_port(self._group_id, previous_port_id)
+                if previous_port and not previous_port.portgrp_id:
+                    pp_action = stereo_menu.addAction(previous_port.port_name)
+                    pp_action.setData((previous_port, self._port))
+                    pp_action.triggered.connect(canvas.qobject.portgroup_the_ports)
+                    at_least_one = True
+                
+            if selfport_index < len(port_id_cousin_list) - 1:
+                next_port_id = port_id_cousin_list[selfport_index + 1]
+                next_port = canvas.get_port(self._group_id, next_port_id)
+                if next_port and not next_port.portgrp_id:
+                    np_action = stereo_menu.addAction(next_port.port_name)
+                    np_action.setData((self._port, next_port))
+                    np_action.triggered.connect(canvas.qobject.portgroup_the_ports)
                     at_least_one = True
 
             if not at_least_one:
@@ -377,10 +352,10 @@ class PortWidget(ConnectableWidget):
         
         act_selected = menu.exec(start_point)
         
-        if act_selected == act_x_info:
+        if act_selected is act_x_info:
             canvas.callback(CallbackAct.PORT_INFO, self._group_id, self._port_id)
 
-        elif act_selected == act_x_rename:
+        elif act_selected is act_x_rename:
             canvas.callback(CallbackAct.PORT_RENAME, self._group_id, self._port_id)
             
         if act_selected is None:

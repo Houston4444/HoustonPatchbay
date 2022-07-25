@@ -24,6 +24,7 @@ import time
 from typing import Callable
 from PyQt5.QtCore import (pyqtSlot, QObject, QPoint, QPointF, QRectF,
                           QSettings, QTimer, pyqtSignal)
+from PyQt5.QtWidgets import QAction
 
 
 # local imports
@@ -105,16 +106,21 @@ class CanvasObject(QObject):
             canvas_callback(CallbackAct.PORTS_DISCONNECT, connection_id)
 
     @pyqtSlot()
-    def set_as_stereo_with(self):
+    def portgroup_the_ports(self):
         try:
-            all_data = self.sender().data()
+            sender = self.sender()
+            assert isinstance(sender, QAction)
+            all_data = sender.data()
+            assert isinstance(all_data, tuple) and len(all_data) == 2
         except:
             return
-
-        port_widget = all_data[0]
-        port_id = all_data[1]
-        assert isinstance(port_widget, PortWidget)
-        port_widget.set_as_stereo(port_id)
+        
+        all_data: tuple[PortObject, PortObject]
+        
+        canvas_callback(
+            CallbackAct.PORTGROUP_ADD,
+            all_data[0].group_id, all_data[0].port_mode, all_data[0].port_type,
+            tuple([p.port_id for p in all_data]))
 
     def join_after_move(self):
         for group_id in self.groups_to_join:

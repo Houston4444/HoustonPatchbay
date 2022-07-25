@@ -84,24 +84,21 @@ class Callbacker:
                 above_metadatas = True
             port_list.append(port)
 
-        portgroup = self.mng.new_portgroup(group_id, port_mode, port_list)
         group = self.mng.get_group_from_id(group_id)
         if group is None:
             return
 
-        group.add_portgroup(portgroup)
-
+        # we add a PortgroupMem, manager will add the portgroup with it
         pg_mem = PortgroupMem()
         pg_mem.group_name = group.name
-        pg_mem.port_type = portgroup.port_type()
-        pg_mem.port_mode = portgroup.port_mode
+        pg_mem.port_type = port_type
+        pg_mem.port_mode = port_mode
+        
         pg_mem.above_metadatas = above_metadatas
         pg_mem.port_names = [p.short_name() for p in port_list]
 
         self.mng.add_portgroup_memory(pg_mem)
         self.mng.save_portgroup_memory(pg_mem)
-
-        portgroup.add_to_canvas()
     
     def _portgroup_remove(self, group_id: int, portgroup_id: int):
         group = self.mng.get_group_from_id(group_id)
@@ -122,8 +119,6 @@ class Callbacker:
                     pg_mem.port_names = [port.short_name()]
                     self.mng.add_portgroup_memory(pg_mem)
                     self.mng.save_portgroup_memory(pg_mem)
-
-                group.remove_portgroup(portgroup)
                 break
 
     def _port_info(self, group_id: int, port_id: int):

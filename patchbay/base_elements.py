@@ -1,4 +1,5 @@
 from enum import IntFlag
+import inspect
 from typing import TYPE_CHECKING, Union
 import sys
 
@@ -165,7 +166,7 @@ class Port:
         self.flags = flags
         self.uuid = uuid
 
-    def mode(self):
+    def mode(self) -> PortMode:
         if self.flags & JackPortFlag.IS_OUTPUT:
             return PortMode.OUTPUT
         elif self.flags & JackPortFlag.IS_INPUT:
@@ -564,27 +565,27 @@ class Group:
         if portgroup_mem.group_name != self.name:
             return
 
-        remove_list = list[Portgroup]()
+        remove_set = set[Portgroup]()
 
         # first remove any existing portgroup with one of the porgroup_mem ports
         for portgroup in self.portgroups:
-            if (portgroup.port_mode != portgroup_mem.port_mode
-                    or portgroup.port_type() != portgroup_mem.port_type):
+            if (portgroup.port_mode is not portgroup_mem.port_mode
+                    or portgroup.port_type() is not portgroup_mem.port_type):
                 continue
 
             for port in portgroup.ports:
                 if port.short_name() in portgroup_mem.port_names:
-                    remove_list.append(portgroup)
+                    remove_set.add(portgroup)
 
-        for portgroup in remove_list:
+        for portgroup in remove_set:
             self.remove_portgroup(portgroup)
 
         # add a portgroup if all needed ports are present and consecutive
         port_list = list[Port]()
 
         for port in self.ports:
-            if (port.mode != portgroup_mem.port_mode
-                    or port.type != portgroup_mem.port_type):
+            if (port.mode() is not portgroup_mem.port_mode
+                    or port.type is not portgroup_mem.port_type):
                 continue
 
             if port.short_name() == portgroup_mem.port_names[len(port_list)]:

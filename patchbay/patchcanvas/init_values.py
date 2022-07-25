@@ -234,6 +234,9 @@ class PortObject(ConnectableObject):
     pg_pos = 0 # index in the portgroup (if any)
     pg_len = 1 # length of the portgroup (if any)
 
+    def __repr__(self) -> str:
+        return f"PortObject({self.port_name} - {self.port_id} - {self.portgrp_id})"
+
     def copy_no_widget(self):
         port_copy = PortObject()
         port_copy.__dict__ = self.__dict__.copy()
