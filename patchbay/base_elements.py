@@ -1,7 +1,5 @@
 from enum import IntFlag
-import inspect
 from typing import TYPE_CHECKING, Union
-import sys
 
 from .patchcanvas import (patchcanvas, PortMode, PortType, IconType,
                           BoxLayoutMode, BoxSplitMode, PortSubType)
