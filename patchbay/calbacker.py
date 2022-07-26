@@ -11,6 +11,10 @@ if TYPE_CHECKING:
 
 
 class Callbacker:
+    ''' manage actions coming from patchcanvas.
+        Each protected method implements the action to run
+        when the action happens. '''
+    
     def __init__(self, manager: 'PatchbayManager'):
         self.mng = manager
         self.patchcanvas = patchcanvas
