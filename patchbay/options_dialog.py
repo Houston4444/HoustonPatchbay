@@ -1,11 +1,13 @@
 
 from PyQt5.QtWidgets import QDialog, QApplication, QInputDialog, QMessageBox, QWidget
-from PyQt5.QtGui import QIcon
+from PyQt5.QtGui import QIcon, QPixmap
 from PyQt5.QtCore import Qt, pyqtSignal, QProcess, QSettings
 
 
 from .patchcanvas import patchcanvas
+from .tools_widgets import is_dark_theme
 from .ui.canvas_options import Ui_CanvasOptions
+
 
 _translate = QApplication.translate
 
@@ -120,10 +122,13 @@ class CanvasOptionsDialog(QDialog):
         del self._theme_list
         self._theme_list = theme_list
 
+        dark = '-dark' if is_dark_theme(self) else ''
+        user_icon = QIcon(QPixmap(f':scalable/breeze{dark}/im-user'))
+
         for theme_dict in theme_list:
             if theme_dict['editable']:
                 self.ui.comboBoxTheme.addItem(
-                    self._user_theme_icon, theme_dict['name'], theme_dict['ref_id'])
+                    user_icon, theme_dict['name'], theme_dict['ref_id'])
             else:
                 self.ui.comboBoxTheme.addItem(theme_dict['name'], theme_dict['ref_id'])
 
