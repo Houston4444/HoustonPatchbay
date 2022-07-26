@@ -1,5 +1,6 @@
+from dataclasses import dataclass
 from enum import IntFlag
-from typing import TYPE_CHECKING, Union
+from typing import TYPE_CHECKING, Any, Union
 
 from .patchcanvas import (patchcanvas, PortMode, PortType, IconType,
                           BoxLayoutMode, BoxSplitMode, PortSubType)
@@ -49,6 +50,65 @@ class GroupPos:
         self.out_xy = (0, 0)
         self.layout_modes = dict[PortMode, BoxLayoutMode]()
     
+    @staticmethod
+    def _is_point(value: Any) -> bool:
+        if not isinstance(value, (list, tuple)):
+            return False
+        
+        if len(value) != 2:
+            return False
+        
+        for v in value:
+            if not isinstance(v, int):
+                return False
+        return True
+
+    @staticmethod
+    def from_serialized_dict(src: dict[str, Any]) -> 'GroupPos':
+        port_types_view = src['port_types_view']
+        group_name = src['group_name']
+        null_zone = src['null_zone']
+        out_zone = src['out_zone']
+        in_zone = src['in_zone']
+        null_xy = src['null_xy']
+        in_xy = src['in_xy']
+        out_xy = src['out_xy']
+        flags = src['flags']
+        layout_modes = src['layout_modes']
+        
+        gpos = GroupPos()
+        
+        if isinstance(port_types_view, int):
+            gpos.port_types_view = port_types_view
+        if isinstance(group_name, str):
+            gpos.group_name = group_name
+        if isinstance(null_zone, str):
+            gpos.null_zone = null_zone
+        if isinstance(in_zone, str):
+            gpos.in_zone = in_zone
+        if isinstance(out_zone, str):
+            gpos.out_zone = out_zone
+        if GroupPos._is_point(null_xy):
+            gpos.null_xy = null_xy
+        if GroupPos._is_point(in_xy):
+            gpos.in_xy = in_xy
+        if GroupPos._is_point(out_xy):
+            gpos.out_xy = out_xy
+        if isinstance(flags, int):
+            try:
+                gpos.flags = GroupPosFlag(flags)
+            except:
+                pass
+        if isinstance(layout_modes, dict):
+            for key, value in layout_modes.items():
+                if isinstance(key, int) and isinstance(value, int):
+                    try:
+                        gpos.layout_modes[PortMode(key)] = BoxLayoutMode(value)
+                    except:
+                        pass
+        
+        return gpos
+
     def copy(self) -> 'GroupPos':
         group_pos = GroupPos()
         group_pos.__dict__ = self.__dict__.copy()
@@ -57,6 +117,18 @@ class GroupPos:
     def eat(self, other: 'GroupPos'):
         self.__dict__ = other.__dict__.copy()
 
+    def as_serializable_dict(self):
+        return {'port_types_view': self.port_types_view,
+                'group_name': self.group_name,
+                'null_zone': self.null_zone,
+                'in_zone': self.in_zone,
+                'out_zone': self.out_zone,
+                'null_xy': self.null_xy,
+                'in_xy': self.in_xy,
+                'out_xy': self.out_xy,
+                'flags': self.flags,
+                'layout_modes': self.layout_modes}
+        
     def set_layout_mode(self, port_mode: PortMode, layout_mode: BoxLayoutMode):
         self.layout_modes[port_mode] = layout_mode
 
@@ -76,6 +148,21 @@ class PortgroupMem:
     def __init__(self):
         self.port_names = list[str]()
 
+    @staticmethod
+    def from_serialized_dict(src: dict[str, Any]) -> 'PortgroupMem':
+        pg_mem = PortgroupMem()
+
+        try:
+            pg_mem.group_name = str(src['group_name'])
+            pg_mem.port_type = PortType(src['port_type'])
+            pg_mem.port_mode = PortMode(src['port_mode'])
+            pg_mem.port_names = [str(a) for a in src['port_names']]
+            pg_mem.above_metadatas = bool(src['above_metadatas'])
+        except:
+            pass
+
+        return pg_mem
+
     def has_a_common_port_with(self, other: 'PortgroupMem') -> bool:
         if (self.port_type is not other.port_type
                 or self.port_mode is not other.port_mode
@@ -87,6 +174,15 @@ class PortgroupMem:
                 return True
         
         return False
+    
+    def as_serializable_dict(self) -> dict[str, Any]:
+        return {
+            'group_name': self.group_name,
+            'port_type': self.port_type,
+            'port_mode': self.port_mode,
+            'port_names': self.port_names,
+            'above_metadatas': self.above_metadatas
+        }
 
 
 class Connection:
