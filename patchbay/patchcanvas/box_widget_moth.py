@@ -186,7 +186,7 @@ class BoxWidgetMoth(QGraphicsItem):
         self.shadow = None
         # FIXME FX on top of graphic items make them lose high-dpi
         # See https://bugreports.qt.io/browse/QTBUG-65035
-        if options.eyecandy and canvas.scene.get_device_pixel_ratio_f() == 1.0:
+        if options.show_shadows and canvas.scene.get_device_pixel_ratio_f() == 1.0:
             self.shadow = BoxWidgetShadow(self.toGraphicsObject())
             self.shadow.set_fake_parent(self)
             self.shadow.set_theme(shadow_theme)

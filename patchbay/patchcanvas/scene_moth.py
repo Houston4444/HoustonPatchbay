@@ -138,7 +138,7 @@ class PatchSceneMoth(QGraphicsScene):
         ''' This function change the place of boxes in order to have no 
             box overlapping other boxes.'''
         # just for easier syntax, this method is overloaded in scene.py
-        # but executed in this part too
+        # but executed in this part too.
         pass
 
     def clear(self):

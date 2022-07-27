@@ -406,10 +406,7 @@ class PatchbayManager:
             self.refresh()
 
     def set_group_shadows(self, yesno: int):
-        if yesno:
-            patchcanvas.options.eyecandy = EyeCandy.SMALL
-        else:
-            patchcanvas.options.eyecandy = EyeCandy.NONE
+        patchcanvas.options.show_shadows = bool(yesno)
         self.remove_and_add_all()
 
     def change_theme(self, theme_name: str):

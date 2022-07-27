@@ -17,7 +17,7 @@
 #
 # For a full copy of the GNU General Public License see the doc/GPL.txt file.
 
-from typing import TYPE_CHECKING, Iterator, Union
+from typing import TYPE_CHECKING, Iterator, Optional, Union
 from enum import IntEnum, IntFlag
 
 from PyQt5.QtCore import QPointF, QRectF, QSettings, QPoint
@@ -167,6 +167,7 @@ class CanvasOptionsObject:
     auto_hide_groups = True
     auto_select_items = False
     eyecandy = EyeCandy.NONE
+    show_shadows = False
     inline_displays = 0
     elastic = True
     borders_navigation = True
@@ -181,6 +182,7 @@ class CanvasFeaturesObject:
     port_info = True
     port_rename = False
     handle_group_pos = False
+
 
 # ------------------------
 
@@ -202,9 +204,9 @@ class GroupObject:
     gui_visible: bool
     widgets: list
     if TYPE_CHECKING:
-        widgets: list[BoxWidget]
+        widgets: list[Optional(BoxWidget)]
 
-    def copy_no_widget(self):
+    def copy_no_widget(self) -> 'GroupObject':
         group_copy = GroupObject()
         group_copy.__dict__ = self.__dict__.copy()
         group_copy.widgets = [None, None]
@@ -237,7 +239,7 @@ class PortObject(ConnectableObject):
     def __repr__(self) -> str:
         return f"PortObject({self.port_name} - {self.port_id} - {self.portgrp_id})"
 
-    def copy_no_widget(self):
+    def copy_no_widget(self) -> 'PortObject':
         port_copy = PortObject()
         port_copy.__dict__ = self.__dict__.copy()
         port_copy.widget = None
@@ -263,7 +265,7 @@ class PortgrpObject(ConnectableObject):
     def __init__(self):
         self.ports = list[PortObject]()
 
-    def copy_no_widget(self):
+    def copy_no_widget(self) -> 'PortObject':
         portgrp_copy = PortgrpObject()
         portgrp_copy.__dict__ = self.__dict__.copy()
         portgrp_copy.widget = None
@@ -283,7 +285,7 @@ class ConnectionObject:
     if TYPE_CHECKING:
         widget: LineWidget
 
-    def copy_no_widget(self):
+    def copy_no_widget(self) -> 'ConnectionObject':
         conn_copy = ConnectionObject()
         conn_copy.__dict__ = self.__dict__.copy()
         conn_copy.widget = None
@@ -641,7 +643,7 @@ options = CanvasOptionsObject()
 options.theme_name = ''
 options.auto_hide_groups = False
 options.auto_select_items = False
-options.eyecandy = EyeCandy.NONE
+options.show_shadows = False
 options.inline_displays = False
 options.elastic = True
 options.prevent_overlap = True
