@@ -132,11 +132,6 @@ class BoxLayoutMode(IntEnum):
     LARGE = 2
 
 
-class EyeCandy(IntEnum):
-    NONE = 0
-    SMALL = 1 # Use boxes shadows
-
-
 # For Repulsive boxes
 class Direction(IntEnum):
     NONE = 0
@@ -166,7 +161,6 @@ class CanvasOptionsObject:
     theme_name = ""
     auto_hide_groups = True
     auto_select_items = False
-    eyecandy = EyeCandy.NONE
     show_shadows = False
     inline_displays = 0
     elastic = True

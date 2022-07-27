@@ -47,7 +47,6 @@ from .init_values import (
     BoxSplitMode,
     BoxLayoutMode,
     IconType,
-    EyeCandy, # not used here, but can be taken from parent
 )
 
 from .utils import canvas_callback, get_new_group_pos

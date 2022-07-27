@@ -8,7 +8,7 @@ from PyQt5.QtGui import QCursor, QGuiApplication
 from PyQt5.QtWidgets import QMessageBox, QWidget
 from PyQt5.QtCore import QTimer, QSettings, QThread
 
-from .patchcanvas import patchcanvas, PortType, EyeCandy
+from .patchcanvas import patchcanvas, PortType
 from .patchcanvas.utils import get_new_group_positions
 from .patchbay_signals import SignalsObject
 from .tools_widgets import PatchbayToolsWidget, CanvasMenu
