@@ -57,8 +57,8 @@ class Callbacker:
     def _group_move(self, group_id: int, port_mode: PortMode, x: int, y: int):
         group = self.mng.get_group_from_id(group_id)
         if group is not None:
-            print('savee', port_mode, x, y)
             gpos = group.current_position
+
             if port_mode == PortMode.NULL:
                 gpos.null_xy = (x, y)
             elif port_mode == PortMode.INPUT:

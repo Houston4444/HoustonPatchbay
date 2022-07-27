@@ -282,6 +282,8 @@ class PatchbayManager:
             # copy the group_position
             gpos = group.current_position.copy()
             gpos.port_types_view = self.port_types_view
+            self.group_positions.append(gpos)
+            self.save_group_position(gpos)
             return gpos
 
         # group position doesn't already exists, create one
@@ -480,7 +482,7 @@ class PatchbayManager:
         
         group = self.get_group_from_name(group_name)
         if group is None:
-            # port is an non existing group, create the group
+            # port is in an non existing group, create the group
             gpos = self.get_group_position(group_name)
             group = Group(self, self._next_group_id, group_name, gpos)
             group.a2j_group = is_a2j_group
