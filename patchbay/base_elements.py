@@ -711,18 +711,25 @@ class Group:
         patchcanvas.move_group_boxes(
             self.group_id, gpos.null_xy, gpos.in_xy, gpos.out_xy)
 
-        if (gpos.flags & GroupPosFlag.SPLITTED
-                and not ex_gpos_flags & GroupPosFlag.SPLITTED):
-            patchcanvas.split_group(self.group_id)
+        # restore split and wrapped modes
+        if gpos.flags & GroupPosFlag.SPLITTED:
+            if not ex_gpos_flags & GroupPosFlag.SPLITTED:
+                patchcanvas.split_group(self.group_id)
 
-        patchcanvas.wrap_group_box(self.group_id, PortMode.INPUT,
-                                   bool(gpos.flags & GroupPosFlag.WRAPPED_INPUT))
-        patchcanvas.wrap_group_box(self.group_id, PortMode.OUTPUT,
-                                   bool(gpos.flags & GroupPosFlag.WRAPPED_OUTPUT))
+            patchcanvas.wrap_group_box(
+                self.group_id, PortMode.INPUT,
+                bool(gpos.flags & GroupPosFlag.WRAPPED_INPUT))
+            patchcanvas.wrap_group_box(
+                self.group_id, PortMode.OUTPUT,
+                bool(gpos.flags & GroupPosFlag.WRAPPED_OUTPUT))
+        else:
+            patchcanvas.wrap_group_box(
+                self.group_id, PortMode.NULL,
+                bool(gpos.flags & (GroupPosFlag.WRAPPED_INPUT
+                                   | GroupPosFlag.WRAPPED_OUTPUT)))
 
-        if (ex_gpos_flags & GroupPosFlag.SPLITTED
-                and not gpos.flags & GroupPosFlag.SPLITTED):
-            patchcanvas.animate_before_join(self.group_id)
+            if ex_gpos_flags & GroupPosFlag.SPLITTED:
+                patchcanvas.animate_before_join(self.group_id)
 
     def set_layout_mode(self, port_mode: PortMode, layout_mode: BoxLayoutMode):
         self.current_position.set_layout_mode(port_mode, layout_mode)
