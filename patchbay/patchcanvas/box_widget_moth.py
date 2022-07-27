@@ -495,7 +495,7 @@ class BoxWidgetMoth(QGraphicsItem):
     def semi_hide(self, yesno: bool):
         self._is_semi_hidden = yesno
         if yesno:
-            self.setOpacity(canvas.semi_hide_opacity)
+            self.setOpacity(options.semi_hide_opacity)
         else:
             self.setOpacity(1.0)
 
@@ -503,7 +503,7 @@ class BoxWidgetMoth(QGraphicsItem):
         if not self._is_semi_hidden:
             return
         
-        self.setOpacity(canvas.semi_hide_opacity)
+        self.setOpacity(options.semi_hide_opacity)
 
     def _has_side_title(self):
         return bool(

@@ -5,7 +5,7 @@ import sys
 import threading
 from typing import Callable, Optional, Union
 from PyQt5.QtGui import QCursor, QGuiApplication
-from PyQt5.QtWidgets import QMessageBox, QWidget
+from PyQt5.QtWidgets import QMainWindow, QMessageBox, QWidget, QGraphicsView
 from PyQt5.QtCore import QTimer, QSettings, QThread
 
 from .patchcanvas import patchcanvas, PortType
@@ -115,9 +115,9 @@ class PatchbayManager:
             assert isinstance(settings, QSettings)
         self._settings = settings
 
-        self.main_win = None
-        self._tools_widget = None
-        self.options_dialog = None
+        self.main_win: QMainWindow = None
+        self._tools_widget: PatchbayToolsWidget = None
+        self.options_dialog: CanvasOptionsDialog = None
 
         self.sg = SignalsObject()
 
@@ -144,6 +144,9 @@ class PatchbayManager:
 
         self.sg.out_thread_order.connect(self._delayed_orders_timer.start)
         self.sg.to_main_thread.connect(self._execute_in_main_thread)
+
+    def app_init(self, view: QGraphicsView):
+        pass
 
     def _execute_in_main_thread(self, func: Callable, args: tuple, kwargs: dict):
         func(*args, **kwargs)
@@ -756,7 +759,7 @@ class PatchbayManager:
         return n_boxes
 
     def set_semi_hide_opacity(self, opacity: float):
-        patchcanvas.set_semi_hide_opacity(opacity)
+        patchcanvas.options.semi_hide_opacity = opacity
 
     @in_main_thread()
     def buffer_size_changed(self, buffer_size: int):

@@ -167,6 +167,7 @@ class CanvasOptionsObject:
     borders_navigation = True
     prevent_overlap = True
     max_port_width = 180
+    semi_hide_opacity = 0.20
 
 
 # Canvas features
@@ -353,7 +354,6 @@ class Canvas:
         self.size_rect = QRectF()
 
         self.is_line_mov = False
-        self.semi_hide_opacity = 0.17
         self.loading_items = False
         self.menu_shown = False
         self.menu_click_pos = QPoint(0, 0)

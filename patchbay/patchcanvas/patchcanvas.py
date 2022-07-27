@@ -1221,7 +1221,7 @@ def get_number_of_boxes(group_id: int) -> int:
 
 @patchbay_api    
 def set_semi_hide_opacity(opacity: float):
-    canvas.semi_hide_opacity = opacity
+    options.semi_hide_opacity = opacity
 
     for box in canvas.list_boxes():
         box.update_opacity()

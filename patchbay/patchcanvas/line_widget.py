@@ -28,6 +28,7 @@ from PyQt5.QtWidgets import QGraphicsPathItem
 
 from .init_values import (
     canvas,
+    options,
     CanvasItemType,
     CallbackAct,
     PortType)
@@ -161,7 +162,7 @@ class LineWidget(QGraphicsPathItem):
                 port_gradient.setColorAt(1.0, tha.color_main)
             else:
                 if self._semi_hidden:
-                    shd = canvas.semi_hide_opacity
+                    shd = options.semi_hide_opacity
                     bgcolor = canvas.theme.scene_background_color
                     
                     color_main = QColor(
@@ -186,9 +187,9 @@ class LineWidget(QGraphicsPathItem):
             self.setPen(QPen(port_gradient, tha.base_width, Qt.SolidLine, Qt.FlatCap))
         else:
             if self._semi_hidden:
-                shd = canvas.semi_hide_opacity
+                shd = options.semi_hide_opacity
                 bgcolor = canvas.theme.scene_background_color
-                
+
                 color_main = QColor(
                     int(tha.color_main.red() * shd + bgcolor.red() * (1.0 - shd) + 0.5),
                     int(tha.color_main.green() * shd + bgcolor.green() * (1.0 - shd)+ 0.5),
