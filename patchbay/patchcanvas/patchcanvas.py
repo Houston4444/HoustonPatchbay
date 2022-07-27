@@ -20,8 +20,7 @@
 # global imports
 import logging
 from pathlib import Path
-import time
-from typing import Callable, Optional, Union
+from typing import Callable
 from PyQt5.QtCore import (pyqtSlot, QObject, QPoint, QPointF, QRectF,
                           QSettings, QTimer, pyqtSignal)
 from PyQt5.QtWidgets import QAction

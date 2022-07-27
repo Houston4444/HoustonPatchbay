@@ -15,15 +15,12 @@ _translate = QApplication.translate
 class CanvasOptionsDialog(QDialog):
     theme_changed = pyqtSignal(str)
     
-    def __init__(self, parent: QWidget, settings=None):
+    def __init__(self, parent: QWidget, settings: QSettings =None):
         QDialog.__init__(self, parent)
         self.ui = Ui_CanvasOptions()
         self.ui.setupUi(self)
         
-        if settings is not None:
-            assert isinstance(settings, QSettings)
         self._settings = settings
-        self._user_theme_icon = QIcon()
 
         gracious_names = True
         a2j_grouped = True
@@ -147,9 +144,6 @@ class CanvasOptionsDialog(QDialog):
                 if ref_id == theme_ref:
                     self.ui.comboBoxTheme.setCurrentIndex(i)
                     break
-
-    def set_user_theme_icon(self, icon: QIcon):
-        self._user_theme_icon = icon
 
     def get_gracious_names(self) -> bool:
         return self.ui.checkBoxGracefulNames.isChecked()
