@@ -21,7 +21,7 @@
 import logging
 from pathlib import Path
 import time
-from typing import Callable
+from typing import Callable, Optional, Union
 from PyQt5.QtCore import (pyqtSlot, QObject, QPoint, QPointF, QRectF,
                           QSettings, QTimer, pyqtSignal)
 from PyQt5.QtWidgets import QAction
@@ -275,7 +275,7 @@ def add_group(group_id: int, group_name: str, split=BoxSplitMode.UNDEF,
                 group_box.setPos(group.null_pos)
             else:
                 group_box.setPos(group.out_pos)
-
+            
         group_sbox = BoxWidget(group_id, group_name, icon_type, icon_name)
         group_sbox.set_split(True, PortMode.INPUT)
 
@@ -412,7 +412,7 @@ def split_group(group_id: int, on_place=False):
 
     item = group.widgets[0]
     tmp_group = group.copy_no_widget()
-    
+        
     if on_place and item is not None:
         pos = item.pos()
         rect = item.boundingRect()
@@ -480,6 +480,11 @@ def split_group(group_id: int, on_place=False):
         if box is not None:
             box.set_wrapped(wrap, animate=False)
             box.update_positions(even_animated=True)
+            
+            if box.get_current_port_mode() is PortMode.OUTPUT:
+                canvas.scene.add_box_to_animation(box, g.out_pos.x(), g.out_pos.y())
+            else:
+                canvas.scene.add_box_to_animation(box, g.in_pos.x(), g.in_pos.y())
 
     QTimer.singleShot(0, canvas.scene.update)
 
@@ -572,15 +577,9 @@ def redraw_all_groups():
     prevent_overlap = options.prevent_overlap
     options.elastic = False
     options.prevent_overlap = False
-    
-    print('start redraw', time.time())
-    times_dict = {}
-    last_time = time.time()
-    
+        
     for box in canvas.list_boxes():
         box.update_positions(without_connections=True)
-        times_dict[(box._group_name, box._current_port_mode)] = time.time() - last_time
-        last_time = time.time()
     
     for connection in canvas.list_connections():
         if connection.widget is not None:
@@ -623,7 +622,7 @@ def animate_before_join(group_id: int):
 
     for widget in group.widgets:
         canvas.scene.add_box_to_animation(
-            widget, group.null_pos.x(), group.null_pos.y())
+            widget, group.null_pos.x(), group.null_pos.y(), joining=True)
 
 @patchbay_api
 def move_group_boxes(group_id: int, null_xy: tuple,
@@ -1138,10 +1137,9 @@ def set_elastic(yesno: bool):
 @patchbay_api
 def set_prevent_overlap(yesno: bool):
     options.prevent_overlap = yesno
-    print(time.time())
     if yesno:
         redraw_all_groups()
-    print(time.time())
+
 @patchbay_api
 def set_borders_navigation(yesno: bool):
     options.borders_navigation = yesno

@@ -39,7 +39,8 @@ class Callbacker:
         if group is not None:
             on_place = not bool(
                 group.current_position.flags & GroupPosFlag.HAS_BEEN_SPLITTED)
-            self.patchcanvas.split_group(group_id, on_place=on_place)
+            self.patchcanvas.split_group(
+                group_id, on_place=on_place)
             group.current_position.flags |= GroupPosFlag.SPLITTED
             group.current_position.flags |= GroupPosFlag.HAS_BEEN_SPLITTED
             group.save_current_position()
@@ -56,6 +57,7 @@ class Callbacker:
     def _group_move(self, group_id: int, port_mode: PortMode, x: int, y: int):
         group = self.mng.get_group_from_id(group_id)
         if group is not None:
+            print('savee', port_mode, x, y)
             gpos = group.current_position
             if port_mode == PortMode.NULL:
                 gpos.null_xy = (x, y)

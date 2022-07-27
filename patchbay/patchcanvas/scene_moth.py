@@ -70,6 +70,7 @@ class MovingBox:
     from_pt: QPointF
     to_pt: QPoint
     start_time: float
+    joining: bool
 
 
 class WrappingBox:
@@ -130,6 +131,15 @@ class PatchSceneMoth(QGraphicsScene):
         self.flying_connectable = None
 
         self.selectionChanged.connect(self._slot_selection_changed)
+
+    def deplace_boxes_from_repulsers(self, repulser_boxes: list[BoxWidget],
+                                     wanted_direction=Direction.NONE,
+                                     new_scene_rect=None):
+        ''' This function change the place of boxes in order to have no 
+            box overlapping other boxes.'''
+        # just for easier syntax, this method is overloaded in scene.py
+        # but executed in this part too
+        pass
 
     def clear(self):
         # reimplement Qt function and fix missing rubberband after clear
@@ -343,7 +353,7 @@ class PatchSceneMoth(QGraphicsScene):
             # box update positions is forbidden while widget is in self.move_boxes
             # So we copy the list before to clear it
             # then we can ask update_positions on widgets
-            boxes = [mb.widget for mb in self.move_boxes]
+            boxes = [mb.widget for mb in self.move_boxes if not mb.joining]
             self.move_boxes.clear()
             self.wrapping_boxes.clear()
 
@@ -353,10 +363,11 @@ class PatchSceneMoth(QGraphicsScene):
                         box.update_positions()
                     box.send_move_callback()
 
+            self.deplace_boxes_from_repulsers(boxes)
             canvas.qobject.move_boxes_finished.emit()
 
     def add_box_to_animation(self, box_widget: BoxWidget, to_x: int, to_y: int,
-                             force_anim=True):
+                             force_anim=True, joining=False):
         for moving_box in self.move_boxes:
             if moving_box.widget is box_widget:
                 break
@@ -376,6 +387,7 @@ class PatchSceneMoth(QGraphicsScene):
         moving_box.from_pt = box_widget.pos()
         moving_box.to_pt = QPoint(to_x, to_y)
         moving_box.start_time = time.time() - self._move_timer_start_at
+        moving_box.joining = joining
 
         if not self._move_box_timer.isActive():
             moving_box.start_time = 0.0

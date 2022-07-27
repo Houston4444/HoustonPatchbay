@@ -82,7 +82,6 @@ class GroupPos:
             gpos.port_types_view = port_types_view
         if isinstance(group_name, str):
             gpos.group_name = group_name
-            print('hoppla groupname', group_name)
         if isinstance(null_zone, str):
             gpos.null_zone = null_zone
         if isinstance(in_zone, str):
@@ -90,11 +89,11 @@ class GroupPos:
         if isinstance(out_zone, str):
             gpos.out_zone = out_zone
         if GroupPos._is_point(null_xy):
-            gpos.null_xy = null_xy
+            gpos.null_xy = tuple(null_xy)
         if GroupPos._is_point(in_xy):
-            gpos.in_xy = in_xy
+            gpos.in_xy = tuple(in_xy)
         if GroupPos._is_point(out_xy):
-            gpos.out_xy = out_xy
+            gpos.out_xy = tuple(out_xy)
         if isinstance(flags, int):
             try:
                 gpos.flags = GroupPosFlag(flags)
@@ -119,7 +118,6 @@ class GroupPos:
         self.__dict__ = other.__dict__.copy()
 
     def as_serializable_dict(self):
-        print('wahiee', self.layout_modes)
         return {'port_types_view': self.port_types_view,
                 'group_name': self.group_name,
                 'null_zone': self.null_zone,
@@ -488,9 +486,6 @@ class Group:
 
         do_split = bool(self.current_position.flags & GroupPosFlag.SPLITTED)
         split = BoxSplitMode.YES if do_split else BoxSplitMode.NO
-        
-        print('___add_to_canvas__')
-        print(self.current_position.as_serializable_dict())
 
         if self._is_hardware:
             icon_type = IconType.HARDWARE

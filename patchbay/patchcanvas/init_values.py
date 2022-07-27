@@ -195,9 +195,9 @@ class GroupObject:
     plugin_id: int
     plugin_ui: int # to verify
     plugin_inline: int # to verify
-    null_pos: tuple
-    in_pos: tuple
-    out_pos: tuple
+    null_pos: QPoint
+    in_pos: QPoint
+    out_pos: QPoint
     handle_client_gui: bool
     gui_visible: bool
     widgets: list
