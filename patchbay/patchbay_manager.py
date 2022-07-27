@@ -759,7 +759,7 @@ class PatchbayManager:
         return n_boxes
 
     def set_semi_hide_opacity(self, opacity: float):
-        patchcanvas.options.semi_hide_opacity = opacity
+        patchcanvas.set_semi_hide_opacity(opacity)
 
     @in_main_thread()
     def buffer_size_changed(self, buffer_size: int):
