@@ -568,6 +568,12 @@ def join_group(group_id: int):
     QTimer.singleShot(0, canvas.scene.update)
 
 @patchbay_api
+def repulse_all_boxes():
+    if options.prevent_overlap:
+        for box in canvas.list_boxes():
+            canvas.scene.deplace_boxes_from_repulsers([box])
+
+@patchbay_api
 def redraw_all_groups():    
     # We are redrawing all groups.
     # For optimization reason we prevent here to resize the scene
@@ -595,8 +601,7 @@ def redraw_all_groups():
     
     if prevent_overlap:
         options.prevent_overlap = True
-        for box in canvas.list_boxes():
-            canvas.scene.deplace_boxes_from_repulsers([box])
+        repulse_all_boxes()
     
     if not elastic or prevent_overlap:
         QTimer.singleShot(0, canvas.scene.update)

@@ -389,7 +389,9 @@ class PatchbayManager:
         
         for group, gpos in groups_and_pos.items():
             group.set_group_position(gpos)
-        
+
+        patchcanvas.repulse_all_boxes()
+
         self.sg.port_types_view_changed.emit(self.port_types_view)
 
     # --- options triggers ---
