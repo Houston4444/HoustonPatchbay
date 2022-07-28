@@ -11,12 +11,11 @@ from PyQt5.QtGui import QCursor, QGuiApplication
 from PyQt5.QtWidgets import QMainWindow, QMessageBox, QWidget
 from PyQt5.QtCore import QTimer, QSettings, QThread, QTranslator, QLocale
 
-from HoustonPatchbay.patchbay.patchcanvas.init_values import CanvasFeaturesObject, CanvasOptionsObject
-
 from .patchcanvas import patchcanvas, PortType
 from .patchcanvas.utils import get_new_group_positions
 from .patchcanvas.scene_view import PatchGraphicsView
-from .patchcanvas.init_values import CallbackAct
+from .patchcanvas.init_values import (
+    CallbackAct, CanvasFeaturesObject, CanvasOptionsObject)
 
 from .patchbay_signals import SignalsObject
 from .tools_widgets import PatchbayToolsWidget, CanvasMenu
