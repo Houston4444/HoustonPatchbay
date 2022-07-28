@@ -18,7 +18,8 @@ from .patchcanvas.init_values import (
     CallbackAct, CanvasFeaturesObject, CanvasOptionsObject)
 
 from .patchbay_signals import SignalsObject
-from .tools_widgets import PatchbayToolsWidget, CanvasMenu
+from .tools_widgets import PatchbayToolsWidget
+from .canvas_menu import CanvasMenu
 from .options_dialog import CanvasOptionsDialog
 from .base_elements import (Connection, GroupPos, Port, Portgroup, Group,
                             JackPortFlag, PortgroupMem)
