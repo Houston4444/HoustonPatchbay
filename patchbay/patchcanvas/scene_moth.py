@@ -86,8 +86,8 @@ class PatchSceneMoth(QGraphicsScene):
     scene_group_moved = pyqtSignal(int, int, QPointF)
     plugin_selected = pyqtSignal(list)
 
-    def __init__(self, parent, view: QGraphicsView):
-        QGraphicsScene.__init__(self, parent)
+    def __init__(self, view: QGraphicsView):
+        QGraphicsScene.__init__(self)
 
         self._scale_area = False
         self._mouse_down_init = False
@@ -894,6 +894,7 @@ class PatchSceneMoth(QGraphicsScene):
 
             event.accept()
             sc_pos = event.screenPos()
+            print('lslllllll')
             canvas.callback(CallbackAct.BG_RIGHT_CLICK, sc_pos.x(), sc_pos.y())
             return
 

@@ -135,6 +135,11 @@ class ThemeManager:
         self.activate_watcher(os.access(self.current_theme_file, os.R_OK))
         return True
     
+    def set_fallback_theme(self):
+        del canvas.theme
+        canvas.theme = Theme()
+        canvas.scene.update_theme()
+
     def list_themes(self) -> list[ThemeDict]:
         themes_set = set()
         conf = configparser.ConfigParser()

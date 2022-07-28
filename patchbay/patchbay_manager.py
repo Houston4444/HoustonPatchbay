@@ -1,16 +1,23 @@
 
+import logging
+import os
 from pathlib import Path
 from threading import Thread
 from dataclasses import dataclass
 import sys
-import threading
-from typing import Callable, Optional, Union
+from typing import Callable, Union
+from unittest.mock import patch
 from PyQt5.QtGui import QCursor, QGuiApplication
-from PyQt5.QtWidgets import QMainWindow, QMessageBox, QWidget, QGraphicsView
-from PyQt5.QtCore import QTimer, QSettings, QThread
+from PyQt5.QtWidgets import QMainWindow, QMessageBox, QWidget
+from PyQt5.QtCore import QTimer, QSettings, QThread, QTranslator, QLocale
+
+from HoustonPatchbay.patchbay.patchcanvas.init_values import CanvasFeaturesObject, CanvasOptionsObject
 
 from .patchcanvas import patchcanvas, PortType
 from .patchcanvas.utils import get_new_group_positions
+from .patchcanvas.scene_view import PatchGraphicsView
+from .patchcanvas.init_values import CallbackAct
+
 from .patchbay_signals import SignalsObject
 from .tools_widgets import PatchbayToolsWidget, CanvasMenu
 from .options_dialog import CanvasOptionsDialog
@@ -33,6 +40,7 @@ JACK_METADATA_PRETTY_NAME = _JACK_METADATA_PREFIX + "pretty-name"
 JACK_METADATA_SIGNAL_TYPE = _JACK_METADATA_PREFIX + "signal-type"
 
 _translate = QGuiApplication.translate
+_logger = logging.getLogger(__name__)
 
 def enum_to_flag(enum_int: int) -> int:
     if enum_int <= 0:
@@ -146,9 +154,52 @@ class PatchbayManager:
         self.sg.out_thread_order.connect(self._delayed_orders_timer.start)
         self.sg.to_main_thread.connect(self._execute_in_main_thread)
 
-    def app_init(self, view: QGraphicsView, submodule_dir: Path,
-                 theme_path: tuple[Path]):
-        pass
+    def __canvas_callback__(self, action: CallbackAct, *args):
+        self.sg.callback_sig.emit(action, args)
+
+    def app_init(self,
+                 view: PatchGraphicsView,
+                 theme_paths: tuple[Path],
+                 callbacker: Callbacker = None,
+                 options: CanvasOptionsObject = None,
+                 features: CanvasFeaturesObject = None):        
+        if callbacker is not None:
+            if not isinstance(callbacker, Callbacker):
+                exception = TypeError("callbacker must be a Callbacker instance !")
+                raise exception
+            
+            self.callbacker = callbacker
+            self.sg.callback_sig.connect(self.callbacker.receive)
+        
+        if not theme_paths:
+            exception = BaseException("theme_paths can't be empty")
+            raise exception
+        
+        if options is None:
+            options = patchcanvas.CanvasOptionsObject()
+            if isinstance(self._settings, QSettings):
+                options.theme_name = self._settings.value(
+                    'Canvas/theme', 'Black Gold', type=str)
+                options.show_shadows = self._settings.value(
+                    'Canvas/box_shadows', False, type=bool)
+                options.auto_select_items = self._settings.value(
+                    'Canvas/auto_select_items', False, type=bool)
+                options.inline_displays = False
+                options.elastic = self._settings.value(
+                    'Canvas/elastic', True, type=bool)
+                options.prevent_overlap = self._settings.value(
+                    'Canvas/prevent_overlap', True, type=bool)
+                options.max_port_width = self._settings.value(
+                    'Canvas/max_port_width', 160, type=int)
+                options.semi_hide_opacity = self._settings.value(
+                    'Canvas/semi_hide_opacity', 0.17, type=float)
+        
+        if features is None:
+            features = CanvasFeaturesObject()
+
+        patchcanvas.set_options(options)
+        patchcanvas.set_features(features)
+        patchcanvas.init(view, self.__canvas_callback__, theme_paths)
 
     def _execute_in_main_thread(self, func: Callable, args: tuple, kwargs: dict):
         func(*args, **kwargs)

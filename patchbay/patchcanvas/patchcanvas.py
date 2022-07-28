@@ -23,8 +23,7 @@ from pathlib import Path
 from typing import Callable
 from PyQt5.QtCore import (pyqtSlot, QObject, QPoint, QPointF, QRectF,
                           QSettings, QTimer, pyqtSignal)
-from PyQt5.QtWidgets import QAction
-
+from PyQt5.QtWidgets import QAction, QMainWindow
 
 # local imports
 from .init_values import (
@@ -54,7 +53,7 @@ from .port_widget import PortWidget
 from .line_widget import LineWidget
 from .theme_manager import ThemeManager
 from .scene import PatchScene
-
+from .scene_view import PatchGraphicsView
 
 _logger = logging.getLogger(__name__)
 # used by patchbay_api decorator to get function_name
@@ -135,9 +134,11 @@ def _get_stored_canvas_position(key, fallback_pos):
         return fallback_pos
 
 
+
+
 @patchbay_api
-def init(app_name: str, scene: PatchScene, callback: Callable,
-         theme_paths: tuple[Path]):
+def init(view: PatchGraphicsView, callback: Callable,
+          theme_paths: tuple[Path]):
     if canvas.initiated:
         _logger.critical("init() - already initiated")
         return
@@ -147,23 +148,28 @@ def init(app_name: str, scene: PatchScene, callback: Callable,
         return
 
     canvas.callback = callback
-    canvas.scene = scene
-
+    canvas.scene = PatchScene(view)
+    view.setScene(canvas.scene)
+    
     canvas.last_z_value = 0
     canvas.initial_pos = QPointF(0, 0)
     canvas.size_rect = QRectF()
 
-    if not canvas.qobject:
+    if canvas.qobject is None:
         canvas.qobject = CanvasObject()
 
-    # TODO settings from falktx    
-    if not canvas.settings:
-        canvas.settings = QSettings("falkTX", app_name)
+    if canvas.settings is None:
+        # TODO : may remove this because it is not used
+        # while features.handle_positions is False. 
+        canvas.settings = QSettings()
 
     if canvas.theme_manager is None:
         canvas.theme_manager = ThemeManager(theme_paths)
         if not canvas.theme_manager.set_theme(options.theme_name):
-            canvas.theme_manager.set_theme('Black Gold')
+            _logger.warning(
+                f"theme '{options.theme_name}' has not been found,"
+                "use the very ugly fallback theme.")
+            canvas.theme_manager.set_fallback_theme()
 
         canvas.theme.load_cache()
 

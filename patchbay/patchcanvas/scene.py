@@ -55,8 +55,8 @@ class PatchScene(PatchSceneMoth):
     " This class part of the scene is for repulsive boxes option"
     " because the algorythm is not simple and takes a lot of lines."
     " See scene_abstract.py for others scene methods."
-    def __init__(self, parent, view: QGraphicsView):
-        PatchSceneMoth.__init__(self, parent, view)
+    def __init__(self, view: QGraphicsView):
+        PatchSceneMoth.__init__(self, view)
 
     def deplace_boxes_from_repulsers(self, repulser_boxes: list[BoxWidget],
                                      wanted_direction=Direction.NONE,

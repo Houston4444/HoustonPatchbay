@@ -199,7 +199,8 @@ class GroupObject:
     gui_visible: bool
     widgets: list
     if TYPE_CHECKING:
-        widgets: list[Optional(BoxWidget)]
+        # BoxWidget is optional, it can also be None
+        widgets: list[BoxWidget]
 
     def copy_no_widget(self) -> 'GroupObject':
         group_copy = GroupObject()
@@ -634,21 +635,4 @@ class Canvas:
 canvas = Canvas()
 
 options = CanvasOptionsObject()
-options.theme_name = ''
-options.auto_hide_groups = False
-options.auto_select_items = False
-options.show_shadows = False
-options.inline_displays = False
-options.elastic = True
-options.prevent_overlap = True
-options.borders_navigation = True
-options.max_port_width = 160
-
 features = CanvasFeaturesObject()
-features.group_info = False
-features.group_rename = False
-features.port_info = False
-features.port_rename = False
-features.handle_group_pos = False
-
-
