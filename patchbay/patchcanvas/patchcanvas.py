@@ -1134,6 +1134,21 @@ def handle_all_plugins_removed():
             group.widgets[1].remove_as_plugin()
 
 @patchbay_api
+def set_auto_select_items(yesno: bool):
+    options.auto_select_items = yesno
+    
+    for box in canvas.list_boxes():
+        box.setAcceptHoverEvents(yesno)
+    
+    for portgrp in canvas.list_portgroups():
+        if portgrp.widget is not None:
+            portgrp.widget.setAcceptHoverEvents(yesno)
+            
+    for port in canvas.list_ports():
+        if port.widget is not None:
+            port.widget.setAcceptHoverEvents(yesno)
+
+@patchbay_api
 def set_elastic(yesno: bool):
     canvas.scene.set_elastic(yesno)
 

@@ -25,6 +25,7 @@ class CanvasOptionsDialog(QDialog):
         gracious_names = True
         a2j_grouped = True
         use_shadows = False
+        auto_select_items = False
         elastic_canvas = True
         borders_navigation = True
         prevent_overlap = True
@@ -37,6 +38,8 @@ class CanvasOptionsDialog(QDialog):
                 'Canvas/group_a2j_ports', True, type=bool)
             use_shadows = settings.value(
                 'Canvas/box_shadows', False, type=bool)
+            auto_select_items = settings.value(
+                'Canvas/auto_select_items', False, type=bool)
             elastic_canvas = settings.value(
                 'Canvas/elastic', True, type=bool)
             borders_navigation = settings.value(
@@ -49,6 +52,7 @@ class CanvasOptionsDialog(QDialog):
         self.ui.checkBoxGracefulNames.setChecked(gracious_names)
         self.ui.checkBoxA2J.setChecked(a2j_grouped)
         self.ui.checkBoxShadows.setChecked(use_shadows)
+        self.ui.checkBoxAutoSelectItems.setChecked(auto_select_items)
         self.ui.checkBoxElastic.setChecked(elastic_canvas)
         self.ui.checkBoxBordersNavigation.setChecked(borders_navigation)
         self.ui.checkBoxPreventOverlap.setChecked(prevent_overlap)
@@ -65,6 +69,7 @@ class CanvasOptionsDialog(QDialog):
         self.gracious_names_checked = self.ui.checkBoxGracefulNames.stateChanged
         self.a2j_grouped_checked = self.ui.checkBoxA2J.stateChanged
         self.group_shadows_checked = self.ui.checkBoxShadows.stateChanged
+        self.auto_select_items_checked = self.ui.checkBoxAutoSelectItems.stateChanged
         self.elastic_checked = self.ui.checkBoxElastic.stateChanged
         self.borders_nav_checked = self.ui.checkBoxBordersNavigation.stateChanged
         self.prevent_overlap_checked = self.ui.checkBoxPreventOverlap.stateChanged
@@ -154,6 +159,9 @@ class CanvasOptionsDialog(QDialog):
     def get_group_shadows(self) -> bool:
         return self.ui.checkBoxShadows.isChecked()
 
+    def get_auto_select_items(self) -> bool:
+        return self.ui.checkBoxAutoSelectItems.isChecked()
+
     def get_elastic(self) -> bool:
         return self.ui.checkBoxElastic.isChecked()
 
@@ -179,6 +187,8 @@ class CanvasOptionsDialog(QDialog):
                                     self.get_a2j_grouped())
             self._settings.setValue('Canvas/box_shadows',
                                     self.get_group_shadows())
+            self._settings.setValue('Canvas/auto_select_items',
+                                    self.get_auto_select_items())
             self._settings.setValue('Canvas/elastic',
                                     self.get_elastic())
             self._settings.setValue('Canvas/borders_navigation',

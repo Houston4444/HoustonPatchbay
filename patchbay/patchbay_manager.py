@@ -1,4 +1,5 @@
 
+from pathlib import Path
 from threading import Thread
 from dataclasses import dataclass
 import sys
@@ -145,7 +146,8 @@ class PatchbayManager:
         self.sg.out_thread_order.connect(self._delayed_orders_timer.start)
         self.sg.to_main_thread.connect(self._execute_in_main_thread)
 
-    def app_init(self, view: QGraphicsView):
+    def app_init(self, view: QGraphicsView, submodule_dir: Path,
+                 theme_path: tuple[Path]):
         pass
 
     def _execute_in_main_thread(self, func: Callable, args: tuple, kwargs: dict):
@@ -172,6 +174,8 @@ class PatchbayManager:
             self.set_a2j_grouped)
         self.options_dialog.group_shadows_checked.connect(
             self.set_group_shadows)
+        self.options_dialog.auto_select_items_checked.connect(
+            self.set_auto_select_items)
         self.options_dialog.theme_changed.connect(
             self.change_theme)
         self.options_dialog.elastic_checked.connect(
@@ -411,6 +415,9 @@ class PatchbayManager:
     def set_group_shadows(self, yesno: int):
         patchcanvas.options.show_shadows = bool(yesno)
         self.remove_and_add_all()
+
+    def set_auto_select_items(self, yesno: int):
+        patchcanvas.set_auto_select_items(bool(yesno))
 
     def change_theme(self, theme_name: str):
         if not theme_name:
