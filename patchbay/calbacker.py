@@ -4,7 +4,7 @@ from PyQt5.QtCore import QPoint
 from . import patchcanvas
 from .patchcanvas import CallbackAct, PortMode, PortType, BoxLayoutMode
 from .base_elements import Port, GroupPosFlag, PortgroupMem
-from .tools_widgets import CanvasPortInfoDialog
+from .port_info_dialog import CanvasPortInfoDialog
 
 if TYPE_CHECKING:
     from .patchbay_manager import PatchbayManager
