@@ -12,5 +12,17 @@ class SignalsObject(QObject):
     full_screen_toggle_wanted = pyqtSignal()
     filters_bar_toggle_wanted = pyqtSignal()
 
+    # theses signals send int because they are related to checkboxes
+    # but the int value is 0 or 1
+    graceful_names_changed = pyqtSignal(int)
+    a2j_grouped_changed = pyqtSignal(int)
+    group_shadows_changed = pyqtSignal(int)
+    auto_select_items_changed = pyqtSignal(int)
+    elastic_changed = pyqtSignal(int)
+    borders_nav_changed = pyqtSignal(int)
+    prevent_overlap_changed = pyqtSignal(int)
+    
+    max_port_width_changed = pyqtSignal(int)
+
     def __init__(self):
         QObject.__init__(self)

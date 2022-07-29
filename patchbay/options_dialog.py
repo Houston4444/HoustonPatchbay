@@ -1,4 +1,5 @@
 
+from typing import TYPE_CHECKING
 from PyQt5.QtWidgets import QDialog, QApplication, QInputDialog, QMessageBox, QWidget
 from PyQt5.QtGui import QIcon, QPixmap
 from PyQt5.QtCore import Qt, pyqtSignal, QProcess, QSettings
@@ -8,6 +9,9 @@ from .patchcanvas import patchcanvas
 from .tools_widgets import is_dark_theme
 from .ui.canvas_options import Ui_CanvasOptions
 
+if TYPE_CHECKING:
+    from .patchbay_manager import PatchbayManager
+
 
 _translate = QApplication.translate
 
@@ -15,65 +19,57 @@ _translate = QApplication.translate
 class CanvasOptionsDialog(QDialog):
     theme_changed = pyqtSignal(str)
     
-    def __init__(self, parent: QWidget, settings: QSettings =None):
+    def __init__(self, parent: QWidget, manager: 'PatchbayManager',
+                 settings: QSettings =None):
         QDialog.__init__(self, parent)
         self.ui = Ui_CanvasOptions()
         self.ui.setupUi(self)
         
+        sg = manager.sg
         self._settings = settings
 
-        gracious_names = True
-        a2j_grouped = True
-        use_shadows = False
-        auto_select_items = False
-        elastic_canvas = True
-        borders_navigation = True
-        prevent_overlap = True
-        max_port_width = 170
-
         if settings is not None:
-            gracious_names = settings.value(
-                'Canvas/use_graceful_names', True, type=bool)
-            a2j_grouped = settings.value(
-                'Canvas/group_a2j_ports', True, type=bool)
-            use_shadows = settings.value(
-                'Canvas/box_shadows', False, type=bool)
-            auto_select_items = settings.value(
-                'Canvas/auto_select_items', False, type=bool)
-            elastic_canvas = settings.value(
-                'Canvas/elastic', True, type=bool)
-            borders_navigation = settings.value(
-                'Canvas/borders_navigation', True, type=bool)
-            prevent_overlap = settings.value(
-                'Canvas/prevent_overlap', True, type=bool)
-            max_port_width = settings.value(
-                'Canvas/max_port_width', 170, type=int)
-
-        self.ui.checkBoxGracefulNames.setChecked(gracious_names)
-        self.ui.checkBoxA2J.setChecked(a2j_grouped)
-        self.ui.checkBoxShadows.setChecked(use_shadows)
-        self.ui.checkBoxAutoSelectItems.setChecked(auto_select_items)
-        self.ui.checkBoxElastic.setChecked(elastic_canvas)
-        self.ui.checkBoxBordersNavigation.setChecked(borders_navigation)
-        self.ui.checkBoxPreventOverlap.setChecked(prevent_overlap)
-        self.ui.spinBoxMaxPortWidth.setValue(max_port_width)
+            self.ui.checkBoxGracefulNames.setChecked(
+                settings.value('Canvas/use_graceful_names', True, type=bool))
+            self.ui.checkBoxA2J.setChecked(
+                settings.value('Canvas/group_a2j_ports', True, type=bool))
+            self.ui.checkBoxShadows.setChecked(
+                settings.value('Canvas/box_shadows', False, type=bool))
+            self.ui.checkBoxAutoSelectItems.setChecked(
+                settings.value('Canvas/auto_select_items', False, type=bool))
+            self.ui.checkBoxElastic.setChecked(
+                settings.value('Canvas/elastic', True, type=bool))
+            self.ui.checkBoxBordersNavigation.setChecked(
+                settings.value('Canvas/borders_navigation', True, type=bool))
+            self.ui.checkBoxPreventOverlap.setChecked(
+                settings.value('Canvas/prevent_overlap', True, type=bool))
+            self.ui.spinBoxMaxPortWidth.setValue(
+                settings.value('Canvas/max_port_width', 170, type=int))
 
         self.ui.comboBoxTheme.activated.connect(self._theme_box_activated)
         self.ui.pushButtonEditTheme.clicked.connect(self._edit_theme)
         self.ui.pushButtonDuplicateTheme.clicked.connect(self._duplicate_theme)
         
         self._current_theme_ref = ''
-        self._theme_list = []
-
-        # all these variables are pyqtSignal 
-        self.gracious_names_checked = self.ui.checkBoxGracefulNames.stateChanged
-        self.a2j_grouped_checked = self.ui.checkBoxA2J.stateChanged
-        self.group_shadows_checked = self.ui.checkBoxShadows.stateChanged
-        self.auto_select_items_checked = self.ui.checkBoxAutoSelectItems.stateChanged
-        self.elastic_checked = self.ui.checkBoxElastic.stateChanged
-        self.borders_nav_checked = self.ui.checkBoxBordersNavigation.stateChanged
-        self.prevent_overlap_checked = self.ui.checkBoxPreventOverlap.stateChanged
-        self.max_port_width_changed = self.ui.spinBoxMaxPortWidth.valueChanged
+        self._theme_list = list[dict]()
+        
+        # connect checkboxs and spinbox signals to patchbays signals
+        self.ui.checkBoxGracefulNames.stateChanged.connect(
+            manager.sg.graceful_names_changed)
+        self.ui.checkBoxA2J.stateChanged.connect(
+            manager.sg.a2j_grouped_changed)
+        self.ui.checkBoxShadows.stateChanged.connect(
+            manager.sg.group_shadows_changed)
+        self.ui.checkBoxAutoSelectItems.stateChanged.connect(
+            manager.sg.auto_select_items_changed)
+        self.ui.checkBoxElastic.stateChanged.connect(
+            manager.sg.elastic_changed)
+        self.ui.checkBoxBordersNavigation.stateChanged.connect(
+            manager.sg.borders_nav_changed)
+        self.ui.checkBoxPreventOverlap.stateChanged.connect(
+            manager.sg.prevent_overlap_changed)
+        self.ui.spinBoxMaxPortWidth.valueChanged.connect(
+            manager.sg.max_port_width_changed)
 
     def _theme_box_activated(self):
         current_theme_ref_id = self.ui.comboBoxTheme.currentData(Qt.UserRole)

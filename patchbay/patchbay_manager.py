@@ -153,6 +153,14 @@ class PatchbayManager:
 
         self.sg.out_thread_order.connect(self._delayed_orders_timer.start)
         self.sg.to_main_thread.connect(self._execute_in_main_thread)
+        
+        self.sg.graceful_names_changed.connect(self.set_graceful_names)
+        self.sg.a2j_grouped_changed.connect(self.set_a2j_grouped)
+        self.sg.group_shadows_changed.connect(self.set_group_shadows)
+        self.sg.auto_select_items_changed.connect(self.set_auto_select_items)
+        self.sg.elastic_changed.connect(self.set_elastic_canvas)
+        self.sg.borders_nav_changed.connect(self.set_borders_navigation)
+        self.sg.prevent_overlap_changed.connect(self.set_prevent_overlap)
 
     def __canvas_callback__(self, action: CallbackAct, *args):
         self.sg.callback_sig.emit(action, args)
@@ -219,24 +227,24 @@ class PatchbayManager:
 
     def set_options_dialog(self, options_dialog: CanvasOptionsDialog):
         self.options_dialog = options_dialog
-        self.options_dialog.gracious_names_checked.connect(
-            self.set_graceful_names)
-        self.options_dialog.a2j_grouped_checked.connect(
-            self.set_a2j_grouped)
-        self.options_dialog.group_shadows_checked.connect(
-            self.set_group_shadows)
-        self.options_dialog.auto_select_items_checked.connect(
-            self.set_auto_select_items)
-        self.options_dialog.theme_changed.connect(
-            self.change_theme)
-        self.options_dialog.elastic_checked.connect(
-            self.set_elastic_canvas)
-        self.options_dialog.borders_nav_checked.connect(
-            self.set_borders_navigation)
-        self.options_dialog.prevent_overlap_checked.connect(
-            self.set_prevent_overlap)
-        self.options_dialog.max_port_width_changed.connect(
-            patchcanvas.set_max_port_width)
+        # self.options_dialog.gracious_names_checked.connect(
+        #     self.set_graceful_names)
+        # self.options_dialog.a2j_grouped_checked.connect(
+        #     self.set_a2j_grouped)
+        # self.options_dialog.group_shadows_checked.connect(
+        #     self.set_group_shadows)
+        # self.options_dialog.auto_select_items_checked.connect(
+        #     self.set_auto_select_items)
+        # self.options_dialog.theme_changed.connect(
+        #     self.change_theme)
+        # self.options_dialog.elastic_checked.connect(
+        #     self.set_elastic_canvas)
+        # self.options_dialog.borders_nav_checked.connect(
+        #     self.set_borders_navigation)
+        # self.options_dialog.prevent_overlap_checked.connect(
+        #     self.set_prevent_overlap)
+        # self.options_dialog.max_port_width_changed.connect(
+        #     patchcanvas.set_max_port_width)
 
     def show_options_dialog(self):
         if self.options_dialog is None:
