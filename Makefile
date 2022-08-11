@@ -42,7 +42,7 @@ patchbay: patchbay/ui/canvas_options.py \
 		patchbay/ui/patchbay_tools.py
 
 patchbay/ui/%.py: resources/ui/%.ui
-	$(PYUIC) $< -o $@
+	$(PYUIC) --import-from=.. $< -o $@
 		
 # ------------------------
 # # Translations Files
