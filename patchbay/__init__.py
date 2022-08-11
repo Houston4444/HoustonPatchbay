@@ -1,4 +1,3 @@
-from . import resources_rc
 from .patchbay_manager import PatchbayManager, patchcanvas
 from .base_elements import Group, Port, Portgroup
 from .calbacker import Callbacker

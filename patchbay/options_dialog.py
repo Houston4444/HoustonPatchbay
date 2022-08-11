@@ -146,30 +146,6 @@ class CanvasOptionsDialog(QDialog):
                     self.ui.comboBoxTheme.setCurrentIndex(i)
                     break
 
-    def get_gracious_names(self) -> bool:
-        return self.ui.checkBoxGracefulNames.isChecked()
-
-    def get_a2j_grouped(self) -> bool:
-        return self.ui.checkBoxA2J.isChecked()
-
-    def get_group_shadows(self) -> bool:
-        return self.ui.checkBoxShadows.isChecked()
-
-    def get_auto_select_items(self) -> bool:
-        return self.ui.checkBoxAutoSelectItems.isChecked()
-
-    def get_elastic(self) -> bool:
-        return self.ui.checkBoxElastic.isChecked()
-
-    def get_borders_nav(self) -> bool:
-        return self.ui.checkBoxBordersNavigation.isChecked()
-
-    def get_prevent_overlap(self) -> bool:
-        return self.ui.checkBoxPreventOverlap.isChecked()
-
-    def get_max_port_width(self) -> int:
-        return self.ui.spinBoxMaxPortWidth.value()
-
     def showEvent(self, event):
         self.set_theme_list(patchcanvas.list_themes())
         self.set_theme(patchcanvas.get_theme())
@@ -178,21 +154,21 @@ class CanvasOptionsDialog(QDialog):
     def closeEvent(self, event):
         if self._settings is not None:
             self._settings.setValue('Canvas/use_graceful_names',
-                                    self.get_gracious_names())
+                                    self.ui.checkBoxGracefulNames.isChecked())
             self._settings.setValue('Canvas/group_a2j_ports',
-                                    self.get_a2j_grouped())
+                                    self.ui.checkBoxA2J.isChecked())
             self._settings.setValue('Canvas/box_shadows',
-                                    self.get_group_shadows())
+                                    self.ui.checkBoxShadows.isChecked())
             self._settings.setValue('Canvas/auto_select_items',
-                                    self.get_auto_select_items())
+                                    self.ui.checkBoxAutoSelectItems.isChecked())
             self._settings.setValue('Canvas/elastic',
-                                    self.get_elastic())
+                                    self.ui.checkBoxElastic.isChecked())
             self._settings.setValue('Canvas/borders_navigation',
-                                    self.get_borders_nav())
+                                    self.ui.checkBoxBordersNavigation.isChecked())
             self._settings.setValue('Canvas/prevent_overlap',
-                                    self.get_prevent_overlap())
+                                    self.ui.checkBoxPreventOverlap.isChecked())
             self._settings.setValue('Canvas/max_port_width',
-                                    self.get_max_port_width())
+                                    self.ui.spinBoxMaxPortWidth.value())
             self._settings.setValue('Canvas/theme',
                                     self.ui.comboBoxTheme.currentData())
         QDialog.closeEvent(self, event)
