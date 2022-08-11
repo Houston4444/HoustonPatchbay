@@ -12,6 +12,8 @@ class SignalsObject(QObject):
     full_screen_toggle_wanted = pyqtSignal()
     filters_bar_toggle_wanted = pyqtSignal()
 
+    theme_changed = pyqtSignal(str)
+
     # theses signals send int because they are related to checkboxes
     # but the int value is 0 or 1
     graceful_names_changed = pyqtSignal(int)

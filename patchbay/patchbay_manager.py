@@ -154,6 +154,8 @@ class PatchbayManager:
         self.sg.out_thread_order.connect(self._delayed_orders_timer.start)
         self.sg.to_main_thread.connect(self._execute_in_main_thread)
         
+        self.sg.theme_changed.connect(self.change_theme)
+        
         self.sg.graceful_names_changed.connect(self.set_graceful_names)
         self.sg.a2j_grouped_changed.connect(self.set_a2j_grouped)
         self.sg.group_shadows_changed.connect(self.set_group_shadows)

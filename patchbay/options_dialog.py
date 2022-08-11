@@ -6,6 +6,7 @@ from PyQt5.QtCore import Qt, pyqtSignal, QProcess, QSettings
 
 
 from .patchcanvas import patchcanvas
+from .patchcanvas.theme_manager import ThemeDict
 from .tools_widgets import is_dark_theme
 from .ui.canvas_options import Ui_CanvasOptions
 
@@ -16,9 +17,7 @@ if TYPE_CHECKING:
 _translate = QApplication.translate
 
 
-class CanvasOptionsDialog(QDialog):
-    theme_changed = pyqtSignal(str)
-    
+class CanvasOptionsDialog(QDialog):    
     def __init__(self, parent: QWidget, manager: 'PatchbayManager',
                  settings: QSettings =None):
         QDialog.__init__(self, parent)
@@ -27,6 +26,7 @@ class CanvasOptionsDialog(QDialog):
         
         sg = manager.sg
         self._settings = settings
+        self._theme_changed = sg.theme_changed
 
         if settings is not None:
             self.ui.checkBoxGracefulNames.setChecked(
@@ -51,7 +51,7 @@ class CanvasOptionsDialog(QDialog):
         self.ui.pushButtonDuplicateTheme.clicked.connect(self._duplicate_theme)
         
         self._current_theme_ref = ''
-        self._theme_list = list[dict]()
+        self._theme_list = list[ThemeDict]()
         
         # connect checkboxs and spinbox signals to patchbays signals
         self.ui.checkBoxGracefulNames.stateChanged.connect(
@@ -81,7 +81,7 @@ class CanvasOptionsDialog(QDialog):
                 self.ui.pushButtonEditTheme.setEnabled(bool(theme_dict['editable']))
                 break
 
-        self.theme_changed.emit(current_theme_ref_id)
+        self._theme_changed.emit(current_theme_ref_id)
         
     def _duplicate_theme(self):        
         new_theme_name, ok = QInputDialog.getText(
@@ -115,7 +115,7 @@ class CanvasOptionsDialog(QDialog):
                 QProcess.startDetached('xdg-open', [theme_dict['file_path']])
                 break
 
-    def set_theme_list(self, theme_list: list[dict]):
+    def set_theme_list(self, theme_list: list[ThemeDict]):
         self.ui.comboBoxTheme.clear()
         del self._theme_list
         self._theme_list = theme_list
