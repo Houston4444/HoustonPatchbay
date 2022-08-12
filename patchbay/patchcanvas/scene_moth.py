@@ -894,7 +894,6 @@ class PatchSceneMoth(QGraphicsScene):
 
             event.accept()
             sc_pos = event.screenPos()
-            print('lslllllll')
             canvas.callback(CallbackAct.BG_RIGHT_CLICK, sc_pos.x(), sc_pos.y())
             return
 
