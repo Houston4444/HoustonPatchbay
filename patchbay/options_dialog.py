@@ -106,11 +106,8 @@ class CanvasOptionsDialog(QDialog):
         current_theme_ref_id = self.ui.comboBoxTheme.currentData(Qt.UserRole)
         
         for theme_dict in self._theme_list:
-            if theme_dict['ref_id'] == current_theme_ref_id:
-                if not theme_dict['editable']:
-                    patchcanvas.copy_theme_to_editable_path_and_load(
-                        theme_dict['file_path'])
-
+            if (theme_dict['ref_id'] == current_theme_ref_id
+                    and theme_dict['editable']):
                 # start the text editor process
                 QProcess.startDetached('xdg-open', [theme_dict['file_path']])
                 break
@@ -144,6 +141,13 @@ class CanvasOptionsDialog(QDialog):
                 ref_id = self.ui.comboBoxTheme.itemData(i, Qt.UserRole)
                 if ref_id == theme_ref:
                     self.ui.comboBoxTheme.setCurrentIndex(i)
+                    
+                    # update the edit button enable state
+                    for theme_dict in self._theme_list:
+                        if theme_dict['ref_id'] == ref_id:
+                            self.ui.pushButtonEditTheme.setEnabled(
+                                bool(theme_dict['editable']))
+                            break
                     break
 
     def showEvent(self, event):
