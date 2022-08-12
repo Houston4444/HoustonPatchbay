@@ -1,10 +1,11 @@
 
 import configparser
+from dataclasses import dataclass
 import logging
 import os
 import shutil
 from pathlib import Path
-from typing import TypedDict
+
 from PyQt5.QtCore import QTimer
 
 from .theme import Theme
@@ -13,7 +14,8 @@ from .init_values import canvas, CallbackAct
 _logger = logging.Logger(__name__)
 
 
-class ThemeDict(TypedDict):
+@dataclass
+class ThemeData:
     ref_id: str
     name: str
     editable: bool
@@ -140,10 +142,10 @@ class ThemeManager:
         canvas.theme = Theme()
         canvas.scene.update_theme()
 
-    def list_themes(self) -> list[ThemeDict]:
+    def list_themes(self) -> list[ThemeData]:
         themes_set = set()
         conf = configparser.ConfigParser()
-        themes_dicts = list[ThemeDict]()
+        theme_classes = list[ThemeData]()
         lang = os.getenv('LANG')
         lang_short = ''
         if len(lang) >= 2:
@@ -185,13 +187,10 @@ class ThemeManager:
                         name = conf_theme[name_lang_key]
                 
                 themes_set.add(file_path)
-                themes_dicts.append(
-                    {'ref_id': file_path.name,
-                     'name': name,
-                     'editable': editable,
-                     'file_path': str(full_path)})
+                theme_classes.append(
+                    ThemeData(file_path.name, name, editable, str(full_path)))
 
-        return themes_dicts
+        return theme_classes
     
     def copy_and_load_current_theme(self, new_name: str) -> int:
         ''' returns 0 if ok, 1 if no editable dir exists, 2 if copy fails '''

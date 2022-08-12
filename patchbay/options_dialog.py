@@ -6,7 +6,7 @@ from PyQt5.QtCore import Qt, pyqtSignal, QProcess, QSettings
 
 
 from .patchcanvas import patchcanvas
-from .patchcanvas.theme_manager import ThemeDict
+from .patchcanvas.theme_manager import ThemeData
 from .tools_widgets import is_dark_theme
 from .ui.canvas_options import Ui_CanvasOptions
 
@@ -51,7 +51,7 @@ class CanvasOptionsDialog(QDialog):
         self.ui.pushButtonDuplicateTheme.clicked.connect(self._duplicate_theme)
         
         self._current_theme_ref = ''
-        self._theme_list = list[ThemeDict]()
+        self._theme_list = list[ThemeData]()
         
         # connect checkboxs and spinbox signals to patchbays signals
         self.ui.checkBoxGracefulNames.stateChanged.connect(
@@ -76,9 +76,9 @@ class CanvasOptionsDialog(QDialog):
         if current_theme_ref_id == self._current_theme_ref:
             return
         
-        for theme_dict in self._theme_list:
-            if theme_dict['ref_id'] == current_theme_ref_id:
-                self.ui.pushButtonEditTheme.setEnabled(bool(theme_dict['editable']))
+        for theme_data in self._theme_list:
+            if theme_data.ref_id == current_theme_ref_id:
+                self.ui.pushButtonEditTheme.setEnabled(theme_data.editable)
                 break
 
         self._theme_changed.emit(current_theme_ref_id)
@@ -105,14 +105,14 @@ class CanvasOptionsDialog(QDialog):
     def _edit_theme(self):
         current_theme_ref_id = self.ui.comboBoxTheme.currentData(Qt.UserRole)
         
-        for theme_dict in self._theme_list:
-            if (theme_dict['ref_id'] == current_theme_ref_id
-                    and theme_dict['editable']):
+        for theme_data in self._theme_list:
+            if (theme_data.ref_id == current_theme_ref_id
+                    and theme_data.editable):
                 # start the text editor process
-                QProcess.startDetached('xdg-open', [theme_dict['file_path']])
+                QProcess.startDetached('xdg-open', [theme_data.file_path])
                 break
 
-    def set_theme_list(self, theme_list: list[ThemeDict]):
+    def set_theme_list(self, theme_list: list[ThemeData]):
         self.ui.comboBoxTheme.clear()
         del self._theme_list
         self._theme_list = theme_list
@@ -120,12 +120,12 @@ class CanvasOptionsDialog(QDialog):
         dark = '-dark' if is_dark_theme(self) else ''
         user_icon = QIcon(QPixmap(f':scalable/breeze{dark}/im-user'))
 
-        for theme_dict in theme_list:
-            if theme_dict['editable']:
+        for theme_data in theme_list:
+            if theme_data.editable:
                 self.ui.comboBoxTheme.addItem(
-                    user_icon, theme_dict['name'], theme_dict['ref_id'])
+                    user_icon, theme_data.name, theme_data.ref_id)
             else:
-                self.ui.comboBoxTheme.addItem(theme_dict['name'], theme_dict['ref_id'])
+                self.ui.comboBoxTheme.addItem(theme_data.name, theme_data.ref_id)
 
     def set_theme(self, theme_ref: str):
         for i in range(self.ui.comboBoxTheme.count()):
@@ -143,10 +143,10 @@ class CanvasOptionsDialog(QDialog):
                     self.ui.comboBoxTheme.setCurrentIndex(i)
                     
                     # update the edit button enable state
-                    for theme_dict in self._theme_list:
-                        if theme_dict['ref_id'] == ref_id:
+                    for theme_data in self._theme_list:
+                        if theme_data.ref_id == ref_id:
                             self.ui.pushButtonEditTheme.setEnabled(
-                                bool(theme_dict['editable']))
+                                theme_data.editable)
                             break
                     break
 
