@@ -141,7 +141,9 @@ class FilterFrame(QFrame):
         self.ui.lineEditGroupFilter.setText('')
         self._n_selected = 0
         self._filter_groups()
+        print('slsk', self._settings)
         if self._settings is not None:
+            print('youppl',self.ui.spinBoxOpacity.value() / 100 )
             self._settings.setValue(
                 'Canvas/semi_hide_opacity',
                 float(self.ui.spinBoxOpacity.value() / 100))

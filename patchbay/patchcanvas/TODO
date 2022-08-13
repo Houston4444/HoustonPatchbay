@@ -20,10 +20,10 @@ bug positionnement boîte midi
 style des CV ports dans connect menu
 
 # changer _is_alternate en subtype
-decouper patchbay_manager
-voire plantage du démon avec ray_control
+<!-- decouper patchbay_manager
+voire plantage du démon avec ray_control -->
 
-voir polices embedded
+<!-- voir polices embedded -->
 suppr box_footer ?
 
 test check pour theme (si possible)
@@ -31,5 +31,4 @@ revoir boîtes sélectionnées (tout thèmes)
 revoir ombres tout thèmes
 opacity dans filter frame (settings)
 
-Split translation
-Manuel introuvable
+<!-- Split translation -->
