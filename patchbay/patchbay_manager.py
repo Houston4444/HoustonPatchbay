@@ -5,11 +5,12 @@ from pathlib import Path
 from threading import Thread
 from dataclasses import dataclass
 import sys
-from typing import Callable, Union
+from typing import TYPE_CHECKING, Callable, Union
 from unittest.mock import patch
 from PyQt5.QtGui import QCursor, QGuiApplication
 from PyQt5.QtWidgets import QMainWindow, QMessageBox, QWidget
 from PyQt5.QtCore import QTimer, QSettings, QThread, QTranslator, QLocale
+
 
 from .patchcanvas import patchcanvas, PortType
 from .patchcanvas.utils import get_new_group_positions
@@ -25,6 +26,8 @@ from .base_elements import (Connection, GroupPos, Port, Portgroup, Group,
                             JackPortFlag, PortgroupMem)
 from .calbacker import Callbacker
 
+if TYPE_CHECKING:
+    from .filter_frame import FilterFrame
 
 # Meta data (taken from pyjacklib)
 _JACK_METADATA_PREFIX = "http://jackaudio.org/metadata/"
@@ -226,6 +229,10 @@ class PatchbayManager:
 
     def set_canvas_menu(self, canvas_menu: CanvasMenu):
         self.canvas_menu = canvas_menu
+
+    def set_filter_frame(self, filter_frame: 'FilterFrame'):
+        self.filter_frame = filter_frame
+        self.filter_frame.set_settings(self._settings)
 
     def set_options_dialog(self, options_dialog: CanvasOptionsDialog):
         self.options_dialog = options_dialog
