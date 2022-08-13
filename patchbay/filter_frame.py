@@ -1,11 +1,14 @@
 
+from typing import TYPE_CHECKING
 from PyQt5.QtWidgets import QFrame
 from PyQt5.QtGui import QKeyEvent
 from PyQt5.QtCore import Qt, QSettings
 
 from .patchcanvas import PortType
-from .patchbay_manager import PatchbayManager
 from .ui.filter_frame import Ui_Frame
+
+if TYPE_CHECKING:
+    from .patchbay_manager import PatchbayManager
 
 
 class FilterFrame(QFrame):
@@ -154,7 +157,7 @@ class FilterFrame(QFrame):
         if event.key() == Qt.Key_Escape:
             self.hide()
             
-    def set_patchbay_manager(self, patchbay_manager: PatchbayManager):
+    def set_patchbay_manager(self, patchbay_manager: 'PatchbayManager'):
         self.patchbay_manager = patchbay_manager
         self.patchbay_manager.sg.port_types_view_changed.connect(
             self._port_types_view_changed)

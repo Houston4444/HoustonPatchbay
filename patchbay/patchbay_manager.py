@@ -22,12 +22,11 @@ from .patchbay_signals import SignalsObject
 from .tools_widgets import PatchbayToolsWidget
 from .canvas_menu import CanvasMenu
 from .options_dialog import CanvasOptionsDialog
+from .filter_frame import FilterFrame
 from .base_elements import (Connection, GroupPos, Port, Portgroup, Group,
                             JackPortFlag, PortgroupMem)
 from .calbacker import Callbacker
 
-if TYPE_CHECKING:
-    from .filter_frame import FilterFrame
 
 # Meta data (taken from pyjacklib)
 _JACK_METADATA_PREFIX = "http://jackaudio.org/metadata/"
@@ -130,6 +129,7 @@ class PatchbayManager:
         self.main_win: QMainWindow = None
         self._tools_widget: PatchbayToolsWidget = None
         self.options_dialog: CanvasOptionsDialog = None
+        self.filter_frame: FilterFrame = None
 
         self.sg = SignalsObject()
 
@@ -230,7 +230,7 @@ class PatchbayManager:
     def set_canvas_menu(self, canvas_menu: CanvasMenu):
         self.canvas_menu = canvas_menu
 
-    def set_filter_frame(self, filter_frame: 'FilterFrame'):
+    def set_filter_frame(self, filter_frame: FilterFrame):
         self.filter_frame = filter_frame
         self.filter_frame.set_settings(self._settings)
 
