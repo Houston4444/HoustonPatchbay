@@ -138,7 +138,7 @@ def _get_stored_canvas_position(key, fallback_pos):
 
 @patchbay_api
 def init(view: PatchGraphicsView, callback: Callable,
-          theme_paths: tuple[Path]):
+          theme_paths: tuple[Path], fallback_theme: str):
     if canvas.initiated:
         _logger.critical("init() - already initiated")
         return
@@ -166,10 +166,15 @@ def init(view: PatchGraphicsView, callback: Callable,
     if canvas.theme_manager is None:
         canvas.theme_manager = ThemeManager(theme_paths)
         if not canvas.theme_manager.set_theme(options.theme_name):
-            _logger.warning(
+            if canvas.theme_manager.set_theme(fallback_theme):
+                _logger.warning(
+                f"theme {options.theme_name}' has not been found,"
+                f"use '{fallback_theme}' instead.")
+            else:
+                _logger.warning(
                 f"theme '{options.theme_name}' has not been found,"
                 "use the very ugly fallback theme.")
-            canvas.theme_manager.set_fallback_theme()
+                canvas.theme_manager.set_fallback_theme()
 
         canvas.theme.load_cache()
 

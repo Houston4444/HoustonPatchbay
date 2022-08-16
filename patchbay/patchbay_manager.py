@@ -1,22 +1,19 @@
 
 import logging
-import os
 from pathlib import Path
-from threading import Thread
 from dataclasses import dataclass
 import sys
 from typing import TYPE_CHECKING, Callable, Union
-from unittest.mock import patch
 from PyQt5.QtGui import QCursor, QGuiApplication
 from PyQt5.QtWidgets import QMainWindow, QMessageBox, QWidget
 from PyQt5.QtCore import QTimer, QSettings, QThread, QTranslator, QLocale
-
 
 from .patchcanvas import patchcanvas, PortType
 from .patchcanvas.utils import get_new_group_positions
 from .patchcanvas.scene_view import PatchGraphicsView
 from .patchcanvas.init_values import (
     CallbackAct, CanvasFeaturesObject, CanvasOptionsObject)
+from .patchcanvas.theme_manager import ThemeManager
 
 from .patchbay_signals import SignalsObject
 from .tools_widgets import PatchbayToolsWidget
@@ -172,10 +169,11 @@ class PatchbayManager:
 
     def app_init(self,
                  view: PatchGraphicsView,
-                 theme_paths: tuple[Path],
+                 source_theme_path: Path = None,
                  callbacker: Callbacker = None,
                  options: CanvasOptionsObject = None,
-                 features: CanvasFeaturesObject = None):        
+                 features: CanvasFeaturesObject = None,
+                 default_theme_name='Black Gold'):
         if callbacker is not None:
             if not isinstance(callbacker, Callbacker):
                 exception = TypeError("callbacker must be a Callbacker instance !")
@@ -184,15 +182,13 @@ class PatchbayManager:
             self.callbacker = callbacker
             self.sg.callback_sig.connect(self.callbacker.receive)
         
-        if not theme_paths:
-            exception = BaseException("theme_paths can't be empty")
-            raise exception
+        theme_paths = ThemeManager.default_theme_paths(source_theme_path)
         
         if options is None:
             options = patchcanvas.CanvasOptionsObject()
             if isinstance(self._settings, QSettings):
                 options.theme_name = self._settings.value(
-                    'Canvas/theme', 'Black Gold', type=str)
+                    'Canvas/theme', default_theme_name, type=str)
                 options.show_shadows = self._settings.value(
                     'Canvas/box_shadows', False, type=bool)
                 options.auto_select_items = self._settings.value(
@@ -212,7 +208,7 @@ class PatchbayManager:
 
         patchcanvas.set_options(options)
         patchcanvas.set_features(features)
-        patchcanvas.init(view, self.__canvas_callback__, theme_paths)
+        patchcanvas.init(view, self.__canvas_callback__, theme_paths, default_theme_name)
 
     def _execute_in_main_thread(self, func: Callable, args: tuple, kwargs: dict):
         func(*args, **kwargs)
