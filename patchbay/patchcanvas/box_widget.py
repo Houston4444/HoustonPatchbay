@@ -1,5 +1,6 @@
 
 from enum import IntEnum
+from math import ceil
 from typing import Iterator
 from PyQt5.QtCore import QRectF
 from PyQt5.QtGui import QPainterPath
@@ -1145,6 +1146,7 @@ class BoxWidget(BoxWidgetMoth):
 
         # round self._height to the upper value
         self._height = float(int(self._height + 0.99))
+        self._height = ceil(self._height)
 
         ports_y_segments_dict = self._set_ports_y_positions(
             align_port_types, self._ports_y_start, one_column)
@@ -1175,4 +1177,9 @@ class BoxWidget(BoxWidgetMoth):
 
         self.update_positions_pending = False
         self.update()
-            
+        
+        # I do not understand why without this
+        # sometimes portgroups aren't redrawn after port renaming
+        for portgrp in self._portgrp_list:
+            if portgrp.widget is not None:
+                portgrp.widget.update()
