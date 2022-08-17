@@ -163,6 +163,7 @@ class PatchbayManager:
         self.sg.elastic_changed.connect(self.set_elastic_canvas)
         self.sg.borders_nav_changed.connect(self.set_borders_navigation)
         self.sg.prevent_overlap_changed.connect(self.set_prevent_overlap)
+        self.sg.max_port_width_changed.connect(patchcanvas.set_max_port_width)
 
     def __canvas_callback__(self, action: CallbackAct, *args):
         self.sg.callback_sig.emit(action, args)
