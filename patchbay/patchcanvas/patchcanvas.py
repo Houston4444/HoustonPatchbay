@@ -178,6 +178,7 @@ def init(view: PatchGraphicsView, callback: Callable,
 
         canvas.theme.load_cache()
 
+    canvas.scene.zoom_reset()
     canvas.initiated = True
 
 @patchbay_api
@@ -1179,6 +1180,10 @@ def set_max_port_width(width: int):
     redraw_all_groups()
 
 @patchbay_api
+def set_default_zoom(default_zoom: int):
+    options.default_zoom = default_zoom
+
+@patchbay_api
 def semi_hide_group(group_id: int, yesno: bool):
     group = canvas.get_group(group_id)
     if group is None:
@@ -1270,6 +1275,20 @@ def set_optional_gui_state(group_id: int, visible: bool):
     
     if not canvas.loading_items:
         canvas.scene.update()
+
+@patchbay_api
+def zoom_reset():
+    if canvas.scene is None:
+        return
+
+    canvas.scene.zoom_reset()
+    
+@patchbay_api
+def zoom_fit():
+    if canvas.scene is None:
+        return
+    
+    canvas.scene.zoom_fit()
 
 @patchbay_api
 def save_cache():

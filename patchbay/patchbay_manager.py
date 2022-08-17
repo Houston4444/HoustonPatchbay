@@ -116,11 +116,8 @@ class PatchbayManager:
     portgroups_memory = list[PortgroupMem]()
     delayed_orders = list[DelayedOrder]()
 
-    def __init__(self, settings=None):
+    def __init__(self, settings: QSettings):
         self.callbacker = Callbacker(self)
-        
-        if settings is not None:
-            assert isinstance(settings, QSettings)
         self._settings = settings
 
         self.main_win: QMainWindow = None
@@ -135,6 +132,7 @@ class PatchbayManager:
         self._next_connection_id = 0
         self._next_portgroup_id = 1
 
+        self.default_zoom = settings.value('Canvas/default_zoom', 100, type=int)
         self.set_graceful_names(settings.value(
             'Canvas/use_graceful_names', True, type=bool))
         self.group_a2j_hw = settings.value(
@@ -164,6 +162,7 @@ class PatchbayManager:
         self.sg.borders_nav_changed.connect(self.set_borders_navigation)
         self.sg.prevent_overlap_changed.connect(self.set_prevent_overlap)
         self.sg.max_port_width_changed.connect(patchcanvas.set_max_port_width)
+        self.sg.default_zoom_changed.connect(patchcanvas.set_default_zoom)
 
     def __canvas_callback__(self, action: CallbackAct, *args):
         self.sg.callback_sig.emit(action, args)
@@ -203,6 +202,8 @@ class PatchbayManager:
                     'Canvas/max_port_width', 160, type=int)
                 options.semi_hide_opacity = self._settings.value(
                     'Canvas/semi_hide_opacity', 0.17, type=float)
+                options.default_zoom = self._settings.value(
+                    'Canvas/default_zoom', 200, type=int)
         
         if features is None:
             features = CanvasFeaturesObject()

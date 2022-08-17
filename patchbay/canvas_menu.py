@@ -96,7 +96,7 @@ class CanvasMenu(QMenu):
         self.zoom_out.triggered.connect(patchcanvas.canvas.scene.zoom_out)
 
         self.zoom_orig = self.zoom_menu.addAction(
-            _translate('patchbay', 'Zoom 100%'))
+            _translate('patchbay', 'Default Zoom'))
         self.zoom_orig.setIcon(QIcon.fromTheme('zoom'))
         self.zoom_orig.setShortcut('Ctrl+1')
         self.zoom_orig.triggered.connect(patchcanvas.canvas.scene.zoom_reset)
@@ -104,7 +104,7 @@ class CanvasMenu(QMenu):
         self.addMenu(self.zoom_menu)
 
         self.action_refresh = self.addAction(
-            _translate('patchbay', "Refresh the canvas"))
+            _translate('patchbay', "Refresh the canvas\tCtrl+R"))
         self.action_refresh.setIcon(QIcon.fromTheme('view-refresh'))
         self.action_refresh.triggered.connect(patchbay_manager.refresh)
 

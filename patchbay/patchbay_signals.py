@@ -25,6 +25,7 @@ class SignalsObject(QObject):
     prevent_overlap_changed = pyqtSignal(int)
     
     max_port_width_changed = pyqtSignal(int)
+    default_zoom_changed = pyqtSignal(int)
 
     def __init__(self):
         QObject.__init__(self)

@@ -531,6 +531,10 @@ class PatchSceneMoth(QGraphicsScene):
     def zoom_ratio(self, percent: float):
         ratio = percent / 100.0
         transform = self._view.transform()
+        
+        if ratio == transform.m11():
+            return
+        
         transform.reset()
         transform.scale(ratio, ratio)
         self._view.setTransform(transform)
@@ -538,6 +542,8 @@ class PatchSceneMoth(QGraphicsScene):
         for box in canvas.list_boxes():
             if box.top_icon:
                 box.top_icon.update_zoom(ratio)
+        
+        self.scale_changed.emit(transform.m11())
 
     def zoom_fit(self):
         if self._view is None:
@@ -588,8 +594,13 @@ class PatchSceneMoth(QGraphicsScene):
         self.scale_changed.emit(transform.m11())
 
     def zoom_reset(self):
-        self._view.resetTransform()
-        self.scale_changed.emit(1.0)
+        transform = self._view.transform()
+        transform.reset()
+        
+        default_scale = options.default_zoom / 100
+        transform.scale(default_scale, default_scale)
+        self._view.setTransform(transform)
+        self.scale_changed.emit(default_scale)
 
     @pyqtSlot()
     def _slot_selection_changed(self):

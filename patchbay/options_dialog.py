@@ -45,6 +45,8 @@ class CanvasOptionsDialog(QDialog):
                 settings.value('Canvas/prevent_overlap', True, type=bool))
             self.ui.spinBoxMaxPortWidth.setValue(
                 settings.value('Canvas/max_port_width', 170, type=int))
+            self.ui.spinBoxDefaultZoom.setValue(
+                settings.value('Canvas/default_zoom', 100, type=int))
 
         self.ui.comboBoxTheme.activated.connect(self._theme_box_activated)
         self.ui.pushButtonEditTheme.clicked.connect(self._edit_theme)
@@ -70,6 +72,12 @@ class CanvasOptionsDialog(QDialog):
             manager.sg.prevent_overlap_changed)
         self.ui.spinBoxMaxPortWidth.valueChanged.connect(
             manager.sg.max_port_width_changed)
+        self.ui.spinBoxDefaultZoom.valueChanged.connect(
+            self._change_default_zoom)
+
+    def _change_default_zoom(self, value: int):
+        patchcanvas.set_default_zoom(value)
+        patchcanvas.zoom_reset()
 
     def _theme_box_activated(self):
         current_theme_ref_id = self.ui.comboBoxTheme.currentData(Qt.UserRole)
@@ -173,6 +181,8 @@ class CanvasOptionsDialog(QDialog):
                                     self.ui.checkBoxPreventOverlap.isChecked())
             self._settings.setValue('Canvas/max_port_width',
                                     self.ui.spinBoxMaxPortWidth.value())
+            self._settings.setValue('Canvas/default_zoom',
+                                    self.ui.spinBoxDefaultZoom.value())
             self._settings.setValue('Canvas/theme',
                                     self.ui.comboBoxTheme.currentData())
         QDialog.closeEvent(self, event)

@@ -36,6 +36,7 @@ class ProgressBarDsp(QProgressBar):
 
 class ZoomSlider(QSlider):
     zoom_fit_asked = pyqtSignal()
+    default_zoom_asked = pyqtSignal()
 
     def __init__(self, parent):
         QSlider.__init__(self, parent)
@@ -72,8 +73,7 @@ class ZoomSlider(QSlider):
         self.zoom_fit_asked.emit()
 
     def contextMenuEvent(self, event):
-        self.setValue(500)
-        self._show_tool_tip()
+        self.default_zoom_asked.emit()
 
     def wheelEvent(self, event: QWheelEvent):
         direction = 1 if event.angleDelta().y() > 0 else -1
@@ -82,7 +82,6 @@ class ZoomSlider(QSlider):
             self.set_percent(self.zoom_percent() + direction)
         else:
             self.set_percent(self.zoom_percent() + direction * 5)
-            #QSlider.wheelEvent(self, event)
         self._show_tool_tip()
 
     def mouseMoveEvent(self, event):

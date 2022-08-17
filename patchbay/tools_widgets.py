@@ -35,6 +35,8 @@ class PatchbayToolsWidget(QWidget):
         self._buffer_change_from_osc = False
 
         self.ui.sliderZoom.valueChanged.connect(self.set_zoom)
+        self.ui.sliderZoom.default_zoom_asked.connect(patchcanvas.zoom_reset)
+        self.ui.sliderZoom.zoom_fit_asked.connect(patchcanvas.zoom_fit)
 
         self.ui.pushButtonXruns.clicked.connect(
             self.reset_xruns)
@@ -50,7 +52,7 @@ class PatchbayToolsWidget(QWidget):
         self.current_buffer_size = self.ui.comboBoxBuffer.currentData()
         self.xruns_counter = 0
 
-    def zoom_changed_from_canvas(self, ratio):
+    def _zoom_changed_from_canvas(self, ratio):
         self.ui.sliderZoom.set_percent(ratio * 100)
 
     def set_zoom(self, value):
@@ -146,9 +148,8 @@ class PatchbayToolsWidget(QWidget):
         self.ui.labelJackNotStarted.setVisible(not yesno)
         if yesno:
             patchcanvas.canvas.scene.scale_changed.connect(
-                self.zoom_changed_from_canvas)
-            self.ui.sliderZoom.zoom_fit_asked.connect(
-                patchcanvas.canvas.scene.zoom_fit)
+                self._zoom_changed_from_canvas)
+            self.ui.sliderZoom.set_percent(patchcanvas.options.default_zoom)
 
 
 
