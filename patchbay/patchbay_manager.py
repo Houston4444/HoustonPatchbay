@@ -203,7 +203,7 @@ class PatchbayManager:
                 options.semi_hide_opacity = self._settings.value(
                     'Canvas/semi_hide_opacity', 0.17, type=float)
                 options.default_zoom = self._settings.value(
-                    'Canvas/default_zoom', 200, type=int)
+                    'Canvas/default_zoom', 100, type=int)
         
         if features is None:
             features = CanvasFeaturesObject()
