@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 import logging
 import os
+from pathlib import Path
 import time
 import pickle
 from typing import TYPE_CHECKING, Union
@@ -9,6 +10,7 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtGui import (QColor, QPen, QFont, QBrush, QFontMetricsF,
                          QImage, QFontDatabase)
 
+import xdg
 
 _logger = logging.getLogger(__name__)
 
@@ -203,6 +205,7 @@ class StyleAttributer:
                         os.path.dirname(Theme.theme_file_path),
                         'fonts', f"{value}.{ext}")
                     if os.path.isfile(embedded_str):
+                        print('emmbeddded found', embedded_str)
                         QFontDatabase.addApplicationFont(embedded_str)
                         break
                 
@@ -596,7 +599,7 @@ class Theme(StyleAttributer):
     
     @classmethod
     def load_cache(cls):
-        cache_file = "%s/.cache/RaySession/patchbay_titles" % os.environ['HOME']
+        cache_file = xdg.xdg_cache_home() / 'HoustonPatchbay' / 'patchbay_titles'
         if not os.path.isfile(cache_file):
             return
 
@@ -611,8 +614,8 @@ class Theme(StyleAttributer):
             except:
                 _logger.warning(f"failed to load cache {cache_file}")
                 return
-            
-        font_cache_file = "%s/.cache/RaySession/patchbay_fonts" % os.environ['HOME']
+        
+        font_cache_file = xdg.xdg_cache_home() / 'HoustonPatchbay' / 'patchbay_fonts'
         if not os.path.isfile(font_cache_file):
             return
 
@@ -627,17 +630,17 @@ class Theme(StyleAttributer):
     
     @classmethod
     def save_cache(cls):
-        cache_dir = "%s/.cache/RaySession" % os.environ['HOME']
-        if not os.path.isdir(cache_dir):
+        cache_dir = xdg.xdg_cache_home() / 'HoustonPatchbay'
+        if not cache_dir.is_dir():
             try:
                 os.makedirs(cache_dir)
             except:
                 return
 
-        with open("%s/patchbay_titles" % cache_dir, 'wb') as f:
+        with open(cache_dir / 'patchbay_titles', 'wb') as f:
             pickle.dump(cls.title_templates_cache, f)
         
-        with open("%s/patchbay_fonts" % cache_dir, 'wb') as f:
+        with open(cache_dir / 'patchbay_fonts', 'wb') as f:
             pickle.dump(cls.font_metrics_cache, f)
     
     def read_theme(self, theme_dict: dict, theme_file_path: str):
@@ -649,6 +652,16 @@ class Theme(StyleAttributer):
         Theme.set_file_path(theme_file_path)
         self.icon.read_theme(theme_file_path)
 
+        # install all fonts from theme 'fonts' directory
+        fonts_dir = Path(theme_file_path).parent / 'fonts'
+        for font_path in fonts_dir.iterdir():
+            if str(font_path).endswith(('.otf', '.ttf')):
+                try:
+                    QFontDatabase.addApplicationFont(str(font_path))
+                except:
+                    _logger.warning(
+                        f"failed to install font from file {str(font_path)}")
+        
         self.aliases.clear()
         
         # first read if there are any aliases
