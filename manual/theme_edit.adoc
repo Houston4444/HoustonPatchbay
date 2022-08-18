@@ -106,8 +106,8 @@ background-image=background.jpg
 
 means that the background image of the object will be the image file `THEMES_PATH/theme_name/images/background.jpg`.
 
-IMPORTANT: a *background-image* is visible ONLY if *background* or *background2* of the same section are colors with transparency. +
-First, image is drawn, then background color or gradient is drawn above. This allows to adjust the color of image applying a color with transparency above, mainly for readability and for quick corrections.
+IMPORTANT: a *background-image* is visible ONLY if *background* of the same section is a color with transparency. +
+First, image is drawn, then background color is drawn above. This allows to adjust the color of image applying a color with transparency above, mainly for readability and for quick corrections.
 
 
 [#font]
@@ -139,12 +139,12 @@ Available parameters are:
 * *hardware-rack-width* : <<number>>, size of the flycase decoration of hardware boxes
 * *monitor_color*: <<color>>, color of the word _Monitor_ in monitor boxes
 * *background* : <<color>>, color of the scene background
-* *background-image* : string, name of the image file to use as background, this file must be in the __images__ folder of the theme folder   
+* *background-image* : string, name of the image file to use as background, this file must be in the __images__ folder of the theme folder
 
 
 == specific blocks
 
-We call specific blocks all blocks defining theme except *[body]* and *[aliases]*.
+We call here specific blocks all blocks defining theme except *[body]* and *[aliases]*.
 
 In each specific block, you can define the following settings:
 
@@ -353,7 +353,7 @@ portgroup.cv
 portgroup.cv.selected
 ```
 
-That said, in RaySession, portgroups exists only for regular audio ports (for the moment, but are midi or CV portgroups really needed ??).
+That said, in Patchance or RaySession, portgroups exists only for regular audio ports (for the moment, but are midi or CV portgroups really needed ??).
 
 === [line]
 a line represents a connection between two ports.
