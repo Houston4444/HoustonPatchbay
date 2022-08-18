@@ -103,6 +103,8 @@ class BoxWidget(BoxWidgetMoth):
         last_out_type_alter = (PortType.NULL, PortSubType.REGULAR)
         last_port_mode = PortMode.NULL
         
+        print('sskskle', self._group_name, port_in_offset, port_out_offset)
+        
         for port_type, port_subtype in list_port_types_and_subs():                
             for port in self._port_list:
                 if (port.port_type is not port_type
