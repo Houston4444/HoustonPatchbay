@@ -654,13 +654,14 @@ class Theme(StyleAttributer):
 
         # install all fonts from theme 'fonts' directory
         fonts_dir = Path(theme_file_path).parent / 'fonts'
-        for font_path in fonts_dir.iterdir():
-            if str(font_path).endswith(('.otf', '.ttf')):
-                try:
-                    QFontDatabase.addApplicationFont(str(font_path))
-                except:
-                    _logger.warning(
-                        f"failed to install font from file {str(font_path)}")
+        if fonts_dir.is_dir():
+            for font_path in fonts_dir.iterdir():
+                if str(font_path).endswith(('.otf', '.ttf')):
+                    try:
+                        QFontDatabase.addApplicationFont(str(font_path))
+                    except:
+                        _logger.warning(
+                            f"failed to install font from file {str(font_path)}")
         
         self.aliases.clear()
         

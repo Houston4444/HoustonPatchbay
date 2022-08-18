@@ -981,18 +981,34 @@ class BoxWidget(BoxWidgetMoth):
                 painter_path = painter_path.united(top_right_path)
             
         if self.is_monitor() and border_radius:
-            left_path = QPainterPath()
-            left_path.addRect(QRectF(
-                0.0 + line_hinting - epsy,
-                self._height - border_radius - epsy,
-                border_radius + epsd, border_radius - line_hinting + epsd))
-            painter_path = painter_path.united(left_path)
+            if self._current_port_mode is PortMode.OUTPUT:
+                left_path = QPainterPath()
+                left_path.addRect(QRectF(
+                    0.0 + line_hinting - epsy,
+                    self._height - border_radius - epsy,
+                    border_radius + epsd, border_radius - line_hinting + epsd))
+                painter_path = painter_path.united(left_path)
 
-            top_left_path = QPainterPath()
-            top_left_path.addRect(QRectF(
-                0.0 + line_hinting - epsy, 0.0 + line_hinting - epsy,
-                border_radius + epsd, border_radius - line_hinting + epsd))
-            painter_path = painter_path.united(top_left_path)
+                top_left_path = QPainterPath()
+                top_left_path.addRect(QRectF(
+                    0.0 + line_hinting - epsy, 0.0 + line_hinting - epsy,
+                    border_radius + epsd, border_radius - line_hinting + epsd))
+                painter_path = painter_path.united(top_left_path)
+
+            elif self._current_port_mode is PortMode.INPUT:
+                right_path = QPainterPath()
+                right_path.addRect(QRectF(
+                    self._width - line_hinting - epsy - border_radius,
+                    self._height - border_radius - epsy,
+                    border_radius + epsd, border_radius - line_hinting + epsd))
+                painter_path = painter_path.united(right_path)
+
+                top_right_path = QPainterPath()
+                top_right_path.addRect(QRectF(
+                    self._width - line_hinting - epsy - border_radius,
+                    0.0 + line_hinting - epsy,
+                    border_radius + epsd, border_radius - line_hinting + epsd))
+                painter_path = painter_path.united(top_right_path)
 
         self._painter_path = painter_path
         
