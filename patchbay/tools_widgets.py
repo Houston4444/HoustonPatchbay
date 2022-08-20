@@ -2,11 +2,12 @@
 import os
 from PyQt5.QtCore import pyqtSignal, QTimer
 from PyQt5.QtGui import QPalette
-from PyQt5.QtWidgets import QWidget
+from PyQt5.QtWidgets import QWidget, QApplication
 
 from .patchcanvas import patchcanvas
 from .ui.patchbay_tools import Ui_Form as PatchbayToolsUiForm
 
+_translate = QApplication.translate
 
 def is_dark_theme(widget: QWidget) -> bool:
     return bool(

@@ -39,7 +39,8 @@ mkdir_ui:
 patchbay: patchbay/ui/canvas_options.py \
 		patchbay/ui/canvas_port_info.py \
 		patchbay/ui/filter_frame.py \
-		patchbay/ui/patchbay_tools.py
+		patchbay/ui/patchbay_tools.py \
+		patchbay/ui/transport_controls.py
 
 patchbay/ui/%.py: resources/ui/%.ui
 	$(PYUIC) --import-from=.. $< -o $@

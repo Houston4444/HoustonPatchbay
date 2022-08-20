@@ -2,6 +2,7 @@ from .patchbay_manager import PatchbayManager, patchcanvas
 from .base_elements import Group, Port, Portgroup
 from .calbacker import Callbacker
 from .tools_widgets import  PatchbayToolsWidget
+from .transport_controls import TransportControlsFrame
 from .port_info_dialog import CanvasPortInfoDialog
 from .canvas_menu import CanvasMenu
 from .options_dialog import CanvasOptionsDialog

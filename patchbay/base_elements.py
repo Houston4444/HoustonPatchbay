@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from enum import IntFlag
+from enum import IntFlag, IntEnum
 from typing import TYPE_CHECKING, Any, Union
 
 from .patchcanvas import (patchcanvas, PortMode, PortType, IconType,
@@ -25,6 +25,23 @@ class GroupPosFlag(IntFlag):
     WRAPPED_INPUT = 0x10
     WRAPPED_OUTPUT = 0x20
     HAS_BEEN_SPLITTED = 0x40
+
+
+@dataclass
+class TransportPosition:
+    frame: int
+    rolling: bool
+    valid_bbt: bool
+    bar: int
+    beat: int
+    tick: int
+    beats_per_minutes: float
+
+
+class TransportViewMode(IntEnum):
+    HOURS_MINUTES_SECONDS = 0
+    BEAT_BAR_TICK = 1
+    FRAMES = 2
 
 
 def enum_to_flag(enum: int) -> int:

@@ -1,7 +1,11 @@
 from PyQt5.QtCore import Qt, pyqtSignal, QPoint
-from PyQt5.QtGui import QWheelEvent, QKeyEvent
+from PyQt5.QtGui import QWheelEvent, QKeyEvent, QMouseEvent
 from PyQt5.QtWidgets import (QApplication, QProgressBar, QSlider, QToolTip,
-                             QLineEdit)
+                             QLineEdit, QLabel, QMenu, QAction)
+
+from .base_elements import TransportViewMode
+
+_translate = QApplication.translate
 
 
 class FilterBar(QLineEdit):
@@ -87,4 +91,53 @@ class ZoomSlider(QSlider):
     def mouseMoveEvent(self, event):
         QSlider.mouseMoveEvent(self, event)
         self._show_tool_tip()
+
+
+class TimeTransportLabel(QLabel):
+    transport_view_changed = pyqtSignal()
+    
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        
+        self._actions = {
+            TransportViewMode.HOURS_MINUTES_SECONDS:
+                QAction(_translate('transport', 'Hours:Minutes:Seconds')),
+            TransportViewMode.BEAT_BAR_TICK:
+                QAction(_translate('transport', 'Beat|Bar|Tick')),
+            TransportViewMode.FRAMES:
+                QAction(_translate('transport', 'Frames'))}
+        
+        self._context_menu = QMenu()
+
+        for key, action in self._actions.items():
+            action.setCheckable(True)
+            action.setChecked(False)
+            action.setData(key)
+            self._context_menu.addAction(action)
+        
+        self.transport_view_mode = TransportViewMode.HOURS_MINUTES_SECONDS
+        self._actions[TransportViewMode.HOURS_MINUTES_SECONDS].setChecked(True)
+        
+        # self._default_style_sheet = "QLabel{background:#222; color:#ddd; border-radius:0px}"
+        # self.setStyleSheet(self._default_style_sheet)
+        
+    # def _change_mode(self, view_mode: TransportViewMode):
+        # if view_mode is TransportViewMode.
+        
+    def mousePressEvent(self, event: QMouseEvent):
+        for key, action in self._actions.items():
+            action.setChecked(self.transport_view_mode is key)
+        
+        act_selected = self._context_menu.exec(
+            self.mapToGlobal(QPoint(0, self.height())))
+
+        if act_selected is not None:
+            data: TransportViewMode = act_selected.data()
+            self.transport_view_mode = data            
+            self.transport_view_changed.emit()
+    
+    def wheelEvent(self, event):
+        self.transport_view_mode = TransportViewMode(
+            (self.transport_view_mode + 1) % 3)
+        self.transport_view_changed.emit()
 

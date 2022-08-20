@@ -8,6 +8,7 @@ from PyQt5.QtGui import QCursor, QGuiApplication
 from PyQt5.QtWidgets import QMainWindow, QMessageBox, QWidget
 from PyQt5.QtCore import QTimer, QSettings, QThread, QTranslator, QLocale
 
+
 from .patchcanvas import patchcanvas, PortType
 from .patchcanvas.utils import get_new_group_positions
 from .patchcanvas.scene_view import PatchGraphicsView
@@ -17,11 +18,12 @@ from .patchcanvas.theme_manager import ThemeManager
 
 from .patchbay_signals import SignalsObject
 from .tools_widgets import PatchbayToolsWidget
+from .transport_controls import TransportControlsFrame
 from .canvas_menu import CanvasMenu
 from .options_dialog import CanvasOptionsDialog
 from .filter_frame import FilterFrame
 from .base_elements import (Connection, GroupPos, Port, Portgroup, Group,
-                            JackPortFlag, PortgroupMem)
+                            JackPortFlag, PortgroupMem, TransportPosition)
 from .calbacker import Callbacker
 
 
@@ -122,9 +124,10 @@ class PatchbayManager:
 
         self.main_win: QMainWindow = None
         self._tools_widget: PatchbayToolsWidget = None
+        self._transport_widget: TransportControlsFrame = None
         self.options_dialog: CanvasOptionsDialog = None
         self.filter_frame: FilterFrame = None
-
+        
         self.sg = SignalsObject()
 
         self._next_group_id = 0
@@ -224,6 +227,10 @@ class PatchbayManager:
         self._tools_widget = tools_widget
         self._tools_widget.buffer_size_change_order.connect(
             self.change_buffersize)
+
+    def set_transport_widget(self, transport_widget: TransportControlsFrame):
+        self._transport_widget = transport_widget
+        self._transport_widget.set_patchbay_manager(self)
 
     def set_canvas_menu(self, canvas_menu: CanvasMenu):
         self.canvas_menu = canvas_menu
@@ -759,7 +766,18 @@ class PatchbayManager:
         if self._tools_widget is not None:
             self._tools_widget.add_xrun()
 
+    @in_main_thread()
+    def refresh_transport(self, transport_position: TransportPosition):
+        if self._transport_widget is not None:
+            self._transport_widget.refresh_transport(transport_position)
+
     def change_buffersize(self, buffer_size: int):
+        pass
+
+    def transport_play_pause(self, play: bool):
+        pass
+
+    def transport_stop(self):
         pass
 
     def redraw_all_groups(self):
@@ -825,6 +843,9 @@ class PatchbayManager:
     def sample_rate_changed(self, samplerate: int):
         if self._tools_widget is not None:
             self._tools_widget.set_samplerate(samplerate)
+        
+        if self._transport_widget is not None:
+            self._transport_widget.set_samplerate(samplerate)
 
     def _delayed_orders_timeout(self):
         self.optimize_operation(True)
