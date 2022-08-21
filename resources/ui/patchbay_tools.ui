@@ -38,6 +38,9 @@ background-color:  rgba(50%, 50%, 50%, 25%);
      <property name="orientation">
       <enum>Qt::Horizontal</enum>
      </property>
+     <property name="sizeType">
+      <enum>QSizePolicy::MinimumExpanding</enum>
+     </property>
      <property name="sizeHint" stdset="0">
       <size>
        <width>40</width>
@@ -48,6 +51,12 @@ background-color:  rgba(50%, 50%, 50%, 25%);
    </item>
    <item>
     <widget class="ZoomSlider" name="sliderZoom">
+     <property name="minimumSize">
+      <size>
+       <width>40</width>
+       <height>0</height>
+      </size>
+     </property>
      <property name="maximumSize">
       <size>
        <width>90</width>

@@ -1,8 +1,8 @@
 
 from typing import TYPE_CHECKING
-from PyQt5.QtGui import QIcon
+from PyQt5.QtGui import QIcon, QPalette, QColor
 from PyQt5.QtWidgets import QFrame
-from PyQt5.QtCore import pyqtSlot
+from PyQt5.QtCore import pyqtSlot, pyqtSignal
 
 from .base_elements import TransportPosition, TransportViewMode
 from .ui.transport_controls import Ui_FrameTransportControls
@@ -12,6 +12,9 @@ if TYPE_CHECKING:
 
 
 class TransportControlsFrame(QFrame):
+    backwards = pyqtSignal()
+    forwards = pyqtSignal()
+    
     def __init__(self, parent=None):
         super().__init__(parent)
         self.ui = Ui_FrameTransportControls()
@@ -19,11 +22,42 @@ class TransportControlsFrame(QFrame):
         
         self.ui.toolButtonPlayPause.clicked.connect(self._play_clicked)
         self.ui.toolButtonStop.clicked.connect(self._stop_clicked)
+        self.ui.toolButtonRewind.clicked.connect(self._rewind_clicked)
+        self.ui.toolButtonForward.clicked.connect(self._forward_clicked)
         self.ui.labelTime.transport_view_changed.connect(self._transport_view_changed)
         
         self._patchbay_mng: 'PatchbayManager' = None
         self._samplerate = 48000
         self._last_transport_pos = TransportPosition(0, False, False, 0, 0, 0, 120.00)
+        
+        # set theme
+        app_bg = self.ui.labelTempo.palette().brush(
+            QPalette.Active, QPalette.Background).color()
+        dark = bool(app_bg.lightness() <= 128)
+        
+        bg = QColor(app_bg)
+        more_gray = 20 if dark else -30
+        
+        bg.setRed(app_bg.red() + more_gray)
+        bg.setGreen(app_bg.green() + more_gray)
+        bg.setBlue(app_bg.blue() + more_gray)
+        background = bg.name()
+
+        round_side = 'left'
+        for button in (self.ui.toolButtonRewind, self.ui.toolButtonPlayPause,
+                       self.ui.toolButtonForward, self.ui.toolButtonStop):
+            if button is self.ui.toolButtonForward:
+                round_side = "right"
+            
+            button.setStyleSheet(f"QToolButton{{background:{background}; border:none;"
+                                 f"border-top-{round_side}-radius:4px;"
+                                 f"border-bottom-{round_side}-radius:4px}}")
+        
+        count_bg = '#222' if dark else '#eee'
+        count_bg = self.palette().base().color().name()
+        
+        self.ui.labelTime.setStyleSheet(
+            f"QLabel{{background:{count_bg}; border: 2px solid {background}}}")
     
     def _play_clicked(self, play: bool):
         if self._patchbay_mng is not None:
@@ -32,7 +66,17 @@ class TransportControlsFrame(QFrame):
     def _stop_clicked(self):
         if self._patchbay_mng is not None:
             self._patchbay_mng.transport_stop()
-            
+    
+    def _rewind_clicked(self):
+        if self._patchbay_mng is not None:
+            self._patchbay_mng.transport_relocate(
+                max(int(self._last_transport_pos.frame - 2.5 * self._samplerate), 0))
+        
+    def _forward_clicked(self):
+        if self._patchbay_mng is not None:
+            self._patchbay_mng.transport_relocate(
+                int(self._last_transport_pos.frame + 2.5 * self._samplerate))
+    
     def set_patchbay_manager(self, mng: 'PatchbayManager'):
         self._patchbay_mng = mng
     
@@ -40,8 +84,6 @@ class TransportControlsFrame(QFrame):
         self._samplerate = samplerate
     
     def refresh_transport(self, transport_pos: TransportPosition):
-        self._last_transport_pos = transport_pos
-        
         self.ui.toolButtonPlayPause.setChecked(transport_pos.rolling)
         if transport_pos.rolling:
             self.ui.toolButtonPlayPause.setIcon(
@@ -49,6 +91,13 @@ class TransportControlsFrame(QFrame):
         else:
             self.ui.toolButtonPlayPause.setIcon(
                 QIcon.fromTheme('media-playback-start'))
+        
+        if self.ui.labelTime.transport_view_mode is not TransportViewMode.FRAMES:
+            # switch the view mode in case beats info appears/disappears 
+            if transport_pos.valid_bbt and not self._last_transport_pos.valid_bbt:
+                self.ui.labelTime.transport_view_mode = TransportViewMode.BEAT_BAR_TICK
+            elif not transport_pos.valid_bbt and self._last_transport_pos.valid_bbt:
+                self.ui.labelTime.transport_view_mode = TransportViewMode.HOURS_MINUTES_SECONDS
         
         if (self.ui.labelTime.transport_view_mode
                 is TransportViewMode.HOURS_MINUTES_SECONDS):
@@ -85,6 +134,8 @@ class TransportControlsFrame(QFrame):
             self.ui.labelTempo.setText('')
             
         self.ui.toolButtonRewind.setEnabled(transport_pos.frame != 0)
+
+        self._last_transport_pos = transport_pos
             
     
     @pyqtSlot()
