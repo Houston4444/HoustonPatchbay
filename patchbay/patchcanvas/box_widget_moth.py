@@ -91,7 +91,7 @@ class DisconnectElement:
 
 
 class BoxWidgetMoth(QGraphicsItem):
-    # inline display is not usable in RaySession
+    # inline display is not usable in RaySession or Patchance
     # but this patchcanvas module has been forked from Carla
     # and all about inline_display has been kept (we never know)
     # but never tested.

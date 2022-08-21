@@ -603,11 +603,12 @@ class PatchbayManager:
     def rename_port(self, name: str, new_name: str) -> Union[int, None]:
         port = self.get_port_from_name(name)
         if port is None:
-            sys.stderr.write(
-                "RaySession:PatchbayManager::rename_port"
-                + "\"%s\" to \"%s\", port doesn't exists\n"
-                    % (name, new_name))
+            _logger.warning(f"rename_port to '{new_name}', no port named '{name}'")
             return
+
+        # change port key in self._ports_by_name dict
+        self._ports_by_name.pop(name)
+        self._ports_by_name[new_name] = port
 
         group_name = name.partition(':')[0]
         new_group_name = new_name.partition(':')[0]
@@ -665,9 +666,9 @@ class PatchbayManager:
             try:
                 port_order = int(value)
             except:
-                sys.stderr.write(
-                    "RaySession:PatchbayManager::JACK_METADATA_ORDER "
-                    + "value is not an int (%i,%s)\n" % (uuid, value))
+                _logger.warning(
+                    f"JACK_METADATA_ORDER for UUID {uuid} "
+                    f"value '{value}' is not an int")
                 return
 
             port.order = port_order
