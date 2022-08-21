@@ -1,6 +1,6 @@
 
 from typing import TYPE_CHECKING
-from PyQt5.QtGui import QIcon, QPalette, QColor
+from PyQt5.QtGui import QIcon, QPalette, QColor, QKeySequence
 from PyQt5.QtWidgets import QFrame
 from PyQt5.QtCore import pyqtSlot, pyqtSignal
 
@@ -30,17 +30,35 @@ class TransportControlsFrame(QFrame):
         self._samplerate = 48000
         self._last_transport_pos = TransportPosition(0, False, False, 0, 0, 0, 120.00)
         
+        # self._play_pause_action = QAction()
+        # self._play_pause_action.triggered.connect(self._play_clicked)
+        # self.ui.toolButtonPlayPause.setDefaultAction(self._play_pause_action)
+        self.ui.toolButtonPlayPause.setShortcut(QKeySequence(' '))
+        
         # set theme
         app_bg = self.ui.labelTempo.palette().brush(
             QPalette.Active, QPalette.Background).color()
         dark = bool(app_bg.lightness() <= 128)
         
+        scheme = 'dark' if dark else 'light'
+        self._icon_play = QIcon(f':/transport/{scheme}/media-playback-start.svg')
+        self._icon_pause = QIcon(f':/transport/{scheme}/media-playback-pause.svg')
+        
+        self.ui.toolButtonRewind.setIcon(
+            QIcon(f':/transport/{scheme}/media-seek-backward.svg'))
+        self.ui.toolButtonForward.setIcon(
+            QIcon(f':/transport/{scheme}/media-seek-forward.svg'))
+        self.ui.toolButtonPlayPause.setIcon(self._icon_play)
+        # self._play_pause_action.setIcon(self._icon_play)
+        self.ui.toolButtonStop.setIcon(
+            QIcon(f':/transport/{scheme}/media-playback-stop.svg'))
+
         bg = QColor(app_bg)
         more_gray = 20 if dark else -30
         
-        bg.setRed(app_bg.red() + more_gray)
-        bg.setGreen(app_bg.green() + more_gray)
-        bg.setBlue(app_bg.blue() + more_gray)
+        bg.setRed(max(min(app_bg.red() + more_gray, 255), 0))
+        bg.setGreen(max(min(app_bg.green() + more_gray, 255), 0))
+        bg.setBlue(max(min(app_bg.blue() + more_gray, 255), 0))
         background = bg.name()
 
         round_side = 'left'
@@ -58,7 +76,7 @@ class TransportControlsFrame(QFrame):
         
         self.ui.labelTime.setStyleSheet(
             f"QLabel{{background:{count_bg}; border: 2px solid {background}}}")
-    
+            
     def _play_clicked(self, play: bool):
         if self._patchbay_mng is not None:
             self._patchbay_mng.transport_play_pause(play)
@@ -86,12 +104,12 @@ class TransportControlsFrame(QFrame):
     def refresh_transport(self, transport_pos: TransportPosition):
         self.ui.toolButtonPlayPause.setChecked(transport_pos.rolling)
         if transport_pos.rolling:
-            self.ui.toolButtonPlayPause.setIcon(
-                QIcon.fromTheme('media-playback-pause'))
+            self.ui.toolButtonPlayPause.setIcon(self._icon_pause)
+            # self._play_pause_action.setIcon(self._icon_pause)
         else:
-            self.ui.toolButtonPlayPause.setIcon(
-                QIcon.fromTheme('media-playback-start'))
-        
+            self.ui.toolButtonPlayPause.setIcon(self._icon_play)
+            # self._play_pause_action.setIcon(self._icon_play)
+            
         if self.ui.labelTime.transport_view_mode is not TransportViewMode.FRAMES:
             # switch the view mode in case beats info appears/disappears 
             if transport_pos.valid_bbt and not self._last_transport_pos.valid_bbt:

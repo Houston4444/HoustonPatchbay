@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>312</width>
-    <height>29</height>
+    <width>364</width>
+    <height>30</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -43,8 +43,8 @@
         <string>...</string>
        </property>
        <property name="icon">
-        <iconset theme="media-seek-backward">
-         <normaloff>.</normaloff>.</iconset>
+        <iconset resource="../resources.qrc">
+         <normaloff>:/transport/dark/media-seek-backward.svg</normaloff>:/transport/dark/media-seek-backward.svg</iconset>
        </property>
        <property name="iconSize">
         <size>
@@ -102,8 +102,8 @@
         <string>...</string>
        </property>
        <property name="icon">
-        <iconset theme="media-seek-forward">
-         <normaloff>.</normaloff>.</iconset>
+        <iconset resource="../resources.qrc">
+         <normaloff>:/transport/dark/media-seek-forward.svg</normaloff>:/transport/dark/media-seek-forward.svg</iconset>
        </property>
        <property name="iconSize">
         <size>
@@ -147,8 +147,8 @@
         <string>...</string>
        </property>
        <property name="icon">
-        <iconset theme="media-playback-start">
-         <normaloff>.</normaloff>.</iconset>
+        <iconset resource="../resources.qrc">
+         <normaloff>:/transport/dark/media-playback-start.svg</normaloff>:/transport/dark/media-playback-start.svg</iconset>
        </property>
        <property name="iconSize">
         <size>
@@ -176,8 +176,8 @@
         <string>...</string>
        </property>
        <property name="icon">
-        <iconset theme="media-playback-stop">
-         <normaloff>.</normaloff>.</iconset>
+        <iconset resource="../resources.qrc">
+         <normaloff>:/transport/dark/media-playback-stop.svg</normaloff>:/transport/dark/media-playback-stop.svg</iconset>
        </property>
        <property name="iconSize">
         <size>
@@ -242,6 +242,8 @@
    <header>..surclassed_widgets</header>
   </customwidget>
  </customwidgets>
- <resources/>
+ <resources>
+  <include location="../resources.qrc"/>
+ </resources>
  <connections/>
 </ui>

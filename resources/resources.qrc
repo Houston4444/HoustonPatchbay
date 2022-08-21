@@ -51,6 +51,16 @@
        <file>app_icons/amsynth.svg</file>
        <file>app_icons/dark/curve-connector.svg</file>
        <file>app_icons/dark/network-wired.svg</file>
+       <file>transport/dark/media-playback-start.svg</file>
+       <file>transport/dark/media-seek-backward.svg</file>
+       <file>transport/dark/media-playback-pause.svg</file>
+       <file>transport/dark/media-playback-stop.svg</file>
+       <file>transport/dark/media-seek-forward.svg</file>
+       <file>transport/light/media-playback-start.svg</file>
+       <file>transport/light/media-seek-backward.svg</file>
+       <file>transport/light/media-playback-pause.svg</file>
+       <file>transport/light/media-playback-stop.svg</file>
+       <file>transport/light/media-seek-forward.svg</file>
        <file>fonts/Ubuntu-R.ttf</file>
        <file>fonts/Ubuntu-C.ttf</file>
        <file>canvas/dark/monitor_playback.svg</file>

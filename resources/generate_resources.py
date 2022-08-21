@@ -4,7 +4,7 @@ import os
 import sys
 
 if __name__ == '__main__':
-    resource_dirs = ('scalable', 'app_icons',
+    resource_dirs = ('scalable', 'app_icons', 'transport',
                      'fonts', 'canvas', 'cursors')
 
     contents = '<RCC version="1.0">\n'
