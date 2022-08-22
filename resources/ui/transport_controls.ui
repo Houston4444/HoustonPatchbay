@@ -14,7 +14,7 @@
    <string>Frame</string>
   </property>
   <property name="styleSheet">
-   <string notr="true">QFrame{border:none; background: #20888888}</string>
+   <string notr="true">QFrame{border:none}</string>
   </property>
   <layout class="QHBoxLayout" name="horizontalLayout_2">
    <property name="topMargin">
@@ -43,7 +43,7 @@
         <string>...</string>
        </property>
        <property name="icon">
-        <iconset resource="../resources.qrc">
+        <iconset resource="../../../../codes_sources/Patchance/HoustonPatchbay/resources/resources.qrc">
          <normaloff>:/transport/dark/media-seek-backward.svg</normaloff>:/transport/dark/media-seek-backward.svg</iconset>
        </property>
        <property name="iconSize">
@@ -80,7 +80,7 @@
         <string notr="true"/>
        </property>
        <property name="text">
-        <string>000'000'000</string>
+        <string>00:00:00</string>
        </property>
        <property name="alignment">
         <set>Qt::AlignCenter</set>
@@ -102,7 +102,7 @@
         <string>...</string>
        </property>
        <property name="icon">
-        <iconset resource="../resources.qrc">
+        <iconset resource="../../../../codes_sources/Patchance/HoustonPatchbay/resources/resources.qrc">
          <normaloff>:/transport/dark/media-seek-forward.svg</normaloff>:/transport/dark/media-seek-forward.svg</iconset>
        </property>
        <property name="iconSize">
@@ -147,7 +147,7 @@
         <string>...</string>
        </property>
        <property name="icon">
-        <iconset resource="../resources.qrc">
+        <iconset resource="../../../../codes_sources/Patchance/HoustonPatchbay/resources/resources.qrc">
          <normaloff>:/transport/dark/media-playback-start.svg</normaloff>:/transport/dark/media-playback-start.svg</iconset>
        </property>
        <property name="iconSize">
@@ -176,7 +176,7 @@
         <string>...</string>
        </property>
        <property name="icon">
-        <iconset resource="../resources.qrc">
+        <iconset resource="../../../../codes_sources/Patchance/HoustonPatchbay/resources/resources.qrc">
          <normaloff>:/transport/dark/media-playback-stop.svg</normaloff>:/transport/dark/media-playback-stop.svg</iconset>
        </property>
        <property name="iconSize">
@@ -243,7 +243,7 @@
   </customwidget>
  </customwidgets>
  <resources>
-  <include location="../resources.qrc"/>
+  <include location="../../../../codes_sources/Patchance/HoustonPatchbay/resources/resources.qrc"/>
  </resources>
  <connections/>
 </ui>

@@ -781,12 +781,6 @@ class PatchbayManager:
     def transport_stop(self):
         pass
 
-    def transport_backwards(self):
-        pass
-    
-    def transport_forwards(self):
-        pass
-
     def transport_relocate(self, frame: int):
         pass
 
