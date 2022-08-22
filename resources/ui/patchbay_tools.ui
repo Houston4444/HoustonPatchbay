@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>885</width>
-    <height>34</height>
+    <width>589</width>
+    <height>33</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -33,22 +33,6 @@ background-color:  rgba(50%, 50%, 50%, 25%);
    <property name="bottomMargin">
     <number>1</number>
    </property>
-   <item>
-    <spacer name="horizontalSpacer">
-     <property name="orientation">
-      <enum>Qt::Horizontal</enum>
-     </property>
-     <property name="sizeType">
-      <enum>QSizePolicy::MinimumExpanding</enum>
-     </property>
-     <property name="sizeHint" stdset="0">
-      <size>
-       <width>40</width>
-       <height>20</height>
-      </size>
-     </property>
-    </spacer>
-   </item>
    <item>
     <widget class="ZoomSlider" name="sliderZoom">
      <property name="minimumSize">
