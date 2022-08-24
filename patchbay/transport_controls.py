@@ -140,11 +140,21 @@ class TransportControlsFrame(QFrame):
         
         if (self.ui.labelTime.transport_view_mode
                 is TransportViewMode.HOURS_MINUTES_SECONDS):
-            time = transport_pos.frame // self._samplerate
-            secs = time % 60
-            mins = (time / 60) % 60
-            hrs  = (time / 3600) % 60
-            self.ui.labelTime.setText("%02i:%02i:%02i" % (hrs, mins, secs))
+            # if the transport time is during the first second
+            # but not at 0, we display something else to show
+            # that transport is rolling after press play.
+            # If it is not rolling, it shows that transport is not
+            # exactly at start.
+            if 0 < transport_pos.frame < self._samplerate / 2:
+                self.ui.labelTime.setText("00:00:0_")
+            elif 0 < transport_pos.frame < self._samplerate:
+                self.ui.labelTime.setText("00:00:0-")
+            else:
+                time = transport_pos.frame // self._samplerate
+                secs = time % 60
+                mins = (time / 60) % 60
+                hrs  = (time / 3600) % 60
+                self.ui.labelTime.setText("%02i:%02i:%02i" % (hrs, mins, secs))
             
         elif (self.ui.labelTime.transport_view_mode
                 is TransportViewMode.FRAMES):
@@ -162,7 +172,7 @@ class TransportControlsFrame(QFrame):
                                         transport_pos.beat,
                                         transport_pos.tick))
             else:
-                self.ui.labelTime.setText("000|00|0000")
+                self.ui.labelTime.setText("???|??|????")
                 
         if transport_pos.valid_bbt:
             if int(transport_pos.beats_per_minutes) == transport_pos.beats_per_minutes:
