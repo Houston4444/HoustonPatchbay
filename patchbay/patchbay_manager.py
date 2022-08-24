@@ -18,7 +18,6 @@ from .patchcanvas.theme_manager import ThemeManager
 
 from .patchbay_signals import SignalsObject
 from .tools_widgets import PatchbayToolsWidget
-from .transport_controls import TransportControlsFrame
 from .canvas_menu import CanvasMenu
 from .options_dialog import CanvasOptionsDialog
 from .filter_frame import FilterFrame
@@ -124,7 +123,6 @@ class PatchbayManager:
 
         self.main_win: QMainWindow = None
         self._tools_widget: PatchbayToolsWidget = None
-        self._transport_widget: TransportControlsFrame = None
         self.options_dialog: CanvasOptionsDialog = None
         self.filter_frame: FilterFrame = None
         
@@ -229,10 +227,7 @@ class PatchbayManager:
         self._tools_widget = tools_widget
         self._tools_widget.buffer_size_change_order.connect(
             self.change_buffersize)
-
-    def set_transport_widget(self, transport_widget: TransportControlsFrame):
-        self._transport_widget = transport_widget
-        self._transport_widget.set_patchbay_manager(self)
+        self._tools_widget.set_patchbay_manager(self)
 
     def set_canvas_menu(self, canvas_menu: CanvasMenu):
         self.canvas_menu = canvas_menu
@@ -771,8 +766,8 @@ class PatchbayManager:
 
     @in_main_thread()
     def refresh_transport(self, transport_position: TransportPosition):
-        if self._transport_widget is not None:
-            self._transport_widget.refresh_transport(transport_position)
+        if self._tools_widget is not None:
+            self._tools_widget.refresh_transport(transport_position)
 
     def change_buffersize(self, buffer_size: int):
         pass
@@ -789,8 +784,6 @@ class PatchbayManager:
     def change_tools_displayed(self, tools_displayed: ToolDisplayed):
         if self._tools_widget is not None:
             self._tools_widget.change_tools_displayed(tools_displayed)
-        if self._transport_widget is not None:
-            self._transport_widget.change_tools_displayed(tools_displayed)
 
         self._tools_displayed = tools_displayed
 
@@ -857,9 +850,6 @@ class PatchbayManager:
     def sample_rate_changed(self, samplerate: int):
         if self._tools_widget is not None:
             self._tools_widget.set_samplerate(samplerate)
-        
-        if self._transport_widget is not None:
-            self._transport_widget.set_samplerate(samplerate)
 
     def _delayed_orders_timeout(self):
         self.optimize_operation(True)
