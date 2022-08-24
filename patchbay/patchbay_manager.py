@@ -23,7 +23,7 @@ from .canvas_menu import CanvasMenu
 from .options_dialog import CanvasOptionsDialog
 from .filter_frame import FilterFrame
 from .base_elements import (Connection, GroupPos, Port, Portgroup, Group,
-                            JackPortFlag, PortgroupMem, TransportPosition)
+                            JackPortFlag, PortgroupMem, ToolDisplayed, TransportPosition)
 from .calbacker import Callbacker
 
 
@@ -166,6 +166,8 @@ class PatchbayManager:
         self.sg.prevent_overlap_changed.connect(self.set_prevent_overlap)
         self.sg.max_port_width_changed.connect(patchcanvas.set_max_port_width)
         self.sg.default_zoom_changed.connect(patchcanvas.set_default_zoom)
+        
+        self._tools_displayed = ToolDisplayed.ALL
 
     def __canvas_callback__(self, action: CallbackAct, *args):
         self.sg.callback_sig.emit(action, args)
@@ -783,6 +785,14 @@ class PatchbayManager:
 
     def transport_relocate(self, frame: int):
         pass
+
+    def change_tools_displayed(self, tools_displayed: ToolDisplayed):
+        if self._tools_widget is not None:
+            self._tools_widget.change_tools_displayed(tools_displayed)
+        if self._transport_widget is not None:
+            self._transport_widget.change_tools_displayed(tools_displayed)
+
+        self._tools_displayed = tools_displayed
 
     def redraw_all_groups(self):
         patchcanvas.redraw_all_groups()

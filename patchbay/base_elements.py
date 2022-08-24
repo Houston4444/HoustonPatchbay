@@ -44,6 +44,25 @@ class TransportViewMode(IntEnum):
     FRAMES = 2
 
 
+class ToolDisplayed(IntFlag):
+    TRANSPORT_CLOCK = 0x01
+    TRANSPORT_PLAY_STOP = 0x02
+    ZOOM_SLIDER = 0x04
+    BUFFER_SIZE = 0x08
+    SAMPLERATE = 0x10
+    LATENCY = 0x20
+    XRUNS = 0x40
+    DSP_LOAD = 0x80
+    ALL = (TRANSPORT_CLOCK
+           | TRANSPORT_PLAY_STOP
+           | ZOOM_SLIDER
+           | BUFFER_SIZE
+           | SAMPLERATE
+           | LATENCY
+           | XRUNS
+           | DSP_LOAD)
+
+
 def enum_to_flag(enum: int) -> int:
     return 2 ** (enum - 1)
 

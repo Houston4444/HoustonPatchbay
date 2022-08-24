@@ -1,10 +1,11 @@
 
+import time
 from typing import TYPE_CHECKING
 from PyQt5.QtGui import QIcon, QPalette, QColor, QKeySequence
 from PyQt5.QtWidgets import QFrame
 from PyQt5.QtCore import pyqtSlot, pyqtSignal
 
-from .base_elements import TransportPosition, TransportViewMode
+from .base_elements import TransportPosition, TransportViewMode, ToolDisplayed
 from .ui.transport_controls import Ui_FrameTransportControls
 
 if TYPE_CHECKING:
@@ -30,10 +31,12 @@ class TransportControlsFrame(QFrame):
         self._samplerate = 48000
         self._last_transport_pos = TransportPosition(0, False, False, 0, 0, 0, 120.00)
         
-        # self._play_pause_action = QAction()
-        # self._play_pause_action.triggered.connect(self._play_clicked)
-        # self.ui.toolButtonPlayPause.setDefaultAction(self._play_pause_action)
         self.ui.toolButtonPlayPause.setShortcut(QKeySequence(' '))
+        
+        self._fw_clicked_last_time = 0
+        self._fw_click_started_at = 0
+        self._bw_clicked_last_time = 0
+        self._bw_click_started_at = 0
         
         # set theme
         app_bg = self.ui.labelTempo.palette().brush(
@@ -71,7 +74,6 @@ class TransportControlsFrame(QFrame):
                                  f"border-top-{round_side}-radius:4px;"
                                  f"border-bottom-{round_side}-radius:4px}}")
         
-        count_bg = '#222' if dark else '#eee'
         count_bg = self.palette().base().color().name()
         
         self.ui.labelTime.setStyleSheet(
@@ -84,17 +86,37 @@ class TransportControlsFrame(QFrame):
     def _stop_clicked(self):
         if self._patchbay_mng is not None:
             self._patchbay_mng.transport_stop()
-    
+
     def _rewind_clicked(self):
         if self._patchbay_mng is not None:
+            now = time.time()
+            move = 1.0 * self._samplerate
+            
+            if now - self._bw_clicked_last_time < 0.400:
+                move = (1.0 + (now - self._bw_click_started_at) ** 1.5) * self._samplerate
+            else:
+                self._bw_click_started_at = now
+
             self._patchbay_mng.transport_relocate(
-                max(int(self._last_transport_pos.frame - 2.5 * self._samplerate), 0))
+                max(0, int(self._last_transport_pos.frame - move)))
+    
+            self._bw_clicked_last_time = now
         
     def _forward_clicked(self):
         if self._patchbay_mng is not None:
+            now = time.time()
+            move = 1.0 * self._samplerate
+            
+            if now - self._fw_clicked_last_time < 0.400:
+                move = (1.0 + (now - self._fw_click_started_at) ** 1.5) * self._samplerate
+            else:
+                self._fw_click_started_at = now
+
             self._patchbay_mng.transport_relocate(
-                int(self._last_transport_pos.frame + 2.5 * self._samplerate))
+                int(self._last_transport_pos.frame + move))
     
+            self._fw_clicked_last_time = now
+
     def set_patchbay_manager(self, mng: 'PatchbayManager'):
         self._patchbay_mng = mng
     
@@ -103,12 +125,11 @@ class TransportControlsFrame(QFrame):
     
     def refresh_transport(self, transport_pos: TransportPosition):
         self.ui.toolButtonPlayPause.setChecked(transport_pos.rolling)
+        
         if transport_pos.rolling:
             self.ui.toolButtonPlayPause.setIcon(self._icon_pause)
-            # self._play_pause_action.setIcon(self._icon_pause)
         else:
             self.ui.toolButtonPlayPause.setIcon(self._icon_play)
-            # self._play_pause_action.setIcon(self._icon_play)
             
         if self.ui.labelTime.transport_view_mode is not TransportViewMode.FRAMES:
             # switch the view mode in case beats info appears/disappears 
@@ -154,8 +175,18 @@ class TransportControlsFrame(QFrame):
         self.ui.toolButtonRewind.setEnabled(transport_pos.frame != 0)
 
         self._last_transport_pos = transport_pos
-            
-    
+
     @pyqtSlot()
     def _transport_view_changed(self):
         self.refresh_transport(self._last_transport_pos)
+        
+    def change_tools_displayed(self, tools_displayed: ToolDisplayed):
+        has_clock = bool(tools_displayed & ToolDisplayed.TRANSPORT_CLOCK)
+        has_play_stop = bool(tools_displayed & ToolDisplayed.TRANSPORT_PLAY_STOP)
+        
+        self.ui.toolButtonRewind.setVisible(has_clock)
+        self.ui.labelTime.setVisible(has_clock)
+        self.ui.toolButtonForward.setVisible(has_clock)
+        self.ui.toolButtonPlayPause.setVisible(has_play_stop)
+        self.ui.toolButtonStop.setVisible(has_play_stop)
+        self.ui.labelTempo.setVisible(has_clock)

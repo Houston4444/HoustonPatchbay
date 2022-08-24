@@ -118,11 +118,16 @@ class TimeTransportLabel(QLabel):
         self.transport_view_mode = TransportViewMode.HOURS_MINUTES_SECONDS
         self._actions[TransportViewMode.HOURS_MINUTES_SECONDS].setChecked(True)
         
-        # self._default_style_sheet = "QLabel{background:#222; color:#ddd; border-radius:0px}"
-        # self.setStyleSheet(self._default_style_sheet)
+    def _update_tool_tip(self):
+        text = ""
+        if self.transport_view_mode is TransportViewMode.HOURS_MINUTES_SECONDS:
+            text = _translate('transport', 'Hours:Minutes:Seconds')
+        elif self.transport_view_mode is TransportViewMode.BEAT_BAR_TICK:
+            text = _translate('transport', 'Beat|Bar|Tick')
+        elif self.transport_view_mode is TransportViewMode.FRAMES:
+            text = _translate('transport', 'Frames')
         
-    # def _change_mode(self, view_mode: TransportViewMode):
-        # if view_mode is TransportViewMode.
+        self.setToolTip(text)
         
     def mousePressEvent(self, event: QMouseEvent):
         for key, action in self._actions.items():
@@ -135,9 +140,11 @@ class TimeTransportLabel(QLabel):
             data: TransportViewMode = act_selected.data()
             self.transport_view_mode = data            
             self.transport_view_changed.emit()
+            self._update_tool_tip()
     
     def wheelEvent(self, event):
         self.transport_view_mode = TransportViewMode(
             (self.transport_view_mode + 1) % 3)
         self.transport_view_changed.emit()
+        self._update_tool_tip()
 
