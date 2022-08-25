@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from enum import IntFlag, IntEnum
+from enum import IntFlag, IntEnum, auto
 from typing import TYPE_CHECKING, Any, Union
 
 from .patchcanvas import (patchcanvas, PortMode, PortType, IconType,
@@ -45,18 +45,20 @@ class TransportViewMode(IntEnum):
 
 
 class ToolDisplayed(IntFlag):
-    PORT_TYPES_VIEW = 0x001
-    TRANSPORT_CLOCK = 0x002
-    TRANSPORT_PLAY_STOP = 0x004
-    ZOOM_SLIDER = 0x008
-    BUFFER_SIZE = 0x010
-    SAMPLERATE = 0x020
-    LATENCY = 0x040
-    XRUNS = 0x080
-    DSP_LOAD = 0x100
+    PORT_TYPES_VIEW = auto()
+    TRANSPORT_CLOCK = auto()
+    TRANSPORT_PLAY_STOP = auto()
+    TRANSPORT_TEMPO = auto()
+    ZOOM_SLIDER = auto()
+    BUFFER_SIZE = auto()
+    SAMPLERATE = auto()
+    LATENCY = auto()
+    XRUNS = auto()
+    DSP_LOAD = auto()
     ALL = (PORT_TYPES_VIEW
            | TRANSPORT_CLOCK
            | TRANSPORT_PLAY_STOP
+           | TRANSPORT_TEMPO
            | ZOOM_SLIDER
            | BUFFER_SIZE
            | SAMPLERATE

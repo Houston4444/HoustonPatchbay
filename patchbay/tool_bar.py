@@ -20,20 +20,13 @@ class PatchbayToolBar(QToolBar):
         super().__init__(parent)
         self.setContextMenuPolicy(Qt.PreventContextMenu)
 
-        default_displayed_widgets = (
+        self._displayed_widgets = (
             ToolDisplayed.ZOOM_SLIDER
             | ToolDisplayed.TRANSPORT_PLAY_STOP
             | ToolDisplayed.BUFFER_SIZE
             | ToolDisplayed.SAMPLERATE
             | ToolDisplayed.XRUNS
             | ToolDisplayed.DSP_LOAD)
-        
-        # TODO : search config here
-        int_displayed_wdgs = default_displayed_widgets
-        try:
-            self._displayed_widgets = ToolDisplayed(int_displayed_wdgs)
-        except:
-            self._displayed_widgets = default_displayed_widgets
         
         self._transport_widget = None
         self._patchbay_mng : PatchbayManager = None
@@ -77,6 +70,9 @@ class PatchbayToolBar(QToolBar):
             ToolDisplayed.TRANSPORT_PLAY_STOP:
                 QAction(QIcon.fromTheme('media-playback-pause'),
                         _translate('tool_bar', 'Transport Play/Stop')),
+            ToolDisplayed.TRANSPORT_TEMPO:
+                QAction(QIcon.fromTheme('folder-music-symbolic'),
+                        _translate('tool_bar', 'Transport Tempo')),
             ToolDisplayed.BUFFER_SIZE:
                 QAction(QIcon.fromTheme('settings-configure'),
                         _translate('tool_bar', 'Buffer size')),

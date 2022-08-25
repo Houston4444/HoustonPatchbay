@@ -280,7 +280,7 @@ class PatchbayToolsWidget(QWidget):
         self.ui.toolButtonForward.setVisible(has_clock)
         self.ui.toolButtonPlayPause.setVisible(has_play_stop)
         self.ui.toolButtonStop.setVisible(has_play_stop)
-        self.ui.labelTempo.setVisible(has_clock)
+        self.ui.labelTempo.setVisible(tools_displayed & ToolDisplayed.TRANSPORT_TEMPO)
         
         SR_AND_LT = ToolDisplayed.SAMPLERATE | ToolDisplayed.LATENCY
         
@@ -400,6 +400,12 @@ class PatchbayToolsWidget(QWidget):
             self.ui.checkBoxAudioFilter.setVisible(False)
             self.ui.checkBoxMidiFilter.setVisible(False)
             self.ui.sliderZoom.setVisible(False)
+            self.ui.toolButtonRewind.setVisible(False)
+            self.ui.labelTime.setVisible(False)
+            self.ui.toolButtonForward.setVisible(False)
+            self.ui.toolButtonPlayPause.setVisible(False)
+            self.ui.toolButtonStop.setVisible(False)
+            self.ui.labelTempo.setVisible(False)
             self.ui.labelBuffer.setVisible(False)
             self.ui.comboBoxBuffer.setVisible(False)
             self.ui.labelSamplerate.setVisible(False)
