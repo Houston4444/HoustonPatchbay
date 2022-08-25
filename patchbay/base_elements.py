@@ -79,6 +79,26 @@ class ToolDisplayed(IntFlag):
                 all_strs.append('~' + flag.name)
         
         return '|'.join(all_strs)
+    
+    def filtered_by_string(self, string: str) -> 'ToolDisplayed':
+        '''returns another ToolDisplayed with value filtered
+           by string where string contains flags names separated with pipe symbol
+           as given by to_save_string method.'''
+        return_td = ToolDisplayed(self.value)
+        
+        for disp_str in string.split('|'):
+            delete = False
+            if disp_str.startswith('~'):
+                delete = True
+                disp_str = disp_str[1:]
+
+            if disp_str in ToolDisplayed._member_names_:
+                if delete:
+                    return_td &= ~ToolDisplayed[disp_str]
+                else:
+                    return_td |= ToolDisplayed[disp_str]
+
+        return return_td
 
 
 def enum_to_flag(enum: int) -> int:
