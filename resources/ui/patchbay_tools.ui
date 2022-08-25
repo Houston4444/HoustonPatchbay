@@ -152,6 +152,9 @@ QSlider::handle:horizontal{
        <height>28</height>
       </size>
      </property>
+     <property name="toolTip">
+      <string>Backwards</string>
+     </property>
      <property name="styleSheet">
       <string notr="true"/>
      </property>
@@ -211,6 +214,9 @@ QSlider::handle:horizontal{
        <height>28</height>
       </size>
      </property>
+     <property name="toolTip">
+      <string>Fast-Forward</string>
+     </property>
      <property name="styleSheet">
       <string notr="true"/>
      </property>
@@ -256,6 +262,9 @@ QSlider::handle:horizontal{
        <height>28</height>
       </size>
      </property>
+     <property name="toolTip">
+      <string>Play/Pause transport</string>
+     </property>
      <property name="styleSheet">
       <string notr="true"/>
      </property>
@@ -284,6 +293,9 @@ QSlider::handle:horizontal{
        <width>16777215</width>
        <height>28</height>
       </size>
+     </property>
+     <property name="toolTip">
+      <string>Stop, return to start.</string>
      </property>
      <property name="styleSheet">
       <string notr="true"/>
@@ -338,6 +350,12 @@ QSlider::handle:horizontal{
        <width>400</width>
        <height>16777215</height>
       </size>
+     </property>
+     <property name="toolTip">
+      <string>Tempo (if known)</string>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">QLabel{ background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #00888888, stop:0.79 #00888888, stop:0.80 #20888888, stop:1 #20888888)}</string>
      </property>
      <property name="text">
       <string/>
@@ -403,6 +421,9 @@ QSlider::handle:horizontal{
       <font>
        <pointsize>9</pointsize>
       </font>
+     </property>
+     <property name="toolTip">
+      <string>JACK Buffer size</string>
      </property>
      <property name="styleSheet">
       <string notr="true">QCombobox{align:right}</string>
