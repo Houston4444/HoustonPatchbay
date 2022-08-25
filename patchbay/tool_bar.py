@@ -5,7 +5,7 @@ from PyQt5.QtWidgets import (
     QToolBar, QLabel, QMenu,
     QApplication, QAction)
 from PyQt5.QtGui import QMouseEvent, QIcon
-from PyQt5.QtCore import pyqtSignal, Qt, QPoint
+from PyQt5.QtCore import pyqtSignal, Qt, QPoint, QSize
 
 
 from .base_elements import ToolDisplayed
@@ -38,6 +38,7 @@ class PatchbayToolBar(QToolBar):
     def _change_visibility(self):
         if self._patchbay_mng is not None:
             self._patchbay_mng.change_tools_displayed(self._displayed_widgets)
+        # self.resize(QSize())
 
     def set_default_displayed_widgets(self, displayed_widgets: ToolDisplayed):
         self._displayed_widgets = displayed_widgets
@@ -46,18 +47,8 @@ class PatchbayToolBar(QToolBar):
     def get_displayed_widgets(self) -> ToolDisplayed:
         return self._displayed_widgets
 
-    def mousePressEvent(self, event: QMouseEvent) -> None:
-        child_widget = self.childAt(event.pos())
-        super().mousePressEvent(event)
-
-        if (event.button() != Qt.RightButton
-                or not isinstance(child_widget, (QLabel, PatchbayToolsWidget))):
-            return
-
-        menu = QMenu()
-        menu.addSection(_translate('tool_bar', 'Displayed tools'))
-        
-        tool_actions = {
+    def _make_context_actions(self) -> dict[ToolDisplayed, QAction]:
+        return {
             ToolDisplayed.PORT_TYPES_VIEW:
                 QAction(QIcon.fromTheme('view-filter'),
                         _translate('tool_bar', 'Type filter')),
@@ -89,11 +80,28 @@ class PatchbayToolBar(QToolBar):
                 QAction(QIcon.fromTheme('histogram-symbolic'),
                         _translate('tool_bar', 'DSP Load'))
         }
+
+    def _make_context_menu(self, context_actions: dict[ToolDisplayed, QAction]) -> QMenu:
+        menu = QMenu()
+        menu.addSection(_translate('tool_bar', 'Displayed tools'))
         
-        for key, act in tool_actions.items():
+        for key, act in context_actions.items():
             act.setCheckable(True)
             act.setChecked(bool(self._displayed_widgets & key))
             menu.addAction(act)
+            
+        return menu
+
+    def mousePressEvent(self, event: QMouseEvent) -> None:
+        child_widget = self.childAt(event.pos())
+        super().mousePressEvent(event)
+
+        if (event.button() != Qt.RightButton
+                or not isinstance(child_widget, (QLabel, PatchbayToolsWidget))):
+            return
+
+        context_actions = self._make_context_actions()
+        menu = self._make_context_menu(context_actions)
         
         # execute the menu, exit if no action
         point = event.screenPos().toPoint()
@@ -102,7 +110,7 @@ class PatchbayToolBar(QToolBar):
         if selected_act is None:
             return
 
-        for key, act in tool_actions.items():
+        for key, act in context_actions.items():
             if act is selected_act:
                 if act.isChecked():
                     self._displayed_widgets |= key
