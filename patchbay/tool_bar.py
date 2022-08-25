@@ -1,7 +1,6 @@
 
 from enum import IntFlag
 from typing import TYPE_CHECKING
-from unittest.mock import patch
 from PyQt5.QtWidgets import (
     QToolBar, QLabel, QMenu,
     QApplication, QAction)
@@ -59,6 +58,9 @@ class PatchbayToolBar(QToolBar):
         menu.addSection(_translate('tool_bar', 'Displayed tools'))
         
         tool_actions = {
+            ToolDisplayed.PORT_TYPES_VIEW:
+                QAction(QIcon.fromTheme('view-filter'),
+                        _translate('tool_bar', 'Type filter')),
             ToolDisplayed.ZOOM_SLIDER:
                 QAction(QIcon.fromTheme('zoom-select'),
                         _translate('tool_bar', 'Zoom slider')),

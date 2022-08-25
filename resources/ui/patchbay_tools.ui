@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1093</width>
+    <width>1304</width>
     <height>33</height>
    </rect>
   </property>
@@ -48,6 +48,20 @@ background-color:  rgba(50%, 50%, 50%, 25%);
       </size>
      </property>
     </spacer>
+   </item>
+   <item>
+    <widget class="QCheckBox" name="checkBoxAudioFilter">
+     <property name="text">
+      <string>Audio</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QCheckBox" name="checkBoxMidiFilter">
+     <property name="text">
+      <string>Midi</string>
+     </property>
+    </widget>
    </item>
    <item>
     <spacer name="horizontalSpacer">
@@ -595,7 +609,7 @@ QPushButton:hover{border: 1 px solid grey;text-align:right}</string>
  </customwidgets>
  <resources>
   <include location="../resources.qrc"/>
-  <include location="../../../../codes_sources/Patchance/HoustonPatchbay/resources/resources.qrc"/>
+  <include location="../resources.qrc"/>
  </resources>
  <connections/>
 </ui>

@@ -45,15 +45,17 @@ class TransportViewMode(IntEnum):
 
 
 class ToolDisplayed(IntFlag):
-    TRANSPORT_CLOCK = 0x01
-    TRANSPORT_PLAY_STOP = 0x02
-    ZOOM_SLIDER = 0x04
-    BUFFER_SIZE = 0x08
-    SAMPLERATE = 0x10
-    LATENCY = 0x20
-    XRUNS = 0x40
-    DSP_LOAD = 0x80
-    ALL = (TRANSPORT_CLOCK
+    PORT_TYPES_VIEW = 0x001
+    TRANSPORT_CLOCK = 0x002
+    TRANSPORT_PLAY_STOP = 0x004
+    ZOOM_SLIDER = 0x008
+    BUFFER_SIZE = 0x010
+    SAMPLERATE = 0x020
+    LATENCY = 0x040
+    XRUNS = 0x080
+    DSP_LOAD = 0x100
+    ALL = (PORT_TYPES_VIEW
+           | TRANSPORT_CLOCK
            | TRANSPORT_PLAY_STOP
            | ZOOM_SLIDER
            | BUFFER_SIZE
