@@ -19,7 +19,8 @@ _translate = QApplication.translate
 class PatchbayToolBar(QToolBar):    
     def __init__(self, parent):
         super().__init__(parent)
-        
+        self.setContextMenuPolicy(Qt.PreventContextMenu)
+
         default_displayed_widgets = (
             ToolDisplayed.ZOOM_SLIDER
             | ToolDisplayed.TRANSPORT_PLAY_STOP
