@@ -46,6 +46,13 @@ class PatchbayToolBar(QToolBar):
         if self._patchbay_mng is not None:
             self._patchbay_mng.change_tools_displayed(self._displayed_widgets)
 
+    def set_default_displayed_widgets(self, displayed_widgets: ToolDisplayed):
+        self._displayed_widgets = displayed_widgets
+        self._change_visibility()
+        
+    def get_displayed_widgets(self) -> ToolDisplayed:
+        return self._displayed_widgets
+
     def mousePressEvent(self, event: QMouseEvent) -> None:
         child_widget = self.childAt(event.pos())
         super().mousePressEvent(event)

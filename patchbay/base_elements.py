@@ -63,6 +63,22 @@ class ToolDisplayed(IntFlag):
            | LATENCY
            | XRUNS
            | DSP_LOAD)
+    
+    def to_save_string(self) -> str:
+        ''' returns a string containing all flags names
+            separated with pipe symbol.'''
+        all_strs = list[str]()
+        
+        for flag in ToolDisplayed:
+            if flag is ToolDisplayed.ALL:
+                continue
+
+            if self & flag:
+                all_strs.append(flag.name)
+            else:
+                all_strs.append('~' + flag.name)
+        
+        return '|'.join(all_strs)
 
 
 def enum_to_flag(enum: int) -> int:
