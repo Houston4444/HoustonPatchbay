@@ -30,7 +30,7 @@ class ThemeManager:
         self.current_theme_file = Path()
         self.theme_paths = theme_paths
 
-        self._last_modified = 0
+        self._last_modified = 0.0
 
         self._theme_file_timer = QTimer()
         self._theme_file_timer.setInterval(400)

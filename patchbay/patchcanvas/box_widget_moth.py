@@ -65,7 +65,7 @@ class UnwrapButton(Enum):
 
 class TitleLine:
     text = ''
-    size = 0
+    size = 0.0
     x = 0
     y = 0
     is_little = False
