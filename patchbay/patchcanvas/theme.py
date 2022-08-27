@@ -10,7 +10,7 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtGui import (QColor, QPen, QFont, QBrush, QFontMetricsF,
                          QImage, QFontDatabase)
 
-import xdg
+from . import xdg
 
 _logger = logging.getLogger(__name__)
 
@@ -96,6 +96,8 @@ def _to_qcolor(color: str) -> QColor:
 def rail_float(value, mini: float, maxi: float) -> float:
     return max(min(float(value), float(maxi)), float(mini))
 
+def rail_int(value, mini: int, maxi: int) -> int:
+    return max(min(int(value), int(maxi), int(mini)))
 
 class StyleAttributer:
     def __init__(self, path: str, parent=None):
@@ -214,13 +216,13 @@ class StyleAttributer:
                 
         elif attribute == 'font-size':
             if isinstance(value, (int, float)):
-                self._font_size = rail_float(value, 1, 200)
+                self._font_size = rail_int(value, 1, 200)
             else:
                 err = True
                 
         elif attribute == 'font-width':
             if isinstance(value, (int, float)):
-                self._font_width = int(rail_float(value, 0, 99))
+                self._font_width = rail_int(value, 0, 99)
             elif isinstance(value, str):
                 value = value.lower()
                 if value == 'normal':
@@ -352,8 +354,8 @@ class StyleAttributer:
     def font(self) -> QFont:
         if self._font is None:
             self._font = QFont(self.get_value_of('_font_name'))
-            self._font.setPixelSize(self.get_value_of('_font_size'))
-            self._font.setWeight(self.get_value_of('_font_width'))
+            self._font.setPixelSize(int(self.get_value_of('_font_size')))
+            self._font.setWeight(int(self.get_value_of('_font_width')))
         return self._font
         
     def _set_font_metrics_cache(self):        
