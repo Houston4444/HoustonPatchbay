@@ -97,7 +97,7 @@ def rail_float(value, mini: float, maxi: float) -> float:
     return max(min(float(value), float(maxi)), float(mini))
 
 def rail_int(value, mini: int, maxi: int) -> int:
-    return max(min(int(value), int(maxi), int(mini)))
+    return max(min(int(value), int(maxi)), int(mini))
 
 class StyleAttributer:
     def __init__(self, path: str, parent=None):
