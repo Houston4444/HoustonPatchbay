@@ -360,7 +360,7 @@ class PatchScene(PatchSceneMoth):
             pos_offset = item.boundingRect().topLeft()
             to_send_rect = new_rect.translated(- pos_offset)
             self.add_box_to_animation(
-                item, to_send_rect.left(), to_send_rect.top())
+                item, int(to_send_rect.left()), int(to_send_rect.top()))
 
     def bring_neighbors_and_deplace_boxes(
             self, box_widget: BoxWidget, new_scene_rect: QRectF):

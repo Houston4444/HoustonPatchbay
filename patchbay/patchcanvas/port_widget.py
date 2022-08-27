@@ -511,11 +511,13 @@ class PortWidget(ConnectableWidget):
 
                 y_line = canvas.theme.port_height / 2.0
                 if self._port_mode is PortMode.OUTPUT:
-                    painter.drawLine(0, y_line, poly_locx[1], y_line)
+                    painter.drawLine(
+                        QPointF(0.0, y_line),
+                        QPointF(float(poly_locx[1]), y_line))
                 elif self._port_mode is PortMode.INPUT:
                     painter.drawLine(
-                        self._port_width + 5, y_line,
-                        self._port_width + 12, y_line)
+                        QPointF(float(self._port_width + 5), y_line),
+                        QPointF(float(self._port_width + 12), y_line))
 
             elif self._port_subtype is PortSubType.A2J:
                 # draw the little circle for a2j (or MidiBridge) port

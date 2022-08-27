@@ -291,7 +291,7 @@ class PatchSceneMoth(QGraphicsScene):
                 apply = True
         
         if apply:
-            self._view.ensureVisible(ensure_rect, 0.0, 0.0)
+            self._view.ensureVisible(ensure_rect, 0, 0)
 
     def _start_navigation_on_borders(self):
         if (options.borders_navigation

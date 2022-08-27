@@ -884,7 +884,8 @@ class BoxWidget(BoxWidgetMoth):
             y = int(self._header_height / 2)
             
             self._header_line_left = (5, y, side_size - 5, y)
-            self._header_line_right = (self._width - side_size + 5, y, self._width - 5, y)
+            self._header_line_right = (int(self._width) - side_size + 5, y,
+                                       int(self._width) - 5, y)
     
     def build_painter_path(self, pos_dict):
         input_segments = pos_dict['input_segments']
