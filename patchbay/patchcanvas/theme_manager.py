@@ -39,6 +39,9 @@ class ThemeManager:
 
     @staticmethod
     def default_theme_paths(source_theme_dir: Path=None) -> list[Path]:
+        ''' do not use now ! While HoustonPatchbay is a submodule and not a lib
+            sharing the same paths for various programs create package conflicts
+            in distributions.'''
         APP_NAME = 'HoustonPatchbay'
         path_list = list[Path]()
         
@@ -213,7 +216,7 @@ class ThemeManager:
         current_theme_dir = os.path.dirname(self.current_theme_file)
         current_theme_dir = self.current_theme_file.parent
         
-        editable_dir = ''
+        editable_dir = Path()
         
         # find the first editable patchbay_themes directory
         # creating it if it doesn't exists
@@ -227,7 +230,7 @@ class ThemeManager:
                     break
             else:
                 try:
-                    search_path.mkdir()
+                    search_path.mkdir(parents=True)
                 except:
                     continue
                 editable_dir = search_path
