@@ -216,4 +216,6 @@ class CanvasOptionsDialog(QDialog):
                                     self.ui.spinBoxDefaultZoom.value())
             self._settings.setValue('Canvas/theme',
                                     self.ui.comboBoxTheme.currentData())
+            self._settings.setValue('Canvas/grouped_box_auto_layout_ratio',
+                                    self.ui.comboBoxBoxesAutoLayout.currentData())
         QDialog.closeEvent(self, event)

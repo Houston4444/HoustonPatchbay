@@ -207,6 +207,8 @@ class PatchbayManager:
                     'Canvas/semi_hide_opacity', 0.17, type=float)
                 options.default_zoom = self._settings.value(
                     'Canvas/default_zoom', 100, type=int)
+                options.box_grouped_auto_layout_ratio = self._settings.value(
+                    'Canvas/grouped_box_auto_layout_ratio', 1.0, type=float)
         
         if features is None:
             features = CanvasFeaturesObject()
