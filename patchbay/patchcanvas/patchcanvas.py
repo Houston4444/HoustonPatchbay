@@ -1295,6 +1295,11 @@ def save_cache():
     canvas.theme.save_cache()
 
 @patchbay_api
+def set_grouped_box_layout_ratio(value: float):
+    options.box_grouped_auto_layout_ratio = max(min(2.0, value), 0.0)
+    redraw_all_groups()
+
+@patchbay_api
 def set_options(new_options: CanvasOptionsObject):
     if not canvas.initiated:
         options.__dict__ = new_options.__dict__.copy()

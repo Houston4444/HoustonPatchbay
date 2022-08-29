@@ -1,6 +1,7 @@
 
 from typing import TYPE_CHECKING
-from PyQt5.QtWidgets import QDialog, QApplication, QInputDialog, QMessageBox, QWidget
+from PyQt5.QtWidgets import (QDialog, QApplication, QInputDialog,
+                             QMessageBox, QWidget, QAction)
 from PyQt5.QtGui import QIcon, QPixmap
 from PyQt5.QtCore import Qt, pyqtSignal, QProcess, QSettings
 
@@ -27,6 +28,16 @@ class CanvasOptionsDialog(QDialog):
         sg = manager.sg
         self._settings = settings
         self._theme_changed = sg.theme_changed
+        
+        box_layout_dict = {
+            1.0: _translate('box_layout', 'Choose the smallest area'),
+            1.1: _translate('box_layout', 'Prefer large boxes'),
+            1.4: _translate('box_layout', 'Almost only large boxes'),
+            2.0: _translate('box_layout', 'Force large boxes')
+        }
+        
+        for ratio, text in box_layout_dict.items():
+            self.ui.comboBoxBoxesAutoLayout.addItem(text, ratio)
 
         if settings is not None:
             self.ui.checkBoxGracefulNames.setChecked(
@@ -47,6 +58,20 @@ class CanvasOptionsDialog(QDialog):
                 settings.value('Canvas/max_port_width', 170, type=int))
             self.ui.spinBoxDefaultZoom.setValue(
                 settings.value('Canvas/default_zoom', 100, type=int))
+            
+            layout_ratio = settings.value(
+                'Canvas/grouped_box_auto_layout_ratio', 1.0, type=float)
+            
+            if layout_ratio <= 1.0:
+                box_index = 0
+            elif layout_ratio <= 1.3:
+                box_index = 1
+            elif layout_ratio < 2.0:
+                box_index = 2
+            else:
+                box_index = 3
+                
+            self.ui.comboBoxBoxesAutoLayout.setCurrentIndex(box_index)
 
         self.ui.comboBoxTheme.activated.connect(self._theme_box_activated)
         self.ui.pushButtonEditTheme.clicked.connect(self._edit_theme)
@@ -74,6 +99,8 @@ class CanvasOptionsDialog(QDialog):
             manager.sg.max_port_width_changed)
         self.ui.spinBoxDefaultZoom.valueChanged.connect(
             self._change_default_zoom)
+        self.ui.comboBoxBoxesAutoLayout.currentIndexChanged.connect(
+            self._grouped_box_auto_layout_changed)
 
     def _change_default_zoom(self, value: int):
         patchcanvas.set_default_zoom(value)
@@ -157,6 +184,10 @@ class CanvasOptionsDialog(QDialog):
                                 theme_data.editable)
                             break
                     break
+
+    def _grouped_box_auto_layout_changed(self, index: int):
+        patchcanvas.set_grouped_box_layout_ratio(
+            self.ui.comboBoxBoxesAutoLayout.currentData())
 
     def showEvent(self, event):
         self.set_theme_list(patchcanvas.list_themes())

@@ -534,6 +534,7 @@ class BoxWidget(BoxWidgetMoth):
         self, height_for_ports: int, height_for_ports_one: int,
         ports_in_width: int, ports_out_width: int) -> dict:
         ''' choose in how many lines should be splitted the title
+        and if the box layout should be large or high.
         returns a dict with all required variables and values '''
         
         # width_for_ports_one is the width needed for ports
@@ -637,7 +638,7 @@ class BoxWidget(BoxWidgetMoth):
                     sizes_tuples.append(
                         ((ports_width + all_title_templates[i]['header_width'])
                         * max(all_title_templates[i]['header_height'],
-                            height_for_ports + ports_y_start_min),
+                              height_for_ports + ports_y_start_min),
                         i, False, TitleOn.SIDE))
 
                 if self.has_top_icon():
@@ -645,8 +646,8 @@ class BoxWidget(BoxWidgetMoth):
                     for i in range(1, lines_choice_max + 1):
                         sizes_tuples.append(
                             ((ports_width + all_title_templates[i]['title_width'] + 16)
-                                * max(all_title_templates[i]['header_height'] + 28,
-                                      height_for_ports + ports_y_start_min),
+                            * max(all_title_templates[i]['header_height'] + 28,
+                                  height_for_ports + ports_y_start_min),
                             i, False, TitleOn.SIDE_UNDER_ICON))
             
             if layout_mode in (BoxLayoutMode.AUTO, BoxLayoutMode.HIGH):
@@ -657,18 +658,21 @@ class BoxWidget(BoxWidgetMoth):
                         * (all_title_templates[i]['header_height'] + height_for_ports),
                         i, False, TitleOn.TOP))
         else:
-            # grouped box
+            # --- grouped box ---
             
             # calculate area with input and outputs ports descending
-            if layout_mode in (BoxLayoutMode.AUTO, BoxLayoutMode.HIGH):
+            if (layout_mode in (BoxLayoutMode.AUTO, BoxLayoutMode.HIGH)
+                    and options.box_grouped_auto_layout_ratio < 2.0):
                 for i in range(1, lines_choice_max + 1):
                     sizes_tuples.append(
                         (max(all_title_templates[i]['header_width'], width_for_ports_one)
-                        * (all_title_templates[i]['header_height'] + height_for_ports_one),
+                        * (all_title_templates[i]['header_height'] + height_for_ports_one)
+                        * options.box_grouped_auto_layout_ratio,
                         i, True, TitleOn.TOP))
 
             # calculate area with input ports at left of output ports
-            if layout_mode in (BoxLayoutMode.AUTO, BoxLayoutMode.LARGE):
+            if (layout_mode in (BoxLayoutMode.AUTO, BoxLayoutMode.LARGE)
+                    and options.box_grouped_auto_layout_ratio > 0.0):
                 for i in range(1, lines_choice_max + 1):
                     sizes_tuples.append(
                         (max(all_title_templates[i]['header_width'], width_for_ports)
