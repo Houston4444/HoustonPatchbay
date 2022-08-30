@@ -4,6 +4,7 @@ from pathlib import Path
 from dataclasses import dataclass
 import sys
 from typing import TYPE_CHECKING, Callable, Union
+from unittest.mock import patch
 from PyQt5.QtGui import QCursor, QGuiApplication
 from PyQt5.QtWidgets import QMainWindow, QMessageBox, QWidget
 from PyQt5.QtCore import QTimer, QSettings, QThread, QTranslator, QLocale
@@ -342,7 +343,7 @@ class PatchbayManager:
 
     def get_group_position(self, group_name: str) -> GroupPos:
         for gpos in self.group_positions:
-            if (gpos.port_types_view == self.port_types_view
+            if (gpos.port_types_view is self.port_types_view
                     and gpos.group_name == group_name):
                 return gpos
 
@@ -430,15 +431,24 @@ class PatchbayManager:
         self._next_portgroup_id = 1
         self._next_connection_id = 0
 
-    def change_port_types_view(self, port_types_view: int):
-        print('change port types view', port_types_view)
-        if port_types_view == self.port_types_view:
+    def change_port_types_view(self, port_types_view: PortTypesViewFlag):
+        if port_types_view is self.port_types_view:
             return
 
+        print('change port types view', port_types_view)
+
+        for group in self.groups:
+            if "Midi Modwheel" in group.name:
+                print('Hidok', group.current_position.null_xy, group.current_position.port_types_view)
+        
+            for gpos in self.group_positions:
+                if "Midi Modwheel" in group.name and gpos.port_types_view == self.port_types_view:
+                    print('Hyillo', group.group_id, gpos.port_types_view, gpos.null_xy)
+        
         self.port_types_view = port_types_view
 
         # Prevent visual update at each canvas item creation
-        # because we may create a lot of ports here
+        # because we may create/remove a lot of ports here
         self.optimize_operation(True)
 
         for connection in self.connections:
@@ -448,9 +458,14 @@ class PatchbayManager:
 
         groups_and_pos = dict[Group, GroupPos]()
 
+        prevent_overlap = patchcanvas.options.prevent_overlap
+        patchcanvas.options.prevent_overlap = False
+
         for group in self.groups:
             group.change_port_types_view()
             groups_and_pos[group] = self.get_group_position(group.name)
+            if "Midi Modwheel" in group.name:
+                print('Hydoo', group.group_id, groups_and_pos[group].null_xy)
 
         for connection in self.connections:
             connection.add_to_canvas()
@@ -460,7 +475,13 @@ class PatchbayManager:
         patchcanvas.redraw_all_groups()
         
         for group, gpos in groups_and_pos.items():
-            group.set_group_position(gpos)
+            if group.name == 'Hydrogen':
+                print('replacee', gpos.null_xy, gpos.in_xy, gpos.out_xy, gpos.port_types_view)
+            if "Midi Modwheel" in group.name:
+                print('replacee Midimod', gpos.null_xy, gpos.in_xy, gpos.out_xy, gpos.port_types_view)
+            group.set_group_position(gpos, view_change=True)
+
+        patchcanvas.options.prevent_overlap = prevent_overlap
 
         patchcanvas.repulse_all_boxes()
 

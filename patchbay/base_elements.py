@@ -113,7 +113,7 @@ class ToolDisplayed(IntFlag):
 
 
 class GroupPos:
-    port_types_view: int = 0
+    port_types_view: PortTypesViewFlag = PortTypesViewFlag.NONE
     group_name: str = ""
     null_zone: str = ""
     in_zone: str = ""
@@ -160,7 +160,8 @@ class GroupPos:
         gpos = GroupPos()
         
         if isinstance(port_types_view, int):
-            gpos.port_types_view = port_types_view
+            gpos.port_types_view = PortTypesViewFlag(
+                port_types_view & PortTypesViewFlag.ALL)
         if isinstance(group_name, str):
             gpos.group_name = group_name
         if isinstance(null_zone, str):
@@ -199,7 +200,7 @@ class GroupPos:
         self.__dict__ = other.__dict__.copy()
 
     def as_serializable_dict(self):
-        return {'port_types_view': self.port_types_view,
+        return {'port_types_view': int(self.port_types_view),
                 'group_name': self.group_name,
                 'null_zone': self.null_zone,
                 'in_zone': self.in_zone,
@@ -812,7 +813,7 @@ class Group:
     def save_current_position(self):
         self.manager.save_group_position(self.current_position)
 
-    def set_group_position(self, group_position: GroupPos):
+    def set_group_position(self, group_position: GroupPos, view_change=False):
         if not self.in_canvas:
             return
 
@@ -824,7 +825,10 @@ class Group:
             self.group_id, gpos.null_xy, gpos.in_xy, gpos.out_xy)
 
         for port_mode, layout_mode in group_position.layout_modes.items():
-            patchcanvas.set_group_layout_mode(self.group_id, port_mode, layout_mode)
+            patchcanvas.set_group_layout_mode(
+                self.group_id, port_mode, layout_mode)
+
+        prevent_overlap = not view_change
 
         # restore split and wrapped modes
         if gpos.flags & GroupPosFlag.SPLITTED:
@@ -833,15 +837,18 @@ class Group:
 
             patchcanvas.wrap_group_box(
                 self.group_id, PortMode.INPUT,
-                bool(gpos.flags & GroupPosFlag.WRAPPED_INPUT))
+                bool(gpos.flags & GroupPosFlag.WRAPPED_INPUT),
+                prevent_overlap=prevent_overlap)
             patchcanvas.wrap_group_box(
                 self.group_id, PortMode.OUTPUT,
-                bool(gpos.flags & GroupPosFlag.WRAPPED_OUTPUT))
+                bool(gpos.flags & GroupPosFlag.WRAPPED_OUTPUT),
+                prevent_overlap=prevent_overlap)
         else:
             patchcanvas.wrap_group_box(
                 self.group_id, PortMode.NULL,
                 bool(gpos.flags & (GroupPosFlag.WRAPPED_INPUT
-                                   | GroupPosFlag.WRAPPED_OUTPUT)))
+                                   | GroupPosFlag.WRAPPED_OUTPUT)),
+                prevent_overlap=prevent_overlap)
 
             if ex_gpos_flags & GroupPosFlag.SPLITTED:
                 patchcanvas.animate_before_join(self.group_id)

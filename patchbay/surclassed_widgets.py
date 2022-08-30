@@ -1,7 +1,7 @@
 from PyQt5.QtCore import Qt, pyqtSignal, QPoint
 from PyQt5.QtGui import QWheelEvent, QKeyEvent, QMouseEvent
 from PyQt5.QtWidgets import (QApplication, QProgressBar, QSlider, QToolTip,
-                             QLineEdit, QLabel, QMenu, QAction)
+                             QLineEdit, QLabel, QMenu, QAction, QCheckBox)
 
 from .base_elements import TransportViewMode
 
@@ -147,3 +147,17 @@ class TimeTransportLabel(QLabel):
             (self.transport_view_mode + 1) % 3)
         self.transport_view_changed.emit()
         self._update_tool_tip()
+
+
+class TypeViewCheckBox(QCheckBox):
+    really_clicked = pyqtSignal(int)
+    
+    def __init__(self, parent=None):
+        super().__init__(parent)
+    
+    def mousePressEvent(self, event: QMouseEvent) -> None:
+        if event.button() in (Qt.LeftButton, Qt.RightButton):
+            self.really_clicked.emit(event.button())
+            return
+    
+        super().mousePressEvent(event)

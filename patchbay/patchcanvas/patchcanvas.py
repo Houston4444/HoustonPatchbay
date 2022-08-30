@@ -640,8 +640,9 @@ def animate_before_join(group_id: int):
             widget, group.null_pos.x(), group.null_pos.y(), joining=True)
 
 @patchbay_api
-def move_group_boxes(group_id: int, null_xy: tuple,
-                     in_xy: tuple, out_xy: tuple, animate=True):
+def move_group_boxes(
+        group_id: int, null_xy: tuple[int, int], in_xy: tuple[int, int],
+        out_xy: tuple[int, int], animate=True):
     group = canvas.get_group(group_id)
     if group is None:
         return
@@ -649,6 +650,9 @@ def move_group_boxes(group_id: int, null_xy: tuple,
     group.null_pos = QPoint(*null_xy)
     group.in_pos = QPoint(*in_xy)
     group.out_pos = QPoint(*out_xy)
+
+    if group.group_name == 'Hydrogen':
+        print('zoklahydrof', group.null_pos, null_xy)
 
     if group.split:
         for port_mode in (PortMode.OUTPUT, PortMode.INPUT):
@@ -680,11 +684,15 @@ def move_group_boxes(group_id: int, null_xy: tuple,
         if int(box_pos.x()) == null_xy[0] and int(box_pos.y()) == null_xy[1]:
             return
 
+        if group.group_name == 'Hydrogen':
+            print('add to annim hydro', null_xy[0], null_xy[1])
+        
         canvas.scene.add_box_to_animation(box, null_xy[0], null_xy[1],
                                           force_anim=animate)
 
 @patchbay_api
-def wrap_group_box(group_id: int, port_mode: int, yesno: bool, animate=True):
+def wrap_group_box(group_id: int, port_mode: int, yesno: bool,
+                   animate=True, prevent_overlap=True):
     group = canvas.get_group(group_id)
     if group is None:
         return
@@ -692,7 +700,8 @@ def wrap_group_box(group_id: int, port_mode: int, yesno: bool, animate=True):
     for box in group.widgets:
         if (box is not None
                 and box.get_splitted_mode() == port_mode):
-            box.set_wrapped(yesno, animate=animate)
+            box.set_wrapped(yesno, animate=animate,
+                            prevent_overlap=prevent_overlap)
 
 @patchbay_api
 def set_group_layout_mode(group_id: int, port_mode: PortMode,

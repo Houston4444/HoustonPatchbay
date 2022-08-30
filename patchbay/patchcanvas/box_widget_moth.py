@@ -17,6 +17,7 @@
 #
 # For a full copy of the GNU General Public License see the doc/GPL.txt file.
 
+import inspect
 import logging
 from math import ceil
 from struct import pack
@@ -400,9 +401,15 @@ class BoxWidgetMoth(QGraphicsItem):
             self._wrapping = False
             self._unwrapping = False
         
-        self.setX(self._x_before_wrap
-                  + (self._x_after_wrap - self._x_before_wrap)
-                    * self._wrapping_ratio)
+        if (self._has_side_title()
+                and self._current_port_mode is PortMode.INPUT
+                and not self in [mb.widget for mb in canvas.scene.move_boxes]):
+            # compensate x position in this case, 
+            # it would be strange that the box stays at its left position.
+            # this way, its right position stays on place.
+            self.setX(self._x_before_wrap
+                    + (self._x_after_wrap - self._x_before_wrap)
+                        * self._wrapping_ratio)
 
         self.update_positions()
 
@@ -425,7 +432,7 @@ class BoxWidgetMoth(QGraphicsItem):
     def is_wrapped(self) -> bool:
         return self._wrapped
 
-    def set_wrapped(self, yesno: bool, animate=True):
+    def set_wrapped(self, yesno: bool, animate=True, prevent_overlap=True):        
         if yesno == self._wrapped:
             return
 
@@ -449,6 +456,12 @@ class BoxWidgetMoth(QGraphicsItem):
             else:
                 self._x_after_wrap = self._x_before_wrap + self._width - self._unwrapped_width
         
+        if self._group_name == 'PulseAudio JACK Source':
+            print('ddkdk', self._group_name, yesno, animate, prevent_overlap)
+        
+        if not prevent_overlap:
+            return
+
         x_diff = self._x_after_wrap - self._x_before_wrap
         hws = canvas.theme.hardware_rack_width
         
@@ -472,7 +485,7 @@ class BoxWidgetMoth(QGraphicsItem):
                 wanted_direction=Direction.DOWN)
 
     def update_positions(self, even_animated=False):
-        # see canvasbox.py
+        # see box_widget.py
         pass
 
     def repaint_lines(self, forced=False, fast_move=False):
@@ -881,10 +894,8 @@ class BoxWidgetMoth(QGraphicsItem):
 
             QGraphicsItem.mouseMoveEvent(self, event)
 
-            rep_time = time.time()
             for item in canvas.scene.get_selected_boxes():
                 item.repaint_lines(fast_move=True)
-            # print('repline', time.time() - rep_time)
 
             canvas.scene.resize_the_scene()
             return
@@ -946,6 +957,12 @@ class BoxWidgetMoth(QGraphicsItem):
         for box in canvas.scene.get_selected_boxes():
             box.fix_pos()
             box.send_move_callback()
+
+    def setPos(self, *args):
+        super().setPos(*args)
+        if self._group_name == 'Hydrogen':
+            print('quivala', *args)
+            # print(inspect.stack())
 
     def set_in_cache(self, yesno: bool):
         cache_mode = self.cacheMode()

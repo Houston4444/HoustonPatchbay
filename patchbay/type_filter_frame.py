@@ -1,5 +1,7 @@
 
 from typing import TYPE_CHECKING
+
+from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QFrame
 
 from .base_elements import PortTypesViewFlag
@@ -16,12 +18,12 @@ class TypeFilterFrame(QFrame):
         self.ui = Ui_FrameTypesFilter()
         self.ui.setupUi(self)
         
-        self.ui.checkBoxAudioFilter.stateChanged.connect(
-            self._check_box_audio_checked)
-        self.ui.checkBoxMidiFilter.stateChanged.connect(
-            self._check_box_midi_checked)
-        self.ui.checkBoxCvFilter.stateChanged.connect(
-            self._check_box_cv_checked)
+        self.ui.checkBoxAudioFilter.really_clicked.connect(
+            self._check_box_audio_right_clicked)
+        self.ui.checkBoxMidiFilter.really_clicked.connect(
+            self._check_box_midi_right_clicked)
+        self.ui.checkBoxCvFilter.really_clicked.connect(
+            self._check_box_cv_right_clicked)
         
         self._patchbay_mng = None
     
@@ -50,17 +52,24 @@ class TypeFilterFrame(QFrame):
                 port_types_view |= PortTypesViewFlag.MIDI
             if cv_checked:
                 port_types_view |= PortTypesViewFlag.CV
-
-        # if not self.ui.checkBoxAudioFilter.isChecked():
-        #     port_types_view &= ~PortTypesViewFlag.AUDIO
-        # if not self.ui.checkBoxMidiFilter.isChecked():
-        #     port_types_view &= ~PortTypesViewFlag.MIDI
-        # if not self.ui.checkBoxCvFilter.isChecked():
-        #     port_types_view &= ~PortTypesViewFlag.CV
+                
+        if port_types_view is PortTypesViewFlag.NONE:
+            if self._patchbay_mng.port_types_view is PortTypesViewFlag.AUDIO:
+                port_types_view = (PortTypesViewFlag.MIDI | PortTypesViewFlag.CV)
+            elif self._patchbay_mng.port_types_view is PortTypesViewFlag.MIDI:
+                port_types_view = (PortTypesViewFlag.AUDIO | PortTypesViewFlag.CV)
+            elif self._patchbay_mng.port_types_view is PortTypesViewFlag.CV:
+                port_types_view = (PortTypesViewFlag.AUDIO | PortTypesViewFlag.MIDI)
         
         self._patchbay_mng.change_port_types_view(port_types_view)
 
     def _check_box_audio_checked(self, state: int):
+        if (not state 
+                and self._patchbay_mng is not None
+                and self._patchbay_mng.port_types_view is PortTypesViewFlag.AUDIO):
+            self._patchbay_mng.change_port_types_view(
+                PortTypesViewFlag.MIDI | PortTypesViewFlag.CV)
+            return
         self._change_port_types_view()
 
     def _check_box_midi_checked(self, state: int):
@@ -68,7 +77,43 @@ class TypeFilterFrame(QFrame):
     
     def _check_box_cv_checked(self, state: int):
         self._change_port_types_view()
+    
+    def _right_click(self, view_flag: PortTypesViewFlag):
+        if self._patchbay_mng is None:
+            return
         
+        if self._patchbay_mng.port_types_view is view_flag:
+            self._patchbay_mng.change_port_types_view(PortTypesViewFlag.ALL)
+        else:
+            self._patchbay_mng.change_port_types_view(view_flag)
+    
+    def _check_box_audio_right_clicked(self, button: int):
+        if button == Qt.RightButton:
+            self._right_click(PortTypesViewFlag.AUDIO)
+            return
+        
+        self.ui.checkBoxAudioFilter.setChecked(
+            not self.ui.checkBoxAudioFilter.isChecked())
+        self._change_port_types_view()
+    
+    def _check_box_midi_right_clicked(self, button: int):
+        if button == Qt.RightButton:
+            self._right_click(PortTypesViewFlag.MIDI)
+            return
+        
+        self.ui.checkBoxMidiFilter.setChecked(
+            not self.ui.checkBoxMidiFilter.isChecked())
+        self._change_port_types_view()
+    
+    def _check_box_cv_right_clicked(self, button: int):
+        if button == Qt.RightButton:
+            self._right_click(PortTypesViewFlag.CV)
+            return
+        
+        self.ui.checkBoxCvFilter.setChecked(
+            not self.ui.checkBoxCvFilter.isChecked())
+        self._change_port_types_view()
+    
     def _port_types_view_changed(self, port_types_view: int):
         self.ui.checkBoxAudioFilter.setChecked(
             bool(port_types_view & PortTypesViewFlag.AUDIO))

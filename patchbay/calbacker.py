@@ -58,12 +58,14 @@ class Callbacker:
         group = self.mng.get_group_from_id(group_id)
         if group is not None:
             gpos = group.current_position
-
-            if port_mode == PortMode.NULL:
+            if group.name == 'Hydrogen':
+                print('reroro', port_mode, x, y, gpos.port_types_view)
+            
+            if port_mode is PortMode.NULL:
                 gpos.null_xy = (x, y)
-            elif port_mode == PortMode.INPUT:
+            elif port_mode is PortMode.INPUT:
                 gpos.in_xy = (x, y)
-            elif port_mode == PortMode.OUTPUT:
+            elif port_mode is PortMode.OUTPUT:
                 gpos.out_xy = (x, y)
 
             group.save_current_position()
