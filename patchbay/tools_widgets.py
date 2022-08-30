@@ -10,7 +10,7 @@ from PyQt5.QtWidgets import QWidget, QApplication
 from .patchcanvas import patchcanvas
 from .ui.patchbay_tools import Ui_Form as PatchbayToolsUiForm
 from .base_elements import (
-    ToolDisplayed, TransportPosition, TransportViewMode, PortType)
+    ToolDisplayed, TransportPosition, TransportViewMode)
 
 if TYPE_CHECKING:
     from .patchbay_manager import PatchbayManager
@@ -30,9 +30,6 @@ class PatchbayToolsWidget(QWidget):
         QWidget.__init__(self)
         self.ui = PatchbayToolsUiForm()
         self.ui.setupUi(self)
-
-        self.ui.checkBoxAudioFilter.stateChanged.connect(self._check_box_audio_checked)
-        self.ui.checkBoxMidiFilter.stateChanged.connect(self._check_box_midi_checked)
 
         self.ui.toolButtonPlayPause.clicked.connect(self._play_clicked)
         self.ui.toolButtonStop.clicked.connect(self._stop_clicked)
@@ -119,18 +116,6 @@ class PatchbayToolsWidget(QWidget):
         self.ui.labelTime.setStyleSheet(
             f"QLabel{{background:{count_bg}; border: 2px solid {background}}}")
     
-    def _check_box_audio_checked(self, state: int):
-        if not state:
-            self.ui.checkBoxMidiFilter.setChecked(True)
-            
-        self._change_port_types_view()
-
-    def _check_box_midi_checked(self, state: int):
-        if not state:
-            self.ui.checkBoxAudioFilter.setChecked(True)
-            
-        self._change_port_types_view()
-    
     def _play_clicked(self, play: bool):
         if self._patchbay_mng is not None:
             self._patchbay_mng.transport_play_pause(play)
@@ -169,29 +154,9 @@ class PatchbayToolsWidget(QWidget):
     
             self._fw_clicked_last_time = now
 
-    def _port_types_view_changed(self, port_types_view: int):
-        self.ui.checkBoxAudioFilter.setChecked(
-            bool(port_types_view & PortType.AUDIO_JACK))
-        self.ui.checkBoxMidiFilter.setChecked(
-            bool(port_types_view & PortType.MIDI_JACK))
-
-    def _change_port_types_view(self):
-        if self._patchbay_mng is None:
-            return
-        
-        port_types_view = (
-            int(self.ui.checkBoxAudioFilter.isChecked())
-                * PortType.AUDIO_JACK
-            + int(self.ui.checkBoxMidiFilter.isChecked())
-                  * PortType.MIDI_JACK)
-        
-        self._patchbay_mng.change_port_types_view(port_types_view)
-
     def set_patchbay_manager(self, mng: 'PatchbayManager'):
         self._patchbay_mng = mng
-        self._patchbay_mng.sg.port_types_view_changed.connect(
-            self._port_types_view_changed)
-        self._port_types_view_changed(self._patchbay_mng.port_types_view)
+        self.ui.frameTypeFilter.set_patchbay_manager(mng)
     
     def refresh_transport(self, transport_pos: TransportPosition):
         self.ui.toolButtonPlayPause.setChecked(transport_pos.rolling)
@@ -263,11 +228,8 @@ class PatchbayToolsWidget(QWidget):
     def change_tools_displayed(self, tools_displayed: ToolDisplayed):
         self._tools_displayed = tools_displayed
         
-        self.ui.checkBoxAudioFilter.setVisible(
+        self.ui.frameTypeFilter.setVisible(
             bool(self._tools_displayed & ToolDisplayed.PORT_TYPES_VIEW))
-        self.ui.checkBoxMidiFilter.setVisible(
-            bool(self._tools_displayed & ToolDisplayed.PORT_TYPES_VIEW))
-        
         self.ui.sliderZoom.setVisible(
             bool(self._tools_displayed & ToolDisplayed.ZOOM_SLIDER))
         
@@ -397,8 +359,7 @@ class PatchbayToolsWidget(QWidget):
         if yesno:
             self.change_tools_displayed(self._tools_displayed)
         else:
-            self.ui.checkBoxAudioFilter.setVisible(False)
-            self.ui.checkBoxMidiFilter.setVisible(False)
+            self.ui.frameTypeFilter.setVisible(False)
             self.ui.sliderZoom.setVisible(False)
             self.ui.toolButtonRewind.setVisible(False)
             self.ui.labelTime.setVisible(False)

@@ -8,12 +8,11 @@ from PyQt5.QtGui import QCursor, QGuiApplication
 from PyQt5.QtWidgets import QMainWindow, QMessageBox, QWidget
 from PyQt5.QtCore import QTimer, QSettings, QThread, QTranslator, QLocale
 
-
 from .patchcanvas import patchcanvas, PortType
 from .patchcanvas.utils import get_new_group_positions
 from .patchcanvas.scene_view import PatchGraphicsView
 from .patchcanvas.init_values import (
-    CallbackAct, CanvasFeaturesObject, CanvasOptionsObject)
+    CallbackAct, CanvasFeaturesObject, CanvasOptionsObject, PortSubType)
 from .patchcanvas.theme_manager import ThemeManager
 
 from .patchbay_signals import SignalsObject
@@ -21,7 +20,7 @@ from .tools_widgets import PatchbayToolsWidget
 from .canvas_menu import CanvasMenu
 from .options_dialog import CanvasOptionsDialog
 from .filter_frame import FilterFrame
-from .base_elements import (Connection, GroupPos, Port, Portgroup, Group,
+from .base_elements import (Connection, GroupPos, Port, PortTypesViewFlag, Portgroup, Group,
                             JackPortFlag, PortgroupMem, ToolDisplayed, TransportPosition)
 from .calbacker import Callbacker
 
@@ -97,8 +96,7 @@ def in_main_thread():
 
 class PatchbayManager:
     use_graceful_names = True
-    port_types_view = (enum_to_flag(PortType.AUDIO_JACK)
-                       | enum_to_flag(PortType.MIDI_JACK))
+    port_types_view = PortTypesViewFlag.ALL
     
     # when True, items can be added to patchcanvas but they won't be drawn
     optimized_operation = False
@@ -288,8 +286,20 @@ class PatchbayManager:
         self._next_portgroup_id += 1
         return portgroup
 
-    def port_type_shown(self, port_type: int) -> bool:
-        return bool(self.port_types_view & enum_to_flag(port_type))
+    def port_type_shown(self, full_port_type: tuple[PortType, PortSubType]) -> bool:
+        port_type, sub_type = full_port_type
+        if port_type is PortType.MIDI_JACK:
+            return bool(self.port_types_view & PortTypesViewFlag.MIDI)
+        if port_type is PortType.AUDIO_JACK:
+            if sub_type is PortSubType.REGULAR:
+                return bool(self.port_types_view & PortTypesViewFlag.AUDIO)
+            elif sub_type is PortSubType.CV:
+                return bool(self.port_types_view & PortTypesViewFlag.CV)
+            elif sub_type is (PortSubType.REGULAR | PortSubType.CV):
+                return bool(self.port_types_view & (PortTypesViewFlag.AUDIO
+                                                    | PortTypesViewFlag.CV))
+
+        return False
 
     def get_group_from_name(self, group_name: str) -> Union[Group, None]:
         return self._groups_by_name.get(group_name)
@@ -421,6 +431,7 @@ class PatchbayManager:
         self._next_connection_id = 0
 
     def change_port_types_view(self, port_types_view: int):
+        print('change port types view', port_types_view)
         if port_types_view == self.port_types_view:
             return
 
@@ -432,7 +443,7 @@ class PatchbayManager:
 
         for connection in self.connections:
             if (connection.in_canvas
-                    and not port_types_view & connection.port_type()):
+                    and not connection.shown_in_port_types_view(port_types_view)):
                 connection.remove_from_canvas()
 
         groups_and_pos = dict[Group, GroupPos]()

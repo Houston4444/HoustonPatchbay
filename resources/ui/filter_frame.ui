@@ -147,22 +147,12 @@
     </widget>
    </item>
    <item>
-    <widget class="QCheckBox" name="checkBoxAudioFilter">
-     <property name="text">
-      <string>Audio</string>
+    <widget class="TypeFilterFrame" name="frameTypeFilter">
+     <property name="frameShape">
+      <enum>QFrame::StyledPanel</enum>
      </property>
-     <property name="checked">
-      <bool>true</bool>
-     </property>
-    </widget>
-   </item>
-   <item>
-    <widget class="QCheckBox" name="checkBoxMidiFilter">
-     <property name="text">
-      <string>Midi</string>
-     </property>
-     <property name="checked">
-      <bool>true</bool>
+     <property name="frameShadow">
+      <enum>QFrame::Raised</enum>
      </property>
     </widget>
    </item>
@@ -234,6 +224,12 @@
    <class>FilterBar</class>
    <extends>QLineEdit</extends>
    <header>..surclassed_widgets</header>
+  </customwidget>
+  <customwidget>
+   <class>TypeFilterFrame</class>
+   <extends>QFrame</extends>
+   <header>..type_filter_frame</header>
+   <container>1</container>
   </customwidget>
  </customwidgets>
  <resources/>

@@ -2,9 +2,8 @@
 from typing import TYPE_CHECKING
 from PyQt5.QtWidgets import QFrame
 from PyQt5.QtGui import QKeyEvent
-from PyQt5.QtCore import Qt, QSettings
+from PyQt5.QtCore import Qt, QSettings, pyqtSlot
 
-from .patchcanvas import PortType
 from .ui.filter_frame import Ui_Frame
 
 if TYPE_CHECKING:
@@ -24,10 +23,6 @@ class FilterFrame(QFrame):
         self.ui.lineEditGroupFilter.up_down_pressed.connect(self._up_down_pressed)
         self.ui.toolButtonUp.clicked.connect(self._up_pressed)
         self.ui.toolButtonDown.clicked.connect(self._down_pressed)
-        self.ui.checkBoxAudioFilter.stateChanged.connect(
-            self._check_box_audio_checked)
-        self.ui.checkBoxMidiFilter.stateChanged.connect(
-            self._check_box_midi_checked)
         self.ui.spinBoxOpacity.valueChanged.connect(
             self._set_semi_hide_opacity)
         self.ui.toolButtonCloseFilterBar.clicked.connect(
@@ -95,37 +90,6 @@ class FilterFrame(QFrame):
             self._up_pressed()
         elif key == Qt.Key_Down:
             self._down_pressed()
-
-    def _change_port_types_view(self):
-        if self.patchbay_manager is None:
-            return
-        
-        port_types_view = (
-            int(self.ui.checkBoxAudioFilter.isChecked())
-                * PortType.AUDIO_JACK
-            + int(self.ui.checkBoxMidiFilter.isChecked())
-                  * PortType.MIDI_JACK)
-        
-        self.patchbay_manager.change_port_types_view(port_types_view)
-        self._filter_groups()
-    
-    def _check_box_audio_checked(self, state: int):
-        if not state:
-            self.ui.checkBoxMidiFilter.setChecked(True)
-            
-        self._change_port_types_view()
-
-    def _check_box_midi_checked(self, state: int):
-        if not state:
-            self.ui.checkBoxAudioFilter.setChecked(True)
-            
-        self._change_port_types_view()
-    
-    def _port_types_view_changed(self, port_types_view: int):
-        self.ui.checkBoxAudioFilter.setChecked(
-            bool(port_types_view & PortType.AUDIO_JACK))
-        self.ui.checkBoxMidiFilter.setChecked(
-            bool(port_types_view & PortType.MIDI_JACK))
     
     def _set_semi_hide_opacity(self, value:int):
         if self.patchbay_manager is None:
@@ -155,11 +119,15 @@ class FilterFrame(QFrame):
         super().keyPressEvent(event)
         if event.key() == Qt.Key_Escape:
             self.hide()
-            
+    
+    @pyqtSlot(int)
+    def _port_types_view_changed(self, port_types_view: int):
+        self._filter_groups()
+    
     def set_patchbay_manager(self, patchbay_manager: 'PatchbayManager'):
         self.patchbay_manager = patchbay_manager
-        self.patchbay_manager.sg.port_types_view_changed.connect(
-            self._port_types_view_changed)
+        self.patchbay_manager.sg.port_types_view_changed.connect(self._port_types_view_changed)
+        self.ui.frameTypeFilter.set_patchbay_manager(patchbay_manager)
     
     def set_filter_text(self, text: str):
         ''' used to find client boxes from client widget '''

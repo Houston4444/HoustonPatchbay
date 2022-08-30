@@ -71,9 +71,9 @@ class PortSubType(IntFlag):
         CV ports are audio ports, but we prevent to connect an output CV port
         to a regular audio port to avoid material destruction, CV ports also
         look different, simply because this is absolutely not the same use.'''
-    REGULAR = 0x00
-    CV = 0x01
-    A2J = 0x02
+    REGULAR = 0x01
+    CV = 0x02
+    A2J = 0x04
 
 
 # Callback Actions

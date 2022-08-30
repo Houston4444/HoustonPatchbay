@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1304</width>
+    <width>1092</width>
     <height>33</height>
    </rect>
   </property>
@@ -50,16 +50,15 @@ background-color:  rgba(50%, 50%, 50%, 25%);
     </spacer>
    </item>
    <item>
-    <widget class="QCheckBox" name="checkBoxAudioFilter">
-     <property name="text">
-      <string>Audio</string>
+    <widget class="TypeFilterFrame" name="frameTypeFilter">
+     <property name="styleSheet">
+      <string notr="true">QFrame{border:none}</string>
      </property>
-    </widget>
-   </item>
-   <item>
-    <widget class="QCheckBox" name="checkBoxMidiFilter">
-     <property name="text">
-      <string>Midi</string>
+     <property name="frameShape">
+      <enum>QFrame::StyledPanel</enum>
+     </property>
+     <property name="frameShadow">
+      <enum>QFrame::Raised</enum>
      </property>
     </widget>
    </item>
@@ -605,6 +604,12 @@ QPushButton:hover{border: 1 px solid grey;text-align:right}</string>
    <class>TimeTransportLabel</class>
    <extends>QLabel</extends>
    <header>..surclassed_widgets</header>
+  </customwidget>
+  <customwidget>
+   <class>TypeFilterFrame</class>
+   <extends>QFrame</extends>
+   <header>..type_filter_frame</header>
+   <container>1</container>
   </customwidget>
  </customwidgets>
  <resources>

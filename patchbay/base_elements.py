@@ -27,6 +27,15 @@ class GroupPosFlag(IntFlag):
     HAS_BEEN_SPLITTED = 0x40
 
 
+class PortTypesViewFlag(IntFlag):
+    NONE = 0x00
+    AUDIO = 0x01
+    MIDI = 0x02
+    CV = 0x04
+    VIDEO = 0x08
+    ALL = AUDIO | MIDI | CV | VIDEO
+
+
 @dataclass
 class TransportPosition:
     frame: int
@@ -101,10 +110,6 @@ class ToolDisplayed(IntFlag):
                     return_td |= ToolDisplayed[disp_str]
 
         return return_td
-
-
-def enum_to_flag(enum: int) -> int:
-    return 2 ** (enum - 1)
 
 
 class GroupPos:
@@ -270,8 +275,26 @@ class Connection:
         self.port_in = port_in
         self.in_canvas = False
 
-    def port_type(self)->int:
+    def port_type(self) -> PortType:
         return self.port_out.type
+
+    def full_type(self) -> tuple[PortType, PortSubType]:
+        port_out_type, port_out_subtype = self.port_out.full_type()
+        port_in_type, port_in_subtype = self.port_in.full_type()
+        return (port_out_type, port_out_subtype | port_in_subtype)
+        
+    def shown_in_port_types_view(self, port_types_view: PortTypesViewFlag) -> bool:
+        if self.port_out.type is PortType.MIDI_JACK:
+            return bool(port_types_view & PortTypesViewFlag.MIDI)
+        
+        if (self.port_out.type is PortType.AUDIO_JACK
+                and self.port_in.type is PortType.AUDIO_JACK):
+            if self.port_out.is_cv() and self.port_in.is_cv():
+                return bool(port_types_view & PortTypesViewFlag.CV)
+            if not self.port_out.is_cv() and not self.port_in.is_cv():
+                return bool(port_types_view & PortTypesViewFlag.AUDIO)
+        
+        return False
 
     def add_to_canvas(self):
         if self.manager.very_fast_operation:
@@ -280,7 +303,7 @@ class Connection:
         if self.in_canvas:
             return
 
-        if not self.manager.port_type_shown(self.port_type()):
+        if not self.manager.port_type_shown(self.full_type()):
             return
 
         self.in_canvas = True
@@ -313,6 +336,7 @@ class Connection:
         
         patchcanvas.set_connection_in_front(self.connection_id)
 
+
 class Port:
     display_name = ''
     group_id = -1
@@ -335,6 +359,14 @@ class Port:
         self.type = port_type
         self.flags = flags
         self.uuid = uuid
+        self.subtype = PortSubType.REGULAR
+        
+        if (self.type is PortType.AUDIO_JACK
+                and self.flags & JackPortFlag.IS_CONTROL_VOLTAGE):
+            self.subtype = PortSubType.CV
+        elif (self.type is PortType.MIDI_JACK
+                and self.full_name.startswith(('a2j:', 'Midi-Bridge:'))):
+            self.subtype = PortSubType.A2J
 
     def mode(self) -> PortMode:
         if self.flags & JackPortFlag.IS_OUTPUT:
@@ -344,6 +376,12 @@ class Port:
         else:
             return PortMode.NULL
 
+    def full_type(self) -> tuple[PortType, PortSubType]:
+        return (self.type, self.subtype)
+
+    def is_cv(self) -> bool:
+        return bool(self.flags & JackPortFlag.IS_CONTROL_VOLTAGE)
+    
     def short_name(self) -> str:
         if self.full_name.startswith('a2j:'):
             long_name = self.full_name.partition(':')[2]
@@ -377,7 +415,7 @@ class Port:
         if self.in_canvas:
             return
 
-        if not self.manager.port_type_shown(self.type):
+        if not self.manager.port_type_shown(self.full_type()):
             return
 
         display_name = self.display_name
@@ -387,20 +425,12 @@ class Port:
         
         if not self.manager.use_graceful_names:
             display_name = self.short_name()
-        
-        port_subtype = PortSubType.REGULAR
-        
-        if self.flags & JackPortFlag.IS_CONTROL_VOLTAGE:
-            port_subtype = PortSubType.CV
-        if (self.type == PortType.MIDI_JACK
-                and self.full_name.startswith(('a2j:', 'Midi-Bridge:'))):
-            port_subtype = PortSubType.A2J
 
         self.in_canvas = True
 
         patchcanvas.add_port(
             self.group_id, self.port_id, display_name,
-            self.mode(), self.type, port_subtype)
+            self.mode(), self.type, self.subtype)
 
     def remove_from_canvas(self):
         if self.manager.very_fast_operation:
@@ -476,6 +506,12 @@ class Portgroup:
 
         return self.ports[0].type
 
+    def full_type(self) -> tuple[PortType, PortSubType]:
+        if not self.ports:
+            return (PortType.NULL, PortSubType.REGULAR)
+        
+        return self.ports[0].full_type()
+
     def update_ports_in_canvas(self):
         for port in self.ports:
             port.rename_in_canvas()
@@ -492,7 +528,7 @@ class Portgroup:
         if self.in_canvas:
             return
     
-        if not self.manager.port_type_shown(self.port_type()):
+        if not self.manager.port_type_shown(self.full_type()):
             return
 
         if len(self.ports) < 2:
@@ -1067,11 +1103,11 @@ class Group:
         self.add_to_canvas()
 
         for portgroup in self.portgroups:
-            if not self.manager.port_type_shown(portgroup.port_type()):
+            if not self.manager.port_type_shown(portgroup.full_type()):
                 portgroup.remove_from_canvas()
 
         for port in self.ports:
-            if not self.manager.port_type_shown(port.type):
+            if not self.manager.port_type_shown(port.full_type()):
                 port.remove_from_canvas()
 
         for port in self.ports:

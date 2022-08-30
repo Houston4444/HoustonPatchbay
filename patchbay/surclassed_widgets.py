@@ -147,4 +147,3 @@ class TimeTransportLabel(QLabel):
             (self.transport_view_mode + 1) % 3)
         self.transport_view_changed.emit()
         self._update_tool_tip()
-
