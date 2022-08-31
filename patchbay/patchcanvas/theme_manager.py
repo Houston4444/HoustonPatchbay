@@ -195,6 +195,8 @@ class ThemeManager:
     
                 name = file_path.name
 
+                # Search the theme name in the theme file
+                # It may be translated
                 if 'Theme' in conf.keys():
                     conf_theme = conf['Theme']
                     if 'Name' in conf_theme.keys():
@@ -204,12 +206,10 @@ class ThemeManager:
                     
                     if name_lang_key in conf_theme.keys():
                         name = conf_theme[name_lang_key]
-                
-                conf.clear()
-                
+
+                conf.clear()                
                 themes_set.add(file_path.name)
                 
-                print(file_path.name, name, editable, full_path)
                 theme_classes.append(
                     ThemeData(file_path.name, name, editable, str(full_path)))
 
