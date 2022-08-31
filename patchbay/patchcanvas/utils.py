@@ -340,7 +340,6 @@ def connect_ports(group_id_1: int, port_id_1: int,
         return
     
     if port_1.port_mode is not port_2.port_mode.opposite():
-        print('whaiirt', port_1.port_name, port_1.port_mode, port_2.port_mode, port_2.port_mode.opposite())
         _logger.critical(f"{_logging_str} - can't connect ports with same mode")
         return
     

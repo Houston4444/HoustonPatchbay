@@ -3,7 +3,7 @@ from PyQt5.QtCore import QPoint
 
 from . import patchcanvas
 from .patchcanvas import CallbackAct, PortMode, PortType, BoxLayoutMode
-from .base_elements import Port, GroupPosFlag, PortgroupMem
+from .base_elements import Port, GroupPosFlag, PortTypesViewFlag, PortgroupMem
 from .port_info_dialog import CanvasPortInfoDialog
 
 if TYPE_CHECKING:
@@ -58,9 +58,7 @@ class Callbacker:
         group = self.mng.get_group_from_id(group_id)
         if group is not None:
             gpos = group.current_position
-            if group.name == 'Hydrogen':
-                print('reroro', port_mode, x, y, gpos.port_types_view)
-            
+
             if port_mode is PortMode.NULL:
                 gpos.null_xy = (x, y)
             elif port_mode is PortMode.INPUT:

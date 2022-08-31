@@ -456,9 +456,6 @@ class BoxWidgetMoth(QGraphicsItem):
             else:
                 self._x_after_wrap = self._x_before_wrap + self._width - self._unwrapped_width
         
-        if self._group_name == 'PulseAudio JACK Source':
-            print('ddkdk', self._group_name, yesno, animate, prevent_overlap)
-        
         if not prevent_overlap:
             return
 
@@ -957,12 +954,6 @@ class BoxWidgetMoth(QGraphicsItem):
         for box in canvas.scene.get_selected_boxes():
             box.fix_pos()
             box.send_move_callback()
-
-    def setPos(self, *args):
-        super().setPos(*args)
-        if self._group_name == 'Hydrogen':
-            print('quivala', *args)
-            # print(inspect.stack())
 
     def set_in_cache(self, yesno: bool):
         cache_mode = self.cacheMode()

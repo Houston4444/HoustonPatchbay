@@ -129,6 +129,7 @@ class PatchSceneMoth(QGraphicsScene):
         self._allowed_nav_directions = set[Direction]()
 
         self.flying_connectable = None
+        self.restore_overlap_asked = False
 
         self.selectionChanged.connect(self._slot_selection_changed)
 
@@ -336,9 +337,6 @@ class PatchSceneMoth(QGraphicsScene):
 
                 moving_box.widget.setPos(x, y)
                 moving_box.widget.repaint_lines(fast_move=True)
-                
-                if moving_box.widget._group_name == 'Hydrogen':
-                    print('hydroplace', x, y, moving_box.widget.pos())
 
         for wrapping_box in self.wrapping_boxes:
             if wrapping_box.widget is not None:
@@ -346,17 +344,16 @@ class PatchSceneMoth(QGraphicsScene):
                     wrapping_box.widget.animate_wrapping(1.00)
                 else:
                     wrapping_box.widget.animate_wrapping(ratio)
-
-        for moving_box in self.move_boxes:
-            if moving_box.widget is not None:
-                if moving_box.widget._group_name == 'Hydrogen':
-                    print('hydronewplace', moving_box.widget.pos())
                 
         self.resize_the_scene()
 
         if time_since_start >= self._MOVE_DURATION:
             # Animation is finished
             self._move_box_timer.stop()
+            
+            if self.restore_overlap_asked:
+                self.restore_overlap_asked = False
+                options.prevent_overlap = True
             
             # box update positions is forbidden while widget is in self.move_boxes
             # So we copy the list before to clear it
@@ -367,22 +364,16 @@ class PatchSceneMoth(QGraphicsScene):
 
             for box in boxes:
                 if box is not None:
-                    if box._group_name == 'Hydrogen':
-                        print('before updatpos', box.pos())
                     if box.update_positions_pending:
                         box.update_positions()
-                    if box._group_name == 'Hydrogen':
-                        print('afterr updatpos', box.pos())
                     box.send_move_callback()
 
-            self.deplace_boxes_from_repulsers(boxes)
+                    self.deplace_boxes_from_repulsers([box])
+            # self.deplace_boxes_from_repulsers(boxes)
             canvas.qobject.move_boxes_finished.emit()
 
     def add_box_to_animation(self, box_widget: BoxWidget, to_x: int, to_y: int,
                              force_anim=True, joining=False):
-        if box_widget._group_name == 'Hydrogen':
-            print('vazyadd', to_x, to_y)
-        
         for moving_box in self.move_boxes:
             if moving_box.widget is box_widget:
                 break
@@ -403,9 +394,6 @@ class PatchSceneMoth(QGraphicsScene):
         moving_box.to_pt = QPoint(to_x, to_y)
         moving_box.start_time = time.time() - self._move_timer_start_at
         moving_box.joining = joining
-        
-        if box_widget._group_name == 'Hydrogen':
-            print('vazyaddpoint', moving_box.to_pt)
 
         if not self._move_box_timer.isActive():
             moving_box.start_time = 0.0

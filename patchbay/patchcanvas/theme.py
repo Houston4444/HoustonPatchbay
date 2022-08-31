@@ -207,7 +207,6 @@ class StyleAttributer:
                         os.path.dirname(Theme.theme_file_path),
                         'fonts', f"{value}.{ext}")
                     if os.path.isfile(embedded_str):
-                        print('emmbeddded found', embedded_str)
                         QFontDatabase.addApplicationFont(embedded_str)
                         break
                 

@@ -651,9 +651,6 @@ def move_group_boxes(
     group.in_pos = QPoint(*in_xy)
     group.out_pos = QPoint(*out_xy)
 
-    if group.group_name == 'Hydrogen':
-        print('zoklahydrof', group.null_pos, null_xy)
-
     if group.split:
         for port_mode in (PortMode.OUTPUT, PortMode.INPUT):
             box = group.widgets[0]
@@ -683,9 +680,6 @@ def move_group_boxes(
         box_pos = box.pos()
         if int(box_pos.x()) == null_xy[0] and int(box_pos.y()) == null_xy[1]:
             return
-
-        if group.group_name == 'Hydrogen':
-            print('add to annim hydro', null_xy[0], null_xy[1])
         
         canvas.scene.add_box_to_animation(box, null_xy[0], null_xy[1],
                                           force_anim=animate)
@@ -1307,6 +1301,10 @@ def save_cache():
 def set_grouped_box_layout_ratio(value: float):
     options.box_grouped_auto_layout_ratio = max(min(2.0, value), 0.0)
     redraw_all_groups()
+
+@patchbay_api
+def restore_prevent_overlap_after_animation():
+    canvas.scene.restore_overlap_asked = True
 
 @patchbay_api
 def set_options(new_options: CanvasOptionsObject):

@@ -208,7 +208,8 @@ class PatchScene(PatchSceneMoth):
 
             search_rect = srect.marginsAdded(QMarginsF(4.0, 4.0, 4.0, 4.0))
 
-            for widget in self.items(search_rect, Qt.IntersectsItemShape, Qt.AscendingOrder):
+            for widget in self.items(search_rect, Qt.IntersectsItemShape,
+                                     Qt.AscendingOrder):
                 if not isinstance(widget, BoxWidget):
                     continue
                 
@@ -320,7 +321,7 @@ class PatchScene(PatchSceneMoth):
             for widget in self.items(search_rect):
                 if not isinstance(widget, BoxWidget):
                     continue
-                if (widget in repulser_boxes
+                if (widget in [r.item for r in repulsers]
                         or widget in [b.item for b in to_move_boxes]
                         or widget in [b.widget for b in self.move_boxes]):
                     continue
@@ -338,7 +339,7 @@ class PatchScene(PatchSceneMoth):
                 mitem = moving_box.widget
                 assert isinstance(mitem, BoxWidget)
                 
-                if (mitem in repulser_boxes
+                if (mitem in [r.item for r in repulsers]
                         or mitem in [b.item for b in to_move_boxes]):
                     continue
 

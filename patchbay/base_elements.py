@@ -821,12 +821,12 @@ class Group:
         self.current_position = group_position
         gpos = self.current_position
 
-        patchcanvas.move_group_boxes(
-            self.group_id, gpos.null_xy, gpos.in_xy, gpos.out_xy)
-
         for port_mode, layout_mode in group_position.layout_modes.items():
             patchcanvas.set_group_layout_mode(
                 self.group_id, port_mode, layout_mode)
+
+        patchcanvas.move_group_boxes(
+            self.group_id, gpos.null_xy, gpos.in_xy, gpos.out_xy)
 
         prevent_overlap = not view_change
 

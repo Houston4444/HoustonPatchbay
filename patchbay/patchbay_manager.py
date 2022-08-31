@@ -434,16 +434,6 @@ class PatchbayManager:
     def change_port_types_view(self, port_types_view: PortTypesViewFlag):
         if port_types_view is self.port_types_view:
             return
-
-        print('change port types view', port_types_view)
-
-        for group in self.groups:
-            if "Midi Modwheel" in group.name:
-                print('Hidok', group.current_position.null_xy, group.current_position.port_types_view)
-        
-            for gpos in self.group_positions:
-                if "Midi Modwheel" in group.name and gpos.port_types_view == self.port_types_view:
-                    print('Hyillo', group.group_id, gpos.port_types_view, gpos.null_xy)
         
         self.port_types_view = port_types_view
 
@@ -459,13 +449,12 @@ class PatchbayManager:
         groups_and_pos = dict[Group, GroupPos]()
 
         prevent_overlap = patchcanvas.options.prevent_overlap
-        patchcanvas.options.prevent_overlap = False
+        if prevent_overlap:
+            patchcanvas.options.prevent_overlap = False
 
         for group in self.groups:
             group.change_port_types_view()
             groups_and_pos[group] = self.get_group_position(group.name)
-            if "Midi Modwheel" in group.name:
-                print('Hydoo', group.group_id, groups_and_pos[group].null_xy)
 
         for connection in self.connections:
             connection.add_to_canvas()
@@ -475,13 +464,10 @@ class PatchbayManager:
         patchcanvas.redraw_all_groups()
         
         for group, gpos in groups_and_pos.items():
-            if group.name == 'Hydrogen':
-                print('replacee', gpos.null_xy, gpos.in_xy, gpos.out_xy, gpos.port_types_view)
-            if "Midi Modwheel" in group.name:
-                print('replacee Midimod', gpos.null_xy, gpos.in_xy, gpos.out_xy, gpos.port_types_view)
             group.set_group_position(gpos, view_change=True)
 
-        patchcanvas.options.prevent_overlap = prevent_overlap
+        if prevent_overlap:
+            patchcanvas.restore_prevent_overlap_after_animation()
 
         patchcanvas.repulse_all_boxes()
 

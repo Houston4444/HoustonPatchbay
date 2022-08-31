@@ -509,7 +509,6 @@ class Canvas:
 
     def list_ports(self, group_id=None) -> Iterator[PortObject]:
         if group_id is None:
-            # print('regular port list')
             for port in self.port_list:
                 yield port
             return     
