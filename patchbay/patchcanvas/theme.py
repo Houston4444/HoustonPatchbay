@@ -644,7 +644,7 @@ class Theme(StyleAttributer):
         with open(cache_dir / 'patchbay_fonts', 'wb') as f:
             pickle.dump(cls.font_metrics_cache, f)
     
-    def read_theme(self, theme_dict: dict, theme_file_path: str):
+    def read_theme(self, theme_dict: dict[str, dict], theme_file_path: str):
         ''' theme_file_path is only used here to find external resources ''' 
         if not isinstance(theme_dict, dict):
             _logger.error("invalid dict read error")
@@ -713,8 +713,8 @@ class Theme(StyleAttributer):
                         value[sub_key] = alias_value
                         break
                     
-                    new_words = []
-                    
+                    new_words = list[str]()
+
                     for word in sub_value.split(' '):
                         if word == alias_key:
                             new_words.append(alias_value)
