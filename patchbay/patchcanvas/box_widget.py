@@ -217,7 +217,7 @@ class BoxWidget(BoxWidgetMoth):
 
     def _set_ports_y_positions(
             self, align_port_types: bool, start_pos: int, one_column: bool) -> dict:
-        def set_widget_pos(widget: QGraphicsItem, pos):
+        def set_widget_pos(widget: QGraphicsItem, pos: float):
             if self._wrapping:
                 widget.setY(pos - ((pos - wrapped_port_pos)
                                    * self._wrapping_ratio))
@@ -229,7 +229,8 @@ class BoxWidget(BoxWidgetMoth):
             else:
                 widget.setY(pos)
             
-        ''' ports Y positioning, and get width informations '''
+        ''' ports Y positioning, and get height segments info
+            used if port-in-offset or port-out-offset are not zero in box theme'''
         last_in_pos = last_out_pos = start_pos
         wrapped_port_pos = start_pos
         
@@ -300,7 +301,7 @@ class BoxWidget(BoxWidgetMoth):
 
                 elif port.port_mode is PortMode.OUTPUT:
                     if not one_column and type_and_sub != last_out_type_and_sub:
-                        if last_out_type_and_sub != (PortType.NULL, False):
+                        if last_out_type_and_sub != (PortType.NULL, PortSubType.REGULAR):
                             last_out_pos += port_type_spacing
                         last_out_type_and_sub = type_and_sub
 
