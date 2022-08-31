@@ -150,14 +150,16 @@ class TimeTransportLabel(QLabel):
 
 
 class TypeViewCheckBox(QCheckBox):
-    really_clicked = pyqtSignal(int)
+    really_clicked = pyqtSignal(bool)
     
     def __init__(self, parent=None):
         super().__init__(parent)
     
     def mousePressEvent(self, event: QMouseEvent) -> None:
         if event.button() in (Qt.LeftButton, Qt.RightButton):
-            self.really_clicked.emit(event.button())
+            alternate = bool(event.button() == Qt.RightButton
+                             or QApplication.keyboardModifiers() & Qt.ControlModifier)
+            self.really_clicked.emit(alternate)
             return
     
         super().mousePressEvent(event)

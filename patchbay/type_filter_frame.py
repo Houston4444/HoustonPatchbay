@@ -62,23 +62,8 @@ class TypeFilterFrame(QFrame):
                 port_types_view = (PortTypesViewFlag.AUDIO | PortTypesViewFlag.MIDI)
         
         self._patchbay_mng.change_port_types_view(port_types_view)
-
-    def _check_box_audio_checked(self, state: int):
-        if (not state 
-                and self._patchbay_mng is not None
-                and self._patchbay_mng.port_types_view is PortTypesViewFlag.AUDIO):
-            self._patchbay_mng.change_port_types_view(
-                PortTypesViewFlag.MIDI | PortTypesViewFlag.CV)
-            return
-        self._change_port_types_view()
-
-    def _check_box_midi_checked(self, state: int):
-        self._change_port_types_view()
     
-    def _check_box_cv_checked(self, state: int):
-        self._change_port_types_view()
-    
-    def _right_click(self, view_flag: PortTypesViewFlag):
+    def _exclusive_choice(self, view_flag: PortTypesViewFlag):
         if self._patchbay_mng is None:
             return
         
@@ -87,27 +72,27 @@ class TypeFilterFrame(QFrame):
         else:
             self._patchbay_mng.change_port_types_view(view_flag)
     
-    def _check_box_audio_right_clicked(self, button: int):
-        if button == Qt.RightButton:
-            self._right_click(PortTypesViewFlag.AUDIO)
+    def _check_box_audio_right_clicked(self, alternate: bool):
+        if alternate:
+            self._exclusive_choice(PortTypesViewFlag.AUDIO)
             return
         
         self.ui.checkBoxAudioFilter.setChecked(
             not self.ui.checkBoxAudioFilter.isChecked())
         self._change_port_types_view()
     
-    def _check_box_midi_right_clicked(self, button: int):
-        if button == Qt.RightButton:
-            self._right_click(PortTypesViewFlag.MIDI)
+    def _check_box_midi_right_clicked(self, alternate: bool):
+        if alternate:
+            self._exclusive_choice(PortTypesViewFlag.MIDI)
             return
         
         self.ui.checkBoxMidiFilter.setChecked(
             not self.ui.checkBoxMidiFilter.isChecked())
         self._change_port_types_view()
     
-    def _check_box_cv_right_clicked(self, button: int):
-        if button == Qt.RightButton:
-            self._right_click(PortTypesViewFlag.CV)
+    def _check_box_cv_right_clicked(self, alternate: bool):
+        if alternate:
+            self._exclusive_choice(PortTypesViewFlag.CV)
             return
         
         self.ui.checkBoxCvFilter.setChecked(
