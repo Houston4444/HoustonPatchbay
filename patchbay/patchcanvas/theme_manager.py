@@ -192,7 +192,7 @@ class ThemeManager:
                 except:
                     # TODO
                     continue
-                
+    
                 name = file_path.name
 
                 if 'Theme' in conf.keys():
@@ -205,7 +205,11 @@ class ThemeManager:
                     if name_lang_key in conf_theme.keys():
                         name = conf_theme[name_lang_key]
                 
+                conf.clear()
+                
                 themes_set.add(file_path.name)
+                
+                print(file_path.name, name, editable, full_path)
                 theme_classes.append(
                     ThemeData(file_path.name, name, editable, str(full_path)))
 

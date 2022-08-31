@@ -687,7 +687,7 @@ class Theme(StyleAttributer):
         
         # read and parse the dict
         for key, value in theme_dict.items():
-            if key == 'aliases':
+            if key in ('aliases', 'Theme'):
                 continue
             
             begin, point, end = key.partition('.')
@@ -741,9 +741,18 @@ class Theme(StyleAttributer):
                         background_path = os.path.join(
                             os.path.dirname(theme_file_path), 'images', body_value)
                         if os.path.isfile(background_path):
-                            self.scene_background_image = QImage(background_path)
-                            if self.scene_background_image.isNull():
-                                self.scene_background_image = None
+                            try:
+                                self.scene_background_image = QImage(background_path)
+                                if self.scene_background_image.isNull():
+                                    _logger.error(
+                                        f"background {background_path} is not a valid image")
+                                    self.scene_background_image = None
+                            except:
+                                _logger.error(
+                                    f"background {background_path} is not a valid image")
+                        else:
+                            _logger.error(
+                                f"Unable to find background-image \"{background_path}\"")
 
                     elif body_key == 'monitor-color':
                         self.monitor_color = _to_qcolor(body_value)
