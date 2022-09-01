@@ -41,7 +41,7 @@ Add possibility to write metadatas opens a Pandora's box. Several questions then
 * What to do if metadatas already exists ? They are probably created by the JACK client itself, which is in a better position than our program to know what metadatas to write.
 * Should we write port order if we can change it ? A program is not supposed to re-organize its tracks in its GUI if theses metadatas change.
 
-The possibility to have things internally saved in config, but not affecting metadatas also exists. For example, rename a port in the patchbay could save the port display name in the config. It already exists for portgroups, following portgroups template for pretty-name would works this way:
+The possibility to have things internally saved in config but not affecting metadatas also exists. For example, rename a port in the patchbay could save the port display name in the config. It already exists for portgroups, if we follow portgroups template for pretty-name, it would works this way:
 
 * the port has no pretty-name metadata, the normal name is used
 * If this port is renamed by user, config saves the new display name with a key above_metadata=False
