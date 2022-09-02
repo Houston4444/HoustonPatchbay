@@ -50,6 +50,9 @@ class BoxWidget(BoxWidgetMoth):
             self, group_id, group_name, icon_type, icon_name)
         self.update_positions_pending = False
 
+    def __repr__(self) -> str:
+        return f"BoxWidget({self._group_name}, {self._current_port_mode.name})"
+
     def _get_portgroup_name(self, portgrp_id: int):
         return get_portgroup_name_from_ports_names(
             [p.port_name for p in self._port_list
@@ -1025,7 +1028,7 @@ class BoxWidget(BoxWidgetMoth):
         if (not even_animated
                 and self in [b.widget for b in canvas.scene.move_boxes]):
             self.update_positions_pending = True
-            # do not change box disposition while box is moved by animation
+            # do not change box layout while box is moved by animation
             # update_positions will be called when animation is finished
             return
 
@@ -1045,7 +1048,7 @@ class BoxWidget(BoxWidgetMoth):
         else:
             for port in canvas.list_ports(group_id=self._group_id):
                 self._port_list.append(port)
-                # used to know present port modes (INPUT or OUTPUT or both)
+                # used to know present port modes (INPUT or OUTPUT or BOTH)
                 self._current_port_mode |= port.port_mode
 
         for portgrp in canvas.list_portgroups(group_id=self._group_id):

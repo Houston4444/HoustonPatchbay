@@ -580,11 +580,10 @@ def join_group(group_id: int):
 @patchbay_api
 def repulse_all_boxes():
     if options.prevent_overlap:
-        for box in canvas.list_boxes():
-            canvas.scene.deplace_boxes_from_repulsers([box])
+        canvas.scene.full_repulse()
 
 @patchbay_api
-def redraw_all_groups():    
+def redraw_all_groups(force_no_prevent_overlap=False):    
     # We are redrawing all groups.
     # For optimization reason we prevent here to resize the scene
     # at each group draw, we'll do it once all is done,
@@ -611,7 +610,8 @@ def redraw_all_groups():
     
     if prevent_overlap:
         options.prevent_overlap = True
-        repulse_all_boxes()
+        if not force_no_prevent_overlap:
+            repulse_all_boxes()
     
     if not elastic or prevent_overlap:
         QTimer.singleShot(0, canvas.scene.update)
@@ -702,6 +702,8 @@ def set_group_layout_mode(group_id: int, port_mode: PortMode,
                           layout_mode: BoxLayoutMode):
     group = canvas.get_group(group_id)
     if group is None:
+        _logger.warning(
+            "set_group_layout_mode, no group with group_id {group_id}")
         return
     
     group.layout_modes[port_mode] = layout_mode
@@ -1301,10 +1303,6 @@ def save_cache():
 def set_grouped_box_layout_ratio(value: float):
     options.box_grouped_auto_layout_ratio = max(min(2.0, value), 0.0)
     redraw_all_groups()
-
-@patchbay_api
-def restore_prevent_overlap_after_animation():
-    canvas.scene.restore_overlap_asked = True
 
 @patchbay_api
 def set_options(new_options: CanvasOptionsObject):

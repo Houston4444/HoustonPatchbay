@@ -129,7 +129,6 @@ class PatchSceneMoth(QGraphicsScene):
         self._allowed_nav_directions = set[Direction]()
 
         self.flying_connectable = None
-        self.restore_overlap_asked = False
 
         self.selectionChanged.connect(self._slot_selection_changed)
 
@@ -139,7 +138,7 @@ class PatchSceneMoth(QGraphicsScene):
         ''' This function change the place of boxes in order to have no 
             box overlapping other boxes.'''
         # just for easier syntax, this method is overloaded in scene.py
-        # but executed in this part too.
+        # but executed in this file too.
         pass
 
     def clear(self):
@@ -351,10 +350,6 @@ class PatchSceneMoth(QGraphicsScene):
             # Animation is finished
             self._move_box_timer.stop()
             
-            if self.restore_overlap_asked:
-                self.restore_overlap_asked = False
-                options.prevent_overlap = True
-            
             # box update positions is forbidden while widget is in self.move_boxes
             # So we copy the list before to clear it
             # then we can ask update_positions on widgets
@@ -368,8 +363,8 @@ class PatchSceneMoth(QGraphicsScene):
                         box.update_positions()
                     box.send_move_callback()
 
-                    self.deplace_boxes_from_repulsers([box])
-            # self.deplace_boxes_from_repulsers(boxes)
+                    # self.deplace_boxes_from_repulsers([box])
+            self.deplace_boxes_from_repulsers(boxes)
             canvas.qobject.move_boxes_finished.emit()
 
     def add_box_to_animation(self, box_widget: BoxWidget, to_x: int, to_y: int,

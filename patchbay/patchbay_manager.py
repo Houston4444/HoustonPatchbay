@@ -448,10 +448,6 @@ class PatchbayManager:
 
         groups_and_pos = dict[Group, GroupPos]()
 
-        prevent_overlap = patchcanvas.options.prevent_overlap
-        if prevent_overlap:
-            patchcanvas.options.prevent_overlap = False
-
         for group in self.groups:
             group.change_port_types_view()
             groups_and_pos[group] = self.get_group_position(group.name)
@@ -461,16 +457,12 @@ class PatchbayManager:
 
         self.optimize_operation(False)
         
-        patchcanvas.redraw_all_groups()
-        
+        patchcanvas.redraw_all_groups(force_no_prevent_overlap=True)
+
         for group, gpos in groups_and_pos.items():
             group.set_group_position(gpos, view_change=True)
 
-        if prevent_overlap:
-            patchcanvas.restore_prevent_overlap_after_animation()
-
         patchcanvas.repulse_all_boxes()
-
         self.sg.port_types_view_changed.emit(self.port_types_view)
 
     # --- options triggers ---
