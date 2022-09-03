@@ -421,7 +421,7 @@ class PatchScene(PatchSceneMoth):
 
         for neighbor in neighbors:
             self.add_box_to_animation(
-                neighbor, neighbor.pos().x(), neighbor.pos().y() - less_y)
+                neighbor, int(neighbor.pos().x()), int(neighbor.pos().y() - less_y))
             repulser_boxes.append(neighbor)
         repulser_boxes.append(box_widget)
         
