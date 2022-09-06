@@ -107,7 +107,7 @@ class CallbackAct(IntEnum):
     THEME_CHANGED = 24      # theme_name: str
 
 
-class IconType(IntEnum):
+class BoxType(IntEnum):
     APPLICATION = 0
     HARDWARE = 1
     MONITOR = 2

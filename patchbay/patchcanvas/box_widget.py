@@ -13,7 +13,7 @@ from .init_values import (
     PortMode,
     PortType,
     PortSubType,
-    IconType)
+    BoxType)
 
 from .utils import get_portgroup_name_from_ports_names
 from .box_widget_moth import BoxWidgetMoth, UnwrapButton, TitleLine
@@ -451,7 +451,7 @@ class BoxWidget(BoxWidgetMoth):
         title, slash, subtitle = self._group_name.partition('/')
 
         if (not subtitle
-                and self._icon_type == IconType.CLIENT
+                and self._box_type == BoxType.CLIENT
                 and ' (' in self._group_name
                 and self._group_name.endswith(')')):
             title, parenthese, subtitle = self._group_name.partition(' (')
@@ -459,7 +459,7 @@ class BoxWidget(BoxWidgetMoth):
         
         theme = self.get_theme()
 
-        if self._icon_type == IconType.CLIENT and subtitle:
+        if self._box_type == BoxType.CLIENT and subtitle:
             # if there is a subtitle, title is not bold when subtitle is.
             # so title is 'little'
             client_line = TitleLine(title, theme, little=True)

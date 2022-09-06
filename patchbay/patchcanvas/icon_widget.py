@@ -25,7 +25,7 @@ from PyQt5.QtGui import QPainter, QIcon
 from PyQt5.QtSvg import QGraphicsSvgItem, QSvgRenderer
 from PyQt5.QtWidgets import QGraphicsPixmapItem
 
-from .init_values import canvas, CanvasItemType, IconType, PortMode
+from .init_values import canvas, CanvasItemType, BoxType, PortMode
 
 
 _logger = logging.getLogger(__name__)
@@ -64,7 +64,7 @@ def get_app_icon(icon_name: str) -> QIcon:
 
 
 class IconPixmapWidget(QGraphicsPixmapItem):
-    def __init__(self, icon_type, icon_name, parent):
+    def __init__(self, box_type: BoxType, icon_name: str, parent):
         QGraphicsPixmapItem.__init__(self, parent)
 
         self._size = QRectF(0.0, 0.0, 24.0, 24.0)
@@ -72,8 +72,8 @@ class IconPixmapWidget(QGraphicsPixmapItem):
         self.x_offset = 4
         self.y_offset = 4
 
-        if icon_type in (IconType.CLIENT, IconType.APPLICATION):
-            self.set_icon(icon_type, icon_name)
+        if box_type in (BoxType.CLIENT, BoxType.APPLICATION):
+            self.set_icon(box_type, icon_name)
 
     def set_icon(self, icon, name, port_mode=PortMode.NULL):
         self.icon = get_app_icon(name)
@@ -107,18 +107,18 @@ class IconPixmapWidget(QGraphicsPixmapItem):
 
 
 class IconSvgWidget(QGraphicsSvgItem):
-    def __init__(self, icon_type, name, port_mode, parent):
+    def __init__(self, box_type: BoxType, name: str, port_mode: PortMode, parent):
         QGraphicsSvgItem.__init__(self, parent)
         self._renderer = None
         self._size = QRectF(4, 4, 24, 24)
-        self.set_icon(icon_type, name, port_mode)
+        self.set_icon(box_type, name, port_mode)
 
-    def set_icon(self, icon_type: IconType, name: str, port_mode: PortMode):
+    def set_icon(self, box_type: BoxType, name: str, port_mode: PortMode):
         name = name.lower()
         icon_path = ""
         theme = canvas.theme.icon
 
-        if icon_type == IconType.APPLICATION:
+        if box_type is BoxType.APPLICATION:
             self._size = QRectF(3, 2, 19, 18)
 
             if "audacious" in name:
@@ -143,7 +143,7 @@ class IconSvgWidget(QGraphicsSvgItem):
                 icon_path = ":/scalable/pb_generic.svg"
                 self._size = QRectF(4, 4, 24, 24)
 
-        elif icon_type == IconType.HARDWARE:
+        elif box_type is BoxType.HARDWARE:
             if name == "a2j":
                 icon_path = theme.hardware_midi
                 self._size = QRectF(4, 4, 24, 24)
@@ -156,24 +156,24 @@ class IconSvgWidget(QGraphicsSvgItem):
                     icon_path = theme.hardware_grouped
                 self._size = QRectF(4, 4, 24, 24)
 
-        elif icon_type == IconType.DISTRHO:
+        elif box_type is BoxType.DISTRHO:
             icon_path = ":/scalable/pb_distrho.svg"
             self._size = QRectF(5, 4, 16, 16)
 
-        elif icon_type == IconType.FILE:
+        elif box_type is BoxType.FILE:
             icon_path = ":/scalable/pb_file.svg"
             self._size = QRectF(5, 4, 16, 16)
 
-        elif icon_type == IconType.PLUGIN:
+        elif box_type is BoxType.PLUGIN:
             icon_path = ":/scalable/pb_plugin.svg"
             self._size = QRectF(5, 4, 16, 16)
 
-        elif icon_type == IconType.LADISH_ROOM:
+        elif box_type is BoxType.LADISH_ROOM:
             # TODO - make a unique ladish-room icon
             icon_path = ":/scalable/pb_hardware.svg"
             self._size = QRectF(5, 2, 16, 16)
 
-        elif icon_type == IconType.MONITOR:
+        elif box_type is BoxType.MONITOR:
             if name == 'monitor_capture':
                 icon_path = theme.monitor_capture
             elif name == 'monitor_playback':
@@ -184,7 +184,7 @@ class IconSvgWidget(QGraphicsSvgItem):
 
         else:
             self._size = QRectF(0, 0, 0, 0)
-            _logger.critical(f"set_icon({str(icon_type)}, {name})"
+            _logger.critical(f"set_icon({str(box_type)}, {name})"
                              " - unsupported icon requested")
             return
 

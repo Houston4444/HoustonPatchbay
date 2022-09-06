@@ -44,7 +44,7 @@ from .init_values import (
     PortMode,
     BoxSplitMode,
     BoxLayoutMode,
-    IconType,
+    BoxType,
 )
 
 from .utils import canvas_callback, get_new_group_pos
@@ -242,14 +242,14 @@ def set_loading_items(yesno: bool):
 
 @patchbay_api
 def add_group(group_id: int, group_name: str, split=BoxSplitMode.UNDEF,
-              icon_type=IconType.APPLICATION, icon_name='', layout_modes={},
+              icon_type=BoxType.APPLICATION, icon_name='', layout_modes={},
               null_xy=(0, 0), in_xy=(0, 0), out_xy=(0, 0),
               split_animated=False):
     if canvas.get_group(group_id) is not None:
         _logger.error(f"{_logging_str} - group already exists.")
         return
 
-    if split is BoxSplitMode.UNDEF and icon_type is IconType.HARDWARE:
+    if split is BoxSplitMode.UNDEF and icon_type is BoxType.HARDWARE:
         split = BoxSplitMode.YES
 
     group_box = BoxWidget(group_id, group_name, icon_type, icon_name)
@@ -775,7 +775,7 @@ def set_group_pos_full(group_id, group_pos_x_o, group_pos_y_o,
     
 
 @patchbay_api
-def set_group_icon(group_id: int, icon_type: IconType, icon_name: str):
+def set_group_icon(group_id: int, icon_type: BoxType, icon_name: str):
     group = canvas.get_group(group_id)
     if group is None:
         _logger.critical(f"{_logging_str} - unable to find group to change icon")

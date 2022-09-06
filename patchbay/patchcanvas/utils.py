@@ -34,7 +34,7 @@ from .init_values import (
     CanvasItemType,
     PortgrpObject,
     canvas,
-    IconType,
+    BoxType,
     PortMode,
     CallbackAct)
 
@@ -289,7 +289,7 @@ def get_group_icon(group_id: int, port_mode: int, dark=True) -> QIcon:
         group.icon_type, group.icon_name, port_mode, dark)
 
 def get_icon(icon_type: int, icon_name: str, port_mode: int, dark=True) -> QIcon:
-    if icon_type in (IconType.CLIENT, IconType.APPLICATION):
+    if icon_type in (BoxType.CLIENT, BoxType.APPLICATION):
         icon = QIcon.fromTheme(icon_name)
 
         if icon.isNull():
@@ -305,7 +305,7 @@ def get_icon(icon_type: int, icon_name: str, port_mode: int, dark=True) -> QIcon
 
     icon = QIcon()
 
-    if icon_type == IconType.HARDWARE:
+    if icon_type == BoxType.HARDWARE:
         icon_file = ":/canvas/"
         icon_file += "dark/" if dark else "light/"
            
@@ -321,7 +321,7 @@ def get_icon(icon_type: int, icon_name: str, port_mode: int, dark=True) -> QIcon
 
         icon.addFile(icon_file)
 
-    elif icon_type == IconType.MONITOR:
+    elif icon_type == BoxType.MONITOR:
         prefix = ":/canvas/"
         prefix += "dark/" if dark else "light/"
         
@@ -330,7 +330,7 @@ def get_icon(icon_type: int, icon_name: str, port_mode: int, dark=True) -> QIcon
         elif port_mode is PortMode.OUTPUT:
             icon.addFile(prefix + "monitor_playback.svg")
 
-    elif icon_type == IconType.INTERNAL:
+    elif icon_type == BoxType.INTERNAL:
         icon.addFile(":/scalable/%s" % icon_name)
 
     return icon

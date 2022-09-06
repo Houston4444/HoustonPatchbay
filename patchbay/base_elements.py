@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from enum import IntFlag, IntEnum, auto
 from typing import TYPE_CHECKING, Any, Union
 
-from .patchcanvas import (patchcanvas, PortMode, PortType, IconType,
+from .patchcanvas import (patchcanvas, PortMode, PortType, BoxType,
                           BoxLayoutMode, BoxSplitMode, PortSubType)
 
 if TYPE_CHECKING:
@@ -594,34 +594,34 @@ class Group:
         if self.in_canvas:
             return
 
-        icon_type = IconType.APPLICATION
+        icon_type = BoxType.APPLICATION
         icon_name = self.name.partition('.')[0].lower()
 
         do_split = bool(self.current_position.flags & GroupPosFlag.SPLITTED)
         split = BoxSplitMode.YES if do_split else BoxSplitMode.NO
 
         if self._is_hardware:
-            icon_type = IconType.HARDWARE
+            icon_type = BoxType.HARDWARE
             if self.a2j_group or self.display_name == "Midi-Bridge":
                 icon_name = "a2j"
 
         if self.client_icon:
-            icon_type = IconType.CLIENT
+            icon_type = BoxType.CLIENT
             icon_name = self.client_icon
 
         if (self.name.startswith("PulseAudio ")
                 and not self.client_icon):
             if "sink" in self.name.lower():
-                icon_type = IconType.MONITOR
+                icon_type = BoxType.MONITOR
                 icon_name = 'monitor_playback'
             elif "source" in self.name.lower():
-                icon_type = IconType.MONITOR
+                icon_type = BoxType.MONITOR
                 icon_name = 'monitor_capture'
 
         elif (self.name.endswith(" Monitor")
                 and not self.client_icon):
             # this group is (probably) a pipewire Monitor group
-            icon_type = IconType.MONITOR
+            icon_type = BoxType.MONITOR
             icon_name = 'monitor_playback'
 
         self.in_canvas = True
@@ -890,7 +890,7 @@ class Group:
         self.client_icon = icon_name
         if self.in_canvas:
             patchcanvas.set_group_icon(
-                self.group_id, IconType.CLIENT, icon_name)
+                self.group_id, BoxType.CLIENT, icon_name)
 
     def get_pretty_client(self) -> str:
         for client_name in ('firewire_pcm', 'a2j',

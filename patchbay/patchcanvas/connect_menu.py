@@ -28,7 +28,7 @@ from .utils import (get_group_icon, get_portgroup_short_name_splitted,
                     get_full_port_name, is_dark_theme, get_portgroup_port_list)
 from .init_values import (
     GroupObject,
-    IconType,
+    BoxType,
     PortObject,
     PortSubType,
     PortgrpObject,
@@ -99,9 +99,9 @@ class GroupConnectMenu(SubMenu):
         self._last_portgrp_id = 0
         
         theme = canvas.theme.box
-        if group.icon_type == IconType.CLIENT:
+        if group.icon_type == BoxType.CLIENT:
             theme = theme.client
-        elif group.icon_type == IconType.HARDWARE:
+        elif group.icon_type == BoxType.HARDWARE:
             theme = theme.hardware
 
         bg_color = theme.background_color().name(QColor.HexArgb)

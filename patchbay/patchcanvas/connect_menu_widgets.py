@@ -10,7 +10,7 @@ from .utils import get_group_icon
 from .theme import StyleAttributer
 from .init_values import (
     GroupObject,
-    IconType,
+    BoxType,
     PortObject,
     PortSubType,
     PortgrpObject,

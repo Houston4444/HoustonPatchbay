@@ -42,7 +42,7 @@ from .init_values import (
     PortMode,
     BoxLayoutMode,
     MAX_PLUGIN_ID_ALLOWED,
-    IconType,
+    BoxType,
     Direction)
 
 from .utils import canvas_callback, is_dark_theme, get_icon
@@ -101,14 +101,14 @@ class BoxWidgetMoth(QGraphicsItem):
     INLINE_DISPLAY_CACHED   = 2
 
     def __init__(self, group_id: int, group_name: str,
-                 icon_type: int, icon_name: str):
+                 box_type: int, icon_name: str):
         QGraphicsItem.__init__(self)
         self.setCacheMode(QGraphicsItem.DeviceCoordinateCache)
 
         # Save Variables, useful for later
         self._group_id = group_id
         self._group_name = group_name
-        self._icon_type = icon_type
+        self._box_type = box_type
 
         # plugin Id, < 0 if invalid
         self._plugin_id = -1
@@ -145,7 +145,7 @@ class BoxWidgetMoth(QGraphicsItem):
 
         self._connection_lines = list[LineWidget]()
 
-        self._is_hardware = bool(icon_type == IconType.HARDWARE)
+        self._is_hardware = bool(box_type == BoxType.HARDWARE)
         self._icon_name = icon_name
 
         self._title_lines = list[TitleLine]()
@@ -162,14 +162,14 @@ class BoxWidgetMoth(QGraphicsItem):
         self._portgrp_list = list[PortgrpObject]()
 
         # Icon
-        if icon_type in (IconType.HARDWARE, IconType.MONITOR):
+        if box_type in (BoxType.HARDWARE, BoxType.MONITOR):
             port_mode = PortMode.NULL
             if self._splitted:
                 port_mode = self._splitted_mode
             self.top_icon = IconSvgWidget(
-                icon_type, icon_name, port_mode, self)
+                box_type, icon_name, port_mode, self)
         else:
-            self.top_icon = IconPixmapWidget(icon_type, icon_name, self)
+            self.top_icon = IconPixmapWidget(box_type, icon_name, self)
             if self.top_icon.is_null():
                 top_icon = self.top_icon
                 self.top_icon = None
@@ -179,7 +179,7 @@ class BoxWidgetMoth(QGraphicsItem):
         shadow_theme = canvas.theme.box_shadow
         if self._is_hardware:
             shadow_theme = shadow_theme.hardware
-        elif self._icon_type is IconType.CLIENT:
+        elif self._box_type is BoxType.CLIENT:
             shadow_theme = shadow_theme.client
         elif self.is_monitor():
             shadow_theme = shadow_theme.monitor
@@ -237,7 +237,7 @@ class BoxWidgetMoth(QGraphicsItem):
         return self._group_name
 
     def is_monitor(self):
-        return (self._icon_type is IconType.MONITOR
+        return (self._box_type is BoxType.MONITOR
                 and self._icon_name in ('monitor_playback', 'monitor_capture'))
 
     def is_splitted(self):
@@ -281,7 +281,7 @@ class BoxWidgetMoth(QGraphicsItem):
         self.update()
 
     def set_icon(self, icon_type, icon_name):
-        if icon_type == IconType.HARDWARE:
+        if icon_type == BoxType.HARDWARE:
             self.remove_icon_from_scene()
             port_mode = PortMode.NULL
             if self._splitted:
@@ -313,7 +313,7 @@ class BoxWidgetMoth(QGraphicsItem):
         self._current_port_mode = mode
         
         if self._is_hardware:
-            self.set_icon(IconType.HARDWARE, self._icon_name)
+            self.set_icon(BoxType.HARDWARE, self._icon_name)
         
         if self.shadow is not None:
             if split:
@@ -645,7 +645,7 @@ class BoxWidgetMoth(QGraphicsItem):
                     ins_label = " (inputs)"
                     outs_label = " (outputs)"
 
-                    if group.icon_type == IconType.HARDWARE:
+                    if group.icon_type == BoxType.HARDWARE:
                         ins_label = " (playbacks)"
                         outs_label = " (captures)"
 
@@ -1004,11 +1004,11 @@ class BoxWidgetMoth(QGraphicsItem):
             theme = theme.hardware
             wtheme = wtheme.hardware
             hltheme = hltheme.hardware
-        elif self._icon_type is IconType.CLIENT:
+        elif self._box_type is BoxType.CLIENT:
             theme = theme.client
             wtheme = wtheme.client
             hltheme = hltheme.client
-        elif (self._icon_type is IconType.INTERNAL
+        elif (self._box_type is BoxType.INTERNAL
                 and self._icon_name == 'monitor_playback'):
             theme = theme.monitor
             wtheme = wtheme.monitor
@@ -1425,7 +1425,7 @@ class BoxWidgetMoth(QGraphicsItem):
         
         if self._is_hardware:
             theme = theme.hardware
-        elif self._icon_type == IconType.CLIENT:
+        elif self._box_type == BoxType.CLIENT:
             theme = theme.client
         elif self.is_monitor():
             theme = theme.monitor
