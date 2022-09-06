@@ -110,12 +110,13 @@ class CallbackAct(IntEnum):
 class IconType(IntEnum):
     APPLICATION = 0
     HARDWARE = 1
-    DISTRHO = 2
-    FILE = 3
-    PLUGIN = 4
-    LADISH_ROOM = 5
-    CLIENT = 6
-    INTERNAL = 7
+    MONITOR = 2
+    DISTRHO = 3
+    FILE = 4
+    PLUGIN = 5
+    LADISH_ROOM = 6
+    CLIENT = 7
+    INTERNAL = 8
 
 
 # Split Option

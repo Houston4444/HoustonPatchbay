@@ -71,9 +71,11 @@
        <file>canvas/dark/pb_hardware.svg</file>
        <file>canvas/dark/microphone.svg</file>
        <file>canvas/dark/audio-volume-medium.svg</file>
+       <file>canvas/light/monitor_playback.svg</file>
        <file>canvas/light/audio-headphones.svg</file>
        <file>canvas/light/DIN-5.svg</file>
        <file>canvas/light/audio-input-microphone.svg</file>
+       <file>canvas/light/monitor_capture.svg</file>
        <file>canvas/light/pb_hardware.svg</file>
        <file>canvas/light/microphone.svg</file>
        <file>canvas/light/audio-volume-medium.svg</file>

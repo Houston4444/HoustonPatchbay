@@ -162,7 +162,7 @@ class BoxWidgetMoth(QGraphicsItem):
         self._portgrp_list = list[PortgrpObject]()
 
         # Icon
-        if icon_type in (IconType.HARDWARE, IconType.INTERNAL):
+        if icon_type in (IconType.HARDWARE, IconType.MONITOR):
             port_mode = PortMode.NULL
             if self._splitted:
                 port_mode = self._splitted_mode
@@ -237,7 +237,7 @@ class BoxWidgetMoth(QGraphicsItem):
         return self._group_name
 
     def is_monitor(self):
-        return (self._icon_type is IconType.INTERNAL
+        return (self._icon_type is IconType.MONITOR
                 and self._icon_name in ('monitor_playback', 'monitor_capture'))
 
     def is_splitted(self):

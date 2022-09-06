@@ -280,23 +280,15 @@ def get_portgroup_short_name_splitted(group_id: int, portgrp_id: int) -> tuple[s
                     '/'.join([get_port_print_name(group_id, port_id, portgrp_id)
                               for port_id in portgrp.port_id_list]))
 
-def get_group_icon(group_id: int, port_mode: int) -> QIcon:
-    # port_mode is here reversed
-    group_port_mode = PortMode.INPUT
-    if port_mode is PortMode.INPUT:
-        group_port_mode = PortMode.OUTPUT
-
+def get_group_icon(group_id: int, port_mode: int, dark=True) -> QIcon:
     group = canvas.get_group(group_id)
     if group is None:
         return QIcon()
 
-    if not group.split:
-        group_port_mode = PortMode.NULL
-
     return get_icon(
-        group.icon_type, group.icon_name, group_port_mode)
+        group.icon_type, group.icon_name, port_mode, dark)
 
-def get_icon(icon_type: int, icon_name: str, port_mode: int) -> QIcon:
+def get_icon(icon_type: int, icon_name: str, port_mode: int, dark=True) -> QIcon:
     if icon_type in (IconType.CLIENT, IconType.APPLICATION):
         icon = QIcon.fromTheme(icon_name)
 
@@ -314,16 +306,29 @@ def get_icon(icon_type: int, icon_name: str, port_mode: int) -> QIcon:
     icon = QIcon()
 
     if icon_type == IconType.HARDWARE:
-        icon_file = ":/scalable/pb_hardware.svg"
-
+        icon_file = ":/canvas/"
+        icon_file += "dark/" if dark else "light/"
+           
         if icon_name == "a2j":
-            icon_file = ":/scalable/DIN-5.svg"
-        elif port_mode is PortMode.INPUT:
-            icon_file = ":/scalable/audio-headphones.svg"
-        elif port_mode is PortMode.OUTPUT:
-            icon_file = ":/scalable/microphone.svg"
+            icon_file += "DIN-5.svg"        
+        else:
+            if port_mode is PortMode.INPUT:
+                icon_file += "audio-headphones.svg"
+            elif port_mode is PortMode.OUTPUT:
+                icon_file += "microphone.svg"
+            else:
+                icon_file += "pb_hardware.svg"
 
         icon.addFile(icon_file)
+
+    elif icon_type == IconType.MONITOR:
+        prefix = ":/canvas/"
+        prefix += "dark/" if dark else "light/"
+        
+        if port_mode is PortMode.INPUT:
+            icon.addFile(prefix + "monitor_capture.svg")
+        elif port_mode is PortMode.OUTPUT:
+            icon.addFile(prefix + "monitor_playback.svg")
 
     elif icon_type == IconType.INTERNAL:
         icon.addFile(":/scalable/%s" % icon_name)

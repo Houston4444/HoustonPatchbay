@@ -17,8 +17,6 @@
 # For a full copy of the GNU General Public License see the doc/GPL.txt file.
 
 from enum import Enum
-import inspect
-import time
 from typing import Union
 from PyQt5.QtCore import pyqtSlot, QCoreApplication
 from PyQt5.QtWidgets import QWidgetAction, QMenu, QAction
@@ -89,7 +87,8 @@ class GroupConnectMenu(SubMenu):
         
         po = self._p_object
         
-        self.setIcon(get_group_icon(group.group_id, po.port_mode))
+        self.setIcon(
+            get_group_icon(group.group_id, po.port_mode.opposite(), is_dark_theme(self)))
         self.hovered.connect(self._mouse_hover_menu)
         
         self._parent = parent
@@ -431,7 +430,7 @@ class DisconnectMenu(SubMenu):
         else:
             action_name = get_full_port_name(group_id, port_id_list[0])
 
-        icon = get_group_icon(group_id, self._p_object.port_mode)
+        icon = get_group_icon(group_id, self._p_object.port_mode.opposite(), is_dark_theme(self))
 
         action = QAction(action_name)
         action.setIcon(icon)

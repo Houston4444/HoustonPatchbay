@@ -19,7 +19,6 @@
 
 import logging
 import os
-import time
 
 from PyQt5.QtCore import QRectF, QFile
 from PyQt5.QtGui import QPainter, QIcon
@@ -174,7 +173,7 @@ class IconSvgWidget(QGraphicsSvgItem):
             icon_path = ":/scalable/pb_hardware.svg"
             self._size = QRectF(5, 2, 16, 16)
 
-        elif icon_type == IconType.INTERNAL:
+        elif icon_type == IconType.MONITOR:
             if name == 'monitor_capture':
                 icon_path = theme.monitor_capture
             elif name == 'monitor_playback':
