@@ -38,7 +38,7 @@ class PortCheckBox(QCheckBox):
         self._parent = parent
         self.set_theme()
 
-    def set_theme(self):
+    def set_theme(self):        
         po = self._p_object
         
         theme = canvas.theme.port
@@ -54,10 +54,8 @@ class PortCheckBox(QCheckBox):
             theme = theme.midi
             line_theme = line_theme.midi
 
-        bg = theme.background_color().name(QColor.HexArgb)
         text_color = theme.text_color().name(QColor.HexArgb)
         border_color = theme.fill_pen().color().name(QColor.HexArgb)
-        h_bg = theme.selected.background_color().name(QColor.HexArgb)
         h_text_color = theme.selected.text_color().name(QColor.HexArgb)
         ind_bg = canvas.theme.scene_background_color.name(QColor.HexArgb)
         checked_bg = line_theme.selected.background_color().name(QColor.HexArgb)
@@ -82,21 +80,32 @@ class PortCheckBox(QCheckBox):
             if po.pg_pos != 0:
                 border_texts[TOP] = f"border-top: 0px solid transparent"
 
+
         self.setStyleSheet(
             f"QCheckBox{{background-color: none;color: {text_color}; spacing: 0px;"
                        f"border-radius: 3px; {radius_text};}}"
             f"QCheckBox:hover{{background-color: none;color: {h_text_color}}}"
-            f"QCheckBox::indicator{{background-color: {ind_bg};margin: 3px;"
-                                  f"border-radius: 3px; border: 1px solid "
-                                  f"{theme.fill_pen().color().name()}}}"
-            f"QCheckBox::indicator:checked{{"
-                f"background-color: {checked_bg}; border: 3px solid {ind_bg}}}"
-            f"QCheckBox::indicator:indeterminate{{"
-                f"background-color: qlineargradient("
-                    f"x1: 0, y1: 0, x2: 1, y2: 1, "
-                    f"stop: 0 {checked_bg}, stop: 0.55 {checked_bg}, "
-                    f"stop: 0.60 {ind_bg}, stop: 1 {ind_bg}); "
-                f"border: 3px solid {ind_bg}}}")
+        )
+        # # this stylesheet code is commented because the checkbox was not clear 
+        # # with some Qt theme (fusion, kvantum).
+        # # seems impossible to have a coherent and readable style
+        # # because change indicator size seems to not be applied when box is checked
+        # # and it is very ugly.
+        # # So we keep native checkboxes for the moment to ensure readability,
+        # # and will see later if we found a better solution.
+
+        #     f"QCheckBox::indicator{{width: 12px;height: 12px;"
+        #                           f"background-color: {ind_bg};margin: 3px;"
+        #                           f"border-radius: 3px; border: 1px solid "
+        #                           f"{theme.fill_pen().color().name()}}}"
+        #     f"QCheckBox::indicator:checked{{"
+        #         f"background-color: {checked_bg}; border: 3px solid {ind_bg}}}"
+        #     f"QCheckBox::indicator:indeterminate{{width: 12px;height: 12px;"
+        #         f"background-color: qlineargradient("
+        #             f"x1: 0, y1: 0, x2: 1, y2: 1, "
+        #             f"stop: 0 {checked_bg}, stop: 0.55 {checked_bg}, "
+        #             f"stop: 0.60 {ind_bg}, stop: 1 {ind_bg}); "
+        #         f"border: 3px solid {ind_bg}}}")
 
     def nextCheckState(self):
         po = self._p_object
@@ -110,6 +119,8 @@ class CheckFrame(QFrame):
                  port_name: str, port_name_end: str,
                  parent: 'SubMenu'):
         QFrame.__init__(self, parent)
+        # self.setMinimumSize(QSize(100, 18))
+        
         self._p_object = p_object
         self._parent = parent
         
