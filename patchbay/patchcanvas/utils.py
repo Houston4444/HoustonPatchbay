@@ -188,8 +188,8 @@ def get_portgroup_name_from_ports_names(ports_names: list[str]):
     if len(ports_names) < 2:
         return ''
 
-    portgrp_name_ends = (' ', '_', '.', '-', '#', ':', 'out', 'in', 'Out',
-                         'In', 'Output', 'Input', 'output', 'input')
+    PG_NAME_ENDS = (' ', '_', '.', '-', '#', ':', 'out', 'in', 'Out',
+                    'In', 'Output', 'Input', 'output', 'input', ' AUX', '_AUX')
 
     # set portgrp name
     portgrp_name = ''
@@ -200,22 +200,15 @@ def get_portgroup_name_from_ports_names(ports_names: list[str]):
                 break
         else:
             portgrp_name += c
-
-    # reduce portgrp name until it ends with one of the characters
+    
+    # reduce portgrp name until it ends with one of the patterns
     # in portgrp_name_ends
-    if not portgrp_name.endswith((' AUX', '_AUX')):
-        check = False
-        while not check:
-            for x in portgrp_name_ends:
-                if portgrp_name.endswith(x):
-                    check = True
-                    break
-
-            if len(portgrp_name) == 0 or portgrp_name in ports_names:
-                check = True
-
-            if not check:
-                portgrp_name = portgrp_name[:-1]
+    while portgrp_name:
+        if (portgrp_name.endswith((PG_NAME_ENDS))
+                or portgrp_name in ports_names):
+            break
+        
+        portgrp_name = portgrp_name[:-1]
     
     return portgrp_name
 
