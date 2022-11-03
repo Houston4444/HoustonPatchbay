@@ -216,10 +216,8 @@ class ThemeManager:
         return theme_classes
     
     def copy_and_load_current_theme(self, new_name: str) -> int:
-        ''' returns 0 if ok, 1 if no editable dir exists, 2 if copy fails '''
-        current_theme_dir = os.path.dirname(self.current_theme_file)
-        current_theme_dir = self.current_theme_file.parent
-        
+        '''returns 0 if ok, 1 if no editable dir exists, 2 if copy fails'''
+        current_theme_dir = self.current_theme_file.parent        
         editable_dir = Path()
         
         # find the first editable patchbay_themes directory
@@ -251,6 +249,30 @@ class ThemeManager:
             return 2
         
         self.current_theme_file = new_dir.joinpath('theme.conf')
+        
+        conf = configparser.ConfigParser()
+        try:
+            # we don't need the file_list
+            # it is just a convenience to mute conf.read
+            file_list = conf.read(self.current_theme_file)
+            
+            # rename the theme in its file with the new name
+            # remove all translated names to prevent them to pass over
+            # the new name.
+            if 'Theme' in conf.keys():
+                conf_theme = conf['Theme']
+                conf_theme['Name'] = new_name
+                for key in conf_theme.keys():
+                    if key.lower().startswith('name[') and key.endswith(']'):
+                        conf_theme.pop(key)
+
+            with open(self.current_theme_file, 'w') as f:
+                conf.write(f)
+            conf.clear()
+        except:
+            _logger.error(
+                f'Impossible to rename Theme in file {self.current_theme_file}')
+
         self._update_theme()
         return 0
     
