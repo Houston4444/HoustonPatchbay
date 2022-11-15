@@ -17,11 +17,9 @@
 #
 # For a full copy of the GNU General Public License see the doc/GPL.txt file.
 
-import inspect
 import logging
 from math import ceil
 from struct import pack
-import time
 from sip import voidptr
 import sys
 from enum import Enum
