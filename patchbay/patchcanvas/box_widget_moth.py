@@ -571,6 +571,10 @@ class BoxWidgetMoth(QGraphicsItem):
     def itemChange(self, change, value):
         if change == QGraphicsItem.ItemSelectedHasChanged:
             self.reset_lines_z_value(bool(value))
+            if bool(value):
+                canvas_callback(
+                    CallbackAct.GROUP_SELECTED, self._group_id,
+                    self._splitted_mode)
 
         return super().itemChange(change, value)
 

@@ -86,25 +86,26 @@ class CallbackAct(IntEnum):
     GROUP_MOVE = 5          # group_id: int, splitted_mode: PortMode, x: int, y: int
     GROUP_WRAP = 6          # group_id: int, folded: bool
     GROUP_LAYOUT_CHANGE = 7 # group_id: int, layout_mode: BoxLayoutMode, splitted_mode: PortMode
-    PORTGROUP_ADD = 8       # group_id: int, portgrp_id: int, port_mode: PortMode,
+    GROUP_SELECTED = 8      # group_id: int, splitted_mode: PortMode
+    PORTGROUP_ADD = 9       # group_id: int, portgrp_id: int, port_mode: PortMode,
                             #      port_type: PortType, port_ids: tuple[int]
-    PORTGROUP_REMOVE = 9    # group_id: int, portgrp_id: int
-    PORT_INFO = 10          # group_id: int, port_id: int
-    PORT_RENAME = 11        # group_id: int, port_id: int
-    PORTS_CONNECT = 12      # group_out_id: int, port_out_id: int,
+    PORTGROUP_REMOVE = 10   # group_id: int, portgrp_id: int
+    PORT_INFO = 11          # group_id: int, port_id: int
+    PORT_RENAME = 12        # group_id: int, port_id: int
+    PORTS_CONNECT = 13      # group_out_id: int, port_out_id: int,
                             #      group_in_id: int, port_in_id: int
-    PORTS_DISCONNECT = 13   # conn_id: int
-    PLUGIN_CLONE = 14       # plugin_id: int
-    PLUGIN_EDIT = 15        # plugin_id: int
-    PLUGIN_RENAME = 16      # plugin_id: int
-    PLUGIN_REPLACE = 17     # plugin_id: int
-    PLUGIN_REMOVE = 18      # plugin_id: int
-    PLUGIN_SHOW_UI = 19     # plugin_id: int
-    INLINE_DISPLAY = 20     # plugin_id: int
-    BG_RIGHT_CLICK = 21     # 
-    BG_DOUBLE_CLICK = 22    # 
-    CLIENT_SHOW_GUI = 23    # group_id: int, visible: bool
-    THEME_CHANGED = 24      # theme_name: str
+    PORTS_DISCONNECT = 14   # conn_id: int
+    PLUGIN_CLONE = 15       # plugin_id: int
+    PLUGIN_EDIT = 16        # plugin_id: int
+    PLUGIN_RENAME = 17      # plugin_id: int
+    PLUGIN_REPLACE = 18     # plugin_id: int
+    PLUGIN_REMOVE = 19      # plugin_id: int
+    PLUGIN_SHOW_UI = 20     # plugin_id: int
+    INLINE_DISPLAY = 21     # plugin_id: int
+    BG_RIGHT_CLICK = 22     # 
+    BG_DOUBLE_CLICK = 23    # 
+    CLIENT_SHOW_GUI = 24    # group_id: int, visible: bool
+    THEME_CHANGED = 25      # theme_name: str
 
 
 class BoxType(IntEnum):
