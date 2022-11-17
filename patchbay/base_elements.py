@@ -290,9 +290,11 @@ class Connection:
         
         if (self.port_out.type is PortType.AUDIO_JACK
                 and self.port_in.type is PortType.AUDIO_JACK):
-            if self.port_out.is_cv() and self.port_in.is_cv():
+            if (self.port_out.subtype is PortSubType.CV
+                    and self.port_in.subtype is PortSubType.CV): 
                 return bool(port_types_view & PortTypesViewFlag.CV)
-            if not self.port_out.is_cv() and not self.port_in.is_cv():
+            if (self.port_out.subtype is PortSubType.REGULAR
+                    and self.port_in.subtype is PortSubType.REGULAR):
                 return bool(port_types_view & PortTypesViewFlag.AUDIO)
         
         return False
@@ -361,7 +363,7 @@ class Port:
         self.flags = flags
         self.uuid = uuid
         self.subtype = PortSubType.REGULAR
-        
+
         if (self.type is PortType.AUDIO_JACK
                 and self.flags & JackPortFlag.IS_CONTROL_VOLTAGE):
             self.subtype = PortSubType.CV
@@ -379,9 +381,6 @@ class Port:
 
     def full_type(self) -> tuple[PortType, PortSubType]:
         return (self.type, self.subtype)
-
-    def is_cv(self) -> bool:
-        return bool(self.flags & JackPortFlag.IS_CONTROL_VOLTAGE)
     
     def short_name(self) -> str:
         if self.full_name.startswith('a2j:'):
@@ -461,13 +460,8 @@ class Port:
         if self.type != other.type:
             return (self.type < other.type)
 
-        if (self.flags & JackPortFlag.IS_CONTROL_VOLTAGE
-                !=  other.flags & JackPortFlag.IS_CONTROL_VOLTAGE):
-            return not bool(self.flags & JackPortFlag.IS_CONTROL_VOLTAGE)
-
-        if (self.full_name.startswith('a2j:')
-                != other.full_name.startswith('a2j:')):
-            return not self.full_name.startswith('a2j:')
+        if self.subtype is not other.subtype:
+            return self.subtype < other.subtype
 
         if self.mode() != other.mode():
             return (self.mode() < other.mode())
@@ -541,18 +535,10 @@ class Portgroup:
 
         self.in_canvas = True
 
-        port_type = self.ports[0].type
-        port_subtype = PortSubType.REGULAR
-        if (port_type is PortType.AUDIO_JACK
-                and self.ports[0].flags & JackPortFlag.IS_CONTROL_VOLTAGE):
-            port_subtype = PortSubType.CV
-        elif (port_type is PortType.MIDI_JACK
-                and self.ports[0].full_name.startswith('a2j:')):
-            port_subtype = PortSubType.A2J
-
-        patchcanvas.add_portgroup(self.group_id, self.portgroup_id,
-                                  self.port_mode, port_type, port_subtype,
-                                  [port.port_id for port in self.ports])
+        patchcanvas.add_portgroup(
+            self.group_id, self.portgroup_id,
+            self.port_mode, self.ports[0].type, self.ports[0].subtype,
+            [port.port_id for port in self.ports])
 
     def remove_from_canvas(self):
         if self.manager.very_fast_operation:
@@ -935,7 +921,7 @@ class Group:
 
             return (name, num)
 
-        def cut_end(name: str, *ends: str)->str:
+        def cut_end(name: str, *ends: str) -> str:
             for end in ends:
                 if name.endswith(end):
                     return name.rsplit(end)[0]
@@ -1001,8 +987,11 @@ class Group:
                         display_name += ' ' + num
 
         elif client_name in ('ardour', 'Ardour'):
+            if '/TriggerBox/' in display_name:
+                display_name = '▸ ' + display_name.replace('/TriggerBox/', '/', 1)
+            
             for pt in ('audio', 'midi'):
-                if display_name == "physical_%s_input_monitor_enable" % pt:
+                if display_name == f"physical_{pt}_input_monitor_enable":
                     display_name = "physical monitor"
                     break
             else:
@@ -1131,10 +1120,7 @@ class Group:
             self.remove_from_canvas()
 
     def stereo_detection(self, port: Port) -> Union[Port, None]:
-        if port.type != PortType.AUDIO_JACK:
-            return
-
-        if port.flags & JackPortFlag.IS_CONTROL_VOLTAGE:
+        if port.type != PortType.AUDIO_JACK or port.subtype != PortSubType.REGULAR:
             return
 
         # find the last port with same type and mode in the group
@@ -1143,8 +1129,8 @@ class Group:
                 continue
 
             if (other_port.type == port.type
+                    and other_port.subtype == port.subtype
                     and other_port.mode() == port.mode()
-                    and not other_port.flags & JackPortFlag.IS_CONTROL_VOLTAGE
                     and not other_port.portgroup_id
                     and not other_port.prevent_stereo):
                 for portgroup_mem in self.manager.portgroups_memory:
@@ -1430,9 +1416,9 @@ class Group:
                     else:
                         portgroups_mdata.append(
                             {'pg_name': port.mdata_portgroup,
-                            'port_type': port.type,
-                            'port_mode': port.mode(),
-                            'ports':[port]})
+                             'port_type': port.type,
+                             'port_mode': port.mode(),
+                             'ports':[port]})
         
         for pg_mdata in portgroups_mdata:
             if len(pg_mdata['ports']) < 2:

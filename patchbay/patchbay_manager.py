@@ -319,7 +319,7 @@ class PatchbayManager:
 
     def get_port_from_id(self, group_id: int, port_id: int) -> Port:
         group = self.get_group_from_id(group_id)
-        if group is not None:        
+        if group is not None:
             for port in group.ports:
                 if port.port_id == port_id:
                     return port
