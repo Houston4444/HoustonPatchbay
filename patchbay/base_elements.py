@@ -469,8 +469,8 @@ class Port:
                 != other.full_name.startswith('a2j:')):
             return not self.full_name.startswith('a2j:')
 
-        if self.mode() != other.mode():
-            return (self.mode() < other.mode())
+        # if self.mode() != other.mode():
+        #     return (self.mode() < other.mode())
 
         if self.order is None and other.order is None:
             return self.port_id < other.port_id
