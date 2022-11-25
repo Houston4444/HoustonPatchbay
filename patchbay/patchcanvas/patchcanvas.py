@@ -234,7 +234,7 @@ def set_canvas_size(x: int, y: int, width: int, height: int):
 @patchbay_api
 def set_loading_items(yesno: bool):
     '''while canvas is loading items (groups or ports, connections...)
-    then, items will be added, but no redrawn.
+    then, items will be added, but not redrawn.
     This is an optimization that prevents a lot of redraws.
     Think to set loading items at False and use redraw_all_groups
     or redraw_group once the long operation is finished'''
