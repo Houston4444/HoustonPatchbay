@@ -279,7 +279,7 @@ def get_group_icon(group_id: int, port_mode: int, dark=True) -> QIcon:
         return QIcon()
 
     return get_icon(
-        group.icon_type, group.icon_name, port_mode, dark)
+        group.box_type, group.icon_name, port_mode, dark)
 
 def get_icon(icon_type: int, icon_name: str, port_mode: int, dark=True) -> QIcon:
     if icon_type in (BoxType.CLIENT, BoxType.APPLICATION):

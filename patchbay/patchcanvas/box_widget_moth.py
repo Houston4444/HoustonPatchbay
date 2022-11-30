@@ -275,8 +275,10 @@ class BoxWidgetMoth(QGraphicsItem):
         self.update()
 
     def set_icon(self, box_type: BoxType, icon_name: str):
-        if box_type == BoxType.HARDWARE:
+        if isinstance(self.top_icon, IconSvgWidget):
             self.remove_icon_from_scene()
+
+        if box_type == BoxType.HARDWARE and (not icon_name or icon_name == 'a2j'):
             port_mode = PortMode.NULL
             if self._splitted:
                 port_mode = self._splitted_mode
@@ -643,14 +645,14 @@ class BoxWidgetMoth(QGraphicsItem):
                     ins_label = " (inputs)"
                     outs_label = " (outputs)"
 
-                    if group.icon_type == BoxType.HARDWARE:
+                    if group.box_type == BoxType.HARDWARE:
                         ins_label = " (playbacks)"
                         outs_label = " (captures)"
 
                     act_x_disc1 = discMenu.addAction(
                         group.group_name + outs_label)
                     act_x_disc1.setIcon(get_icon(
-                        group.icon_type, group.icon_name, PortMode.OUTPUT))
+                        group.box_type, group.icon_name, PortMode.OUTPUT))
                     act_x_disc1.setData(
                         disconnect_element.connection_out_ids)
                     act_x_disc1.triggered.connect(
@@ -659,7 +661,7 @@ class BoxWidgetMoth(QGraphicsItem):
                     act_x_disc2 = discMenu.addAction(
                         group.group_name + ins_label)
                     act_x_disc2.setIcon(get_icon(
-                        group.icon_type, group.icon_name, PortMode.INPUT))
+                        group.box_type, group.icon_name, PortMode.INPUT))
                     act_x_disc2.setData(
                         disconnect_element.connection_in_ids)
                     act_x_disc2.triggered.connect(
@@ -673,7 +675,7 @@ class BoxWidgetMoth(QGraphicsItem):
 
                     act_x_disc = discMenu.addAction(group.group_name)
                     icon = get_icon(
-                        group.icon_type, group.icon_name, port_mode)
+                        group.box_type, group.icon_name, port_mode)
                     act_x_disc.setIcon(icon)
                     act_x_disc.setData(
                         disconnect_element.connection_out_ids

@@ -258,7 +258,7 @@ def add_group(group_id: int, group_name: str, split=BoxSplitMode.UNDEF,
     group.group_id = group_id
     group.group_name = group_name
     group.split = bool(split == BoxSplitMode.YES)
-    group.icon_type = icon_type
+    group.box_type = icon_type
     group.icon_name = icon_name
     group.layout_modes = layout_modes
     group.plugin_id = -1
@@ -459,7 +459,7 @@ def split_group(group_id: int, on_place=False):
 
     # Step 3 - Re-create Item, now split
     add_group(group_id, g.group_name, BoxSplitMode.YES,
-              g.icon_type, g.icon_name, g.layout_modes,
+              g.box_type, g.icon_name, g.layout_modes,
               null_xy=(g.null_pos.x(), g.null_pos.y()),
               in_xy=(g.in_pos.x(), g.in_pos.y()),
               out_xy=(g.out_pos.x(), g.out_pos.y()),
@@ -542,7 +542,7 @@ def join_group(group_id: int):
     g = tmp_group
     # Step 3 - Re-create Item, now together
     add_group(group_id, g.group_name, BoxSplitMode.NO,
-              g.icon_type, g.icon_name, g.layout_modes,
+              g.box_type, g.icon_name, g.layout_modes,
               null_xy=(g.null_pos.x(), g.null_pos.y()),
               in_xy=(g.in_pos.x(), g.in_pos.y()),
               out_xy=(g.out_pos.x(), g.out_pos.y()))
@@ -775,18 +775,18 @@ def set_group_pos_full(group_id, group_pos_x_o, group_pos_y_o,
     
 
 @patchbay_api
-def set_group_icon(group_id: int, icon_type: BoxType, icon_name: str):
+def set_group_icon(group_id: int, box_type: BoxType, icon_name: str):
     group = canvas.get_group(group_id)
     if group is None:
         _logger.critical(f"{_logging_str} - unable to find group to change icon")
         return
     
-    group.icon_type = icon_type
+    group.box_type = box_type
     group.icon_name = icon_name
 
     for widget in group.widgets:
         if widget is not None:
-            widget.set_icon(icon_type, icon_name)
+            widget.set_icon(box_type, icon_name)
 
     QTimer.singleShot(0, canvas.scene.update)
 

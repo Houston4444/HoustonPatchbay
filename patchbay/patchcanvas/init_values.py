@@ -190,7 +190,7 @@ class GroupObject:
     group_id: int
     group_name: str
     split: int
-    icon_type: int
+    box_type: int
     icon_name: str
     layout_modes: dict[PortMode, BoxLayoutMode]
     plugin_id: int
@@ -203,8 +203,7 @@ class GroupObject:
     gui_visible: bool
     widgets: list
     if TYPE_CHECKING:
-        # BoxWidget is optional, it can also be None
-        widgets: list[BoxWidget]
+        widgets: list[Optional[BoxWidget]]
 
     def copy_no_widget(self) -> 'GroupObject':
         group_copy = GroupObject()

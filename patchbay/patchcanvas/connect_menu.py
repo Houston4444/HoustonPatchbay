@@ -99,9 +99,9 @@ class GroupConnectMenu(SubMenu):
         self._last_portgrp_id = 0
         
         theme = canvas.theme.box
-        if group.icon_type == BoxType.CLIENT:
+        if group.box_type == BoxType.CLIENT:
             theme = theme.client
-        elif group.icon_type == BoxType.HARDWARE:
+        elif group.box_type == BoxType.HARDWARE:
             theme = theme.hardware
 
         bg_color = theme.background_color().name(QColor.HexArgb)

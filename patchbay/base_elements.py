@@ -123,7 +123,7 @@ class GroupPos:
     out_xy: tuple[int, int]
     flags: int = 0
     layout_modes: dict[PortMode, BoxLayoutMode]
-    fully_set: bool = False
+    fully_set: bool = True
     
     def __init__(self):
         self.null_xy = (0, 0)
@@ -586,6 +586,9 @@ class Group:
 
         self.mdata_icon = ''
 
+    def __repr__(self) -> str:
+        return f"Group({self.name})"
+
     def update_ports_in_canvas(self):
         for port in self.ports:
             port.rename_in_canvas()
@@ -598,8 +601,6 @@ class Group:
 
         do_split = bool(self.current_position.flags & GroupPosFlag.SPLITTED)
         split = BoxSplitMode.YES if do_split else BoxSplitMode.NO
-
-        self.in_canvas = True
 
         gpos = self.current_position
 
@@ -617,6 +618,8 @@ class Group:
             self.group_id, display_name, split,
             box_type, icon_name, layout_modes=layout_modes_,
             null_xy=gpos.null_xy, in_xy=gpos.in_xy, out_xy=gpos.out_xy)
+
+        self.in_canvas = True
 
         if do_split:
             gpos.flags |= GroupPosFlag.HAS_BEEN_SPLITTED
@@ -667,6 +670,7 @@ class Group:
 
         if self._is_hardware:
             box_type = BoxType.HARDWARE
+            icon_name = ''
             if self.a2j_group or self.display_name == "Midi-Bridge":
                 icon_name = "a2j"
 
@@ -888,7 +892,7 @@ class Group:
 
         patchcanvas.wrap_group_box(self.group_id, port_mode, yesno)
 
-    def set_client_icon(self, icon_name:str, from_metadata=False):
+    def set_client_icon(self, icon_name: str, from_metadata=False):
         if from_metadata:
             self.mdata_icon = icon_name
         else:
