@@ -542,9 +542,9 @@ class BoxWidget(BoxWidgetMoth):
     def _choose_title_layout(
         self, height_for_ports: int, height_for_ports_one: int,
         ports_in_width: int, ports_out_width: int) -> dict:
-        ''' choose in how many lines should be splitted the title
+        '''choose in how many lines should be splitted the title
         and if the box layout should be large or high.
-        returns a dict with all required variables and values '''
+        returns a dict with all required variables and values'''
         
         # width_for_ports_one is the width needed for ports
         # if inputs and outputs layouted in one column.
@@ -566,7 +566,7 @@ class BoxWidget(BoxWidgetMoth):
         
         # first look in cache if title sizes are stocked
         all_title_templates = box_theme.get_title_templates(
-            self._group_name, self._can_handle_gui, self.has_top_icon)
+            self._group_name, self._can_handle_gui, self.has_top_icon())
         lines_choice_max = len(all_title_templates) - 1
         
         if not all_title_templates:
@@ -627,7 +627,7 @@ class BoxWidget(BoxWidgetMoth):
 
             lines_choice_max = i
             box_theme.save_title_templates(
-                self._group_name, self._can_handle_gui, self.has_top_icon,
+                self._group_name, self._can_handle_gui, self.has_top_icon(),
                 all_title_templates[:lines_choice_max])
 
         # Now compare multiple possible areas for the box,
@@ -1214,7 +1214,7 @@ class BoxWidget(BoxWidgetMoth):
         # I do not understand why without this,
         # when a renamed port does not change the box geometry,
         # port and portgroups widgets aren't updated,
-        # they will be if we click on it for exemple.
+        # they will be if we click on it for exemple.        
         for portgrp in self._portgrp_list:
             if portgrp.widget is not None:
                 portgrp.widget.update()

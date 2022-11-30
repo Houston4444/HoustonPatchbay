@@ -125,10 +125,6 @@ class BoxWidgetMoth(QGraphicsItem):
         self._unwrapped_height = 0
         self._height = self._header_height + 1
         self._ports_y_start = self._header_height
-        self._ex_width = self._width
-        self._ex_height = self._height
-        self._ex_scene_pos = self.scenePos()
-        self._ex_ports_y_segments_dict = {}
 
         self._last_pos = QPointF()
         self._splitted = False
@@ -278,23 +274,23 @@ class BoxWidgetMoth(QGraphicsItem):
                                else self.INLINE_DISPLAY_DISABLED)
         self.update()
 
-    def set_icon(self, icon_type, icon_name):
-        if icon_type == BoxType.HARDWARE:
+    def set_icon(self, box_type: BoxType, icon_name: str):
+        if box_type == BoxType.HARDWARE:
             self.remove_icon_from_scene()
             port_mode = PortMode.NULL
             if self._splitted:
                 port_mode = self._splitted_mode
-            self.top_icon = IconSvgWidget(icon_type, icon_name, port_mode, self)
+            self.top_icon = IconSvgWidget(box_type, icon_name, port_mode, self)
             return
 
         if self.top_icon is not None:
-            self.top_icon.set_icon(icon_type, icon_name, self._current_port_mode)
+            self.top_icon.set_icon(box_type, icon_name, self._current_port_mode)
         else:
-            self.top_icon = IconPixmapWidget(icon_type, icon_name, self)
+            self.top_icon = IconPixmapWidget(box_type, icon_name, self)
 
         self.update_positions()
 
-    def has_top_icon(self)->bool:
+    def has_top_icon(self) -> bool:
         if self.top_icon is None:
             return False
 

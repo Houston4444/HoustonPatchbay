@@ -782,6 +782,8 @@ def set_group_icon(group_id: int, icon_type: BoxType, icon_name: str):
         return
     
     group.icon_type = icon_type
+    group.icon_name = icon_name
+
     for widget in group.widgets:
         if widget is not None:
             widget.set_icon(icon_type, icon_name)
