@@ -49,6 +49,11 @@ class BoxWidget(BoxWidgetMoth):
         BoxWidgetMoth.__init__(
             self, group_id, group_name, icon_type, icon_name)
         self.update_positions_pending = False
+        self._ex_width = self._width
+        self._ex_height = self._height
+
+        self._ex_scene_pos = self.scenePos()
+        self._ex_ports_y_segments_dict = dict[str, list[list[int]]]()
 
     def __repr__(self) -> str:
         return f"BoxWidget({self._group_name}, {self._current_port_mode.name})"
@@ -219,7 +224,8 @@ class BoxWidget(BoxWidgetMoth):
                 'last_port_mode': last_port_mode}
 
     def _set_ports_y_positions(
-            self, align_port_types: bool, start_pos: int, one_column: bool) -> dict:
+            self, align_port_types: bool, start_pos: int, one_column: bool
+                ) -> dict[str, list[list[int]]]:
         def set_widget_pos(widget: QGraphicsItem, pos: float):
             if self._wrapping:
                 widget.setY(pos - ((pos - wrapped_port_pos)
@@ -345,9 +351,9 @@ class BoxWidget(BoxWidgetMoth):
                 'output_segments': output_segments}
     
     @staticmethod
-    def split_in_two(string: str, n_lines: int) -> list:
+    def split_in_two(string: str, n_lines: int) -> list[str]:
         def polished_list(input_list: list) -> list:
-            output_list = []
+            output_list = list[str]()
 
             for string in input_list:
                 if not string:
@@ -368,7 +374,7 @@ class BoxWidget(BoxWidgetMoth):
         if n_lines <= 1:
             return [string]
             
-        sep_indexes = []
+        sep_indexes = list[int]()
         last_was_digit = False
         last_was_upper = False
 
@@ -397,7 +403,7 @@ class BoxWidget(BoxWidgetMoth):
             return [string]
         
         if len(sep_indexes) + 1 <= n_lines:
-            return_list = []
+            return_list = list[str]()
             last_index = 0
 
             for sep_index in sep_indexes:
@@ -410,7 +416,6 @@ class BoxWidget(BoxWidgetMoth):
         
         best_indexes = [0]
         string_rest = string
-        string_list = []
 
         for i in range(n_lines, 1, -1):
             
@@ -437,7 +442,7 @@ class BoxWidget(BoxWidgetMoth):
 
         best_indexes = best_indexes[1:]
         last_index = 0
-        return_list = []
+        return_list = list[str]()
 
         for i in best_indexes:
             return_list.append(string[last_index:i])
@@ -951,10 +956,11 @@ class BoxWidget(BoxWidgetMoth):
                 left_path = QPainterPath()
                 left_path.addRect(QRectF(
                     0.0 + line_hinting - epsy,
-                    max(self._height - border_radius, input_segments[-1][1]) + line_hinting - epsy,
+                    max(self._height - border_radius, input_segments[-1][1])
+                        + line_hinting - epsy,
                     border_radius + epsd,
                     min(border_radius, self._height - input_segments[-1][1])
-                    - 2 * line_hinting + epsd))
+                        - 2 * line_hinting + epsd))
                 painter_path = painter_path.united(left_path)
 
             if (input_segments
@@ -973,9 +979,11 @@ class BoxWidget(BoxWidgetMoth):
                 right_path = QPainterPath()
                 right_path.addRect(QRectF(
                     self._width - border_radius - line_hinting - epsy,
-                    max(self._height - border_radius, output_segments[-1][1]) + line_hinting - epsy,
+                    max(self._height - border_radius, output_segments[-1][1])
+                        + line_hinting - epsy,
                     border_radius + epsd,
-                    min(border_radius, self._height - output_segments[-1][1]) - 2 * line_hinting + epsd))
+                    min(border_radius, self._height - output_segments[-1][1])
+                        - 2 * line_hinting + epsd))
                 painter_path = painter_path.united(right_path)
                 
             if (output_segments
@@ -1114,7 +1122,7 @@ class BoxWidget(BoxWidgetMoth):
             one_column = bool(
                 self._current_port_mode is PortMode.BOTH
                 and self._current_layout_mode == BoxLayoutMode.HIGH)
-            
+        
         last_in_pos += self._ports_y_start
         last_out_pos += self._ports_y_start
 
@@ -1203,8 +1211,14 @@ class BoxWidget(BoxWidgetMoth):
         self.update_positions_pending = False
         self.update()
         
-        # I do not understand why without this
-        # sometimes portgroups aren't redrawn after port renaming
+        # I do not understand why without this,
+        # when a renamed port does not change the box geometry,
+        # port and portgroups widgets aren't updated,
+        # they will be if we click on it for exemple.
         for portgrp in self._portgrp_list:
             if portgrp.widget is not None:
                 portgrp.widget.update()
+                
+        for port in self._port_list:
+            if port.widget is not None:
+                port.widget.update()
