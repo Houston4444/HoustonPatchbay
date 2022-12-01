@@ -534,7 +534,7 @@ class Theme(StyleAttributer):
     
     # if for some reason cache may be incompatible with this version
     # of the patchbay, we need to discard the cache files. 
-    CACHE_VERSION = (1, 0)
+    CACHE_VERSION = (1, 1)
     
     title_templates_cache = {'CACHE_VERSION': CACHE_VERSION}
     font_metrics_cache = {'CACHE_VERSION': CACHE_VERSION}

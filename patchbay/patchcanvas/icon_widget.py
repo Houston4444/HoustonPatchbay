@@ -72,15 +72,14 @@ class IconPixmapWidget(QGraphicsPixmapItem):
         self.x_offset = 4
         self.y_offset = 4
 
-        if box_type in (BoxType.CLIENT, BoxType.APPLICATION):
-            self.set_icon(box_type, icon_name)
+        self.set_icon(box_type, icon_name)
 
-    def set_icon(self, icon, name, port_mode=PortMode.NULL):
+    def set_icon(self, box_type: BoxType, name: str, port_mode=PortMode.NULL):
         self.icon = get_app_icon(name)
+
         if not self.icon.isNull():
             pixmap = self.icon.pixmap(24, 24)
             self.setPixmap(pixmap)
-            #self.setOffset(4.0, 4.0)
             self.setPos(4.0, 4.0)
 
     def update_zoom(self, scale: float):

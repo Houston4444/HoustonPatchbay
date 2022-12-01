@@ -38,7 +38,6 @@ class PatchbayToolBar(QToolBar):
     def _change_visibility(self):
         if self._patchbay_mng is not None:
             self._patchbay_mng.change_tools_displayed(self._displayed_widgets)
-        # self.resize(QSize())
 
     def set_default_displayed_widgets(self, displayed_widgets: ToolDisplayed):
         self._displayed_widgets = displayed_widgets

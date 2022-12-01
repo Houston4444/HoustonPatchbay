@@ -1,19 +1,20 @@
 
+import json
 import logging
+import operator
 from pathlib import Path
 from dataclasses import dataclass
-import sys
-from typing import TYPE_CHECKING, Callable, Union
-from unittest.mock import patch
+from typing import TYPE_CHECKING, Any, Callable, Optional, Union
+
 from PyQt5.QtGui import QCursor, QGuiApplication
 from PyQt5.QtWidgets import QMainWindow, QMessageBox, QWidget
 from PyQt5.QtCore import QTimer, QSettings, QThread, QTranslator, QLocale
 
-from .patchcanvas import patchcanvas, PortType
+from .patchcanvas import patchcanvas, PortType, PortSubType, PortMode
 from .patchcanvas.utils import get_new_group_positions
 from .patchcanvas.scene_view import PatchGraphicsView
 from .patchcanvas.init_values import (
-    CallbackAct, CanvasFeaturesObject, CanvasOptionsObject, PortSubType)
+    CallbackAct, CanvasFeaturesObject, CanvasOptionsObject)
 from .patchcanvas.theme_manager import ThemeManager
 
 from .patchbay_signals import SignalsObject
@@ -21,8 +22,9 @@ from .tools_widgets import PatchbayToolsWidget
 from .canvas_menu import CanvasMenu
 from .options_dialog import CanvasOptionsDialog
 from .filter_frame import FilterFrame
-from .base_elements import (Connection, GroupPos, Port, PortTypesViewFlag, Portgroup, Group,
-                            JackPortFlag, PortgroupMem, ToolDisplayed, TransportPosition)
+from .base_elements import (
+    Connection, GroupPos, Port, PortTypesViewFlag, Portgroup, Group,
+    JackPortFlag, PortgroupMem, ToolDisplayed, TransportPosition)
 from .calbacker import Callbacker
 
 
@@ -665,7 +667,7 @@ class PatchbayManager:
             return group.group_id
 
     @later_by_batch(sort_group=True)
-    def metadata_update(self, uuid: int, key: str, value: str) -> int:
+    def metadata_update(self, uuid: int, key: str, value: str) -> Optional[int]:
         ''' remember metadata and returns the group_id'''
         if key == JACK_METADATA_ORDER:
             port = self.get_port_from_uuid(uuid)
@@ -705,6 +707,20 @@ class PatchbayManager:
                 if group.uuid == uuid:
                     group.set_client_icon(value, from_metadata=True)
                     return group.group_id
+                
+        
+        elif key == JACK_METADATA_SIGNAL_TYPE:
+            port = self.get_port_from_uuid(uuid)
+            if port is None:
+                return
+            
+            if port.type is PortType.AUDIO_JACK:
+                if value == 'CV':
+                    port.subtype = PortSubType.CV
+                elif value == 'AUDIO':
+                    port.subtype = PortSubType.REGULAR
+            
+            return port.group_id
 
     @later_by_batch()
     def add_connection(self, port_out_name: str, port_in_name: str):
@@ -916,3 +932,136 @@ class PatchbayManager:
 
         if some_groups_removed:
             patchcanvas.canvas.scene.resize_the_scene()
+
+    def _export_port_list_to_patchichi(self) -> str:
+        def slcol(input_str: str) -> str:
+            return input_str.replace(':', '\\:')
+        
+        contents = ''
+
+        gps_and_ports = list[tuple[str, list[Port]]]()
+        for group in self.groups:
+            for port in group.ports:
+                group_name = port.full_name.partition(':')[0]
+                for gp_name, gp_port_list in gps_and_ports:
+                    if gp_name == group_name:
+                        gp_port_list.append(port)
+                        break
+                else:
+                    gps_and_ports.append((group_name, [port]))
+
+        for group_name, port_list in gps_and_ports:
+            port_list.sort(key=operator.attrgetter('port_id'))
+                
+        for group_name, port_list in gps_and_ports:
+            gp_written = False              
+            last_type_and_mode = (PortType.NULL, PortMode.NULL)
+            physical = False
+            pg_name = ''
+
+            for port in port_list:
+                if not gp_written:
+                    contents += f'\n::{group_name}\n'
+                    gp_written = True
+
+                    group = self.get_group_from_name(group_name)
+                    if group is not None:
+                        group_attrs = list[str]()
+                        if group.client_icon:
+                            group_attrs.append(f'CLIENT_ICON={slcol(group.client_icon)}')
+                            
+                        if group.mdata_icon:
+                            group_attrs.append(f'ICON_NAME={slcol(group.mdata_icon)}')
+
+                        if group.has_gui:
+                            if group.gui_visible:
+                                group_attrs.append('GUI_VISIBLE')
+                            else:
+                                group_attrs.append('GUI_HIDDEN')
+                        if group_attrs:
+                            contents += ':'
+                            contents += '\n:'.join(group_attrs)
+                            contents += '\n'
+
+                if port.flags & JackPortFlag.IS_PHYSICAL:
+                    if not physical:
+                        contents += ':PHYSICAL\n'
+                        physical = True
+                elif physical:
+                    contents += ':~PHYSICAL\n'
+                    physical = False
+
+                if last_type_and_mode != (port.type, port.mode()):
+                    if port.type is PortType.AUDIO_JACK:
+                        if port.flags & JackPortFlag.IS_CONTROL_VOLTAGE:
+                            contents += ':CV'
+                        else:
+                            contents += ':AUDIO'
+                    elif port.type is PortType.MIDI_JACK:
+                        contents += ':MIDI'
+
+                    contents += f':{port.mode().name}\n'
+                    last_type_and_mode = (port.type, port.mode())
+                
+                if port.mdata_portgroup != pg_name:
+                    if port.mdata_portgroup:
+                        contents += f':PORTGROUP={slcol(port.mdata_portgroup)}\n'
+                    else:
+                        contents += ':~PORTGROUP\n'
+                    pg_name = port.mdata_portgroup
+
+                port_short_name = port.full_name.partition(':')[2]
+                contents += f'{port_short_name}\n'
+                
+                if port.pretty_name or port.order:
+                    port_attrs = list[str]()
+                    if port.pretty_name:
+                        port_attrs.append(f'PRETTY_NAME={slcol(port.pretty_name)}')
+                    if port.order:
+                        port_attrs.append(f'PORT_ORDER={port.order}')
+                    contents += '\n'
+                    contents += ':'.join(port_attrs)
+
+        return contents
+    
+    def export_to_patchichi_json(
+            self, path: Path, editor_text='') -> bool:
+        if not editor_text:
+            editor_text = self._export_port_list_to_patchichi()
+
+        file_dict = dict[str, Any]()
+        file_dict['VERSION'] = (0, 1)       
+        file_dict['editor_text'] = editor_text
+        file_dict['connections'] = [
+            (c.port_out.full_name, c.port_in.full_name)
+            for c in self.connections]
+        file_dict['group_positions'] = [
+            gpos.as_serializable_dict() for gpos in self.group_positions
+            if self.get_group_from_name(gpos.group_name) is not None]
+        
+        portgroups = list[dict[str, Any]]()
+        for pg_mem in self.portgroups_memory:
+            group = self.get_group_from_name(pg_mem.group_name)
+            if group is None:
+                continue
+
+            for port_str in pg_mem.port_names:
+                for port in group.ports:
+                    if (port.short_name() == port_str
+                            and port.type == pg_mem.port_type
+                            and port.mode() == pg_mem.port_mode):
+                        portgroups.append(pg_mem.as_serializable_dict())
+                        break
+        
+        file_dict['portgroups'] = portgroups
+        
+        try:
+            with open(path, 'w') as f:
+                json.dump(file_dict, f, indent=2)
+            return True
+        except Exception as e:
+            _logger.error(f'Failed to save patchichi file: {str(e)}')
+            return False
+        
+            
+        

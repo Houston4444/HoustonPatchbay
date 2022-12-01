@@ -123,7 +123,7 @@ class GroupPos:
     out_xy: tuple[int, int]
     flags: int = 0
     layout_modes: dict[PortMode, BoxLayoutMode]
-    fully_set: bool = False
+    fully_set: bool = True
     
     def __init__(self):
         self.null_xy = (0, 0)
@@ -463,8 +463,8 @@ class Port:
         if self.subtype is not other.subtype:
             return self.subtype < other.subtype
 
-        if self.mode() != other.mode():
-            return (self.mode() < other.mode())
+        # if self.mode() != other.mode():
+        #     return (self.mode() < other.mode())
 
         if self.order is None and other.order is None:
             return self.port_id < other.port_id
@@ -570,7 +570,10 @@ class Group:
         self.has_gui = False
         self.gui_visible = False
 
-        self._icon_from_metadata = False
+        self.mdata_icon = ''
+
+    def __repr__(self) -> str:
+        return f"Group({self.name})"
 
     def update_ports_in_canvas(self):
         for port in self.ports:
@@ -580,55 +583,29 @@ class Group:
         if self.in_canvas:
             return
 
-        icon_type = BoxType.APPLICATION
-        icon_name = self.name.partition('.')[0].lower()
+        box_type, icon_name = self._get_box_type_and_icon()
 
         do_split = bool(self.current_position.flags & GroupPosFlag.SPLITTED)
         split = BoxSplitMode.YES if do_split else BoxSplitMode.NO
 
-        if self._is_hardware:
-            icon_type = BoxType.HARDWARE
-            if self.a2j_group or self.display_name == "Midi-Bridge":
-                icon_name = "a2j"
-
-        if self.client_icon:
-            icon_type = BoxType.CLIENT
-            icon_name = self.client_icon
-
-        if (self.name.startswith("PulseAudio ")
-                and not self.client_icon):
-            if "sink" in self.name.lower():
-                icon_type = BoxType.MONITOR
-                icon_name = 'monitor_playback'
-            elif "source" in self.name.lower():
-                icon_type = BoxType.MONITOR
-                icon_name = 'monitor_capture'
-
-        elif (self.name.endswith(" Monitor")
-                and not self.client_icon):
-            # this group is (probably) a pipewire Monitor group
-            icon_type = BoxType.MONITOR
-            icon_name = 'monitor_playback'
-
-        self.in_canvas = True
-
         gpos = self.current_position
 
-        self.display_name = self.display_name.replace('.0/', '/')
-        self.display_name = self.display_name.replace('_', ' ')
+        self.display_name = self.display_name.replace('.0/', '/').replace('_', ' ')
         
         display_name = self.name
         if self.manager.use_graceful_names:
             display_name = self.display_name
         
-        layout_modes_ = dict[PortMode, int]()
+        layout_modes_ = dict[PortMode, BoxLayoutMode]()
         for port_mode in (PortMode.INPUT, PortMode.OUTPUT, PortMode.BOTH):
             layout_modes_[port_mode] = gpos.get_layout_mode(port_mode.value)
         
         patchcanvas.add_group(
             self.group_id, display_name, split,
-            icon_type, icon_name, layout_modes=layout_modes_,
+            box_type, icon_name, layout_modes=layout_modes_,
             null_xy=gpos.null_xy, in_xy=gpos.in_xy, out_xy=gpos.out_xy)
+
+        self.in_canvas = True
 
         if do_split:
             gpos.flags |= GroupPosFlag.HAS_BEEN_SPLITTED
@@ -672,6 +649,40 @@ class Group:
             display_name = self.display_name
         
         patchcanvas.rename_group(self.group_id, display_name)
+
+    def _get_box_type_and_icon(self) -> tuple[BoxType, str]:
+        box_type = BoxType.APPLICATION
+        icon_name = self.name.partition('.')[0].lower()
+
+        if self._is_hardware:
+            box_type = BoxType.HARDWARE
+            icon_name = ''
+            if self.a2j_group or self.display_name == "Midi-Bridge":
+                icon_name = "a2j"
+
+        if self.client_icon:
+            box_type = BoxType.CLIENT
+            icon_name = self.client_icon
+
+        if (self.name.startswith("PulseAudio ")
+                and not self.client_icon):
+            if "sink" in self.name.lower():
+                box_type = BoxType.MONITOR
+                icon_name = 'monitor_playback'
+            elif "source" in self.name.lower():
+                box_type = BoxType.MONITOR
+                icon_name = 'monitor_capture'
+
+        elif (self.name.endswith(" Monitor")
+                and not self.client_icon):
+            # this group is (probably) a pipewire Monitor group
+            box_type = BoxType.MONITOR
+            icon_name = 'monitor_playback'
+        
+        if self.mdata_icon:
+            icon_name = self.mdata_icon
+
+        return (box_type, icon_name)
 
     def semi_hide(self, yesno: bool):
         if not self.in_canvas:
@@ -867,16 +878,17 @@ class Group:
 
         patchcanvas.wrap_group_box(self.group_id, port_mode, yesno)
 
-    def set_client_icon(self, icon_name:str, from_metadata=False):
-        # icon from metadata is the prority
-        if not from_metadata and self._icon_from_metadata:
-            return
+    def set_client_icon(self, icon_name: str, from_metadata=False):
+        if from_metadata:
+            self.mdata_icon = icon_name
+        else:
+            self.client_icon = icon_name
         
-        self._icon_from_metadata = from_metadata
-        self.client_icon = icon_name
+        box_type, ex_icon_name = self._get_box_type_and_icon()
+        
         if self.in_canvas:
             patchcanvas.set_group_icon(
-                self.group_id, BoxType.CLIENT, icon_name)
+                self.group_id, box_type, icon_name)
 
     def get_pretty_client(self) -> str:
         for client_name in ('firewire_pcm', 'a2j',
