@@ -4,7 +4,7 @@ import logging
 import operator
 from pathlib import Path
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, Callable, Union
+from typing import TYPE_CHECKING, Any, Callable, Optional, Union
 
 from PyQt5.QtGui import QCursor, QGuiApplication
 from PyQt5.QtWidgets import QMainWindow, QMessageBox, QWidget
@@ -667,7 +667,7 @@ class PatchbayManager:
             return group.group_id
 
     @later_by_batch(sort_group=True)
-    def metadata_update(self, uuid: int, key: str, value: str) -> int:
+    def metadata_update(self, uuid: int, key: str, value: str) -> Optional[int]:
         ''' remember metadata and returns the group_id'''
         if key == JACK_METADATA_ORDER:
             port = self.get_port_from_uuid(uuid)
@@ -707,6 +707,20 @@ class PatchbayManager:
                 if group.uuid == uuid:
                     group.set_client_icon(value, from_metadata=True)
                     return group.group_id
+                
+        
+        elif key == JACK_METADATA_SIGNAL_TYPE:
+            port = self.get_port_from_uuid(uuid)
+            if port is None:
+                return
+            
+            if port.type is PortType.AUDIO_JACK:
+                if value == 'CV':
+                    port.subtype = PortSubType.CV
+                elif value == 'AUDIO':
+                    port.subtype = PortSubType.REGULAR
+            
+            return port.group_id
 
     @later_by_batch()
     def add_connection(self, port_out_name: str, port_in_name: str):
