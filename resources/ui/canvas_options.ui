@@ -304,6 +304,39 @@
              </property>
             </spacer>
            </item>
+           <item>
+            <widget class="QPushButton" name="pushButtonPatchichiExport">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="toolTip">
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Patchichi is a software allowing to run patchbay scenes abstractly.&lt;/p&gt;&lt;p&gt;It is useful for developers, to can develop or fix bug on the patchbay.&lt;/p&gt;&lt;p&gt;It is also nicer to use Patchichi to edit patchbay themes.&lt;/p&gt;&lt;p&gt;You could also use it to build a patchbay graph, for tutorials or whatever you want.&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             </property>
+             <property name="text">
+              <string>Export scene to Patchichi</string>
+             </property>
+             <property name="icon">
+              <iconset theme="document-save-as">
+               <normaloff>.</normaloff>.</iconset>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <spacer name="verticalSpacer_4">
+             <property name="orientation">
+              <enum>Qt::Vertical</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>20</width>
+               <height>40</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
           </layout>
          </widget>
         </widget>

@@ -1,12 +1,12 @@
 
+from pathlib import Path
 from typing import TYPE_CHECKING
 from PyQt5.QtWidgets import (QDialog, QApplication, QInputDialog,
-                             QMessageBox, QWidget, QAction)
+                             QMessageBox, QWidget, QFileDialog)
 from PyQt5.QtGui import QIcon, QPixmap
-from PyQt5.QtCore import Qt, pyqtSignal, QProcess, QSettings
+from PyQt5.QtCore import Qt, QProcess, QSettings
 
-
-from .patchcanvas import patchcanvas
+from .patchcanvas import patchcanvas, xdg
 from .patchcanvas.theme_manager import ThemeData
 from .tools_widgets import is_dark_theme
 from .ui.canvas_options import Ui_CanvasOptions
@@ -25,6 +25,7 @@ class CanvasOptionsDialog(QDialog):
         self.ui = Ui_CanvasOptions()
         self.ui.setupUi(self)
         
+        self.manager = manager
         sg = manager.sg
         self._settings = settings
         self._theme_changed = sg.theme_changed
@@ -76,6 +77,7 @@ class CanvasOptionsDialog(QDialog):
         self.ui.comboBoxTheme.activated.connect(self._theme_box_activated)
         self.ui.pushButtonEditTheme.clicked.connect(self._edit_theme)
         self.ui.pushButtonDuplicateTheme.clicked.connect(self._duplicate_theme)
+        self.ui.pushButtonPatchichiExport.clicked.connect(self._export_to_patchichi)
         
         self._current_theme_ref = ''
         self._theme_list = list[ThemeData]()
@@ -146,6 +148,29 @@ class CanvasOptionsDialog(QDialog):
                 # start the text editor process
                 QProcess.startDetached('xdg-open', [theme_data.file_path])
                 break
+
+    def _export_to_patchichi(self):
+        scenes_dir = xdg.xdg_data_home() / 'Patchichi' / 'scenes'
+
+        if not scenes_dir.exists():
+            try:
+                scenes_dir.mkdir()
+            except:
+                pass
+        
+        if not scenes_dir.is_dir():
+            scenes_dir = Path.home()
+        
+        ret, ok = QFileDialog.getSaveFileName(
+            self,
+            _translate('file_dialog', 'Where do you want to save this patchbay scene ?'),
+            str(scenes_dir),
+            _translate('file_dialog', 'Patchichi files (*.patchichi.json)'))
+
+        if not ok:
+            return
+        
+        self.manager.export_to_patchichi_json(Path(ret))
 
     def set_theme_list(self, theme_list: list[ThemeData]):
         self.ui.comboBoxTheme.clear()
