@@ -707,19 +707,18 @@ class PatchbayManager:
                 if group.uuid == uuid:
                     group.set_client_icon(value, from_metadata=True)
                     return group.group_id
-                
-        
+
         elif key == JACK_METADATA_SIGNAL_TYPE:
             port = self.get_port_from_uuid(uuid)
             if port is None:
                 return
-            
+
             if port.type is PortType.AUDIO_JACK:
                 if value == 'CV':
                     port.subtype = PortSubType.CV
                 elif value == 'AUDIO':
                     port.subtype = PortSubType.REGULAR
-            
+
             return port.group_id
 
     @later_by_batch()
