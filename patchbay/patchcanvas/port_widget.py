@@ -21,16 +21,13 @@
 # Imports (Global)
 import logging
 from math import floor
-import time
-from tokenize import group
 from typing import TYPE_CHECKING
 
-from PyQt5.QtCore import Qt, QPointF, QPoint, QRectF
+from PyQt5.QtCore import Qt, QPointF, QRectF
 from PyQt5.QtGui import (
     QBrush, QFontMetrics, QPainter, QPen, QPolygonF,
     QLinearGradient, QIcon, QCursor)
 from PyQt5.QtWidgets import QGraphicsItem, QMenu, QApplication
-
 
 
 # Imports (Custom)
@@ -39,9 +36,7 @@ from .init_values import (
     PortObject,
     PortSubType,
     canvas,
-    ConnectionObject,
     features,
-    options,
     CallbackAct,
     PortMode,
     PortType)
@@ -422,9 +417,9 @@ class PortWidget(ConnectableWidget):
 
             if is_cv_port:
                 poly_locx[0] = line_hinting
-                poly_locx[1] = self._port_width + 5 - line_hinting
-                poly_locx[2] = self._port_width + 5 - line_hinting
-                poly_locx[3] = self._port_width + 5 - line_hinting
+                poly_locx[1] = self._port_width + 7 - line_hinting
+                poly_locx[2] = self._port_width + 7 - line_hinting
+                poly_locx[3] = self._port_width + 7 - line_hinting
                 poly_locx[4] = line_hinting
                 poly_locx[5] = self._port_width
             else:
@@ -513,10 +508,10 @@ class PortWidget(ConnectableWidget):
                 if self._port_mode is PortMode.OUTPUT:
                     painter.drawLine(
                         QPointF(0.0, y_line),
-                        QPointF(float(poly_locx[1]), y_line))
+                        QPointF(float(poly_locx[1]) - line_hinting, y_line))
                 elif self._port_mode is PortMode.INPUT:
                     painter.drawLine(
-                        QPointF(float(self._port_width + 5), y_line),
+                        QPointF(float(self._port_width + 7), y_line),
                         QPointF(float(self._port_width + 12), y_line))
 
             elif self._port_subtype is PortSubType.A2J:
