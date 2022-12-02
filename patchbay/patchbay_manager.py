@@ -713,6 +713,8 @@ class PatchbayManager:
             if port is None:
                 return
 
+            port.mdata_signal_type = value
+
             if port.type is PortType.AUDIO_JACK:
                 if value == 'CV':
                     port.subtype = PortSubType.CV
@@ -956,7 +958,10 @@ class PatchbayManager:
             gp_written = False              
             last_type_and_mode = (PortType.NULL, PortMode.NULL)
             physical = False
+            terminal = False
+            monitor = False
             pg_name = ''
+            signal_type = ''
 
             for port in port_list:
                 if not gp_written:
@@ -1001,6 +1006,12 @@ class PatchbayManager:
 
                     contents += f':{port.mode().name}\n'
                     last_type_and_mode = (port.type, port.mode())
+                
+                if port.mdata_signal_type != signal_type:
+                    if port.mdata_signal_type:
+                        contents += f':SIGNAL_TYPE={slcol(port.mdata_signal_type)}\n'
+                    else:
+                        contents += ':~SIGNAL_TYPE\n'
                 
                 if port.mdata_portgroup != pg_name:
                     if port.mdata_portgroup:

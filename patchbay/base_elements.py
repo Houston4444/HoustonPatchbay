@@ -353,6 +353,7 @@ class Port:
     # given by JACK metadatas
     pretty_name = ''
     mdata_portgroup = ''
+    mdata_signal_type = ''
 
     def __init__(self, manager: 'PatchbayManager', port_id: int, name: str,
                  port_type: PortType, flags: int, uuid: int):
