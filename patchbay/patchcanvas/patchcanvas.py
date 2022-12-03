@@ -1226,6 +1226,25 @@ def set_connection_in_front(connection_id: int):
         connection.widget.setZValue(canvas.last_z_value)
 
 @patchbay_api
+def select_port(group_id: int, port_id: int):
+    port = canvas.get_port(group_id, port_id)
+    if port is None:
+        return
+    
+    if port.widget is None:
+        return
+    
+    box_widget = port.widget.parentItem()
+    canvas.scene.clearSelection()
+
+    if box_widget.is_wrapped():
+        canvas.scene.center_view_on(box_widget)
+        box_widget.setSelected(True)
+    else:
+        canvas.scene.center_view_on(port.widget)
+        port.widget.setSelected(True)
+
+@patchbay_api
 def select_filtered_group_box(group_id: int, n_select=1):
     group = canvas.get_group(group_id)
     if group is None:

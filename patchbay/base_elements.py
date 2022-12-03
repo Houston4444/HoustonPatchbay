@@ -457,6 +457,12 @@ class Port:
         patchcanvas.rename_port(
             self.group_id, self.port_id, display_name)
 
+    def select_in_canvas(self):
+        if not self.in_canvas:
+            return
+        
+        patchcanvas.select_port(self.group_id, self.port_id)
+
     def __lt__(self, other: 'Port'):
         if self.type != other.type:
             return (self.type < other.type)
