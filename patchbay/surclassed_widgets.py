@@ -1,9 +1,13 @@
-from PyQt5.QtCore import Qt, pyqtSignal, QPoint
+from typing import TYPE_CHECKING
+from PyQt5.QtCore import Qt, pyqtSignal, pyqtSlot, QPoint, QSize
 from PyQt5.QtGui import QWheelEvent, QKeyEvent, QMouseEvent
 from PyQt5.QtWidgets import (QApplication, QProgressBar, QSlider, QToolTip,
                              QLineEdit, QLabel, QMenu, QAction, QCheckBox)
 
 from .base_elements import TransportViewMode
+
+if TYPE_CHECKING:
+    from .patchbay_manager import PatchbayManager
 
 _translate = QApplication.translate
 
@@ -39,11 +43,35 @@ class ProgressBarDsp(QProgressBar):
         
 
 class ZoomSlider(QSlider):
-    zoom_fit_asked = pyqtSignal()
-    default_zoom_asked = pyqtSignal()
-
     def __init__(self, parent):
         QSlider.__init__(self, parent)
+        
+        self.patchbay_manager = None
+        self.setMinimumSize(QSize(40, 0))
+        self.setMaximumSize(QSize(90, 16777215))
+        self.setMouseTracking(True)
+
+        dark_theme = self.palette().text().color().lightnessF() > 0.5
+        dark = '-dark' if dark_theme else '' 
+
+        self.setStyleSheet(
+            'QSlider:focus{border: none;} '
+            'QSlider::handle:horizontal{'
+            f'image: url(:scalable/breeze{dark}/zoom-centered.svg);}}'
+            )
+        self.setMinimum(0)
+        self.setMaximum(1000)
+        self.setSingleStep(10)
+        self.setPageStep(10)
+        self.setProperty("value", 500)
+        self.setTracking(True)
+        self.setOrientation(Qt.Horizontal)
+        self.setInvertedAppearance(False)
+        self.setInvertedControls(False)
+        self.setTickPosition(QSlider.TicksBelow)
+        self.setTickInterval(500)
+        
+        self.valueChanged.connect(self._value_changed)
 
     @staticmethod
     def map_float_to(x: float, min_a: int, max_a: int,
@@ -59,6 +87,18 @@ class ZoomSlider(QSlider):
         string = "  Zoom: %i%%  " % int(self.zoom_percent())
         QToolTip.showText(self.mapToGlobal(QPoint(0, 12)), string)
 
+    @pyqtSlot(int)
+    def _value_changed(self, value: int):
+        if self.patchbay_manager is None:
+            return
+        
+        self.patchbay_manager.set_zoom(self.zoom_percent())
+
+    def set_patchbay_manager(self, patchbay_manager: 'PatchbayManager'):
+        self.patchbay_manager = patchbay_manager
+        self.patchbay_manager.sg.scene_scale_changed.connect(
+            self._scale_changed)
+
     def zoom_percent(self) -> int:
         if self.value() <= 500:
             return self.map_float_to(self.value(), 0, 500, 20, 100)
@@ -73,11 +113,22 @@ class ZoomSlider(QSlider):
             self.setValue(int(self.map_float_to(percent, 100, 300, 500, 1000)))
         self._show_tool_tip()
 
+    def _scale_changed(self, ratio: float):
+        self.set_percent(ratio * 100)
+
     def mouseDoubleClickEvent(self, event):
-        self.zoom_fit_asked.emit()
+        if self.patchbay_manager is None:
+            super().mouseDoubleClickEvent(event)
+            return
+
+        self.patchbay_manager.zoom_fit()
 
     def contextMenuEvent(self, event):
-        self.default_zoom_asked.emit()
+        if self.patchbay_manager is None:
+            super().contextMenuEvent(event)
+            return
+
+        self.patchbay_manager.zoom_reset()
 
     def wheelEvent(self, event: QWheelEvent):
         direction = 1 if event.angleDelta().y() > 0 else -1

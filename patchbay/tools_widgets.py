@@ -1,13 +1,11 @@
 
-import os
 import time
 from typing import TYPE_CHECKING
 from PyQt5.QtCore import pyqtSignal, QTimer, pyqtSlot
 from PyQt5.QtGui import QPalette, QIcon, QColor, QKeySequence
-from PyQt5.QtWidgets import QWidget, QApplication
+from PyQt5.QtWidgets import QWidget
 
 
-from .patchcanvas import patchcanvas
 from .ui.patchbay_tools import Ui_Form as PatchbayToolsUiForm
 from .base_elements import (
     ToolDisplayed, TransportPosition, TransportViewMode)
@@ -48,16 +46,9 @@ class PatchbayToolsWidget(QWidget):
         self._bw_click_started_at = 0
         
         dark = is_dark_theme(self)
-        if dark:
-            self.ui.sliderZoom.setStyleSheet(
-                self.ui.sliderZoom.styleSheet().replace('/breeze/', '/breeze-dark/'))
 
         self._waiting_buffer_change = False
         self._buffer_change_from_osc = False
-
-        self.ui.sliderZoom.valueChanged.connect(self.set_zoom)
-        self.ui.sliderZoom.default_zoom_asked.connect(patchcanvas.zoom_reset)
-        self.ui.sliderZoom.zoom_fit_asked.connect(patchcanvas.zoom_fit)
 
         self.ui.pushButtonXruns.clicked.connect(
             self.reset_xruns)
@@ -65,7 +56,7 @@ class PatchbayToolsWidget(QWidget):
             self.change_buffersize)
 
         self._buffer_sizes = [16, 32, 64, 128, 256, 512,
-                             1024, 2048, 4096, 8192]
+                              1024, 2048, 4096, 8192]
 
         for size in self._buffer_sizes:
             self.ui.comboBoxBuffer.addItem(str(size), size)
@@ -89,7 +80,6 @@ class PatchbayToolsWidget(QWidget):
         self.ui.toolButtonForward.setIcon(
             QIcon(f':/transport/{scheme}/media-seek-forward.svg'))
         self.ui.toolButtonPlayPause.setIcon(self._icon_play)
-        # self._play_pause_action.setIcon(self._icon_play)
         self.ui.toolButtonStop.setIcon(
             QIcon(f':/transport/{scheme}/media-playback-stop.svg'))
 
@@ -106,13 +96,14 @@ class PatchbayToolsWidget(QWidget):
                        self.ui.toolButtonForward, self.ui.toolButtonStop):
             if button is self.ui.toolButtonForward:
                 round_side = "right"
-            
-            button.setStyleSheet(f"QToolButton{{background:{background}; border:none;"
-                                 f"border-top-{round_side}-radius:4px;"
-                                 f"border-bottom-{round_side}-radius:4px}}")
-        
+
+            button.setStyleSheet(
+                f"QToolButton{{background:{background}; border:none;"
+                f"border-top-{round_side}-radius:4px;"
+                f"border-bottom-{round_side}-radius:4px}}")
+
         count_bg = self.palette().base().color().name()
-        
+
         self.ui.labelTime.setStyleSheet(
             f"QLabel{{background:{count_bg}; border: 2px solid {background}}}")
     
@@ -157,6 +148,7 @@ class PatchbayToolsWidget(QWidget):
     def set_patchbay_manager(self, mng: 'PatchbayManager'):
         self._patchbay_mng = mng
         self.ui.frameTypeFilter.set_patchbay_manager(mng)
+        self.ui.sliderZoom.set_patchbay_manager(mng)
     
     def refresh_transport(self, transport_pos: TransportPosition):
         self.ui.toolButtonPlayPause.setChecked(transport_pos.rolling)
@@ -260,14 +252,7 @@ class PatchbayToolsWidget(QWidget):
             bool(tools_displayed & ToolDisplayed.XRUNS))
         self.ui.progressBarDsp.setVisible(
             bool(tools_displayed & ToolDisplayed.DSP_LOAD))
-
-    def _zoom_changed_from_canvas(self, ratio):
-        self.ui.sliderZoom.set_percent(ratio * 100)
-
-    def set_zoom(self, value):
-        percent = self.ui.sliderZoom.zoom_percent()
-        patchcanvas.canvas.scene.zoom_ratio(percent)
-        
+    
     def _set_latency(self, buffer_size=None, samplerate=None):
         if buffer_size is None:
             buffer_size = self._current_buffer_size
@@ -374,14 +359,5 @@ class PatchbayToolsWidget(QWidget):
             self.ui.labelLatency.setVisible(False)
             self.ui.pushButtonXruns.setVisible(False)
             self.ui.progressBarDsp.setVisible(False)
-
-        # TODO put this elsewhere.
-        # Anyway, this would be needed in a case of a very abstract patchbay
-        # out of JACK.
-        if yesno:
-            patchcanvas.canvas.scene.scale_changed.connect(
-                self._zoom_changed_from_canvas)
-            self.ui.sliderZoom.set_percent(patchcanvas.options.default_zoom)
-
 
 

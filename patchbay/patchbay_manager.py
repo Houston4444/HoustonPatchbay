@@ -15,7 +15,6 @@ from .patchcanvas.utils import get_new_group_positions
 from .patchcanvas.scene_view import PatchGraphicsView
 from .patchcanvas.init_values import (
     CallbackAct, CanvasFeaturesObject, CanvasOptionsObject)
-from .patchcanvas.theme_manager import ThemeManager
 
 from .patchbay_signals import SignalsObject
 from .tools_widgets import PatchbayToolsWidget
@@ -217,6 +216,10 @@ class PatchbayManager:
         patchcanvas.set_options(options)
         patchcanvas.set_features(features)
         patchcanvas.init(view, self.__canvas_callback__, theme_paths, default_theme_name)
+        patchcanvas.canvas.scene.scale_changed.connect(self._scene_scale_changed)
+        
+    def _scene_scale_changed(self, value: float):
+        self.sg.scene_scale_changed.emit(value)
 
     def _execute_in_main_thread(self, func: Callable, args: tuple, kwargs: dict):
         func(*args, **kwargs)
@@ -507,6 +510,15 @@ class PatchbayManager:
             group.update_name_in_canvas()
         self.optimize_operation(False)
         patchcanvas.redraw_all_groups()
+
+    def set_zoom(self, zoom: float):
+        patchcanvas.canvas.scene.zoom_ratio(zoom)
+
+    def zoom_reset(self):
+        patchcanvas.zoom_reset()
+    
+    def zoom_fit(self):
+        patchcanvas.zoom_fit()  
 
     def refresh(self):
         self.clear_all()

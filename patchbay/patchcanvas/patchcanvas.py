@@ -20,7 +20,7 @@
 # global imports
 import logging
 from pathlib import Path
-from typing import Callable
+from typing import Callable, Optional
 from PyQt5.QtCore import (pyqtSlot, QObject, QPoint, QPointF, QRectF,
                           QSettings, QTimer, pyqtSignal)
 from PyQt5.QtWidgets import QAction, QMainWindow
@@ -82,11 +82,10 @@ class CanvasObject(QObject):
     connection_added = pyqtSignal(int)
     connection_removed = pyqtSignal(int)
     move_boxes_finished = pyqtSignal()
-    zoom_changed = pyqtSignal(int)
 
     def __init__(self, parent=None):
         QObject.__init__(self, parent)
-        self.groups_to_join = []
+        self.groups_to_join = list[int]()
         self.move_boxes_finished.connect(self.join_after_move)
 
     @pyqtSlot()
