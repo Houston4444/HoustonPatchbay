@@ -1040,7 +1040,7 @@ class PatchbayManager:
                     if port.pretty_name:
                         port_attrs.append(f'PRETTY_NAME={slcol(port.pretty_name)}')
                     if port.order:
-                        port_attrs.append(f'PORT_ORDER={port.order}')
+                        port_attrs.append(f'ORDER={port.order}')
                     contents += ':'
                     contents += '\n:'.join(port_attrs)
                     contents += '\n'
