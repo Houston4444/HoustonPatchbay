@@ -1,7 +1,8 @@
 
 from typing import TYPE_CHECKING
-from PyQt5.QtGui import QIcon
+from PyQt5.QtGui import QIcon, QDesktopServices
 from PyQt5.QtWidgets import QMenu, QApplication
+from PyQt5.QtCore import QLocale, QUrl
 
 from . import patchcanvas
 from .base_elements import PortType, PortTypesViewFlag
@@ -118,7 +119,8 @@ class CanvasMenu(QMenu):
             _translate('patchbay', "Patchbay manual"))
         self.action_manual.setIcon(QIcon.fromTheme('system-help'))
         self.action_manual.triggered.connect(self.internal_manual)
-        self.action_manual.setVisible(False)
+        self.action_manual.setVisible(
+            self.patchbay_manager._manual_path is not None)
 
         self.action_options = self.addAction(
             _translate('patchbay', "Canvas options"))
@@ -151,4 +153,17 @@ class CanvasMenu(QMenu):
             PortTypesViewFlag.CV)
 
     def internal_manual(self):
-        pass
+        short_locale = 'en'
+        manual_dir = self.patchbay_manager._manual_path
+        if manual_dir is None:
+            return        
+        
+        locale_str = QLocale.system().name()
+        html_path = manual_dir / locale_str[:2] / 'manual.html'
+        
+        if (len(locale_str) > 2 and '_' in locale_str
+                and html_path.is_file()):
+            short_locale = locale_str[:2]
+
+        url = QUrl(f"file://{manual_dir}/{short_locale}/manual.html")
+        QDesktopServices.openUrl(url)

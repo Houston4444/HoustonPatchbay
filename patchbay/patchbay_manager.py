@@ -126,6 +126,8 @@ class PatchbayManager:
         self.options_dialog: CanvasOptionsDialog = None
         self.filter_frame: FilterFrame = None
         
+        self._manual_path: Path = None
+
         self.sg = SignalsObject()
 
         self._next_group_id = 0
@@ -173,6 +175,7 @@ class PatchbayManager:
     def app_init(self,
                  view: PatchGraphicsView,
                  theme_paths: list[Path],
+                 manual_path: Path = None,
                  callbacker: Callbacker = None,
                  options: CanvasOptionsObject = None,
                  features: CanvasFeaturesObject = None,
@@ -185,7 +188,7 @@ class PatchbayManager:
             self.callbacker = callbacker
             self.sg.callback_sig.connect(self.callbacker.receive)
         
-        # theme_paths = ThemeManager.default_theme_paths(source_theme_path)
+        self._manual_path = manual_path
         
         if options is None:
             options = patchcanvas.CanvasOptionsObject()
