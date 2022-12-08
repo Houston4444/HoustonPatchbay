@@ -1,6 +1,6 @@
 = HoustonPatchbay Manual
 :toc: left
-:toclevels: 1
+:toclevels: 2
 :imagesdir: images
 :stylesheet: patchbay_manual.css
 
@@ -77,6 +77,7 @@ It will allow you to :
 * Filter ports: show only AUDIO, MIDI, CV ports or all of them
 * adjust the zoom level
 * refresh the canvas: ask JACK again for the list of existing ports and their connections
+* Manual: show this manual in the web browser
 * Canvas Preferences: display a window of options +
     All changes in this window take effect immediately. Hover over the boxes to see the tooltips.
 
@@ -115,13 +116,14 @@ Note that with the right-click connection and the switching of connections from 
 
 video::video/fast_new_plugin.mp4[width=640]
 
-== A2J or Midi-Bridge ports
+== Special ports
+=== A2J or Midi-Bridge ports
 
 image::patchbay_a2j.png[ports a2j]
 
 The MIDI ports provided by the A2J (Alsa To Jack) bridge (or Midi-Bridge with Pipewire) have a hole at the end to identify them. Their real name is a long name, but that's about the only thing that differs from the other MIDI ports.
 
-== Control Voltage ports (CV ports)
+=== Control Voltage ports (CV ports)
 
 image::patchbay_CV.png[ports CV]
 
@@ -131,3 +133,8 @@ You can't say you weren't warned, and it's almost impossible to do this by mista
 
 On the other hand, connecting a classic audio output port to a CV input port is perfectly possible, no problem.
 
+== Edit Theme
+
+You have the possibility to modify theme colors, it is quite easy and fast to do.
+
+For more informations, read link:theme_edit.html[how to edit themes]. 

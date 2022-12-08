@@ -1,37 +1,49 @@
 = Write custom themes for *HoustonPatchbay*
+:toc: left
+:toclevels: 2
+:imagesdir: images
+:stylesheet: patchbay_manual.css
 
 == Introduction
 
-This guide helps to write custom HoustonPatchbay patchbay themes, which are used by RaySession and Patchance.
+This guide helps to write custom HoustonPatchbay patchbay themes, which are used by RaySession, Patchance and Patchichi.
 
 A good practice is to modify an existing theme, starting from a light theme if you want to make a light theme, else starting from a dark theme.
 
-First right click on the patchbay, and select *Canvas Options*, then select a theme and press *duplicate*, then *edit*, it will open your theme file with your default plain text reader (kate, gedit, ...).
+Patchichi is the best tool to do that, because you can easily add on your patchbay all types of ports.
+
+First right click on the patchbay, select *Canvas Options*, switch to the *Theme* tab, then select a theme and press *duplicate*, then *edit*, it will open your theme file with your default plain text reader (kate, gedit, ...).
 
 Your theme should be located in:
 
-`/home/_user_/.local/share/HoustonPatchbay/themes/_MyTheme_`
+`/home/_user_/.local/share/_software_/HoustonPatchbay/themes/_MyTheme_`
 
-replace _user_ and _My Theme_ with your user name and your theme name, of course.
+replace 
+
+* _user_ with your user name
+* _software_ with the software you use in lower case (raysession, patchance or patchichi)
+* _My Theme_ with your theme name
 
 You can now edit the theme.conf file to change the theme. When you save changes to the file, the theme is directly uploaded in the software, so you don't need to restart the program to test the changes !
 
 == directory tree
 
-* My Theme
-** fonts
-*** font1.ttf
-*** font2.otf
-*** ...
-** icons
-*** monitor_capture.svg
-*** monitor_playback.svg
-*** ...
-** images
-*** background.png
-*** background2.jpg
-*** ...
-** theme.conf
+```
+/ My Theme
+↳ fonts
+  ↳ font1.ttf
+  ↳ font2.ttf
+  ↳ ...
+↳ icons
+  ↳ monitor_capture.svg
+  ↳ monitor_playback.svg
+  ↳ ...
+↳ images
+  ↳ background.png
+  ↳ background2.jpg
+  ↳ ...
+↳ theme.conf
+```
 
 Your theme directory must contain a file named `theme.conf` where all parameters are defined. Directories `fonts`, `icons` and `images` are optional.
 
@@ -60,65 +72,6 @@ At this stage, only svg format is supported, the following file names can be use
 === images
 This folder contains images that you can use as background for the full scene or any widget (box, port or portgroup). A lot of image formats are supported.
 
-== Glossaire
-
-[#color]
-=== color
-
-_color_ is specified with a string understandable by Qt QColor.
-
-Examples:
-
-* _white_
-* _red_
-* _#DDD_ (each hexadecimal character specify a RGB channel, here a little gray)
-* _#A0A000_ (each block of two hexadecimal character specify a RGB channel)
-* _#FF5050A0_ (the first block of two specify alpha channel, nexts are for RGB channels)
-
-alternatively you can write colors this way :
-
-* _rgb(255, 0, 0)_ (each RGB channel from 0 to 255, here red)
-* _rgba(255, 0, 0, 0.5)_ (each RGB channel from 0 to 255, and opacity from 0.0 to 1.0) 
-
-for convenience, you can quickly adjust color lightness and/or opacity.
-for example:
-
-* `background=red * 0.8` will result in a slightly dark red.
-* `background=red ** 0.8` will result in a red with an opacity at 80%.
-* `background=#AFD755 * 1.2 ** 0.4`
-
-spaces between color and number are required, number MUST be after color.
-
-[#number]
-=== number
-
-_number_ defines an integer or a float.
-
-[#image]
-=== image
-
-_image_ is a string. Its name must match with a file in `images` directory, in the theme folder.
-
-for example, the following line:
-```
-background-image=background.jpg
-```
-
-means that the background image of the object will be the image file `THEMES_PATH/theme_name/images/background.jpg`.
-
-IMPORTANT: a *background-image* is visible ONLY if *background* of the same section is a color with transparency. +
-First, image is drawn, then background color is drawn above. This allows to adjust the color of image applying a color with transparency above, mainly for readability and for quick corrections.
-
-
-[#font]
-=== font
-
-_font_ is a string matching with a font family.
-
-Example: +
-`text-color=Deja Vu Sans`
-
-if the font exists in <<fonts>> dir, this will be chosen, else font will be found in system fonts.
 
 == [aliases]
 
@@ -411,3 +364,64 @@ hardware_rack.selected
 
 
 *hardware_rack.selected* is the hardware_rack when the box is selected.
+
+
+== Glossary
+
+[#color]
+=== color
+
+_color_ is specified with a string understandable by Qt QColor.
+
+Examples:
+
+* _white_
+* _red_
+* _#DDD_ (each hexadecimal character specify a RGB channel, here a little gray)
+* _#A0A000_ (each block of two hexadecimal character specify a RGB channel)
+* _#FF5050A0_ (the first block of two specify alpha channel, nexts are for RGB channels)
+
+alternatively you can write colors this way :
+
+* _rgb(255, 0, 0)_ (each RGB channel from 0 to 255, here red)
+* _rgba(255, 0, 0, 0.5)_ (each RGB channel from 0 to 255, and opacity from 0.0 to 1.0) 
+
+for convenience, you can quickly adjust color lightness and/or opacity.
+for example:
+
+* `background=red * 0.8` will result in a slightly dark red.
+* `background=red ** 0.8` will result in a red with an opacity at 80%.
+* `background=#AFD755 * 1.2 ** 0.4`
+
+spaces between color and number are required, number MUST be after color.
+
+[#number]
+=== number
+
+_number_ defines an integer or a float.
+
+[#image]
+=== image
+
+_image_ is a string. Its name must match with a file in `images` directory, in the theme folder.
+
+for example, the following line:
+```
+background-image=background.jpg
+```
+
+means that the background image of the object will be the image file `THEMES_PATH/theme_name/images/background.jpg`.
+
+IMPORTANT: a *background-image* is visible ONLY if *background* of the same section is a color with transparency. +
+First, image is drawn, then background color is drawn above. This allows to adjust the color of image applying a color with transparency above, mainly for readability and for quick corrections.
+
+
+[#font]
+=== font
+
+_font_ is a string matching with a font family.
+
+Example: +
+`text-color=Deja Vu Sans`
+
+if the font exists in <<fonts>> dir, this will be chosen, else font will be found in system fonts.

@@ -21,8 +21,9 @@
 --secondarycolor:#ba3925;
 --tertiarycolor: #186d7a;
 --sidebarbackground:#232323; /* Grey 900 */
---linkcolor:#808080; /* Grey 200 */
---linkcoloralternate:#d0d0d0;
+--linkcolor:#663815; /* Brown */
+--linkhover: #9c5620;
+--linkcoloralternate: #9c5620;
 --white:#FFFFFF;
 --black:#000000;
 --gold:#ffd777;
@@ -47,7 +48,7 @@ a {
   color: var(--linkcolor);
 }
 a:hover {
-  color: var(--white);
+  color: var(--linkhover);
 }
 .quoteblock blockquote::before {
   color: var(--linkcoloralternate);
@@ -64,9 +65,9 @@ mark {
 th{background-color: var(--linkcolor);color:var(--white);}
 
 #toc.toc2{background-color:var(--sidebarbackground);color:var(--gold);}
-#toc.toc2.a{color:var(--gold);}
-#toc.toc2.a:active{color:var(--gold);}
-#toc.toc2.a:visited{color:var(--gold);}
+#toc a{color:var(--gold);}
+#toc a:visited{color: #999;}
+#toc a:active{color:var(--gold);}
 #toctitle{color:var(--gold); !important;background-color:var(--brown);font-size: 14px !important;padding:10px;border-radius:6px;}
 
 /* Responsiveness fixes */
@@ -89,11 +90,26 @@ table {
 <div id="toctitle">Table of Contents</div>
 <ul class="sectlevel1">
 <li><a href="#_overview">Overview</a></li>
-<li><a href="#_make_and_break_a_connection">Make and break a connection</a></li>
+<li><a href="#_make_and_break_a_connection">Make and break a connection</a>
+<ul class="sectlevel2">
+<li><a href="#_intuitive_method">Intuitive Method</a></li>
+<li><a href="#_alternative_method">Alternative method</a></li>
+</ul>
+</li>
 <li><a href="#_options">Options</a></li>
-<li><a href="#_shortcuts_you_should_know">Shortcuts you should know</a></li>
+<li><a href="#_shortcuts_you_should_know">Shortcuts you should know</a>
+<ul class="sectlevel2">
+<li><a href="#_burst_connections">Burst Connections</a></li>
+<li><a href="#_passing_connections_from_one_port_to_another">Passing connections from one port to another</a></li>
+</ul>
+</li>
+<li><a href="#_special_ports">Special ports</a>
+<ul class="sectlevel2">
 <li><a href="#_a2j_or_midi_bridge_ports">A2J or Midi-Bridge ports</a></li>
 <li><a href="#_control_voltage_ports_cv_ports">Control Voltage ports (CV ports)</a></li>
+</ul>
+</li>
+<li><a href="#_edit_theme">Edit Theme</a></li>
 </ul>
 </div>
 </div>
@@ -254,13 +270,16 @@ It will allow you to :</p>
 <p>Find a box with its name</p>
 </li>
 <li>
-<p>Filter ports: show only AUDIO or MIDI ports or both</p>
+<p>Filter ports: show only AUDIO, MIDI, CV ports or all of them</p>
 </li>
 <li>
 <p>adjust the zoom level</p>
 </li>
 <li>
 <p>refresh the canvas: ask JACK again for the list of existing ports and their connections</p>
+</li>
+<li>
+<p>Manual: show this manual in the web browser</p>
 </li>
 <li>
 <p>Canvas Preferences: display a window of options<br>
@@ -352,8 +371,10 @@ Your browser does not support the video tag.
 </div>
 </div>
 <div class="sect1">
-<h2 id="_a2j_or_midi_bridge_ports">A2J or Midi-Bridge ports</h2>
+<h2 id="_special_ports">Special ports</h2>
 <div class="sectionbody">
+<div class="sect2">
+<h3 id="_a2j_or_midi_bridge_ports">A2J or Midi-Bridge ports</h3>
 <div class="imageblock">
 <div class="content">
 <img src="images/patchbay_a2j.png" alt="ports a2j">
@@ -363,10 +384,8 @@ Your browser does not support the video tag.
 <p>The MIDI ports provided by the A2J (Alsa To Jack) bridge (or Midi-Bridge with Pipewire) have a hole at the end to identify them. Their real name is a long name, but that&#8217;s about the only thing that differs from the other MIDI ports.</p>
 </div>
 </div>
-</div>
-<div class="sect1">
-<h2 id="_control_voltage_ports_cv_ports">Control Voltage ports (CV ports)</h2>
-<div class="sectionbody">
+<div class="sect2">
+<h3 id="_control_voltage_ports_cv_ports">Control Voltage ports (CV ports)</h3>
 <div class="imageblock">
 <div class="content">
 <img src="images/patchbay_CV.png" alt="ports CV">
@@ -383,9 +402,21 @@ You can&#8217;t say you weren&#8217;t warned, and it&#8217;s almost impossible t
 </div>
 </div>
 </div>
+<div class="sect1">
+<h2 id="_edit_theme">Edit Theme</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>You have the possibility to modify theme colors, it is quite easy and fast to do.</p>
+</div>
+<div class="paragraph">
+<p>For more informations, read <a href="theme_edit.html">how to edit themes</a>.</p>
+</div>
+</div>
+</div>
+</div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2022-12-06 19:03:06 +0100
+Last updated 2022-12-08 11:32:58 +0100
 </div>
 </div>
 </body>

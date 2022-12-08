@@ -1,0 +1,791 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Asciidoctor 2.0.12">
+<title>Write custom themes for HoustonPatchbay</title>
+<style>
+/* Asciidoctor default stylesheet | MIT License | https://asciidoctor.org */
+
+@import url(//fonts.googleapis.com/css?family=Noto+Sans);
+@import url(https://cdn.jsdelivr.net/gh/asciidoctor/asciidoctor@2.0/data/stylesheets/asciidoctor-default.css); /* Default asciidoc style framework - important */
+
+/* CUSTOMISATIONS */
+/* Change the values in root for quick customisation. If you want even more fine grain... venture further. */
+
+:root{
+--maincolor:#cccccc;
+--primarycolor:#5E5E5E; /* Grey 500 */
+--secondarycolor:#ba3925;
+--tertiarycolor: #186d7a;
+--sidebarbackground:#232323; /* Grey 900 */
+--linkcolor:#663815; /* Brown */
+--linkhover: #9c5620;
+--linkcoloralternate: #9c5620;
+--white:#FFFFFF;
+--black:#000000;
+--gold:#ffd777;
+--brown:#4e2b10;
+}
+
+body{font-family: "Noto Sans",sans-serif;background-color: var(--maincolor);link-color: var(--gold)}
+
+#header{background-color:var(--brown); padding:25px;padding-top:0px;max-width: none;}
+#footer{background-color: var(--sidebarbackground);}
+/* h1{color:#ffd755 !important;font-family:"Noto Sans",sans-serif;} */
+h1{color:var(--white) !important;font-family:"Noto Sans",sans-serif;}
+h2{background-color:var(--brown);;color:var(--gold) !important;font-family:"Noto Sans",sans-serif;text-decoration:none;padding:10px;border-top-left-radius:10px;border-top-right-radius:10px;}
+h3{background-color:var(--primarycolor);color:white !important;font-family:"Noto Sans",sans-serif;text-decoration:none;padding:10px;border-top-left-radius:6px;border-top-right-radius:6px;}
+h4,h5,h6{color:var(--primarycolor);}
+.title{color:var(--sidebarbackground) !important;font-family:"Noto Sans",sans-serif;font-style: normal; font-weight: normal;}
+p{font-family: "Noto Sans",sans-serif ! important}
+#toc.toc2 a:link{color:#d0d0d0;font-family: "Noto Sans",sans-serif ! important;font-size:13px;}
+
+a {
+  text-decoration: none;
+  color: var(--linkcolor);
+}
+a:hover {
+  color: var(--linkhover);
+}
+.quoteblock blockquote::before {
+  color: var(--linkcoloralternate);
+}
+mark {
+  color: var(--white);
+  background-color: var(--linkcolor);
+}
+
+/* Card styling */
+.sect1{border-bottom:1px solid grey;border-radius:10px;}
+
+/* Table styles */
+th{background-color: var(--linkcolor);color:var(--white);}
+
+#toc.toc2{background-color:var(--sidebarbackground);color:var(--gold);}
+#toc a{color:var(--gold);}
+#toc a:visited{color: #999;}
+#toc a:active{color:var(--gold);}
+#toctitle{color:var(--gold); !important;background-color:var(--brown);font-size: 14px !important;padding:10px;border-radius:6px;}
+
+/* Responsiveness fixes */
+video {
+  max-width: 100%;
+}
+
+@media all and (max-width: 600px) {
+table {
+  width: 55vw!important;
+  font-size: 3vw;
+}
+
+</style>
+</head>
+<body class="book toc2 toc-left">
+<div id="header">
+<h1>Write custom themes for <strong>HoustonPatchbay</strong></h1>
+<div id="toc" class="toc2">
+<div id="toctitle">Table of Contents</div>
+<ul class="sectlevel1">
+<li><a href="#_introduction">Introduction</a></li>
+<li><a href="#_directory_tree">directory tree</a>
+<ul class="sectlevel2">
+<li><a href="#fonts">fonts</a></li>
+<li><a href="#_icons">icons</a></li>
+<li><a href="#_images">images</a></li>
+</ul>
+</li>
+<li><a href="#_aliases">[aliases]</a></li>
+<li><a href="#body">[body]</a></li>
+<li><a href="#_specific_blocks">specific blocks</a>
+<ul class="sectlevel2">
+<li><a href="#_box">[Box]</a></li>
+<li><a href="#_wrapper">[wrapper]</a></li>
+<li><a href="#_header_line">[header_line]</a></li>
+<li><a href="#_port">[port]</a></li>
+<li><a href="#_portgroup">[portgroup]</a></li>
+<li><a href="#_line">[line]</a></li>
+<li><a href="#_rubberband">[rubberband]</a></li>
+<li><a href="#_gui_button">[gui_button]</a></li>
+<li><a href="#_monitor_decoration">[monitor_decoration]</a></li>
+<li><a href="#_hardware_rack">[hardware_rack]</a></li>
+</ul>
+</li>
+<li><a href="#_glossary">Glossary</a>
+<ul class="sectlevel2">
+<li><a href="#color">color</a></li>
+<li><a href="#number">number</a></li>
+<li><a href="#image">image</a></li>
+<li><a href="#font">font</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<div id="content">
+<div class="sect1">
+<h2 id="_introduction">Introduction</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>This guide helps to write custom HoustonPatchbay patchbay themes, which are used by RaySession, Patchance and Patchichi.</p>
+</div>
+<div class="paragraph">
+<p>A good practice is to modify an existing theme, starting from a light theme if you want to make a light theme, else starting from a dark theme.</p>
+</div>
+<div class="paragraph">
+<p>Patchichi is the best tool to do that, because you can easily add on your patchbay all types of ports.</p>
+</div>
+<div class="paragraph">
+<p>First right click on the patchbay, select <strong>Canvas Options</strong>, switch to the <strong>Theme</strong> tab, then select a theme and press <strong>duplicate</strong>, then <strong>edit</strong>, it will open your theme file with your default plain text reader (kate, gedit, &#8230;&#8203;).</p>
+</div>
+<div class="paragraph">
+<p>Your theme should be located in:</p>
+</div>
+<div class="paragraph">
+<p><code>/home/<em>user</em>/.local/share/<em>software</em>/HoustonPatchbay/themes/<em>MyTheme</em></code></p>
+</div>
+<div class="paragraph">
+<p>replace</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><em>user</em> with your user name</p>
+</li>
+<li>
+<p><em>software</em> with the software you use in lower case (raysession, patchance or patchichi)</p>
+</li>
+<li>
+<p><em>My Theme</em> with your theme name</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>You can now edit the theme.conf file to change the theme. When you save changes to the file, the theme is directly uploaded in the software, so you don&#8217;t need to restart the program to test the changes !</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_directory_tree">directory tree</h2>
+<div class="sectionbody">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code>/ My Theme
+↳ fonts
+  ↳ font1.ttf
+  ↳ font2.ttf
+  ↳ ...
+↳ icons
+  ↳ monitor_capture.svg
+  ↳ monitor_playback.svg
+  ↳ ...
+↳ images
+  ↳ background.png
+  ↳ background2.jpg
+  ↳ ...
+↳ theme.conf</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Your theme directory must contain a file named <code>theme.conf</code> where all parameters are defined. Directories <code>fonts</code>, <code>icons</code> and <code>images</code> are optional.</p>
+</div>
+<div class="sect2">
+<h3 id="fonts">fonts</h3>
+<div class="paragraph">
+<p>This folder contains .ttf or .otf font files.
+All .otf and .ttf files in this folder are installed by the software before loading the theme.
+Note that the font name that you will need in theme.conf is not necessary the file name.<br>
+You can use:
+<code>fc-scan --format "%{family}\n" FontFile.ttf</code>
+to know the font family name inside the file.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_icons">icons</h3>
+<div class="paragraph">
+<p>This folder contains icons for hardware, PulseAudio bridges and monitor boxes.</p>
+</div>
+<div class="paragraph">
+<p>At this stage, only svg format is supported, the following file names can be used:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>hardware_capture.svg</p>
+</li>
+<li>
+<p>hardware_playback.svg</p>
+</li>
+<li>
+<p>hardware_grouped.svg</p>
+</li>
+<li>
+<p>hardware_midi.svg</p>
+</li>
+<li>
+<p>monitor_capture.svg</p>
+</li>
+<li>
+<p>monitor_playback.svg</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_images">images</h3>
+<div class="paragraph">
+<p>This folder contains images that you can use as background for the full scene or any widget (box, port or portgroup). A lot of image formats are supported.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_aliases">[aliases]</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>You can define in <strong>[aliases]</strong> block colors or numbers for faster general changes in other sections.
+For example, define <em>midi</em> to a color, and re-use <em>midi</em> for midi ports and midi lines.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="body">[body]</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>in <strong>[body]</strong> block, define general colors and sizes for the scene.</p>
+</div>
+<div class="paragraph">
+<p>Available parameters are:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>port-height</strong> : <a href="#number">number</a></p>
+</li>
+<li>
+<p><strong>box-spacing</strong>: <a href="#number">number</a>, spacing between boxes when they are moved around</p>
+</li>
+<li>
+<p><strong>box-spacing-horizontal</strong> : <a href="#number">number</a>, horizontal spacing between boxes when they are moved around, if one of the boxes has ports on this side</p>
+</li>
+<li>
+<p><strong>magnet</strong> : <a href="#number">number</a>, if the distance between borders of glued boxes is lower or equal to this value, boxes will be aligned</p>
+</li>
+<li>
+<p><strong>hardware-rack-width</strong> : <a href="#number">number</a>, size of the flycase decoration of hardware boxes</p>
+</li>
+<li>
+<p><strong>monitor_color</strong>: <a href="#color">color</a>, color of the word <em>Monitor</em> in monitor boxes</p>
+</li>
+<li>
+<p><strong>background</strong> : <a href="#color">color</a>, color of the scene background</p>
+</li>
+<li>
+<p><strong>background-image</strong> : string, name of the image file to use as background, this file must be in the <em>images</em> folder of the theme folder</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_specific_blocks">specific blocks</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>We call here specific blocks all blocks defining theme except <strong>[body]</strong> and <strong>[aliases]</strong>.</p>
+</div>
+<div class="paragraph">
+<p>In each specific block, you can define the following settings:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>background</strong> : <a href="#color">color</a></p>
+</li>
+<li>
+<p><strong>background2</strong> : <a href="#color">color</a> (optional, used to make a gradient from <strong>background</strong> to <strong>background2</strong>, may be unused with some widgets)</p>
+</li>
+<li>
+<p><strong>background-image</strong> : <a href="#image">image</a></p>
+</li>
+<li>
+<p><strong>text-color</strong> : <a href="#color">color</a></p>
+</li>
+<li>
+<p><strong>font-name</strong> : string</p>
+</li>
+<li>
+<p><strong>font-size</strong> : <a href="#number">number</a> between 1 and 200</p>
+</li>
+<li>
+<p><strong>font-width</strong> : <a href="#number">number</a> between 0 (very light) and 99 (very bold). alternatively, it can also be <em>normal</em> or <em>bold</em>.</p>
+</li>
+<li>
+<p><strong>border-color</strong> : <a href="#color">color</a></p>
+</li>
+<li>
+<p><strong>border-width</strong> : <a href="#number">number</a> between 0 and 20</p>
+</li>
+<li>
+<p><strong>border-radius</strong> : <a href="#number">number</a> between 0 and 50</p>
+</li>
+<li>
+<p><strong>border-style</strong> :</p>
+<div class="ulist">
+<ul>
+<li>
+<p><em>solid</em>, <em>normal</em> : normal border line</p>
+</li>
+<li>
+<p><em>nopen</em>, <em>none</em> : no border</p>
+</li>
+<li>
+<p><em>dash</em> : dashed line</p>
+</li>
+<li>
+<p><em>dashdot</em> : more dashed line</p>
+</li>
+<li>
+<p><em>dashdotdot</em> : more more dashed line</p>
+</li>
+</ul>
+</div>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>The interpretable specific blocks are the following ones:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code>box
+box.selected
+box.hardware
+box.hardware.selected
+box.monitor
+box.monitor.selected
+box.client
+box.client.selected
+
+box_wrapper
+box_wrapper.selected
+box_wrapper.hardware
+box_wrapper.hardware.selected
+box_wrapper.monitor
+box_wrapper.monitor.selected
+box_wrapper.client
+box_wrapper.client.selected
+
+box_header_line
+box_header_line.selected
+box_header_line.hardware
+box_header_line.hardware.selected
+box_header_line.monitor
+box_header_line.monitor.selected
+box_header_line.client
+box_header_line.client.selected
+
+box_shadow
+box_shadow.selected
+box_shadow.hardware
+box_shadow.hardware.selected
+box_shadow.monitor
+box_shadow.monitor.selected
+box_shadow.client
+box_shadow.client.selected
+
+port
+port.selected
+port.audio
+port.audio.selected
+port.midi
+port.midi.selected
+port.cv
+port.cv.selected
+
+portgroup
+portgroup.selected
+portgroup.audio
+portgroup.audio.selected
+portgroup.midi
+portgroup.midi.selected
+portgroup.cv
+portgroup.cv.selected
+
+line
+line.selected
+line.disconnecting
+line.audio
+line.audio.selected
+line.midi
+line.midi.selected
+
+rubberband
+
+gui_button
+gui_button.gui_hidden
+gui_button.gui_visible
+
+monitor_decoration
+monitor_decoration.selected
+
+hardware_rack
+hardware_rack.selected</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Of course, you don&#8217;t need to specify all of themes.
+If in a block a setting is unspecified, the program will look into the parent block.
+For example, to know which are the theme settings of an audio port, the program will look for settings in this order</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code>port.audio
+port</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Note that if the this audio port is selected, it will check if "selected" block of the parent block exists and search inside before. The order of search will be:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code>port.audio.selected
+port.audio
+port.selected
+port</code></pre>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_box">[Box]</h3>
+<div class="paragraph">
+<p>In addition to all common block settings, a box block can also interpret the following settings:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>port_in_offset</strong> : the horizontal offset of the input ports from the border of the box</p>
+</li>
+<li>
+<p><strong>port_out_offset</strong> : the horizontal offset of the output ports from the border of the box</p>
+</li>
+<li>
+<p><strong>port_spacing</strong> : vertical spacing between ports (if they are not in the same portgroup)</p>
+</li>
+<li>
+<p><strong>port_type_spacing</strong> : vertical spacing between ports of different type, in addition to <strong>port_spacing</strong></p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>The available Box Blocks are the following ones:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code>box
+box.selected
+box.hardware
+box.hardware.selected
+box.monitor
+box.monitor.selected
+box.client
+box.client.selected</code></pre>
+</div>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>hardware</strong> : boxes representing hardware physicals groups.</p>
+</li>
+<li>
+<p><strong>monitor</strong> : boxes representing Monitors of hardware physicals groups (only for PipeWire)</p>
+</li>
+<li>
+<p><strong>client</strong> : RaySession client boxes, if JACK client name follows the NSM rules.</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_wrapper">[wrapper]</h3>
+<div class="paragraph">
+<p><strong>wrapper</strong> is the little triangle used to wrap/unwrap boxes.<br>
+The available blocks are the same than for boxes:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code>wrapper
+wrapper.selected
+wrapper.hardware
+wrapper.hardware.selected
+wrapper.monitor
+wrapper.monitor.selected
+wrapper.client
+wrapper.client.selected</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_header_line">[header_line]</h3>
+<div class="paragraph">
+<p><strong>header_line</strong> represents lines at left and at right of a box title, if the box is larger than the title.<br>
+The available blocks are the same than for boxes:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code>header_line
+header_line.selected
+header_line.hardware
+header_line.hardware.selected
+header_line.monitor
+header_line.monitor.selected
+header_line.client
+header_line.client.selected</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_port">[port]</h3>
+<div class="paragraph">
+<p><strong>port</strong> is a named connection endpoint. They can be input or output ports. For coherence, you can&#8217;t change their shape, only colors and sizes.<br>
+The available port blocks are:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code>port
+port.selected
+port.audio
+port.audio.selected
+port.midi
+port.midi.selected
+port.cv
+port.cv.selected</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>a CV port is a Control Voltage port. It works like an audio port, but it is not meant to be listened.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_portgroup">[portgroup]</h3>
+<div class="paragraph">
+<p><strong>portgroup</strong> is a group of ports ! In most cases it is an audio stereo pair.<br>
+The available blocks are the same than for port.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code>portgroup
+portgroup.selected
+portgroup.audio
+portgroup.audio.selected
+portgroup.midi
+portgroup.midi.selected
+portgroup.cv
+portgroup.cv.selected</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>That said, in Patchance or RaySession, portgroups exists only for regular audio ports (for the moment, but are midi or CV portgroups really needed ??).</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_line">[line]</h3>
+<div class="paragraph">
+<p>a line represents a connection between two ports.
+The available line blocks are:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code>line
+line.selected
+line.disconnecting
+line.audio
+line.audio.selected
+line.midi
+line.midi.selected</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><strong>line.disconnecting</strong> is the color of a line which will be disconnected if the user release the mouse button on the port or portgroup under the cursor. Please choose for this a color near but different from the <a href="#body">[body]</a> background-color.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_rubberband">[rubberband]</h3>
+<div class="paragraph">
+<p>rubberband is the rectangle of selection that you will see when you press mouse button in the background and drag the cursor to select multiple boxes. It doesn&#8217;t have child blocks.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_gui_button">[gui_button]</h3>
+<div class="paragraph">
+<p><strong>gui_button</strong> is the rectangle under the box title drawn if the box belongs to a client capable to show/hide its GUI.<br>
+User will just have to double-click on this rectangle (or anywhere on the box) to toggle GUI visibility state.</p>
+</div>
+<div class="paragraph">
+<p>Available blocks are:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code>gui_button
+gui_button.gui_hidden
+gui_button.gui_visible</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_monitor_decoration">[monitor_decoration]</h3>
+<div class="paragraph">
+<p><strong>monitor_decoration</strong> is the band on the left of a monitor box (only for PipeWire).<br>
+Available blocks are :</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code>monitor_decoration
+monitor_decoration.selected</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><strong>monitor_decoration.selected</strong> is the decoration when the box is selected.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_hardware_rack">[hardware_rack]</h3>
+<div class="paragraph">
+<p><strong>hardware_rack</strong> is the decoration that simulates a flycase rack around hardware boxes.<br>
+Available blocks are :</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code>hardware_rack
+hardware_rack.selected</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><strong>hardware_rack.selected</strong> is the hardware_rack when the box is selected.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_glossary">Glossary</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="color">color</h3>
+<div class="paragraph">
+<p><em>color</em> is specified with a string understandable by Qt QColor.</p>
+</div>
+<div class="paragraph">
+<p>Examples:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><em>white</em></p>
+</li>
+<li>
+<p><em>red</em></p>
+</li>
+<li>
+<p><em>#DDD</em> (each hexadecimal character specify a RGB channel, here a little gray)</p>
+</li>
+<li>
+<p><em>#A0A000</em> (each block of two hexadecimal character specify a RGB channel)</p>
+</li>
+<li>
+<p><em>#FF5050A0</em> (the first block of two specify alpha channel, nexts are for RGB channels)</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>alternatively you can write colors this way :</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><em>rgb(255, 0, 0)</em> (each RGB channel from 0 to 255, here red)</p>
+</li>
+<li>
+<p><em>rgba(255, 0, 0, 0.5)</em> (each RGB channel from 0 to 255, and opacity from 0.0 to 1.0)</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>for convenience, you can quickly adjust color lightness and/or opacity.
+for example:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>background=red * 0.8</code> will result in a slightly dark red.</p>
+</li>
+<li>
+<p><code>background=red ** 0.8</code> will result in a red with an opacity at 80%.</p>
+</li>
+<li>
+<p><code>background=#AFD755 * 1.2 ** 0.4</code></p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>spaces between color and number are required, number MUST be after color.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="number">number</h3>
+<div class="paragraph">
+<p><em>number</em> defines an integer or a float.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="image">image</h3>
+<div class="paragraph">
+<p><em>image</em> is a string. Its name must match with a file in <code>images</code> directory, in the theme folder.</p>
+</div>
+<div class="paragraph">
+<p>for example, the following line:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code>background-image=background.jpg</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>means that the background image of the object will be the image file <code>THEMES_PATH/theme_name/images/background.jpg</code>.</p>
+</div>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Important</div>
+</td>
+<td class="content">
+a <strong>background-image</strong> is visible ONLY if <strong>background</strong> of the same section is a color with transparency.<br>
+First, image is drawn, then background color is drawn above. This allows to adjust the color of image applying a color with transparency above, mainly for readability and for quick corrections.
+</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="font">font</h3>
+<div class="paragraph">
+<p><em>font</em> is a string matching with a font family.</p>
+</div>
+<div class="paragraph">
+<p>Example:<br>
+<code>text-color=Deja Vu Sans</code></p>
+</div>
+<div class="paragraph">
+<p>if the font exists in <a href="#fonts">fonts</a> dir, this will be chosen, else font will be found in system fonts.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div id="footer">
+<div id="footer-text">
+Last updated 2022-12-08 11:14:49 +0100
+</div>
+</div>
+</body>
+</html>

@@ -1,7 +1,7 @@
 = Manuel de *HoustonPatchbay*
 :toc: left
 :toc-title: Table des matières
-:toclevels: 1
+:toclevels: 2
 :imagesdir: images
 :stylesheet: patchbay_manual.css
 
@@ -115,13 +115,14 @@ Notez qu'avec la connexion par clic droit et le passage de connexions d'un port 
 
 video::video/fast_new_plugin.mp4[width=640]
 
-== Les ports A2J
+== Ports spéciaux
+=== Les ports A2J (ou Midi-Bridge)
 
 image::patchbay_a2j.png[ports a2j]
 
 Les ports MIDI fournis par le pont A2J (Alsa To Jack) (ou Midi-Bridge avec Pipewire) présentent un trou à leur extrêmité pour les reconnaître. Leur véritable nom est un nom à ralonges, mais c'est à peu près la seule chose qui diffère avec les autres ports MIDI.
 
-== Les ports de tension de contrôle (ports CV)
+=== Les ports de tension de contrôle (ports CV)
 
 image::patchbay_CV.png[ports CV]
 
@@ -130,3 +131,9 @@ Si vous souhaitez quand même le faire, faites un clic droit sur l'un des ports,
 Vous ne pourrez pas dire que vous n'étiez pas prévenu, et il est quasiment impossible de faire ça par erreur.
 
 En revanche, connecter un port de sortie audio classique vers un port CV d'entrée est tout à fait possible, ça ne pose aucun problème.
+
+== Éditer un thème
+
+Vous avez la possibilité d'éditer les couleurs d'un thème. C'est plutôt facile et rapide à faire.
+
+Pour plus d'informations, consultez link:theme_edit.html[l'aide sur l'édition des themes].

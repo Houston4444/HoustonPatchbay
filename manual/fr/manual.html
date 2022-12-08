@@ -90,11 +90,26 @@ table {
 <div id="toctitle">Table des matières</div>
 <ul class="sectlevel1">
 <li><a href="#_vue_densemble">Vue d&#8217;ensemble</a></li>
-<li><a href="#_faire_et_défaire_une_connexion">Faire et défaire une connexion</a></li>
+<li><a href="#_faire_et_défaire_une_connexion">Faire et défaire une connexion</a>
+<ul class="sectlevel2">
+<li><a href="#_méthode_intuitive">Méthode Intuitive</a></li>
+<li><a href="#_méthode_alternative">Méthode Alternative</a></li>
+</ul>
+</li>
 <li><a href="#_les_options">Les options</a></li>
-<li><a href="#_raccourcis_à_connaître">Raccourcis à connaître</a></li>
-<li><a href="#_les_ports_a2j">Les ports A2J</a></li>
+<li><a href="#_raccourcis_à_connaître">Raccourcis à connaître</a>
+<ul class="sectlevel2">
+<li><a href="#_connexions_en_rafale">Connexions en rafale</a></li>
+<li><a href="#_passer_les_connexions_dun_port_à_un_autre">Passer les connexions d&#8217;un port à un autre</a></li>
+</ul>
+</li>
+<li><a href="#_ports_spéciaux">Ports spéciaux</a>
+<ul class="sectlevel2">
+<li><a href="#_les_ports_a2j_ou_midi_bridge">Les ports A2J (ou Midi-Bridge)</a></li>
 <li><a href="#_les_ports_de_tension_de_contrôle_ports_cv">Les ports de tension de contrôle (ports CV)</a></li>
+</ul>
+</li>
+<li><a href="#_éditer_un_thème">Éditer un thème</a></li>
 </ul>
 </div>
 </div>
@@ -253,7 +268,7 @@ Il vous permettra de :</p>
 <p>chercher une boîte par son nom</p>
 </li>
 <li>
-<p>Filtrer les ports: n&#8217;afficher que les ports AUDIO ou MIDI ou les deux</p>
+<p>Filtrer les ports: n&#8217;afficher que les ports AUDIO, MIDI, CV ou les trois</p>
 </li>
 <li>
 <p>régler le niveau de zoom</p>
@@ -351,21 +366,21 @@ Your browser does not support the video tag.
 </div>
 </div>
 <div class="sect1">
-<h2 id="_les_ports_a2j">Les ports A2J</h2>
+<h2 id="_ports_spéciaux">Ports spéciaux</h2>
 <div class="sectionbody">
+<div class="sect2">
+<h3 id="_les_ports_a2j_ou_midi_bridge">Les ports A2J (ou Midi-Bridge)</h3>
 <div class="imageblock">
 <div class="content">
 <img src="images/patchbay_a2j.png" alt="ports a2j">
 </div>
 </div>
 <div class="paragraph">
-<p>Les ports MIDI fournis par le pont A2J (Alsa To Jack) présentent un trou à leur extrêmité pour les reconnaître. Leur véritable nom est un nom à ralonges, mais c&#8217;est à peu près la seule chose qui diffère avec les autres ports MIDI.</p>
+<p>Les ports MIDI fournis par le pont A2J (Alsa To Jack) (ou Midi-Bridge avec Pipewire) présentent un trou à leur extrêmité pour les reconnaître. Leur véritable nom est un nom à ralonges, mais c&#8217;est à peu près la seule chose qui diffère avec les autres ports MIDI.</p>
 </div>
 </div>
-</div>
-<div class="sect1">
-<h2 id="_les_ports_de_tension_de_contrôle_ports_cv">Les ports de tension de contrôle (ports CV)</h2>
-<div class="sectionbody">
+<div class="sect2">
+<h3 id="_les_ports_de_tension_de_contrôle_ports_cv">Les ports de tension de contrôle (ports CV)</h3>
 <div class="imageblock">
 <div class="content">
 <img src="images/patchbay_CV.png" alt="ports CV">
@@ -382,9 +397,21 @@ Vous ne pourrez pas dire que vous n&#8217;étiez pas prévenu, et il est quasime
 </div>
 </div>
 </div>
+<div class="sect1">
+<h2 id="_éditer_un_thème">Éditer un thème</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Vous avez la possibilité d&#8217;éditer les couleurs d&#8217;un thème. C&#8217;est plutôt facile et rapide à faire.</p>
+</div>
+<div class="paragraph">
+<p>Pour plus d&#8217;informations, consultez <a href="theme_edit.html">l&#8217;aide sur l&#8217;édition des themes</a>.</p>
+</div>
+</div>
+</div>
+</div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2022-12-07 14:39:52 +0100
+Last updated 2022-12-08 11:33:04 +0100
 </div>
 </div>
 </body>
