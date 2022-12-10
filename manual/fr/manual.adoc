@@ -2,8 +2,8 @@
 :toc: left
 :toc-title: Table des matières
 :toclevels: 2
-:imagesdir: images
-:stylesheet: patchbay_manual.css
+:imagesdir: ../en/images
+:stylesheet: ../en/patchbay_manual.css
 
 [.text-right]
 image:flags/en.jpeg[EN, 30, 20, link=../en/manual.html] image:flags/fr.jpeg[FR, 40, 30, link=../fr/manual.html]
