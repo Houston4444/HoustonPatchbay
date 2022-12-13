@@ -526,6 +526,9 @@ class PatchbayManager:
     def refresh(self):
         self.clear_all()
 
+    def arrange_canvas(self):
+        patchcanvas.arrange()
+
     @later_by_batch()
     def set_group_uuid_from_name(self, client_name: str, uuid: int):
         group = self.get_group_from_name(client_name)

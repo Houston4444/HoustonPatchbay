@@ -20,10 +20,10 @@
 # global imports
 import logging
 from pathlib import Path
-from typing import Callable, Optional
+from typing import Callable
 from PyQt5.QtCore import (pyqtSlot, QObject, QPoint, QPointF, QRectF,
                           QSettings, QTimer, pyqtSignal)
-from PyQt5.QtWidgets import QAction, QMainWindow
+from PyQt5.QtWidgets import QAction
 
 # local imports
 from .init_values import (
@@ -76,6 +76,38 @@ def patchbay_api(func):
     return wrapper
 
 
+class BoxArranger:
+    group_id: int
+    hardware: bool
+    port_mode: PortMode
+    has_conns: bool
+    conns_in_group_ids: set[int]
+    conns_out_group_ids: set[int]
+    box: BoxWidget
+    level: int
+
+    def __init__(self, box: BoxWidget):
+        self.box = box
+        self.group_id = box.get_group_id()
+        self.group_name = box.get_group_name()
+        self.port_mode = box.get_current_port_mode()
+
+        self.has_conns = False
+        self.conns_in_group_ids = set[int]()
+        self.conns_out_group_ids = set[int]()
+        self.level = 0
+    
+    def __repr__(self) -> str:
+        return f"BoxArranger({self.group_name}, {self.port_mode})"
+    
+    def has_conns(self) -> bool:
+        return bool(self.conns_in_group_ids or self.conns_out_group_ids)
+    
+    def is_owner(self, group_id: int, port_mode: PortMode):
+        return bool(self.group_id == group_id
+                    and self.port_mode & port_mode)
+
+
 class CanvasObject(QObject):
     port_added = pyqtSignal(int, int)
     port_removed = pyqtSignal(int, int)
@@ -124,16 +156,12 @@ class CanvasObject(QObject):
 
         self.groups_to_join.clear()
 
-
 def _get_stored_canvas_position(key, fallback_pos):
     try:
         return canvas.settings.value(
             "CanvasPositions/" + key, fallback_pos, type=QPointF)
     except:
         return fallback_pos
-
-
-
 
 @patchbay_api
 def init(view: PatchGraphicsView, callback: Callable,
@@ -215,7 +243,148 @@ def clear():
 
     QTimer.singleShot(0, canvas.scene.update)
 
-# ------------------------------------------------------------------------------------------------------------
+# ----------
+
+@patchbay_api
+def arrange():
+    BOX_X = {PortMode.OUTPUT: -300,
+            PortMode.BOTH: 0,
+            PortMode.INPUT: 300,
+            PortMode.NULL: 0}
+    last_box_y = {PortMode.OUTPUT: -200,
+                  PortMode.BOTH: -200,
+                  PortMode.INPUT: -200,
+                  PortMode.NULL: -400}
+
+    group_ids_hw = [g.group_id for g in canvas.group_list
+                    if g.box_type is BoxType.HARDWARE]
+    all_group_ids = [g.group_id for g in canvas.group_list]
+
+    box_arrangers = list[BoxArranger]()
+    group_ids_to_split = set[int]()
+    group_ids_hw_out_conn = set[int]()
+    group_ids_hw_in_conn = set[int]()
+    group_ids_with_conn = set[int]()
+    
+    for conn in canvas.list_connections():
+        if conn.group_out_id == conn.group_in_id:
+            group_ids_to_split.add(conn.group_out_id)
+        
+        if conn.group_out_id in group_ids_hw:
+            group_ids_hw_out_conn.add(conn.group_in_id)
+        elif conn.group_in_id in group_ids_hw:
+            group_ids_hw_in_conn.add(conn.group_out_id)
+
+        group_ids_with_conn.add(conn.group_out_id)
+        group_ids_with_conn.add(conn.group_in_id)
+
+    # join or split groups we want to join or split
+    while True:
+        for group in canvas.group_list:
+            if group.split:
+                if (group.box_type is not BoxType.HARDWARE
+                        and group.group_id not in group_ids_to_split):
+                    join_group(group.group_id)
+                    break
+            else:
+                if (group.box_type is BoxType.HARDWARE
+                        or group.group_id in group_ids_to_split):
+                    split_group(group.group_id)
+                    break
+        else:
+            break
+
+    box_arrangers = [BoxArranger(box) for box in canvas.list_boxes()]
+
+    for conn in canvas.list_connections():
+        for box_arranger in box_arrangers:
+            if box_arranger.is_owner(conn.group_out_id, PortMode.OUTPUT):
+                box_arranger.conns_in_group_ids.add(conn.group_in_id)
+            if box_arranger.is_owner(conn.group_in_id, PortMode.INPUT):
+                box_arranger.conns_out_group_ids.add(conn.group_out_id)
+    
+    # group_level will contain {(group_id, port_mode): level}
+    group_level = dict[tuple[int, PortMode], int]()
+    
+    for box_arranger in box_arrangers:
+        if box_arranger.box._box_type is BoxType.HARDWARE:
+            if box_arranger.port_mode & PortMode.OUTPUT:
+                group_level[(box_arranger.group_id, PortMode.OUTPUT)] = 1
+                box_arranger.level = 1
+            else:
+                group_level[(box_arranger.group_id, PortMode.INPUT)] = -1
+                box_arranger.level = -1
+    
+    found_one = True
+    level_search = 1
+    while found_one:
+        found_one = False
+        level_search += 1
+
+        for box_arranger in box_arrangers:
+            if box_arranger.level != 0:
+                continue
+    
+            for group_id in box_arranger.conns_out_group_ids:
+                if group_level.get((group_id, PortMode.OUTPUT)) == level_search - 1:
+                    box_arranger.level = level_search
+                    if box_arranger.port_mode & PortMode.OUTPUT:
+                        group_level[(box_arranger.group_id, PortMode.OUTPUT)] = level_search
+                    found_one = True
+                    break
+
+    level_max = level_search - 1
+    print('levelmax1', level_max)
+
+    found_one = True
+    level_search = -1
+    while found_one:
+        found_one = False
+        level_search -= 1
+
+        for box_arranger in box_arrangers:
+            if box_arranger.level != 0:
+                continue
+    
+            for group_id in box_arranger.conns_in_group_ids:
+                if group_level.get((group_id, PortMode.INPUT)) == level_search + 1:
+                    box_arranger.level = level_search
+                    if box_arranger.port_mode & PortMode.INPUT:
+                        group_level[(box_arranger.group_id, PortMode.INPUT)] = level_search
+                    found_one = True
+                    break
+    
+    level_max = max(abs(level_search + 1), level_max)
+    print('levelmax2', level_max)
+
+    for box_arranger in box_arrangers:
+        if box_arranger.level < 0:
+            box_arranger.level += level_max + 2
+            
+        print(box_arranger, box_arranger.level)
+    
+    for level in range(1, level_max + 3):
+        print('level', level)
+        last_box_y = 0
+        
+        for box_arranger in box_arrangers:
+            if box_arranger.level == level:
+                canvas.scene.add_box_to_animation(
+                    box_arranger.box, -600 + level * 200, last_box_y)
+                
+                last_box_y += (box_arranger.box.boundingRect().height()
+                               + canvas.theme.box_spacing)
+        
+    
+    # for box in canvas.list_boxes():
+    #     port_mode = box.get_current_port_mode()
+        
+    #     canvas.scene.add_box_to_animation(
+    #         box, BOX_X[port_mode],
+    #         last_box_y[port_mode] - box.boundingRect().top())
+    #     last_box_y[port_mode] += (box.boundingRect().height()
+    #                               + canvas.theme.box_spacing)
+
 @patchbay_api
 def set_initial_pos(x: int, y: int):
     canvas.initial_pos.setX(x)

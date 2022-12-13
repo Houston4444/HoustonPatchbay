@@ -240,7 +240,7 @@ class BoxWidgetMoth(QGraphicsItem):
     def get_splitted_mode(self):
         return self._splitted_mode
 
-    def get_current_port_mode(self):
+    def get_current_port_mode(self) -> PortMode:
         return self._current_port_mode
     
     def redraw_inline_display(self):

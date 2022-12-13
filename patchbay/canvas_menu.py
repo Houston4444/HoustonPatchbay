@@ -115,6 +115,11 @@ class CanvasMenu(QMenu):
         self.action_refresh.setIcon(QIcon.fromTheme('view-refresh'))
         self.action_refresh.triggered.connect(patchbay_manager.refresh)
 
+        self.action_arrange = self.addAction(
+            _translate('patchbay', 'Auto-Arrange'))
+        self.action_arrange.setIcon(QIcon.fromTheme('auto-transition'))
+        self.action_arrange.triggered.connect(patchbay_manager.arrange_canvas)
+
         self.action_manual = self.addAction(
             _translate('patchbay', "Patchbay manual"))
         self.action_manual.setIcon(QIcon.fromTheme('system-help'))
