@@ -20,7 +20,7 @@
 # global imports
 import logging
 from pathlib import Path
-from typing import Callable
+from typing import TYPE_CHECKING, Callable
 from PyQt5.QtCore import (pyqtSlot, QObject, QPoint, QPointF, QRectF,
                           QSettings, QTimer, pyqtSignal)
 from PyQt5.QtWidgets import QAction
@@ -96,7 +96,10 @@ class BoxArranger:
         self.conns_in_group_ids = set[int]()
         self.conns_out_group_ids = set[int]()
         self.level = 0
-    
+        
+        self.ins_connected_to = list[BoxArranger]()
+        self.outs_connected_to = list[BoxArranger]()
+
     def __repr__(self) -> str:
         return f"BoxArranger({self.group_name}, {self.port_mode})"
     
@@ -106,6 +109,106 @@ class BoxArranger:
     def is_owner(self, group_id: int, port_mode: PortMode):
         return bool(self.group_id == group_id
                     and self.port_mode & port_mode)
+    
+    def set_next_boxes(self, box_arrangers: list['BoxArranger']):
+        for group_id in self.conns_in_group_ids:
+            for box_arranger in box_arrangers:
+                if box_arranger.is_owner(group_id, PortMode.INPUT):
+                    self.outs_connected_to.append(box_arranger)
+                    break
+
+        for group_id in self.conns_out_group_ids:
+            for box_arranger in box_arrangers:
+                if box_arranger.is_owner(group_id, PortMode.OUTPUT):
+                    self.ins_connected_to.append(box_arranger)
+                    break
+                
+    def parse_to_output(self, start_point: 'BoxArranger'):
+        if self.level != 0:
+            return
+
+        if len(self.ins_connected_to) == 1:
+            self.level = start_point.level + 1
+        else:
+            self.level = self.get_level_from_ins()
+            self.set_levels_to_ins()
+        
+        for box_arranger in self.outs_connected_to:
+            box_arranger.parse_to_output(self)
+            
+    def get_level_from_ins(self, path: list['BoxArranger']=[]) -> int:
+        if self.level != 0:
+            return self.level + 1
+        
+        tmp_level = 2
+        path = path.copy() + [self]
+        
+        for box_arranger in self.ins_connected_to:
+            if box_arranger in path:
+                print('problem de boucle sur', box_arranger)
+                break
+            nini = box_arranger.get_level_from_ins(path)
+            tmp_level = max(nini, tmp_level)
+        
+        if len(path) == 1:
+            return tmp_level
+        
+        return tmp_level + 1
+    
+    def set_levels_to_ins(self, previous: 'BoxArranger'=None):
+        if previous is not None:
+            if self.level != 0:
+                return
+
+            self.level = previous.level - 1
+        
+        for box_arranger in self.ins_connected_to:
+            box_arranger.set_levels_to_ins(self)
+    
+    def parse_to_input(self, start_point: 'BoxArranger'):
+        if self.level != 0:
+            print('HH:', self, self.level)
+            return
+
+        if len(self.outs_connected_to) == 1:
+            self.level = start_point.level - 1
+            print('Zi:', self, self.level)
+        else:
+            self.level = self.get_level_from_outs()
+            self.set_levels_to_outs()
+            print('Xz:', self, self.level)
+        
+        for box_arranger in self.ins_connected_to:
+            box_arranger.parse_to_input(self)
+    
+    def get_level_from_outs(self, path: list['BoxArranger']=[]) -> int:
+        if self.level != 0:
+            return self.level - 1
+        
+        tmp_level = -2
+        path = path.copy() + [self]
+        
+        for box_arranger in self.outs_connected_to:
+            if box_arranger in path:
+                print('gros problem de boucle sur', box_arranger)
+                break
+            nini = box_arranger.get_level_from_outs(path)
+            tmp_level = min(nini, tmp_level)
+        
+        if len(path) == 1:
+            return tmp_level
+        
+        return tmp_level - 1
+    
+    def set_levels_to_outs(self, previous: 'BoxArranger'=None):
+        if previous is not None:
+            if self.level != 0:
+                return
+
+            self.level = previous.level + 1
+        
+        for box_arranger in self.outs_connected_to:
+            box_arranger.set_levels_to_outs(self)
 
 
 class CanvasObject(QObject):
@@ -243,7 +346,7 @@ def clear():
 
     QTimer.singleShot(0, canvas.scene.update)
 
-# ----------
+# -----
 
 @patchbay_api
 def arrange():
@@ -258,7 +361,6 @@ def arrange():
 
     group_ids_hw = [g.group_id for g in canvas.group_list
                     if g.box_type is BoxType.HARDWARE]
-    all_group_ids = [g.group_id for g in canvas.group_list]
 
     box_arrangers = list[BoxArranger]()
     group_ids_to_split = set[int]()
@@ -294,7 +396,7 @@ def arrange():
         else:
             break
 
-    box_arrangers = [BoxArranger(box) for box in canvas.list_boxes()]
+    box_arrangers = [BoxArranger(box) for box in canvas.list_boxes()]        
 
     for conn in canvas.list_connections():
         for box_arranger in box_arrangers:
@@ -302,6 +404,9 @@ def arrange():
                 box_arranger.conns_in_group_ids.add(conn.group_in_id)
             if box_arranger.is_owner(conn.group_in_id, PortMode.INPUT):
                 box_arranger.conns_out_group_ids.add(conn.group_out_id)
+    
+    for box_arranger in box_arrangers:
+        box_arranger.set_next_boxes(box_arrangers)
     
     # group_level will contain {(group_id, port_mode): level}
     group_level = dict[tuple[int, PortMode], int]()
@@ -315,53 +420,72 @@ def arrange():
                 group_level[(box_arranger.group_id, PortMode.INPUT)] = -1
                 box_arranger.level = -1
     
+    print('____=== FROM INPUTS ===___')
+    
+    # start parsing from hardware captures (to outputs)
+    for box_arranger in box_arrangers:
+        if box_arranger.level == 1:
+            for ba_in in box_arranger.outs_connected_to:
+                ba_in.parse_to_output(box_arranger)
+    
+    print('____=== FROM OUTPUTS ==___')
+    
+    # parse from hardware playback (to inputs)
+    for box_arranger in box_arrangers:
+        if box_arranger.level == -1:
+            for ba_out in box_arranger.ins_connected_to:
+                ba_out.parse_to_input(box_arranger)
+    
+    # parse from any unparsed box with outputs only connected
     found_one = True
-    level_search = 1
     while found_one:
         found_one = False
-        level_search += 1
-
         for box_arranger in box_arrangers:
-            if box_arranger.level != 0:
-                continue
+            if (box_arranger.level == 0
+                    and box_arranger.outs_connected_to
+                    and not box_arranger.ins_connected_to):
+                box_arranger.parse_to_output(box_arranger)
+                found_one = True
+                break
     
-            for group_id in box_arranger.conns_out_group_ids:
-                if group_level.get((group_id, PortMode.OUTPUT)) == level_search - 1:
-                    box_arranger.level = level_search
-                    if box_arranger.port_mode & PortMode.OUTPUT:
-                        group_level[(box_arranger.group_id, PortMode.OUTPUT)] = level_search
-                    found_one = True
-                    break
-
-    level_max = level_search - 1
-    print('levelmax1', level_max)
-
+    # parse from any unparsed box with inputs only connected
     found_one = True
-    level_search = -1
     while found_one:
         found_one = False
-        level_search -= 1
-
         for box_arranger in box_arrangers:
-            if box_arranger.level != 0:
-                continue
+            if (box_arranger.level == 0
+                    and box_arranger.ins_connected_to
+                    and not box_arranger.outs_connected_to):
+                box_arranger.parse_to_input(box_arranger)
+                found_one = True
+                break
     
-            for group_id in box_arranger.conns_in_group_ids:
-                if group_level.get((group_id, PortMode.INPUT)) == level_search + 1:
-                    box_arranger.level = level_search
-                    if box_arranger.port_mode & PortMode.INPUT:
-                        group_level[(box_arranger.group_id, PortMode.INPUT)] = level_search
-                    found_one = True
-                    break
+    for box_arranger in box_arrangers:
+        if (box_arranger.level == 0
+                and box_arranger.ins_connected_to
+                and box_arranger.outs_connected_to):
+            print("Boucle sur un truc  connecté dans l'entre soi")
+            break
+        
+    for box_arranger in box_arrangers:
+        if (box_arranger.level == 0
+                and not box_arranger.ins_connected_to
+                and not box_arranger.outs_connected_to):
+            box_arranger.level = 2
     
-    level_max = max(abs(level_search + 1), level_max)
-    print('levelmax2', level_max)
+    if box_arrangers:
+        level_max = max([abs(ba.level) for ba in box_arrangers])
+    else:
+        level_max = 0
+    
+    # level_max = max(abs(level_search + 1), level_max)
+    # print('levelmax2', level_max)
 
     for box_arranger in box_arrangers:
         if box_arranger.level < 0:
             box_arranger.level += level_max + 2
             
-        print(box_arranger, box_arranger.level)
+        # print(box_arranger, box_arranger.level)
     
     for level in range(1, level_max + 3):
         print('level', level)
@@ -374,16 +498,6 @@ def arrange():
                 
                 last_box_y += (box_arranger.box.boundingRect().height()
                                + canvas.theme.box_spacing)
-        
-    
-    # for box in canvas.list_boxes():
-    #     port_mode = box.get_current_port_mode()
-        
-    #     canvas.scene.add_box_to_animation(
-    #         box, BOX_X[port_mode],
-    #         last_box_y[port_mode] - box.boundingRect().top())
-    #     last_box_y[port_mode] += (box.boundingRect().height()
-    #                               + canvas.theme.box_spacing)
 
 @patchbay_api
 def set_initial_pos(x: int, y: int):
