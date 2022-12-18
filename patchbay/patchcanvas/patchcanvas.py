@@ -54,6 +54,7 @@ from .line_widget import LineWidget
 from .theme_manager import ThemeManager
 from .scene import PatchScene
 from .scene_view import PatchGraphicsView
+from .arranger import BoxArranger, CanvasArranger
 
 _logger = logging.getLogger(__name__)
 # used by patchbay_api decorator to get function_name
@@ -74,141 +75,6 @@ def patchbay_api(func):
         _logger.debug(_logging_str)
         return func(*args, **kwargs)
     return wrapper
-
-
-class BoxArranger:
-    group_id: int
-    hardware: bool
-    port_mode: PortMode
-    has_conns: bool
-    conns_in_group_ids: set[int]
-    conns_out_group_ids: set[int]
-    box: BoxWidget
-    level: int
-
-    def __init__(self, box: BoxWidget):
-        self.box = box
-        self.group_id = box.get_group_id()
-        self.group_name = box.get_group_name()
-        self.port_mode = box.get_current_port_mode()
-
-        self.has_conns = False
-        self.conns_in_group_ids = set[int]()
-        self.conns_out_group_ids = set[int]()
-        self.level = 0
-        
-        self.ins_connected_to = list[BoxArranger]()
-        self.outs_connected_to = list[BoxArranger]()
-
-    def __repr__(self) -> str:
-        return f"BoxArranger({self.group_name}, {self.port_mode})"
-    
-    def has_conns(self) -> bool:
-        return bool(self.conns_in_group_ids or self.conns_out_group_ids)
-    
-    def is_owner(self, group_id: int, port_mode: PortMode):
-        return bool(self.group_id == group_id
-                    and self.port_mode & port_mode)
-    
-    def set_next_boxes(self, box_arrangers: list['BoxArranger']):
-        for group_id in self.conns_in_group_ids:
-            for box_arranger in box_arrangers:
-                if box_arranger.is_owner(group_id, PortMode.INPUT):
-                    self.outs_connected_to.append(box_arranger)
-                    break
-
-        for group_id in self.conns_out_group_ids:
-            for box_arranger in box_arrangers:
-                if box_arranger.is_owner(group_id, PortMode.OUTPUT):
-                    self.ins_connected_to.append(box_arranger)
-                    break
-                
-    def parse_to_output(self, start_point: 'BoxArranger'):
-        if self.level != 0:
-            return
-
-        if len(self.ins_connected_to) == 1:
-            self.level = start_point.level + 1
-        else:
-            self.level = self.get_level_from_ins()
-            self.set_levels_to_ins()
-        
-        for box_arranger in self.outs_connected_to:
-            box_arranger.parse_to_output(self)
-            
-    def get_level_from_ins(self, path: list['BoxArranger']=[]) -> int:
-        if self.level != 0:
-            return self.level + 1
-        
-        tmp_level = 2
-        path = path.copy() + [self]
-        
-        for box_arranger in self.ins_connected_to:
-            if box_arranger in path:
-                print('problem de boucle sur', box_arranger)
-                break
-            nini = box_arranger.get_level_from_ins(path)
-            tmp_level = max(nini, tmp_level)
-        
-        if len(path) == 1:
-            return tmp_level
-        
-        return tmp_level + 1
-    
-    def set_levels_to_ins(self, previous: 'BoxArranger'=None):
-        if previous is not None:
-            if self.level != 0:
-                return
-
-            self.level = previous.level - 1
-        
-        for box_arranger in self.ins_connected_to:
-            box_arranger.set_levels_to_ins(self)
-    
-    def parse_to_input(self, start_point: 'BoxArranger'):
-        if self.level != 0:
-            print('HH:', self, self.level)
-            return
-
-        if len(self.outs_connected_to) == 1:
-            self.level = start_point.level - 1
-            print('Zi:', self, self.level)
-        else:
-            self.level = self.get_level_from_outs()
-            self.set_levels_to_outs()
-            print('Xz:', self, self.level)
-        
-        for box_arranger in self.ins_connected_to:
-            box_arranger.parse_to_input(self)
-    
-    def get_level_from_outs(self, path: list['BoxArranger']=[]) -> int:
-        if self.level != 0:
-            return self.level - 1
-        
-        tmp_level = -2
-        path = path.copy() + [self]
-        
-        for box_arranger in self.outs_connected_to:
-            if box_arranger in path:
-                print('gros problem de boucle sur', box_arranger)
-                break
-            nini = box_arranger.get_level_from_outs(path)
-            tmp_level = min(nini, tmp_level)
-        
-        if len(path) == 1:
-            return tmp_level
-        
-        return tmp_level - 1
-    
-    def set_levels_to_outs(self, previous: 'BoxArranger'=None):
-        if previous is not None:
-            if self.level != 0:
-                return
-
-            self.level = previous.level + 1
-        
-        for box_arranger in self.outs_connected_to:
-            box_arranger.set_levels_to_outs(self)
 
 
 class CanvasObject(QObject):
@@ -350,36 +216,26 @@ def clear():
 
 @patchbay_api
 def arrange():
-    BOX_X = {PortMode.OUTPUT: -300,
-            PortMode.BOTH: 0,
-            PortMode.INPUT: 300,
-            PortMode.NULL: 0}
-    last_box_y = {PortMode.OUTPUT: -200,
-                  PortMode.BOTH: -200,
-                  PortMode.INPUT: -200,
-                  PortMode.NULL: -400}
-
-    group_ids_hw = [g.group_id for g in canvas.group_list
-                    if g.box_type is BoxType.HARDWARE]
-
-    box_arrangers = list[BoxArranger]()
-    group_ids_to_split = set[int]()
-    group_ids_hw_out_conn = set[int]()
-    group_ids_hw_in_conn = set[int]()
-    group_ids_with_conn = set[int]()
+    arranger = CanvasArranger()
+    box_arrangers = arranger.box_arrangers
     
-    for conn in canvas.list_connections():
-        if conn.group_out_id == conn.group_in_id:
-            group_ids_to_split.add(conn.group_out_id)
-        
-        if conn.group_out_id in group_ids_hw:
-            group_ids_hw_out_conn.add(conn.group_in_id)
-        elif conn.group_in_id in group_ids_hw:
-            group_ids_hw_in_conn.add(conn.group_out_id)
+    print('fin de la préparation')
 
-        group_ids_with_conn.add(conn.group_out_id)
-        group_ids_with_conn.add(conn.group_in_id)
-
+    correct_leveling = False
+    while not correct_leveling:
+        for box_arranger in box_arrangers:
+            box_arranger.reset()
+            
+            if box_arranger.box_type is BoxType.HARDWARE:
+                if box_arranger.port_mode & PortMode.OUTPUT:
+                    box_arranger.col_left = 1
+                    box_arranger.col_left_fixed = True
+                else:
+                    box_arranger.col_right = -1
+                    box_arranger.col_right_fixed = True
+        correct_leveling = arranger.set_all_levels()
+    
+    group_ids_to_split = arranger.get_group_ids_to_split()
     # join or split groups we want to join or split
     while True:
         for group in canvas.group_list:
@@ -396,77 +252,9 @@ def arrange():
         else:
             break
 
-    box_arrangers = [BoxArranger(box) for box in canvas.list_boxes()]        
+    for box_arranger in box_arrangers:
+        box_arranger.set_box()
 
-    for conn in canvas.list_connections():
-        for box_arranger in box_arrangers:
-            if box_arranger.is_owner(conn.group_out_id, PortMode.OUTPUT):
-                box_arranger.conns_in_group_ids.add(conn.group_in_id)
-            if box_arranger.is_owner(conn.group_in_id, PortMode.INPUT):
-                box_arranger.conns_out_group_ids.add(conn.group_out_id)
-    
-    for box_arranger in box_arrangers:
-        box_arranger.set_next_boxes(box_arrangers)
-    
-    # group_level will contain {(group_id, port_mode): level}
-    group_level = dict[tuple[int, PortMode], int]()
-    
-    for box_arranger in box_arrangers:
-        if box_arranger.box._box_type is BoxType.HARDWARE:
-            if box_arranger.port_mode & PortMode.OUTPUT:
-                group_level[(box_arranger.group_id, PortMode.OUTPUT)] = 1
-                box_arranger.level = 1
-            else:
-                group_level[(box_arranger.group_id, PortMode.INPUT)] = -1
-                box_arranger.level = -1
-    
-    print('____=== FROM INPUTS ===___')
-    
-    # start parsing from hardware captures (to outputs)
-    for box_arranger in box_arrangers:
-        if box_arranger.level == 1:
-            for ba_in in box_arranger.outs_connected_to:
-                ba_in.parse_to_output(box_arranger)
-    
-    print('____=== FROM OUTPUTS ==___')
-    
-    # parse from hardware playback (to inputs)
-    for box_arranger in box_arrangers:
-        if box_arranger.level == -1:
-            for ba_out in box_arranger.ins_connected_to:
-                ba_out.parse_to_input(box_arranger)
-    
-    # parse from any unparsed box with outputs only connected
-    found_one = True
-    while found_one:
-        found_one = False
-        for box_arranger in box_arrangers:
-            if (box_arranger.level == 0
-                    and box_arranger.outs_connected_to
-                    and not box_arranger.ins_connected_to):
-                box_arranger.parse_to_output(box_arranger)
-                found_one = True
-                break
-    
-    # parse from any unparsed box with inputs only connected
-    found_one = True
-    while found_one:
-        found_one = False
-        for box_arranger in box_arrangers:
-            if (box_arranger.level == 0
-                    and box_arranger.ins_connected_to
-                    and not box_arranger.outs_connected_to):
-                box_arranger.parse_to_input(box_arranger)
-                found_one = True
-                break
-    
-    for box_arranger in box_arrangers:
-        if (box_arranger.level == 0
-                and box_arranger.ins_connected_to
-                and box_arranger.outs_connected_to):
-            print("Boucle sur un truc  connecté dans l'entre soi")
-            break
-        
     for box_arranger in box_arrangers:
         if (box_arranger.level == 0
                 and not box_arranger.ins_connected_to
@@ -474,30 +262,128 @@ def arrange():
             box_arranger.level = 2
     
     if box_arrangers:
-        level_max = max([abs(ba.level) for ba in box_arrangers])
+        number_of_columns = max(
+            [ba.get_needed_columns() for ba in box_arrangers])
     else:
-        level_max = 0
-    
-    # level_max = max(abs(level_search + 1), level_max)
-    # print('levelmax2', level_max)
+        number_of_columns = 3
 
-    for box_arranger in box_arrangers:
-        if box_arranger.level < 0:
-            box_arranger.level += level_max + 2
-            
-        # print(box_arranger, box_arranger.level)
-    
-    for level in range(1, level_max + 3):
-        print('level', level)
-        last_box_y = 0
+    column_widths = dict[int, float]()
+    columns_pos = dict[int, float]()
+    columns_bottoms = dict[int, float]()
+    last_pos = 0
+
+    for column in range(1, number_of_columns):
+        column_widths[column] = 0.0
+
+    for ba in box_arrangers:
+        column_width = column_widths.get(ba.get_level(number_of_columns))
+        if column_width is None:
+            column_width = 0.0
+        column_widths[ba.get_level(number_of_columns)] = max(
+            ba.box.boundingRect().width(), column_width)
+
+    for column in range(1, number_of_columns + 1):
+        columns_pos[column] = last_pos
+        columns_bottoms[column] = 0.0
+        last_pos += column_widths[column] + 80
+
+    last_top, last_bottom = 0.0, 0.0
+
+    GO_TO_NONE = 0
+    GO_TO_LEFT = 1
+    GO_TO_RIGHT = 2
+
+    for ba_network in arranger.ba_networks:
+        direction = GO_TO_NONE
+        previous_column = 0
         
-        for box_arranger in box_arrangers:
-            if box_arranger.level == level:
-                canvas.scene.add_box_to_animation(
-                    box_arranger.box, -600 + level * 200, last_box_y)
-                
-                last_box_y += (box_arranger.box.boundingRect().height()
-                               + canvas.theme.box_spacing)
+        if len(ba_network) == 1 and not ba_network[0].box_type is BoxType.HARDWARE:
+            # This is an isolated box (without connections)
+            choosed_column = 2            
+            bottom_min = min([columns_bottoms[c] for c in columns_bottoms])
+            
+            for column, bottom in columns_bottoms.items():
+                if column in (1, number_of_columns):
+                    continue
+
+                if bottom == bottom_min:
+                    choosed_column = column
+                    break
+            
+            print('coixhi', choosed_column, bottom_min)
+            
+            ba = ba_network[0]
+            column_pos = columns_pos[choosed_column]
+            ba.column = choosed_column
+            ba.y_pos = bottom_min
+            # canvas.scene.add_box_to_animation(
+            #     ba.box, int(column_pos), int(bottom_min))
+
+            columns_bottoms[choosed_column] += ba.box.boundingRect().height() + canvas.theme.box_spacing
+
+            continue
+        
+        for ba in ba_network:            
+            column = ba.get_level(number_of_columns)
+            column_pos = columns_pos[column]
+            
+            if direction == GO_TO_NONE:
+                if column > previous_column:
+                    direction = GO_TO_RIGHT
+                elif column < previous_column:
+                    direction = GO_TO_LEFT
+            
+            if column in (1, number_of_columns):
+                y_pos = columns_bottoms[column]
+                print('nika', column, y_pos)
+
+            elif ((direction == GO_TO_RIGHT and column > previous_column)
+                    or (direction == GO_TO_LEFT and column < previous_column)):
+                y_pos = last_top
+            else:
+                y_pos = last_bottom
+                last_bottom = 0.0
+                direction = GO_TO_NONE
+
+            print('PLACE', ba, column_pos, y_pos, direction)
+            # canvas.scene.add_box_to_animation(
+            #     ba.box, int(column_pos), int(y_pos))
+            ba.column = column
+            ba.y_pos = y_pos
+
+            if column not in (1, number_of_columns):
+                last_top = y_pos
+            
+            bottom = (y_pos
+                      + ba.box.boundingRect().height()
+                      + canvas.theme.box_spacing)
+            
+            columns_bottoms[column] = bottom
+            print('Set Bottom', ba,  column, bottom)
+            if column not in (1, number_of_columns):
+                last_bottom = max(bottom, last_bottom)
+
+            previous_column = column
+
+    max_hardware = 0
+    max_middle = 0
+
+    for column, bottom in columns_bottoms.items():
+        if column in (1, number_of_columns):
+            max_hardware = max(max_hardware, bottom)
+        else:
+            max_middle = max(max_middle, bottom)
+
+    for ba in box_arrangers:
+        if ba.column in (1, number_of_columns):
+            offset = (columns_bottoms[ba.column] - max_hardware) / 2
+        else:
+            offset = (max_hardware - max_middle) / 2
+        
+        print(ba, 'offset:', offset)
+
+        canvas.scene.add_box_to_animation(
+            ba.box, int(columns_pos[ba.column]), int(ba.y_pos + offset))
 
 @patchbay_api
 def set_initial_pos(x: int, y: int):
