@@ -236,6 +236,7 @@ def arrange():
         correct_leveling = arranger.set_all_levels()
     
     group_ids_to_split = arranger.get_group_ids_to_split()
+
     # join or split groups we want to join or split
     while True:
         for group in canvas.group_list:
@@ -252,138 +253,7 @@ def arrange():
         else:
             break
 
-    for box_arranger in box_arrangers:
-        box_arranger.set_box()
-
-    for box_arranger in box_arrangers:
-        if (box_arranger.level == 0
-                and not box_arranger.ins_connected_to
-                and not box_arranger.outs_connected_to):
-            box_arranger.level = 2
-    
-    if box_arrangers:
-        number_of_columns = max(
-            [ba.get_needed_columns() for ba in box_arrangers])
-    else:
-        number_of_columns = 3
-
-    column_widths = dict[int, float]()
-    columns_pos = dict[int, float]()
-    columns_bottoms = dict[int, float]()
-    last_pos = 0
-
-    for column in range(1, number_of_columns):
-        column_widths[column] = 0.0
-
-    for ba in box_arrangers:
-        column_width = column_widths.get(ba.get_level(number_of_columns))
-        if column_width is None:
-            column_width = 0.0
-        column_widths[ba.get_level(number_of_columns)] = max(
-            ba.box.boundingRect().width(), column_width)
-
-    for column in range(1, number_of_columns + 1):
-        columns_pos[column] = last_pos
-        columns_bottoms[column] = 0.0
-        last_pos += column_widths[column] + 80
-
-    last_top, last_bottom = 0.0, 0.0
-
-    GO_TO_NONE = 0
-    GO_TO_LEFT = 1
-    GO_TO_RIGHT = 2
-
-    for ba_network in arranger.ba_networks:
-        direction = GO_TO_NONE
-        previous_column = 0
-        
-        if len(ba_network) == 1 and not ba_network[0].box_type is BoxType.HARDWARE:
-            # This is an isolated box (without connections)
-            choosed_column = 2            
-            bottom_min = min([columns_bottoms[c] for c in columns_bottoms])
-            
-            for column, bottom in columns_bottoms.items():
-                if column in (1, number_of_columns):
-                    continue
-
-                if bottom == bottom_min:
-                    choosed_column = column
-                    break
-            
-            print('coixhi', choosed_column, bottom_min)
-            
-            ba = ba_network[0]
-            column_pos = columns_pos[choosed_column]
-            ba.column = choosed_column
-            ba.y_pos = bottom_min
-            # canvas.scene.add_box_to_animation(
-            #     ba.box, int(column_pos), int(bottom_min))
-
-            columns_bottoms[choosed_column] += ba.box.boundingRect().height() + canvas.theme.box_spacing
-
-            continue
-        
-        for ba in ba_network:            
-            column = ba.get_level(number_of_columns)
-            column_pos = columns_pos[column]
-            
-            if direction == GO_TO_NONE:
-                if column > previous_column:
-                    direction = GO_TO_RIGHT
-                elif column < previous_column:
-                    direction = GO_TO_LEFT
-            
-            if column in (1, number_of_columns):
-                y_pos = columns_bottoms[column]
-                print('nika', column, y_pos)
-
-            elif ((direction == GO_TO_RIGHT and column > previous_column)
-                    or (direction == GO_TO_LEFT and column < previous_column)):
-                y_pos = last_top
-            else:
-                y_pos = last_bottom
-                last_bottom = 0.0
-                direction = GO_TO_NONE
-
-            print('PLACE', ba, column_pos, y_pos, direction)
-            # canvas.scene.add_box_to_animation(
-            #     ba.box, int(column_pos), int(y_pos))
-            ba.column = column
-            ba.y_pos = y_pos
-
-            if column not in (1, number_of_columns):
-                last_top = y_pos
-            
-            bottom = (y_pos
-                      + ba.box.boundingRect().height()
-                      + canvas.theme.box_spacing)
-            
-            columns_bottoms[column] = bottom
-            print('Set Bottom', ba,  column, bottom)
-            if column not in (1, number_of_columns):
-                last_bottom = max(bottom, last_bottom)
-
-            previous_column = column
-
-    max_hardware = 0
-    max_middle = 0
-
-    for column, bottom in columns_bottoms.items():
-        if column in (1, number_of_columns):
-            max_hardware = max(max_hardware, bottom)
-        else:
-            max_middle = max(max_middle, bottom)
-
-    for ba in box_arrangers:
-        if ba.column in (1, number_of_columns):
-            offset = (columns_bottoms[ba.column] - max_hardware) / 2
-        else:
-            offset = (max_hardware - max_middle) / 2
-        
-        print(ba, 'offset:', offset)
-
-        canvas.scene.add_box_to_animation(
-            ba.box, int(columns_pos[ba.column]), int(ba.y_pos + offset))
+    arranger.end_of_script()
 
 @patchbay_api
 def set_initial_pos(x: int, y: int):
