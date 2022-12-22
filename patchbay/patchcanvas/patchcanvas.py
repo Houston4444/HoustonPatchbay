@@ -216,43 +216,7 @@ def clear():
 
 @patchbay_api
 def arrange():
-    arranger = CanvasArranger()
-    box_arrangers = arranger.box_arrangers
-    
-    print('fin de la préparation')
-
-    correct_leveling = False
-    while not correct_leveling:
-        for box_arranger in box_arrangers:
-            box_arranger.reset()
-            
-            if box_arranger.box_type is BoxType.HARDWARE:
-                if box_arranger.port_mode & PortMode.OUTPUT:
-                    box_arranger.col_left = 1
-                    box_arranger.col_left_fixed = True
-                else:
-                    box_arranger.col_right = -1
-                    box_arranger.col_right_fixed = True
-        correct_leveling = arranger.set_all_levels()
-    
-    group_ids_to_split = arranger.get_group_ids_to_split()
-
-    # join or split groups we want to join or split
-    while True:
-        for group in canvas.group_list:
-            if group.split:
-                if (group.box_type is not BoxType.HARDWARE
-                        and group.group_id not in group_ids_to_split):
-                    join_group(group.group_id)
-                    break
-            else:
-                if (group.box_type is BoxType.HARDWARE
-                        or group.group_id in group_ids_to_split):
-                    split_group(group.group_id)
-                    break
-        else:
-            break
-
+    arranger = CanvasArranger(join_group, split_group)
     arranger.end_of_script()
 
 @patchbay_api
@@ -280,23 +244,23 @@ def set_loading_items(yesno: bool):
 
 @patchbay_api
 def add_group(group_id: int, group_name: str, split=BoxSplitMode.UNDEF,
-              icon_type=BoxType.APPLICATION, icon_name='', layout_modes={},
+              box_type=BoxType.APPLICATION, icon_name='', layout_modes={},
               null_xy=(0, 0), in_xy=(0, 0), out_xy=(0, 0),
               split_animated=False):
     if canvas.get_group(group_id) is not None:
         _logger.error(f"{_logging_str} - group already exists.")
         return
 
-    if split is BoxSplitMode.UNDEF and icon_type is BoxType.HARDWARE:
+    if split is BoxSplitMode.UNDEF and box_type is BoxType.HARDWARE:
         split = BoxSplitMode.YES
 
-    group_box = BoxWidget(group_id, group_name, icon_type, icon_name)
+    group_box = BoxWidget(group_id, group_name, box_type, icon_name)
     
     group = GroupObject()
     group.group_id = group_id
     group.group_name = group_name
     group.split = bool(split == BoxSplitMode.YES)
-    group.box_type = icon_type
+    group.box_type = box_type
     group.icon_name = icon_name
     group.layout_modes = layout_modes
     group.plugin_id = -1
@@ -324,7 +288,7 @@ def add_group(group_id: int, group_name: str, split=BoxSplitMode.UNDEF,
             else:
                 group_box.setPos(group.out_pos)
             
-        group_sbox = BoxWidget(group_id, group_name, icon_type, icon_name)
+        group_sbox = BoxWidget(group_id, group_name, box_type, icon_name)
         group_sbox.set_split(True, PortMode.INPUT)
 
         group.widgets[1] = group_sbox

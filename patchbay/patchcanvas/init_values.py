@@ -190,7 +190,7 @@ class GroupObject:
     group_id: int
     group_name: str
     split: int
-    box_type: int
+    box_type: BoxType
     icon_name: str
     layout_modes: dict[PortMode, BoxLayoutMode]
     plugin_id: int

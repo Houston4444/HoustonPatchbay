@@ -1,10 +1,22 @@
+from enum import IntEnum
 import logging
-import time
+from typing import Callable
 
 from .init_values import PortMode, GroupObject, canvas, BoxType
 from .box_widget import BoxWidget
 
 _logger = logging.getLogger(__name__)
+
+class GoTo(IntEnum):
+    NONE = 0
+    LEFT = 1
+    RIGHT = 2
+
+
+class BoxAlign(IntEnum):
+    LEFT = 0
+    CENTER = 1
+    RIGHT = 2
 
 
 class BoxArranger:
@@ -14,7 +26,6 @@ class BoxArranger:
     conns_in_group_ids: set[int]
     conns_out_group_ids: set[int]
     box: BoxWidget
-    level: int
 
     def __init__(self, arranger: 'CanvasArranger',
                  group: GroupObject, port_mode: PortMode):
@@ -30,7 +41,6 @@ class BoxArranger:
 
         self.conns_in_group_ids = set[int]()
         self.conns_out_group_ids = set[int]()
-        self.level = 0
         self.col_left = 2 # is mininum if not fixed
         self.col_right = -2 # is maximum if not fixed
         self.col_left_fixed = False
@@ -47,6 +57,17 @@ class BoxArranger:
 
     def __repr__(self) -> str:
         return f"BoxArranger({self.group_name}, {self.port_mode.name})"
+    
+    def __lt__(self, other: 'BoxArranger') -> bool:
+        if self.box_type is not other.box_type:
+            if self.box_type is BoxType.APPLICATION:
+                return False
+            if other.box_type is BoxType.APPLICATION:
+                return True
+            
+            return self.box_type < other.box_type
+        
+        return self.group_id < other.group_id
     
     def set_box(self):
         group = canvas.get_group(self.group_id)
@@ -74,6 +95,9 @@ class BoxArranger:
                 if box_arranger.is_owner(group_id, PortMode.OUTPUT):
                     self.ins_connected_to.append(box_arranger)
                     break
+        
+        # self.outs_connected_to.sort()
+        # self.ins_connected_to.sort()
     
     def parse_all(self, path: list['BoxArranger']=[]):
         if self.arranger.ba_to_split is not None:
@@ -114,18 +138,8 @@ class BoxArranger:
         path = path.copy()
         path.append(self)
         
-        if 'Invada' in self.group_name:
-            print('JJ', self, self.col_left, self.col_left_counted, self.col_left_fixed)
-        
         for ba in self.ins_connected_to:
-            if 'Invada' in self.group_name:
-                print('JA', ba, ba.col_left, ba.col_left_fixed, ba.col_left_counted)
             ba.count_left(path)
-            if 'Invada' in self.group_name:
-                print('JB', ba, ba.col_left, ba.col_left_fixed, ba.col_left_counted)
-        
-        if 'Invada' in self.group_name:
-            print('JK', self, self.col_left, self.col_left_counted, self.col_left_fixed)
         
         left_min = self.col_left
         fixed = 0
@@ -134,14 +148,10 @@ class BoxArranger:
             left_min = max(left_min, ba.col_left + 1)
             if ba.col_left_fixed:
                 fixed += 1
-            if 'Invada' in self.group_name:
-                print('JX', ba, ba.col_left, ba.col_left_fixed, ba.col_left_counted)
+
         self.col_left = left_min
         if fixed and fixed == len(self.ins_connected_to):
             self.col_left_fixed = True
-        
-        if 'Invada' in self.group_name:
-            print('JL', self, self.col_left, self.col_left_counted, self.col_left_fixed, fixed)
         
         self.col_left_counted = True
     
@@ -177,8 +187,6 @@ class BoxArranger:
         self.col_right_counted = True
     
     def get_needed_columns(self) -> int:
-        print('needs cols:', self, self.col_left - self.col_right -1)
-        print('___', f"[{self.col_left}:{self.col_right}] [{self.col_left_fixed}:{self.col_right_fixed}]")
         return self.col_left - self.col_right - 1
     
     def get_level(self, n_columns: int) -> int:
@@ -189,6 +197,19 @@ class BoxArranger:
             return n_columns + self.col_right + 1
         
         return self.col_left
+
+    def get_box_align(self) -> BoxAlign:
+        if self.port_mode is PortMode.OUTPUT:
+            return BoxAlign.RIGHT
+        if self.port_mode is PortMode.INPUT:
+            return BoxAlign.LEFT
+        if self.outs_connected_to and self.ins_connected_to:
+            return BoxAlign.CENTER
+        if self.outs_connected_to:
+            return BoxAlign.RIGHT
+        if self.ins_connected_to:
+            return BoxAlign.LEFT
+        return BoxAlign.CENTER
 
     def reset(self):
         self.col_left = 2
@@ -201,13 +222,17 @@ class BoxArranger:
 
 
 class CanvasArranger:
-    def __init__(self):
+    def __init__(self, join_group: Callable[[int], None],
+                 split_group: Callable[[int], None]):
         self.box_arrangers = list[BoxArranger]()
         self.ba_networks = list[list[BoxArranger]]()
 
         # is set only in case there are looping connections
         # around this box arranger.
         self.ba_to_split: BoxArranger = None
+
+        self.join_group = join_group
+        self.split_group = split_group
 
         to_split_group_ids = set[int]()
 
@@ -236,7 +261,7 @@ class CanvasArranger:
         for box_arranger in self.box_arrangers:
             box_arranger.set_next_boxes(self.box_arrangers)
 
-    def conn_loop_error(self) -> bool:
+    def needs_to_split_a_box(self) -> bool:
         if self.ba_to_split is None:
             return False
 
@@ -271,13 +296,7 @@ class CanvasArranger:
                 ba_network = list[BoxArranger]()
                 box_arranger.parse_all(ba_network)
 
-                print('CHOOOPP')
-                for ba in ba_network:
-                    print('YAA', ba, ba.col_left, ba.col_left_fixed, ba.col_right, ba.col_right_fixed)
-                    if ba.group_name == '0/Surround Level 3':
-                        print('dd', ba, ba.outs_connected_to)
-
-                if self.conn_loop_error():
+                if self.needs_to_split_a_box():
                     return False
 
                 self.ba_networks.append(ba_network)
@@ -289,12 +308,8 @@ class CanvasArranger:
                 ba_network = list[BoxArranger]()
                 box_arranger.parse_all(ba_network)
                 
-                if self.conn_loop_error():
+                if self.needs_to_split_a_box():
                     return False
-                
-                print('KOPPPZ')
-                for ba in ba_network:
-                    print('YBB', ba, ba.col_left, ba.col_left_fixed, ba.col_right, ba.col_right_fixed)
                 
                 self.ba_networks.append(ba_network)
 
@@ -305,44 +320,19 @@ class CanvasArranger:
             ba_network = list[BoxArranger]()
             box_arranger.parse_all(ba_network)
             
-            if self.conn_loop_error():
+            if self.needs_to_split_a_box():
                 return False
-
-            print('POOAAS')
-            for ba in ba_network:
-                print('YCC', ba, ba.col_left, ba.col_left_fixed, ba.col_right, ba.col_right_fixed)
             
             self.ba_networks.append(ba_network)
             
-        n_columns = 2
+        n_columns = 3
         for ba in self.box_arrangers:
-            n_columns = max(n_columns, ba.col_left - ba.col_right -1)
-        
-        print('NEEDDED COLS1', n_columns)
+            n_columns = max(n_columns, ba.get_needed_columns())
         
         for ba in self.box_arrangers:
-            if ba.col_left - ba.col_right - 1 == n_columns:
+            if ba.get_needed_columns() == n_columns:
                 ba.col_left_fixed = True
                 ba.col_right_fixed = True
-        
-        # for ba in self.box_arrangers:
-        #     if not (ba.col_left_fixed or ba.col_right_fixed):
-        #         for ba_in in ba.ins_connected_to:
-        #             if ba_in.col_left_fixed:
-        #                 ba.col_left_fixed = True
-        #                 ba.col_right = ba.col_left - n_columns - 1
-        #                 break
-        #         else:
-        #             for ba_out in ba.outs_connected_to:
-        #                 if ba_out.col_right_fixed:
-        #                     ba.col_left = n_columns + ba.col_right + 1
-        #                     ba.col_right_fixed = True
-        #                     break
-
-        needed_columns = max(
-            [ba.get_needed_columns() for ba in self.box_arrangers] + [3])
-        
-        print('NEEDED COLUMNS :', needed_columns)
 
         for ba_network in self.ba_networks:
             while True:
@@ -352,22 +342,12 @@ class CanvasArranger:
                     ba.analyzed = False
                     
                     if not (ba.col_left_fixed or ba.col_right_fixed):
-                        print('try it', ba, ba.col_left, ba.col_right)
                         ba.count_left()
                         ba.count_right()
-                        print('joozzz', ba, ba.col_left, ba.col_right)
                         if ba.col_left_fixed or ba.col_right_fixed:
                             break
                 else:
                     break
-
-        for ba in self.box_arrangers:
-            if ba.col_left_fixed:
-                ba.level = ba.col_left
-            elif ba.col_right_fixed:
-                ba.level = n_columns + 1 + ba.col_right
-            else:
-                ba.level = ba.col_left
         
         return True
     
@@ -381,102 +361,82 @@ class CanvasArranger:
         return group_ids
     
     def end_of_script(self):
+        print('début du script')
+
+        correct_leveling = False
+        while not correct_leveling:
+            for box_arranger in self.box_arrangers:
+                box_arranger.reset()
+                
+                if box_arranger.box_type is BoxType.HARDWARE:
+                    if box_arranger.port_mode & PortMode.OUTPUT:
+                        box_arranger.col_left = 1
+                        box_arranger.col_left_fixed = True
+                    else:
+                        box_arranger.col_right = -1
+                        box_arranger.col_right_fixed = True
+            correct_leveling = self.set_all_levels()
+        
+        group_ids_to_split = self.get_group_ids_to_split()
+
+        # join or split groups we want to join or split
+        while True:
+            for group in canvas.group_list:
+                if group.split:
+                    if (group.box_type is not BoxType.HARDWARE
+                            and group.group_id not in group_ids_to_split):
+                        self.join_group(group.group_id)
+                        break
+                else:
+                    if (group.box_type is BoxType.HARDWARE
+                            or group.group_id in group_ids_to_split):
+                        self.split_group(group.group_id)
+                        break
+            else:
+                break
+        
         for box_arranger in self.box_arrangers:
             box_arranger.set_box()
 
-        for box_arranger in self.box_arrangers:
-            if (box_arranger.level == 0
-                    and not box_arranger.ins_connected_to
-                    and not box_arranger.outs_connected_to):
-                box_arranger.level = 2
-        
-        if self.box_arrangers:
-            number_of_columns = max(
-                [ba.get_needed_columns() for ba in self.box_arrangers])
-        else:
-            number_of_columns = 3
+        number_of_columns = max(
+            [ba.get_needed_columns() for ba in self.box_arrangers] + [3])
 
         column_widths = dict[int, float]()
         columns_pos = dict[int, float]()
         columns_bottoms = dict[int, float]()
         last_pos = 0
 
-        for column in range(1, number_of_columns):
-            column_widths[column] = 0.0
-
-        for ba in self.box_arrangers:
-            column_width = column_widths.get(ba.get_level(number_of_columns))
-            if column_width is None:
-                column_width = 0.0
-            column_widths[ba.get_level(number_of_columns)] = max(
-                ba.box.boundingRect().width(), column_width)
-
         for column in range(1, number_of_columns + 1):
-            columns_pos[column] = last_pos
             columns_bottoms[column] = 0.0
-            last_pos += column_widths[column] + 80
 
         last_top, last_bottom = 0.0, 0.0
-
-        GO_TO_NONE = 0
-        GO_TO_LEFT = 1
-        GO_TO_RIGHT = 2
+        direction = GoTo.NONE
+        previous_column = 0
 
         for ba_network in self.ba_networks:
-            direction = GO_TO_NONE
-            previous_column = 0
-            
-            if len(ba_network) == 1 and not ba_network[0].box_type is BoxType.HARDWARE:
-                # This is an isolated box (without connections)
-                choosed_column = 2            
-                bottom_min = min([columns_bottoms[c] for c in columns_bottoms])
-                
-                for column, bottom in columns_bottoms.items():
-                    if column in (1, number_of_columns):
-                        continue
-
-                    if bottom == bottom_min:
-                        choosed_column = column
-                        break
-                
-                print('coixhi', choosed_column, bottom_min)
-                
-                ba = ba_network[0]
-                column_pos = columns_pos[choosed_column]
-                ba.column = choosed_column
-                ba.y_pos = bottom_min
-                # canvas.scene.add_box_to_animation(
-                #     ba.box, int(column_pos), int(bottom_min))
-
-                columns_bottoms[choosed_column] += (ba.box.boundingRect().height()
-                                                    + canvas.theme.box_spacing)
+            if len(ba_network) <= 1:
                 continue
-            
+
             for ba in ba_network:            
                 column = ba.get_level(number_of_columns)
-                column_pos = columns_pos[column]
                 
-                if direction == GO_TO_NONE:
+                if direction is GoTo.NONE:
                     if column > previous_column:
-                        direction = GO_TO_RIGHT
+                        direction = GoTo.RIGHT
                     elif column < previous_column:
-                        direction = GO_TO_LEFT
+                        direction = GoTo.LEFT
                 
                 if column in (1, number_of_columns):
                     y_pos = columns_bottoms[column]
-                    print('nika', column, y_pos)
 
-                elif ((direction == GO_TO_RIGHT and column > previous_column)
-                        or (direction == GO_TO_LEFT and column < previous_column)):
+                elif ((direction is GoTo.RIGHT and column > previous_column)
+                        or (direction == GoTo.LEFT and column < previous_column)):
                     y_pos = last_top
                 else:
                     y_pos = last_bottom
                     last_bottom = 0.0
-                    direction = GO_TO_NONE
+                    direction = GoTo.NONE
 
-                print('PLACE', ba, column_pos, y_pos, direction)
-                # canvas.scene.add_box_to_animation(
-                #     ba.box, int(column_pos), int(y_pos))
                 ba.column = column
                 ba.y_pos = y_pos
 
@@ -488,14 +448,63 @@ class CanvasArranger:
                         + canvas.theme.box_spacing)
                 
                 columns_bottoms[column] = bottom
-                print('Set Bottom', ba,  column, bottom)
                 if column not in (1, number_of_columns):
                     last_bottom = max(bottom, last_bottom)
 
                 previous_column = column
 
+        for ba_network in self.ba_networks:
+            if len(ba_network) != 1:
+                continue
+
+            ba = ba_network[0]
+            
+            if ba.get_level(number_of_columns) in (1, number_of_columns):
+                ba.column = ba.get_level(number_of_columns)
+                ba.y_pos = columns_bottoms[ba.column]
+                columns_bottoms[ba.column] += (ba.box.boundingRect().height()
+                                               + canvas.theme.box_spacing)
+                continue
+            
+            # This is an isolated box (without connections)
+            # we place it in the column with the lowest bottom value,
+            # (the nearest from top)
+            choosed_column = 2            
+            bottom_min = min([columns_bottoms[c] for c in columns_bottoms
+                              if c not in (1, number_of_columns)])
+            
+            for column, bottom in columns_bottoms.items():
+                if column in (1, number_of_columns):
+                    continue
+
+                if bottom == bottom_min:
+                    choosed_column = column
+                    break
+            
+            ba.column = choosed_column
+            ba.y_pos = bottom_min
+
+            columns_bottoms[ba.column] += (ba.box.boundingRect().height()
+                                                + canvas.theme.box_spacing)
+
         max_hardware = 0
         max_middle = 0
+
+        for column in range(1, number_of_columns + 1):
+            column_widths[column] = 0.0
+
+        for ba in self.box_arrangers:
+            column_width = column_widths.get(ba.column)
+            if column_width is None:
+                print('OHOH', ba, ba.get_level(number_of_columns), number_of_columns)
+                column_width = 0.0
+            column_widths[ba.column] = max(
+                ba.box.boundingRect().width(), column_width)
+
+        for column in range(1, number_of_columns + 1):
+            columns_pos[column] = last_pos
+            
+            last_pos += column_widths[column] + 80
 
         for column, bottom in columns_bottoms.items():
             if column in (1, number_of_columns):
@@ -505,11 +514,20 @@ class CanvasArranger:
 
         for ba in self.box_arrangers:
             if ba.column in (1, number_of_columns):
-                offset = (columns_bottoms[ba.column] - max_hardware) / 2
+                y_offset = (columns_bottoms[ba.column] - max_hardware) / 2
             else:
-                offset = (max_hardware - max_middle) / 2
-            
-            print(ba, 'offset:', offset)
+                y_offset = (max_hardware - max_middle) / 2
+
+            if ba.get_box_align() is BoxAlign.CENTER:
+                x_pos = (columns_pos[ba.column]
+                         + (column_widths[ba.column]
+                            - ba.box.boundingRect().width()) / 2)
+            elif ba.get_box_align() is BoxAlign.RIGHT:
+                x_pos = (columns_pos[ba.column]
+                         + column_widths[ba.column]
+                         - ba.box.boundingRect().width())
+            else:
+                x_pos = columns_pos[ba.column] 
 
             canvas.scene.add_box_to_animation(
-                ba.box, int(columns_pos[ba.column]), int(ba.y_pos + offset))
+                ba.box, int(x_pos), int(ba.y_pos + y_offset))
