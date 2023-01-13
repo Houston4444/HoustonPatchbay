@@ -530,8 +530,8 @@ class Canvas:
                 
     def list_connections(
             self, *connectables: ConnectableObject,
-            group_in_id=None, group_out_id=None,
-            group_id=None) -> Iterator[ConnectionObject]:
+            group_in_id:int =None, group_out_id:int =None,
+            group_id:int =None) -> Iterator[ConnectionObject]:
         if (not connectables
                 and group_id is None
                 and group_in_id is None

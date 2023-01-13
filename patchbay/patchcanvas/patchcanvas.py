@@ -217,7 +217,7 @@ def clear():
 @patchbay_api
 def arrange():
     arranger = CanvasArranger(join_group, split_group)
-    arranger.end_of_script()
+    arranger.arrange_boxes()
 
 @patchbay_api
 def set_initial_pos(x: int, y: int):
