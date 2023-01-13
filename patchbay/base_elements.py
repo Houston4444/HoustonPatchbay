@@ -664,7 +664,7 @@ class Group:
         if self._is_hardware:
             box_type = BoxType.HARDWARE
             icon_name = ''
-            if self.a2j_group or self.display_name == "Midi-Bridge":
+            if self.a2j_group or self.display_name in ("Midi-Bridge", "a2j"):
                 icon_name = "a2j"
 
         if self.client_icon:
