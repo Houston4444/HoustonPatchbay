@@ -239,7 +239,7 @@
     </message>
     <message>
         <location filename="../resources/ui/patchbay_tools.ui" line="311"/>
-        <source>Stop, return to start.</source>
+        <source>Stop, return to start</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
