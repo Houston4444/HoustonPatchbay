@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>260</width>
-    <height>275</height>
+    <height>303</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -60,6 +60,13 @@
             <widget class="QCheckBox" name="checkBoxA2J">
              <property name="text">
               <string>Group MIDI hardware ports</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QCheckBox" name="checkBoxAlsa">
+             <property name="text">
+              <string>Display ALSA MIDI ports</string>
              </property>
             </widget>
            </item>

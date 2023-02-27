@@ -45,6 +45,8 @@ class CanvasOptionsDialog(QDialog):
                 settings.value('Canvas/use_graceful_names', True, type=bool))
             self.ui.checkBoxA2J.setChecked(
                 settings.value('Canvas/group_a2j_ports', True, type=bool))
+            self.ui.checkBoxAlsa.setChecked(
+                settings.value('Canvas/alsa_midi_enabled', False, type=bool))
             self.ui.checkBoxShadows.setChecked(
                 settings.value('Canvas/box_shadows', False, type=bool))
             self.ui.checkBoxAutoSelectItems.setChecked(
@@ -87,6 +89,8 @@ class CanvasOptionsDialog(QDialog):
             manager.sg.graceful_names_changed)
         self.ui.checkBoxA2J.stateChanged.connect(
             manager.sg.a2j_grouped_changed)
+        self.ui.checkBoxAlsa.stateChanged.connect(
+            manager.sg.alsa_midi_enabled_changed)
         self.ui.checkBoxShadows.stateChanged.connect(
             manager.sg.group_shadows_changed)
         self.ui.checkBoxAutoSelectItems.stateChanged.connect(
@@ -225,6 +229,8 @@ class CanvasOptionsDialog(QDialog):
                                     self.ui.checkBoxGracefulNames.isChecked())
             self._settings.setValue('Canvas/group_a2j_ports',
                                     self.ui.checkBoxA2J.isChecked())
+            self._settings.setValue('Canvas/alsa_midi_enabled',
+                                    self.ui.checkBoxAlsa.isChecked())
             self._settings.setValue('Canvas/box_shadows',
                                     self.ui.checkBoxShadows.isChecked())
             self._settings.setValue('Canvas/auto_select_items',

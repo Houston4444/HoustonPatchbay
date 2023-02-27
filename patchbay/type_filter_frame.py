@@ -28,12 +28,17 @@ class TypeFilterFrame(QFrame):
             self._check_box_alsa_right_clicked)
         
         self._patchbay_mng = None
+        self._alsa_midi_enabled = False
     
     def set_patchbay_manager(self, manager: 'PatchbayManager'):
         self._patchbay_mng = manager
         self._patchbay_mng.sg.port_types_view_changed.connect(
             self._port_types_view_changed)
         self._port_types_view_changed(self._patchbay_mng.port_types_view)
+    
+    def enable_alsa_midi(self, yesno: bool):
+        self._alsa_midi_enabled = yesno
+        self.ui.checkBoxAlsaFilter.setVisible(yesno)
     
     def _change_port_types_view(self):
         if self._patchbay_mng is None:
@@ -120,6 +125,9 @@ class TypeFilterFrame(QFrame):
         self._change_port_types_view()
     
     def _port_types_view_changed(self, port_types_view: int):
+        self.ui.checkBoxAlsaFilter.setVisible(
+            self._patchbay_mng.alsa_midi_enabled)
+
         self.ui.checkBoxAudioFilter.setChecked(
             bool(port_types_view & PortTypesViewFlag.AUDIO))
         self.ui.checkBoxMidiFilter.setChecked(

@@ -18,6 +18,7 @@ class SignalsObject(QObject):
     # but the int value is 0 or 1
     graceful_names_changed = pyqtSignal(int)
     a2j_grouped_changed = pyqtSignal(int)
+    alsa_midi_enabled_changed = pyqtSignal(int)
     group_shadows_changed = pyqtSignal(int)
     auto_select_items_changed = pyqtSignal(int)
     elastic_changed = pyqtSignal(int)

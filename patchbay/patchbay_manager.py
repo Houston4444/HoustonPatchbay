@@ -135,11 +135,12 @@ class PatchbayManager:
         self._next_connection_id = 0
         self._next_portgroup_id = 1
 
-        self.default_zoom = settings.value('Canvas/default_zoom', 100, type=int)
         self.set_graceful_names(settings.value(
             'Canvas/use_graceful_names', True, type=bool))
         self.group_a2j_hw = settings.value(
             'Canvas/group_a2j_ports', True, type=bool)
+        self.alsa_midi_enabled = settings.value(
+            'Canvas/alsa_midi_enabled', False, type=bool)
 
         # all patchbay events are delayed
         # to reduce the patchbay comsumption.
@@ -159,6 +160,7 @@ class PatchbayManager:
         
         self.sg.graceful_names_changed.connect(self.set_graceful_names)
         self.sg.a2j_grouped_changed.connect(self.set_a2j_grouped)
+        self.sg.alsa_midi_enabled_changed.connect(self.set_alsa_midi_enabled)
         self.sg.group_shadows_changed.connect(self.set_group_shadows)
         self.sg.auto_select_items_changed.connect(self.set_auto_select_items)
         self.sg.elastic_changed.connect(self.set_elastic_canvas)
@@ -308,7 +310,8 @@ class PatchbayManager:
                 return bool(self.port_types_view & (PortTypesViewFlag.AUDIO
                                                     | PortTypesViewFlag.CV))
         if port_type is PortType.MIDI_ALSA:
-            return bool(self.port_types_view & PortTypesViewFlag.ALSA)
+            return bool(self.alsa_midi_enabled
+                        and self.port_types_view & PortTypesViewFlag.ALSA)
         if port_type is PortType.VIDEO:
             return bool(self.port_types_view & PortTypesViewFlag.VIDEO)
 
@@ -443,8 +446,8 @@ class PatchbayManager:
         self._next_portgroup_id = 1
         self._next_connection_id = 0
 
-    def change_port_types_view(self, port_types_view: PortTypesViewFlag):
-        if port_types_view is self.port_types_view:
+    def change_port_types_view(self, port_types_view: PortTypesViewFlag, force=False):
+        if not force and port_types_view is self.port_types_view:
             return
         
         self.port_types_view = port_types_view
@@ -487,6 +490,11 @@ class PatchbayManager:
         if self.group_a2j_hw != bool(yesno):
             self.group_a2j_hw = bool(yesno)
             self.refresh()
+
+    def set_alsa_midi_enabled(self, yesno: int):
+        if self.alsa_midi_enabled != bool(yesno):
+            self.alsa_midi_enabled = bool(yesno)
+            self.change_port_types_view(PortTypesViewFlag.ALL, force=True)
 
     def set_group_shadows(self, yesno: int):
         patchcanvas.options.show_shadows = bool(yesno)
