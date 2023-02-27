@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>187</width>
+    <width>281</width>
     <height>34</height>
    </rect>
   </property>
@@ -38,6 +38,16 @@
     <widget class="TypeViewCheckBox" name="checkBoxCvFilter">
      <property name="text">
       <string>CV</string>
+     </property>
+     <property name="checked">
+      <bool>true</bool>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="TypeViewCheckBox" name="checkBoxAlsaFilter">
+     <property name="text">
+      <string>Alsa</string>
      </property>
      <property name="checked">
       <bool>true</bool>
