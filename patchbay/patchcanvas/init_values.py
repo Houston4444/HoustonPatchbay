@@ -63,7 +63,8 @@ class PortType(IntFlag):
     AUDIO_JACK = 0x01
     MIDI_JACK = 0x02
     MIDI_ALSA = 0x04
-    PARAMETER = 0x08
+    VIDEO = 0x08
+    PARAMETER = 0x10
 
 
 class PortSubType(IntFlag):

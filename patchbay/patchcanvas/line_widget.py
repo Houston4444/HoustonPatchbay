@@ -128,6 +128,10 @@ class LineWidget(QGraphicsPathItem):
                     theme = theme.audio
                 elif port_type1 == PortType.MIDI_JACK:
                     theme = theme.midi
+                elif port_type1 == PortType.MIDI_ALSA:
+                    theme = theme.alsa
+                elif port_type1 == PortType.VIDEO:
+                    theme = theme.video
 
                 if theme_state is _ThemeState.SELECTED:
                     theme = theme.selected

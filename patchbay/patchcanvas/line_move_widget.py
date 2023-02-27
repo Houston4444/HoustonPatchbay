@@ -67,6 +67,10 @@ class LineMoveWidget(QGraphicsPathItem):
             theme = theme.audio
         elif self._port_type is PortType.MIDI_JACK:
             theme = theme.midi
+        elif self._port_type is PortType.MIDI_ALSA:
+            theme = theme.alsa
+        elif self._port_type is PortType.VIDEO:
+            theme = theme.video
             
         theme = theme.selected
         

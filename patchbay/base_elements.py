@@ -33,7 +33,8 @@ class PortTypesViewFlag(IntFlag):
     MIDI = 0x02
     CV = 0x04
     VIDEO = 0x08
-    ALL = AUDIO | MIDI | CV | VIDEO
+    ALSA = 0x10
+    ALL = AUDIO | MIDI | CV | VIDEO | ALSA
 
 
 @dataclass

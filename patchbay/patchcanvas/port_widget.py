@@ -377,13 +377,17 @@ class PortWidget(ConnectableWidget):
     
         theme = canvas.theme.port
 
-        if self._port_type == PortType.AUDIO_JACK:
+        if self._port_type is PortType.AUDIO_JACK:
             if self._port_subtype is PortSubType.CV:
                 theme = theme.cv
             else:
                 theme = theme.audio
-        elif self._port_type == PortType.MIDI_JACK:
+        elif self._port_type is PortType.MIDI_JACK:
             theme = theme.midi
+        elif self._port_type is PortType.MIDI_ALSA:
+            theme = theme.alsa
+        elif self._port_type is PortType.VIDEO:
+            theme = theme.video
         
         if self.isSelected():
             theme = theme.selected
@@ -407,7 +411,8 @@ class PortWidget(ConnectableWidget):
         poly_locx = [0, 0, 0, 0, 0, 0]
         poly_corner_xhinting = ((float(canvas.theme.port_height)/2)
                                 % floor(float(canvas.theme.port_height)/2))
-        if poly_corner_xhinting == 0:
+
+        if poly_corner_xhinting == 0.0:
             poly_corner_xhinting = 0.5 * (1 - 7 / (float(canvas.theme.port_height)/2))
 
         is_cv_port = bool(self._port_subtype is PortSubType.CV)
@@ -422,6 +427,15 @@ class PortWidget(ConnectableWidget):
                 poly_locx[3] = self._port_width + 7 - line_hinting
                 poly_locx[4] = line_hinting
                 poly_locx[5] = self._port_width
+
+            elif self._port_type is PortType.MIDI_ALSA:
+                poly_locx[0] = line_hinting
+                poly_locx[1] = self._port_width + 5 - line_hinting
+                poly_locx[2] = self._port_width + 8.5 - poly_corner_xhinting
+                poly_locx[3] = self._port_width + 5 - line_hinting
+                poly_locx[4] = line_hinting
+                poly_locx[5] = self._port_width
+                
             else:
                 poly_locx[0] = line_hinting
                 poly_locx[1] = self._port_width + 5 - line_hinting
@@ -440,6 +454,15 @@ class PortWidget(ConnectableWidget):
                 poly_locx[3] = 5 + line_hinting
                 poly_locx[4] = self._port_width + 12 - line_hinting
                 poly_locx[5] = 12 - line_hinting
+                
+            elif self._port_type is PortType.MIDI_ALSA:
+                poly_locx[0] = self._port_width + 12 - line_hinting
+                poly_locx[1] = 7 + line_hinting
+                poly_locx[2] = 3.5 + poly_corner_xhinting
+                poly_locx[3] = 7 + line_hinting
+                poly_locx[4] = self._port_width + 12 - line_hinting
+                poly_locx[5] = 12 - line_hinting
+                
             else:
                 poly_locx[0] = self._port_width + 12 - line_hinting
                 poly_locx[1] = 7 + line_hinting
@@ -449,8 +472,8 @@ class PortWidget(ConnectableWidget):
                 poly_locx[5] = 12 - line_hinting
 
         else:
-            self._logger.critical(f"paint() - "
-                                  "invalid port mode {str(self._port_mode)}")
+            self._logger.critical(
+                f"paint() - invalid port mode {str(self._port_mode)}")
             return
 
         polygon = QPolygonF()
@@ -472,6 +495,22 @@ class PortWidget(ConnectableWidget):
             else:
                 polygon += QPointF(poly_locx[5], canvas.theme.port_height)
                 polygon += QPointF(poly_locx[0], canvas.theme.port_height)
+
+        elif self._port_type is PortType.MIDI_ALSA:
+            polygon += QPointF(poly_locx[0], line_hinting)
+            polygon += QPointF(poly_locx[1], line_hinting)
+            polygon += QPointF(poly_locx[2], canvas.theme.port_height * 1/4)
+            polygon += QPointF(poly_locx[2], canvas.theme.port_height - line_hinting)
+            # polygon += QPointF(poly_locx[1], float(canvas.theme.port_height)/3)
+            # polygon += QPointF(poly_locx[1], float(canvas.theme.port_height) * 2/3)
+            # polygon += QPointF(poly_locx[2], float(canvas.theme.port_height) * 2/3)
+            polygon += QPointF(poly_locx[0], canvas.theme.port_height - line_hinting)
+            
+            # polygon += QPointF(poly_locx[2], float(canvas.theme.port_height) * 0.75)
+            # polygon += QPointF(poly_locx[3], canvas.theme.port_height - line_hinting)
+            # polygon += QPointF(poly_locx[4], canvas.theme.port_height - line_hinting)
+            # polygon += QPointF(poly_locx[0], line_hinting)
+            
         else:
             polygon += QPointF(poly_locx[0], line_hinting)
             polygon += QPointF(poly_locx[1], line_hinting)

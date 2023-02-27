@@ -307,6 +307,10 @@ class PatchbayManager:
             elif sub_type is (PortSubType.REGULAR | PortSubType.CV):
                 return bool(self.port_types_view & (PortTypesViewFlag.AUDIO
                                                     | PortTypesViewFlag.CV))
+        if port_type is PortType.MIDI_ALSA:
+            return bool(self.port_types_view & PortTypesViewFlag.ALSA)
+        if port_type is PortType.VIDEO:
+            return bool(self.port_types_view & PortTypesViewFlag.VIDEO)
 
         return False
 
@@ -541,6 +545,10 @@ class PatchbayManager:
             port_type = PortType.AUDIO_JACK
         elif port_type_int == PortType.MIDI_JACK:
             port_type = PortType.MIDI_JACK
+        elif port_type_int == PortType.MIDI_ALSA:
+            port_type = PortType.MIDI_ALSA
+        elif port_type_int == PortType.VIDEO:
+            port_type = PortType.VIDEO
 
         port = Port(self, self._next_port_id, name, port_type, flags, uuid)
         self._next_port_id += 1

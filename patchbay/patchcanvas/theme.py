@@ -487,7 +487,9 @@ class PortStyleAttributer(UnselectedStyleAttributer):
         self.audio = UnselectedStyleAttributer(path + '.audio', self)
         self.midi = UnselectedStyleAttributer(path + '.midi', self)
         self.cv = UnselectedStyleAttributer(path + '.cv', self)
-        self.subs += ['audio', 'midi', 'cv']
+        self.alsa = UnselectedStyleAttributer(path + '.alsa', self)
+        self.video = UnselectedStyleAttributer(path + '.video', self)
+        self.subs += ['audio', 'midi', 'cv', 'video', 'alsa']
 
 
 class LineStyleAttributer(UnselectedStyleAttributer):
@@ -495,8 +497,10 @@ class LineStyleAttributer(UnselectedStyleAttributer):
         UnselectedStyleAttributer.__init__(self, path, parent)
         self.audio = UnselectedStyleAttributer(path + '.audio', self)
         self.midi = UnselectedStyleAttributer(path + '.midi', self)
+        self.alsa = UnselectedStyleAttributer(path + '.alsa', self)
+        self.video = UnselectedStyleAttributer(path + '.video', self)
         self.disconnecting = StyleAttributer(path + '.disconnecting', self)
-        self.subs += ['audio', 'midi', 'disconnecting']
+        self.subs += ['audio', 'midi', 'alsa', 'video', 'disconnecting']
 
 
 class GuiButtonStyleAttributer(StyleAttributer):

@@ -811,7 +811,7 @@ def set_group_as_plugin(group_id: int, plugin_id: int,
 @patchbay_api
 def add_port(group_id: int, port_id: int, port_name: str,
              port_mode: PortMode, port_type: PortType,
-             port_subtype: PortSubType.REGULAR):
+             port_subtype: PortSubType):
     if canvas.get_port(group_id, port_id) is not None:
         _logger.critical(f"{_logging_str} - port already exists")
 
