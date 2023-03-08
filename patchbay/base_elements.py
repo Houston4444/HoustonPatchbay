@@ -385,6 +385,10 @@ class Port:
         return (self.type, self.subtype)
     
     def short_name(self) -> str:
+        if (self.type is PortType.MIDI_ALSA
+                and self.full_name.startswith(('ALSA_IN:', 'ALSA_OUT:'))):
+            return self.full_name.partition(':')[2].partition(':')[2]
+        
         if self.full_name.startswith('a2j:'):
             long_name = self.full_name.partition(':')[2]
             if ': ' in long_name:

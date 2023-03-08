@@ -567,7 +567,11 @@ class PatchbayManager:
         is_a2j_group = False
         group_is_new = False
 
-        if (full_port_name.startswith(('a2j:', 'Midi-Bridge:'))
+        if (port_type is PortType.MIDI_ALSA
+                and full_port_name.startswith(('ALSA_OUT:', 'ALSA_IN:'))):
+            group_name, colon, port_name = port_name.partition(':')
+
+        elif (full_port_name.startswith(('a2j:', 'Midi-Bridge:'))
                 and (not self.group_a2j_hw
                      or not port.flags & JackPortFlag.IS_PHYSICAL)):
             group_name, colon, port_name = port_name.partition(':')
