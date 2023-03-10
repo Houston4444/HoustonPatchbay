@@ -386,8 +386,8 @@ class Port:
     
     def short_name(self) -> str:
         if (self.type is PortType.MIDI_ALSA
-                and self.full_name.startswith(('ALSA_IN:', 'ALSA_OUT:'))):
-            return self.full_name.partition(':')[2].partition(':')[2]
+                and self.full_name.startswith((':ALSA_IN:', ':ALSA_OUT:'))):
+            return self.full_name[1:].partition(':')[2].partition(':')[2]
         
         if self.full_name.startswith('a2j:'):
             long_name = self.full_name.partition(':')[2]
@@ -954,7 +954,10 @@ class Group:
         client_name = self.get_pretty_client()
 
         if (not client_name
-                and port.full_name.startswith(('a2j:', 'Midi-Bridge:'))
+                and ((port.type is PortType.MIDI_JACK
+                        and port.full_name.startswith(
+                            ('a2j:', 'Midi-Bridge:')))
+                     or port.type is PortType.MIDI_ALSA)
                 and port.flags & JackPortFlag.IS_PHYSICAL):
             client_name = 'a2j'
 

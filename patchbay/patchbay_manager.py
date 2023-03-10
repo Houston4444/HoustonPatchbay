@@ -568,8 +568,8 @@ class PatchbayManager:
         group_is_new = False
 
         if (port_type is PortType.MIDI_ALSA
-                and full_port_name.startswith(('ALSA_OUT:', 'ALSA_IN:'))):
-            group_name, colon, port_name = port_name.partition(':')
+                and full_port_name.startswith((':ALSA_OUT:', ':ALSA_IN:'))):
+            group_name, colon, port_name = full_port_name[1:].partition(':')[2].partition(':')
 
         elif (full_port_name.startswith(('a2j:', 'Midi-Bridge:'))
                 and (not self.group_a2j_hw
