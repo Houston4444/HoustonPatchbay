@@ -51,7 +51,8 @@
         <string>...</string>
        </property>
        <property name="icon">
-        <iconset theme="view-refresh"/>
+        <iconset theme="view-refresh">
+         <normaloff>.</normaloff>.</iconset>
        </property>
       </widget>
      </item>
@@ -130,14 +131,14 @@
       </widget>
      </item>
      <item row="0" column="0">
-      <widget class="QLabel" name="label_2">
+      <widget class="QLabel" name="labelJackUuid">
        <property name="text">
         <string>JACK UUID</string>
        </property>
       </widget>
      </item>
      <item row="0" column="1">
-      <widget class="QLabel" name="label_7">
+      <widget class="QLabel" name="labelColonJackUuid">
        <property name="text">
         <string>:</string>
        </property>

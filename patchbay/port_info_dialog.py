@@ -28,6 +28,8 @@ class CanvasPortInfoDialog(QDialog):
             port_type_str = _translate('patchbay', "Audio")
         elif self._port.type is PortType.MIDI_JACK:
             port_type_str = _translate('patchbay', "MIDI")
+        elif self._port.type is PortType.MIDI_ALSA:
+            port_type_str = _translate('patchbay', "ALSA")
         else:
             port_type_str = _translate('patchbay', 'NULL')
 
@@ -47,7 +49,14 @@ class CanvasPortInfoDialog(QDialog):
 
         port_flags_str = ' | '.join(flags_list)
 
-        self.ui.lineEditFullPortName.setText(self._port.full_name)
+        port_full_name = self._port.full_name
+        if self._port.type is PortType.MIDI_ALSA:
+            port_full_name = port_full_name[1:].partition(':')[2]
+            self.ui.labelJackUuid.setVisible(False)
+            self.ui.labelColonJackUuid.setVisible(False)
+            self.ui.lineEditUuid.setVisible(False)
+            
+        self.ui.lineEditFullPortName.setText(port_full_name)
         self.ui.lineEditUuid.setText(str(self._port.uuid))
         self.ui.labelPortType.setText(port_type_str)
         self.ui.labelPortFlags.setText(port_flags_str)

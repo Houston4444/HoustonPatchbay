@@ -498,8 +498,8 @@ class PortWidget(ConnectableWidget):
 
         elif self._port_type is PortType.MIDI_ALSA:
             polygon += QPointF(poly_locx[0], line_hinting)
-            polygon += QPointF(poly_locx[1], line_hinting)
-            polygon += QPointF(poly_locx[2], canvas.theme.port_height * 1/4)
+            polygon += QPointF(poly_locx[2], line_hinting)
+            # polygon += QPointF(poly_locx[2], canvas.theme.port_height * 1/4)
             polygon += QPointF(poly_locx[2], canvas.theme.port_height - line_hinting)
             # polygon += QPointF(poly_locx[1], float(canvas.theme.port_height)/3)
             # polygon += QPointF(poly_locx[1], float(canvas.theme.port_height) * 2/3)
@@ -553,7 +553,8 @@ class PortWidget(ConnectableWidget):
                         QPointF(float(self._port_width + 7), y_line),
                         QPointF(float(self._port_width + 12), y_line))
 
-            elif self._port_subtype is PortSubType.A2J:
+            elif (self._port_subtype is PortSubType.A2J
+                    or self._port_type is PortType.MIDI_ALSA):
                 # draw the little circle for a2j (or MidiBridge) port
                 poly_pen.setWidthF(1.000001)
                 
@@ -564,16 +565,25 @@ class PortWidget(ConnectableWidget):
                 if parent.isSelected():
                     box_theme = box_theme.selected
 
-                painter.setBrush(box_theme.background_color())
+                bg_color = box_theme.background_color()
+                bg_color.setAlphaF(1.0)
+                painter.setBrush(bg_color)
 
                 ellipse_x = poly_locx[1]
-                if self._port_mode is PortMode.OUTPUT:
-                    ellipse_x -= 2
-                elif self._port_mode is PortMode.INPUT:
-                    ellipse_x += 2
+                
+                if self._port_type is PortType.MIDI_ALSA:
+                    if self._port_mode is PortMode.OUTPUT:
+                        ellipse_x -= 4
+                    else:
+                        ellipse_x += 4
+                else:
+                    if self._port_mode is PortMode.OUTPUT:
+                        ellipse_x -= 2
+                    elif self._port_mode is PortMode.INPUT:
+                        ellipse_x += 2
 
                 painter.drawEllipse(
-                    QPointF(ellipse_x, canvas.theme.port_height / 2.0), 2, 2)
+                    QPointF(ellipse_x, canvas.theme.port_height / 2.0), 2.0, 2.0)
 
         painter.setPen(text_pen)
         painter.setFont(self._port_font)
