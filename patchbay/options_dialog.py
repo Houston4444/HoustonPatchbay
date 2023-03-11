@@ -214,6 +214,16 @@ class CanvasOptionsDialog(QDialog):
                             break
                     break
 
+    def enable_alsa_midi(self, yesno: bool):
+        self.ui.checkBoxAlsa.setEnabled(yesno)
+        if yesno:
+            self.ui.checkBoxAlsa.setToolTip('')
+        else:
+            self.ui.checkBoxAlsa.setToolTip(
+                _translate('alsa_midi', 
+                           "ALSA python lib version is not present or too old.\n"
+                           "Ensure to have python3-pyalsa >= 1.2.4"))
+
     def _grouped_box_auto_layout_changed(self, index: int):
         patchcanvas.set_grouped_box_layout_ratio(
             self.ui.comboBoxBoxesAutoLayout.currentData())
