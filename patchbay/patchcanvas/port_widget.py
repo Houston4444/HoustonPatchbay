@@ -26,7 +26,7 @@ from typing import TYPE_CHECKING
 from PyQt5.QtCore import Qt, QPointF, QRectF
 from PyQt5.QtGui import (
     QBrush, QFontMetrics, QPainter, QPen, QPolygonF,
-    QLinearGradient, QIcon, QCursor)
+    QLinearGradient, QIcon, QCursor, QColor)
 from PyQt5.QtWidgets import QGraphicsItem, QMenu, QApplication
 
 
@@ -565,7 +565,7 @@ class PortWidget(ConnectableWidget):
                 if parent.isSelected():
                     box_theme = box_theme.selected
 
-                bg_color = box_theme.background_color()
+                bg_color = QColor(box_theme.background_color())
                 bg_color.setAlphaF(1.0)
                 painter.setBrush(bg_color)
 
