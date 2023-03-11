@@ -53,6 +53,9 @@ class PortCheckBox(QCheckBox):
         elif po.port_type is PortType.MIDI_JACK:
             theme = theme.midi
             line_theme = line_theme.midi
+        elif po.port_type is PortType.MIDI_ALSA:
+            theme = theme.alsa
+            line_theme = line_theme.alsa
 
         text_color = theme.text_color().name(QColor.HexArgb)
         border_color = theme.fill_pen().color().name(QColor.HexArgb)
@@ -155,6 +158,10 @@ class CheckFrame(QFrame):
         elif po.port_type is PortType.MIDI_JACK:
             theme = theme.midi
             line_theme = line_theme.midi
+            
+        elif po.port_type is PortType.MIDI_ALSA:
+            theme = theme.alsa
+            line_theme = line_theme.alsa
 
         text_color = theme.text_color().name()
         border_color = theme.fill_pen().color().name()
