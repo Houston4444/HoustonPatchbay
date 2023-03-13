@@ -1046,12 +1046,12 @@ def disconnect_ports(connection_id: int):
 
     out_port = canvas.get_port(tmp_conn.group_out_id, tmp_conn.port_out_id)
     in_port = canvas.get_port(tmp_conn.group_in_id, tmp_conn.port_in_id)
-    if out_port is None:
-        _logger.critical(f"{_logging_str} - unable to find output port")
-        return
-
-    if in_port is None:
-        _logger.critical(f"{_logging_str} - unable to find input port")
+    
+    if out_port is None or in_port is None:
+        canvas.scene.removeItem(line)
+        del line
+    
+        _logger.info(f"{_logging_str} - connection cleaned after its ports")
         return
         
     item1 = out_port.widget

@@ -63,7 +63,6 @@ def later_by_batch(draw_group=False, sort_group=False, clear_conns=False):
         def wrapper(*args, **kwargs):
             mng = args[0]
             assert isinstance(mng, PatchbayManager)
-            
             if mng.very_fast_operation:
                 return func(*args, **kwargs)
 
@@ -784,7 +783,6 @@ class PatchbayManager:
     def remove_connection(self, port_out_name: str, port_in_name: str):
         port_out = self.get_port_from_name(port_out_name)
         port_in = self.get_port_from_name(port_in_name)
-
         if port_out is None or port_in is None:
             return
 
