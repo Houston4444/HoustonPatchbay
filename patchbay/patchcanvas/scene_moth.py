@@ -32,9 +32,11 @@ from PyQt5.QtGui import QCursor, QPixmap, QPolygonF, QBrush
 from PyQt5.QtWidgets import (QGraphicsRectItem, QGraphicsScene, QApplication,
                              QGraphicsView, QGraphicsItem)
 
+
 # Imports (locals)
 from .init_values import (
     CanvasItemType,
+    PortMode,
     Direction,
     canvas,
     options,
@@ -484,6 +486,8 @@ class PatchSceneMoth(QGraphicsScene):
         full_rect = QRectF()
 
         for widget in canvas.list_boxes():
+            if widget.get_current_port_mode() is PortMode.NULL:
+                continue
             full_rect |= widget.sceneBoundingRect().marginsAdded(
                 QMarginsF(50.0, 20.0, 50.0, 20.0))
 
