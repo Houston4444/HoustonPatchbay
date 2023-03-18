@@ -78,8 +78,11 @@ class IconPixmapWidget(QGraphicsPixmapItem):
         self.icon = get_app_icon(name)
 
         if not self.icon.isNull():
-            pixmap = self.icon.pixmap(24, 24)
+            scale = canvas.scene.get_zoom_scale()
+            pixmap = self.icon.pixmap(int(0.5 + 24 * scale),
+                                      int(0.5 + 24 * scale))
             self.setPixmap(pixmap)
+            self.setScale(1.0 / scale)
             self.setPos(4.0, 4.0)
 
     def update_zoom(self, scale: float):
