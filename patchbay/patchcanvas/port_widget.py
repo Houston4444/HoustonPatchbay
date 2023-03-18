@@ -21,6 +21,7 @@
 # Imports (Global)
 import logging
 from math import floor
+from re import A
 from typing import TYPE_CHECKING
 
 from PyQt5.QtCore import Qt, QPointF, QRectF
@@ -499,17 +500,8 @@ class PortWidget(ConnectableWidget):
         elif self._port_type is PortType.MIDI_ALSA:
             polygon += QPointF(poly_locx[0], line_hinting)
             polygon += QPointF(poly_locx[2], line_hinting)
-            # polygon += QPointF(poly_locx[2], canvas.theme.port_height * 1/4)
             polygon += QPointF(poly_locx[2], canvas.theme.port_height - line_hinting)
-            # polygon += QPointF(poly_locx[1], float(canvas.theme.port_height)/3)
-            # polygon += QPointF(poly_locx[1], float(canvas.theme.port_height) * 2/3)
-            # polygon += QPointF(poly_locx[2], float(canvas.theme.port_height) * 2/3)
             polygon += QPointF(poly_locx[0], canvas.theme.port_height - line_hinting)
-            
-            # polygon += QPointF(poly_locx[2], float(canvas.theme.port_height) * 0.75)
-            # polygon += QPointF(poly_locx[3], canvas.theme.port_height - line_hinting)
-            # polygon += QPointF(poly_locx[4], canvas.theme.port_height - line_hinting)
-            # polygon += QPointF(poly_locx[0], line_hinting)
             
         else:
             polygon += QPointF(poly_locx[0], line_hinting)
@@ -565,9 +557,17 @@ class PortWidget(ConnectableWidget):
                 if parent.isSelected():
                     box_theme = box_theme.selected
 
-                bg_color = QColor(box_theme.background_color())
-                bg_color.setAlphaF(1.0)
-                painter.setBrush(bg_color)
+                scene_col = canvas.theme.scene_background_color
+                box_bg_col = box_theme.background_color()
+                ra = box_bg_col.alphaF()
+                rb = 1.0 - ra
+                
+                circle_bg_col = QColor(
+                    scene_col.red() * rb + box_bg_col.red() * ra,
+                    scene_col.green() * rb + box_bg_col.green() * ra,
+                    scene_col.blue() * rb + box_bg_col.blue() * ra)
+                
+                painter.setBrush(circle_bg_col)
 
                 ellipse_x = poly_locx[1]
                 
