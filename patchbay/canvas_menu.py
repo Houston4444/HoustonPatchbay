@@ -32,6 +32,8 @@ class CanvasMenu(QMenu):
 
         self.patchbay_manager.sg.port_types_view_changed.connect(
             self._port_types_view_changed)
+        self.patchbay_manager.sg.alsa_midi_enabled_changed.connect(
+            self._alsa_midi_enabled)
 
         self.action_fullscreen = self.addAction(
             _translate('patchbay', "Toggle Full Screen"))
@@ -50,16 +52,16 @@ class CanvasMenu(QMenu):
 
         self.port_types_menu = QMenu(_translate('patchbay', 'Type filter'), self)
         self.port_types_menu.setIcon(QIcon.fromTheme('view-filter'))
-        self.action_audio_midi = self.port_types_menu.addAction(
-            _translate('patchbay', 'Audio | Midi | CV'))
-        self.action_audio_midi.setCheckable(True)
-        self.action_audio_midi.setChecked(
+        self.action_all_types = self.port_types_menu.addAction(
+            _translate('patchbay', 'AUDIO | MIDI | CV'))
+        self.action_all_types.setCheckable(True)
+        self.action_all_types.setChecked(
             bool(port_types_view is PortTypesViewFlag.ALL))
-        self.action_audio_midi.triggered.connect(
-            self.port_types_view_audio_midi_choice)
+        self.action_all_types.triggered.connect(
+            self.port_types_view_all_types_choice)
 
         self.action_audio = self.port_types_menu.addAction(
-            _translate('patchbay', 'Audio only'))
+            _translate('patchbay', 'AUDIO only'))
         self.action_audio.setCheckable(True)
         self.action_audio.setChecked(port_types_view is PortTypesViewFlag.AUDIO)
         self.action_audio.triggered.connect(
@@ -77,9 +79,18 @@ class CanvasMenu(QMenu):
         self.action_cv.setCheckable(True)
         self.action_cv.setChecked(port_types_view is PortTypesViewFlag.CV)
         self.action_cv.triggered.connect(
-            self.port_types_view_midi_choice)
+            self.port_types_view_cv_choice)
+
+        self.action_alsa = self.port_types_menu.addAction(
+            _translate('patchbay', 'ALSA only'))
+        self.action_alsa.setCheckable(True)
+        self.action_alsa.setChecked(port_types_view is PortTypesViewFlag.ALSA)
+        self.action_alsa.triggered.connect(
+            self.port_types_view_alsa_choice)
 
         self.addMenu(self.port_types_menu)
+
+        self._alsa_midi_enabled(patchbay_manager.alsa_midi_enabled)
 
         self.zoom_menu = QMenu(_translate('patchbay', 'Zoom'), self)
         self.zoom_menu.setIcon(QIcon.fromTheme('zoom'))
@@ -129,14 +140,18 @@ class CanvasMenu(QMenu):
             patchbay_manager.show_options_dialog)
 
     def _port_types_view_changed(self, port_types_view: int):
-        self.action_audio_midi.setChecked(
-            port_types_view == PortTypesViewFlag.AUDIO | PortTypesViewFlag.MIDI)
+        self.action_all_types.setChecked(
+            port_types_view == PortTypesViewFlag.ALL)
         self.action_audio.setChecked(
             port_types_view == PortTypesViewFlag.AUDIO)
         self.action_midi.setChecked(
             port_types_view == PortTypesViewFlag.MIDI)
+        self.action_cv.setChecked(
+            port_types_view == PortTypesViewFlag.CV)
+        self.action_alsa.setChecked(
+            port_types_view == PortTypesViewFlag.ALSA)
 
-    def port_types_view_audio_midi_choice(self):
+    def port_types_view_all_types_choice(self):
         self.patchbay_manager.change_port_types_view(
             PortTypesViewFlag.ALL)
 
@@ -151,6 +166,19 @@ class CanvasMenu(QMenu):
     def port_types_view_cv_choice(self):
         self.patchbay_manager.change_port_types_view(
             PortTypesViewFlag.CV)
+
+    def port_types_view_alsa_choice(self):
+        self.patchbay_manager.change_port_types_view(
+            PortTypesViewFlag.ALSA)
+
+    def _alsa_midi_enabled(self, yesno: bool):
+        self.action_alsa.setVisible(yesno)
+        if yesno:
+            self.action_all_types.setText(
+                _translate('patchbay', 'AUDIO | MIDI | CV | ALSA'))
+        else:
+            self.action_all_types.setText(
+                _translate('patchbay', 'AUDIO | MIDI | CV'))
 
     def internal_manual(self):
         short_locale = 'en'
