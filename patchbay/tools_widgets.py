@@ -219,9 +219,7 @@ class PatchbayToolsWidget(QWidget):
     def _transport_view_changed(self):
         self.refresh_transport(self._last_transport_pos)
     
-    def change_tools_displayed(self, tools_displayed: ToolDisplayed):
-        print('Toolss widget displated', tools_displayed)
-        
+    def change_tools_displayed(self, tools_displayed: ToolDisplayed):        
         self._tools_displayed = tools_displayed
         
         if not self._jack_running:
@@ -349,7 +347,6 @@ class PatchbayToolsWidget(QWidget):
             self.set_buffer_size(self._current_buffer_size)
 
     def set_jack_running(self, yesno: bool, use_alsa_midi=False):
-        print('tools Widget JACK running', yesno)
         self._jack_running = yesno
         
         self.ui.labelJackNotStarted.setVisible(not yesno)
