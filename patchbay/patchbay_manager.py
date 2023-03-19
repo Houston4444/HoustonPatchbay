@@ -127,6 +127,8 @@ class PatchbayManager:
         
         self._manual_path: Path = None
 
+        self.server_is_started = True
+
         self.sg = SignalsObject()
 
         self._next_group_id = 0
@@ -805,21 +807,31 @@ class PatchbayManager:
 
     @in_main_thread()
     def server_started(self):
+        self.server_is_started = True
         if self._tools_widget is not None:
             self._tools_widget.set_jack_running(True)
 
     @in_main_thread()
     def server_stopped(self):
+        self.server_is_started = False
         if self._tools_widget is not None:
-            self._tools_widget.set_jack_running(False)
+            self._tools_widget.set_jack_running(
+                False, use_alsa_midi=self.alsa_midi_enabled)
+
         self.clear_all()
+        if self.alsa_midi_enabled:
+            self.refresh()
 
     @in_main_thread()
     def server_lose(self):
+        self.server_is_started = False
+        
         if self._tools_widget is not None:
             self._tools_widget.set_jack_running(False)
 
         self.clear_all()
+        if self.alsa_midi_enabled:
+            self.refresh()
 
         if self.main_win is not None:
             ret = QMessageBox.critical(

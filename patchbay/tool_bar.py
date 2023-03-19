@@ -1,5 +1,4 @@
 
-from enum import IntFlag
 from typing import TYPE_CHECKING
 from PyQt5.QtWidgets import (
     QToolBar, QLabel, QMenu,
@@ -87,6 +86,12 @@ class PatchbayToolBar(QToolBar):
         for key, act in context_actions.items():
             act.setCheckable(True)
             act.setChecked(bool(self._displayed_widgets & key))
+            if self._patchbay_mng is not None:
+                if not self._patchbay_mng.server_is_started:
+                    if key in (ToolDisplayed.PORT_TYPES_VIEW, ToolDisplayed.ZOOM_SLIDER):
+                        act.setEnabled(self._patchbay_mng.alsa_midi_enabled)
+                    else:
+                        act.setEnabled(False)
             menu.addAction(act)
             
         return menu

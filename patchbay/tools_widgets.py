@@ -35,6 +35,8 @@ class PatchbayToolsWidget(QWidget):
         self.ui.toolButtonForward.clicked.connect(self._forward_clicked)
         self.ui.labelTime.transport_view_changed.connect(self._transport_view_changed)
         
+        self._jack_running = True
+        
         self._patchbay_mng: 'PatchbayManager' = None
         self._last_transport_pos = TransportPosition(0, False, False, 0, 0, 0, 120.00)
         
@@ -218,13 +220,20 @@ class PatchbayToolsWidget(QWidget):
         self.refresh_transport(self._last_transport_pos)
     
     def change_tools_displayed(self, tools_displayed: ToolDisplayed):
+        print('Toolss widget displated', tools_displayed)
+        
         self._tools_displayed = tools_displayed
+        
+        if not self._jack_running:
+            self.set_jack_running(
+                False, use_alsa_midi=self._patchbay_mng.alsa_midi_enabled)
+            return
         
         self.ui.frameTypeFilter.setVisible(
             bool(self._tools_displayed & ToolDisplayed.PORT_TYPES_VIEW))
         self.ui.sliderZoom.setVisible(
             bool(self._tools_displayed & ToolDisplayed.ZOOM_SLIDER))
-        
+
         # manage transport widgets
         has_clock = bool(tools_displayed & ToolDisplayed.TRANSPORT_CLOCK)
         has_play_stop = bool(tools_displayed & ToolDisplayed.TRANSPORT_PLAY_STOP)
@@ -339,13 +348,18 @@ class PatchbayToolsWidget(QWidget):
         if self._waiting_buffer_change:
             self.set_buffer_size(self._current_buffer_size)
 
-    def set_jack_running(self, yesno: bool):
+    def set_jack_running(self, yesno: bool, use_alsa_midi=False):
+        print('tools Widget JACK running', yesno)
+        self._jack_running = yesno
+        
         self.ui.labelJackNotStarted.setVisible(not yesno)
         if yesno:
             self.change_tools_displayed(self._tools_displayed)
         else:
-            self.ui.frameTypeFilter.setVisible(False)
-            self.ui.sliderZoom.setVisible(False)
+            self.ui.frameTypeFilter.setVisible(
+                use_alsa_midi and self._tools_displayed & ToolDisplayed.PORT_TYPES_VIEW)
+            self.ui.sliderZoom.setVisible(
+                use_alsa_midi and self._tools_displayed & ToolDisplayed.ZOOM_SLIDER)
             self.ui.toolButtonRewind.setVisible(False)
             self.ui.labelTime.setVisible(False)
             self.ui.toolButtonForward.setVisible(False)

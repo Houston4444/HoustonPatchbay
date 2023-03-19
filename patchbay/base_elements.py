@@ -765,6 +765,7 @@ class Group:
 
     def remove_port(self, port: Port):
         if port in self.ports:
+            port.remove_from_canvas()
             self.ports.remove(port)
         
         if self.manager._ports_by_name.get(port.full_name):
