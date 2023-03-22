@@ -387,7 +387,7 @@ class Port:
     def short_name(self) -> str:
         if (self.type is PortType.MIDI_ALSA
                 and self.full_name.startswith((':ALSA_IN:', ':ALSA_OUT:'))):
-            return self.full_name[1:].partition(':')[2].partition(':')[2]
+            return ':'.join(self.full_name.split(':')[5:])
         
         if self.full_name.startswith('a2j:'):
             long_name = self.full_name.partition(':')[2]
@@ -747,6 +747,10 @@ class Group:
         if (port_full_name.startswith('a2j:')
                 and not port.flags & JackPortFlag.IS_PHYSICAL):
             port_full_name = port_full_name.partition(':')[2]
+            
+        elif port.type is PortType.MIDI_ALSA:
+            port_full_name = ':'.join(port_full_name.split(':')[4:])
+
         port.display_name = port_full_name.partition(':')[2]
 
         if not self.ports:

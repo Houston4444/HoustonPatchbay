@@ -577,9 +577,10 @@ class PatchbayManager:
 
         if (port_type is PortType.MIDI_ALSA
                 and full_port_name.startswith((':ALSA_OUT:', ':ALSA_IN:'))):
-            group_name, colon, port_name = \
-                full_port_name[1:].partition(':')[2].partition(':')
-            
+            _, _alsa_key, alsa_gp_id, alsa_p_id, group_name, *rest = \
+                full_port_name.split(':')
+            port_name = ':'.join(rest)
+
             if port.flags & JackPortFlag.IS_PHYSICAL:
                 is_a2j_group = True
 
