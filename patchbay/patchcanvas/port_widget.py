@@ -562,10 +562,11 @@ class PortWidget(ConnectableWidget):
                 ra = box_bg_col.alphaF()
                 rb = 1.0 - ra
                 
-                circle_bg_col = QColor(
-                    scene_col.red() * rb + box_bg_col.red() * ra,
-                    scene_col.green() * rb + box_bg_col.green() * ra,
-                    scene_col.blue() * rb + box_bg_col.blue() * ra)
+                circle_bg_col = QColor()
+                circle_bg_col.setRgbF(
+                    scene_col.redF() * rb + box_bg_col.redF() * ra,
+                    scene_col.greenF() * rb + box_bg_col.greenF() * ra,
+                    scene_col.blueF() * rb + box_bg_col.blueF() * ra)
                 
                 painter.setBrush(circle_bg_col)
 
