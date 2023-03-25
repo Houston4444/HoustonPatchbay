@@ -1093,8 +1093,8 @@ class Group:
                 display_name += " " + num
 
         elif client_name == 'rakarrack-plus':
-            if display_name.startswith('rakarrack-plus '):
-                display_name = display_name.replace('rakarrack-plus ', '', 1)
+            if display_name.startswith(('rakarrack-plus ', 'rakarrack-plus.')):
+                display_name = display_name[15:]
             display_name = display_name.replace('_', ' ')
 
         elif not client_name:
