@@ -533,11 +533,11 @@ class PatchSceneMoth(QGraphicsScene):
         
         self._view.viewport().unsetCursor()
 
-    def zoom_ratio(self, percent: float):
+    def zoom_ratio(self, percent: float, force=False):
         ratio = percent / 100.0
         transform = self._view.transform()
         
-        if ratio == transform.m11():
+        if not force and ratio == transform.m11():
             return
         
         transform.reset()
@@ -601,7 +601,7 @@ class PatchSceneMoth(QGraphicsScene):
     def zoom_reset(self):
         transform = self._view.transform()
         transform.reset()
-        
+
         default_scale = options.default_zoom / 100
         transform.scale(default_scale, default_scale)
         self._view.setTransform(transform)
