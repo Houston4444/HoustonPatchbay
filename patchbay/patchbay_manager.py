@@ -224,10 +224,15 @@ class PatchbayManager:
         patchcanvas.init(view, self.__canvas_callback__, theme_paths, default_theme_name)
         patchcanvas.canvas.scene.scale_changed.connect(self._scene_scale_changed)
         
-        port_types_view = self._settings.value(
-            'Canvas/default_port_types_view',
-            PortTypesViewFlag.ALL.value,
-            type=int)
+        # get port_types_view from config file
+        try:
+            port_types_view = PortTypesViewFlag(
+                self._settings.value(
+                    'Canvas/default_port_types_view',
+                    PortTypesViewFlag.ALL.value,
+                    type=int))
+        except:
+            port_types_view = PortTypesViewFlag.ALL
         
         self.change_port_types_view(port_types_view)
         
