@@ -5,6 +5,7 @@ import operator
 from pathlib import Path
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, Callable, Optional, Union
+from unittest.mock import patch
 
 from PyQt5.QtGui import QCursor, QGuiApplication
 from PyQt5.QtWidgets import QMainWindow, QMessageBox, QWidget
@@ -224,6 +225,9 @@ class PatchbayManager:
         patchcanvas.init(view, self.__canvas_callback__, theme_paths, default_theme_name)
         patchcanvas.canvas.scene.scale_changed.connect(self._scene_scale_changed)
         
+        # just to have the zoom slider updated with the default zoom
+        patchcanvas.canvas.scene.zoom_reset()
+
         # get port_types_view from config file
         try:
             port_types_view = PortTypesViewFlag(
@@ -233,7 +237,7 @@ class PatchbayManager:
                     type=int))
         except:
             port_types_view = PortTypesViewFlag.ALL
-        
+                
         self.change_port_types_view(port_types_view)
         
     def _scene_scale_changed(self, value: float):

@@ -1,4 +1,4 @@
-
+from PyQt5.QtGui import QShowEvent, QFontMetrics, QFont
 from PyQt5.QtWidgets import QApplication, QDialog
 
 from .base_elements import Port, PortType, JackPortFlag
@@ -13,8 +13,20 @@ class CanvasPortInfoDialog(QDialog):
         self.ui.setupUi(self)
 
         self._port = None
+        
+        self._show_alsa_props(False)
+
         self.ui.toolButtonRefresh.clicked.connect(
             self.update_contents)
+
+    def _show_alsa_props(self, yesno: bool):
+        for widget in (self.ui.labelAlsaClientId, 
+                       self.ui.labelColonAlsaClientId,
+                       self.ui.labelAlsaClientIdNum,
+                       self.ui.labelAlsaPortId,
+                       self.ui.labelColonAlsaPortId,
+                       self.ui.labelAlsaPortIdNum):
+            widget.setVisible(yesno)
 
     def set_port(self, port: Port):
         self._port = port
@@ -30,6 +42,7 @@ class CanvasPortInfoDialog(QDialog):
             port_type_str = _translate('patchbay', "MIDI")
         elif self._port.type is PortType.MIDI_ALSA:
             port_type_str = _translate('patchbay', "ALSA")
+            self._show_alsa_props(True)
         else:
             port_type_str = _translate('patchbay', 'NULL')
 
@@ -51,7 +64,11 @@ class CanvasPortInfoDialog(QDialog):
 
         port_full_name = self._port.full_name
         if self._port.type is PortType.MIDI_ALSA:
-            port_full_name = port_full_name[1:].partition(':')[2]
+            splitted_names = port_full_name.split(':')
+            
+            port_full_name = ':'.join(splitted_names[4:])
+            self.ui.labelAlsaClientIdNum.setText(splitted_names[2])
+            self.ui.labelAlsaPortIdNum.setText(splitted_names[3])
             self.ui.labelJackUuid.setVisible(False)
             self.ui.labelColonJackUuid.setVisible(False)
             self.ui.lineEditUuid.setVisible(False)
@@ -68,3 +85,11 @@ class CanvasPortInfoDialog(QDialog):
             self._port.pretty_name
             or self._port.order is not None
             or self._port.mdata_portgroup))
+    
+    def showEvent(self, event: QShowEvent) -> None:
+        self.resize(0, 0)
+        self.ui.lineEditFullPortName.setMinimumWidth(
+            QFontMetrics(QFont()).width(
+            self.ui.lineEditFullPortName.text()) + 20
+        )
+        super().showEvent(event)
