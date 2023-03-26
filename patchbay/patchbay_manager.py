@@ -228,7 +228,8 @@ class PatchbayManager:
         # just to have the zoom slider updated with the default zoom
         patchcanvas.canvas.scene.zoom_reset()
 
-        # get port_types_view from config file
+        # get port_types_view from config file only if the port type view
+        # filter widget is visible.         
         try:
             port_types_view = PortTypesViewFlag(
                 self._settings.value(
@@ -236,6 +237,9 @@ class PatchbayManager:
                     PortTypesViewFlag.ALL.value,
                     type=int))
         except:
+            _logger.warning(
+                "unable to find correct default port types view "
+                "in the config file.")
             port_types_view = PortTypesViewFlag.ALL
                 
         self.change_port_types_view(port_types_view)
