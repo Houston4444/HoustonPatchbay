@@ -909,8 +909,8 @@ class Group:
 
     def get_pretty_client(self) -> str:
         for client_name in ('firewire_pcm', 'a2j',
-                            'Hydrogen', 'ardour', 'Ardour', 'Qtractor',
-                            'SooperLooper', 'sooperlooper', 'Luppp',
+                            'Hydrogen', 'ardour', 'Ardour', 'Mixbus', 'mixbus',
+                            'Qtractor', 'SooperLooper', 'sooperlooper', 'Luppp',
                             'seq64', 'calfjackhost', 'rakarrack-plus',
                             'seq192', 'Non-Mixer', 'jack_mixer'):
             if self.name == client_name:
@@ -1018,7 +1018,7 @@ class Group:
                     else:
                         display_name += ' ' + num
 
-        elif client_name in ('ardour', 'Ardour'):
+        elif client_name in ('ardour', 'Ardour', 'Mixbus', 'mixbus'):
             if '/TriggerBox/' in display_name:
                 display_name = '▸ ' + display_name.replace('/TriggerBox/', '/', 1)
             
