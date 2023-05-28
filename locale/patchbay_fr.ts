@@ -404,8 +404,8 @@
     </message>
     <message>
         <location filename="../resources/ui/patchbay_tools.ui" line="311"/>
-        <source>Stop, return to start.</source>
-        <translation>Stop, retourner au début.</translation>
+        <source>Stop, return to start</source>
+        <translation>Stop, retourner au début</translation>
     </message>
     <message>
         <location filename="../resources/ui/patchbay_tools.ui" line="368"/>
