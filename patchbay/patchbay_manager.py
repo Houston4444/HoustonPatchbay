@@ -1013,7 +1013,12 @@ class PatchbayManager:
         gps_and_ports = list[tuple[str, list[Port]]]()
         for group in self.groups:
             for port in group.ports:
-                group_name = port.full_name.partition(':')[0]
+                if port.type is PortType.MIDI_ALSA:
+                    group_name = port.full_name.split(':')[4]
+                    print('goreupp name', group_name)
+                else:
+                    group_name = port.full_name.partition(':')[0]
+
                 for gp_name, gp_port_list in gps_and_ports:
                     if gp_name == group_name:
                         gp_port_list.append(port)
@@ -1073,6 +1078,8 @@ class PatchbayManager:
                             contents += ':AUDIO'
                     elif port.type is PortType.MIDI_JACK:
                         contents += ':MIDI'
+                    elif port.type is PortType.MIDI_ALSA:
+                        contents += ':ALSA'
 
                     contents += f':{port.mode().name}\n'
                     last_type_and_mode = (port.type, port.mode())
@@ -1090,7 +1097,10 @@ class PatchbayManager:
                         contents += ':~PORTGROUP\n'
                     pg_name = port.mdata_portgroup
 
-                port_short_name = port.full_name.partition(':')[2]
+                if port.type is PortType.MIDI_ALSA:
+                    port_short_name = ':'.join(port.full_name.split(':')[5:])
+                else:
+                    port_short_name = port.full_name.partition(':')[2]
                 contents += f'{port_short_name}\n'
                 
                 if port.pretty_name or port.order:
