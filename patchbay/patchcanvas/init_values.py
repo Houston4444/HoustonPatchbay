@@ -96,17 +96,19 @@ class CallbackAct(IntEnum):
     PORTS_CONNECT = 13      # group_out_id: int, port_out_id: int,
                             #      group_in_id: int, port_in_id: int
     PORTS_DISCONNECT = 14   # conn_id: int
-    PLUGIN_CLONE = 15       # plugin_id: int
-    PLUGIN_EDIT = 16        # plugin_id: int
-    PLUGIN_RENAME = 17      # plugin_id: int
-    PLUGIN_REPLACE = 18     # plugin_id: int
-    PLUGIN_REMOVE = 19      # plugin_id: int
-    PLUGIN_SHOW_UI = 20     # plugin_id: int
-    INLINE_DISPLAY = 21     # plugin_id: int
-    BG_RIGHT_CLICK = 22     # 
-    BG_DOUBLE_CLICK = 23    # 
-    CLIENT_SHOW_GUI = 24    # group_id: int, visible: bool
-    THEME_CHANGED = 25      # theme_name: str
+    PORT_MENU_CALL = 15     # group_id: int, port_id: int, connect_only: bool,
+                            #      x_pos: int, y_pos: int
+    PLUGIN_CLONE = 16       # plugin_id: int
+    PLUGIN_EDIT = 17        # plugin_id: int
+    PLUGIN_RENAME = 18      # plugin_id: int
+    PLUGIN_REPLACE = 19     # plugin_id: int
+    PLUGIN_REMOVE = 20      # plugin_id: int
+    PLUGIN_SHOW_UI = 21     # plugin_id: int
+    INLINE_DISPLAY = 22     # plugin_id: int
+    BG_RIGHT_CLICK = 23     # 
+    BG_DOUBLE_CLICK = 24    # 
+    CLIENT_SHOW_GUI = 25    # group_id: int, visible: bool
+    THEME_CHANGED = 26      # theme_name: str
 
 
 class BoxType(IntEnum):
