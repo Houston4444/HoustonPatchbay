@@ -21,7 +21,7 @@ from enum import Enum
 import time
 from typing import TYPE_CHECKING
 
-from PyQt5.QtCore import Qt, QPointF
+from PyQt5.QtCore import Qt
 from PyQt5.QtGui import (QColor, QLinearGradient, QPainter,
                          QPainterPath, QPen, QBrush)
 from PyQt5.QtWidgets import QGraphicsPathItem
@@ -211,16 +211,14 @@ class LineWidget(QGraphicsPathItem):
         painter.save()
         painter.setRenderHint(QPainter.Antialiasing, True)
 
-        pen = self.pen()
-        cosm_pen = QPen(pen)
+        QGraphicsPathItem.paint(self, painter, option, widget)
+
+        cosm_pen = QPen(self.pen())
         cosm_pen.setCosmetic(True)
         cosm_pen.setWidthF(1.00001)
 
-        QGraphicsPathItem.paint(self, painter, option, widget)
-
         painter.setPen(cosm_pen)
         painter.setBrush(Qt.NoBrush)
-        # painter.setOpacity(0.2)
         painter.drawPath(self.path())
 
         painter.restore()
