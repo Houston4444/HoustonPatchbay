@@ -1,5 +1,4 @@
 
-from ast import Call
 from typing import TYPE_CHECKING, Union
 from PyQt5.QtWidgets import (
     QMenu, QCheckBox, QFrame, QLabel, QHBoxLayout,
@@ -25,7 +24,7 @@ def theme_css(theme: StyleAttributer) -> str:
     
 class PortCheckBox(QCheckBox):
     def __init__(self, p_object:  Union[Port, Portgroup],
-                 parent: 'SubMenu', pg_pos=0, pg_len=1):
+                 parent: 'CheckFrame', pg_pos=0, pg_len=1):
         QCheckBox.__init__(self, "", parent)
         self.setTristate(True)
         self._p_object = p_object
@@ -116,7 +115,7 @@ class PortCheckBox(QCheckBox):
 class CheckFrame(QFrame):
     def __init__(self, p_object: Union[Port, Portgroup],
                  port_name: str, port_name_end: str,
-                 parent: 'SubMenu', pg_pos=0, pg_len=1):
+                 parent: 'PortConnectionsMenu', pg_pos=0, pg_len=1):
         QFrame.__init__(self, parent)
         # self.setMinimumSize(QSize(100, 18))
         
@@ -217,8 +216,7 @@ class CheckFrame(QFrame):
         self._check_box.setCheckState(check_state)
 
     def connection_asked_from_box(self, po: Union[Port, Portgroup], yesno: bool):
-        po = self._p_object
-        self._parent.connection_asked_from_box(po, yesno)
+        self._parent.connection_asked_from_box(self._p_object, yesno)
     
     def mousePressEvent(self, event):
         self._check_box.nextCheckState()
@@ -234,17 +232,18 @@ class CheckFrame(QFrame):
         self.setFocus()
 
 
-class PortMenu(QMenu):
-    def __init__(self, mng: 'PatchbayManager', group_id: int, port_id: int):
+class PortConnectionsMenu(QMenu):
+    def __init__(self, mng: 'PatchbayManager', group_id: int, port_id: int,
+                 parent=None):
+        QMenu.__init__(self, 'Connections', parent)
         self._mng = mng
-        mng.sg.connection_added.connect(self._connection_added)
-        mng.sg.connection_removed.connect(self._connection_removed)
-        QMenu.__init__(self)
+        mng.sg.patch_may_have_changed.connect(self._patch_may_have_change)
         
-        conn_menu = QMenu('Connect', self)        
         self._port = self._mng.get_port_from_id(group_id, port_id)
         if self._port is None:
             return
+        
+        self._widgets = dict[Union[Port, Portgroup], CheckFrame]()
         
         for group in mng.groups:
             gp_menu = None
@@ -255,13 +254,13 @@ class PortMenu(QMenu):
                     if gp_menu is None:
                         gp_menu = QMenu(group.name, self)
                         gp_menu.setIcon(QIcon.fromTheme(group.client_icon))
-                    # gp_menu.addAction(port.short_name())
+
                     pg_pos, pg_len = group.port_pg_pos(port.port_id)
-                    print('dkdk', pg_pos, pg_len, port.display_name)
                     check_frame = CheckFrame(port, port.display_name, '', self,
                                              pg_pos, pg_len)
                     action = QWidgetAction(self)
                     action.setDefaultWidget(check_frame)
+                    self._widgets[port] = check_frame
                     gp_menu.addAction(action)
                     
                     if self._port.mode() is PortMode.OUTPUT:
@@ -274,21 +273,59 @@ class PortMenu(QMenu):
                                 check_frame.set_check_state(2)
 
             if gp_menu is not None:
-                conn_menu.addMenu(gp_menu)
+                self.addMenu(gp_menu)
+        
+    def connection_asked_from_box(self, po: Union[Port, Portgroup], yesno: bool):        
+        if isinstance(po, Port):
+            if yesno:
+                if self._port.mode() is PortMode.OUTPUT:
+                    canvas.callback(
+                        CallbackAct.PORTS_CONNECT,
+                        self._port.group_id, self._port.port_id,
+                        po.group_id, po.port_id)
+                else:
+                    canvas.callback(
+                        CallbackAct.PORTS_CONNECT,
+                        po.group_id, po.port_id,
+                        self._port.group_id, self._port.port_id)
+            else:
+                if self._port.mode() is PortMode.OUTPUT:
+                    for conn in self._mng.connections:
+                        if conn.port_out is self._port and conn.port_in is po:
+                            canvas.callback(
+                                CallbackAct.PORTS_DISCONNECT, conn.connection_id)
+                            break
+                else:
+                    for conn in self._mng.connections:
+                        if conn.port_out is po and conn.port_in is self._port:
+                            canvas.callback(
+                                CallbackAct.PORTS_DISCONNECT, conn.connection_id)
+                            break
+            
+    def _patch_may_have_change(self):
+        if self._port.mode() is PortMode.OUTPUT:
+            connected_ports = [c.port_in for c in self._mng.connections
+                               if c.port_out is self._port]
+        else:
+            connected_ports = [c.port_out for c in self._mng.connections
+                               if c.port_in is self._port]
+            
+        for po, check_frame in self._widgets.items():
+            check_frame.set_check_state(
+                2 if po in connected_ports else 0)
+
+
+class PortMenu(QMenu):
+    def __init__(self, mng: 'PatchbayManager', group_id: int, port_id: int):
+        self._mng = mng
+        QMenu.__init__(self)
+        
+        conn_menu = PortConnectionsMenu(mng, group_id, port_id, self)       
+        self._port = self._mng.get_port_from_id(group_id, port_id)
+        if self._port is None:
+            return
 
         self.addMenu(conn_menu)
-    
-    def _connection_added(self, connection_id: int):
-        for conn in self._mng.connections:
-            if (conn.connection_id == connection_id
-                    and ((self._port.mode() is PortMode.OUTPUT
-                          and conn.port_out is self._port)
-                         or (self._port.mode() is PortMode.INPUT
-                             and conn.port_in is self._port))):
-                pass
-    
-    def _connection_removed(self, connection_id: int):
-        pass
     
     def connection_asked_from_box(self, po: Union[Port, Portgroup], yesno: bool):
         if self._port.mode() is PortMode.OUTPUT:

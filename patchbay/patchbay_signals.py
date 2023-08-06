@@ -31,6 +31,7 @@ class SignalsObject(QObject):
     
     connection_added = pyqtSignal(int)
     connection_removed = pyqtSignal(int)
+    patch_may_have_changed = pyqtSignal()
 
     def __init__(self):
         QObject.__init__(self)

@@ -800,9 +800,7 @@ class PatchbayManager:
         connection = Connection(self, self._next_connection_id, port_out, port_in)
         self._next_connection_id += 1
         self.connections.append(connection)
-        
-        # send signal for any context menu with connections
-        self.sg.connection_added.emit(connection.connection_id)
+
         connection.add_to_canvas()
 
     @later_by_batch()
@@ -1007,6 +1005,8 @@ class PatchbayManager:
 
         if some_groups_removed:
             patchcanvas.canvas.scene.resize_the_scene()
+        
+        self.sg.patch_may_have_changed.emit()
 
     def _export_port_list_to_patchichi(self) -> str:
         def slcol(input_str: str) -> str:
