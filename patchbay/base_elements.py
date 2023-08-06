@@ -587,6 +587,30 @@ class Group:
     def __repr__(self) -> str:
         return f"Group({self.name})"
 
+    def port_pg_pos(self, port_id: int) -> tuple[int, int]:
+        '''returns the port portgroup position index'''
+        portgroup_id = 0
+
+        for port in self.ports:
+            if port.port_id == port_id:
+                portgroup_id = port.portgroup_id
+                break
+
+        if not portgroup_id:
+            return (0, 1)
+        
+        for portgroup in self.portgroups:
+            if portgroup.portgroup_id == portgroup_id:
+                i = 0
+                for port in portgroup.ports:
+                    if port.port_id == port_id:
+                        print('kkccc', port_id, [p.port_id for p in portgroup.ports])
+                        return (i, len(portgroup.ports))
+                    print('zappi', port_id)
+                    i += 1
+
+        return (0, 1)
+
     def update_ports_in_canvas(self):
         for port in self.ports:
             port.rename_in_canvas()

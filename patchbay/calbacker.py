@@ -1,10 +1,12 @@
 from typing import TYPE_CHECKING
 from PyQt5.QtCore import QPoint
+from PyQt5.QtWidgets import QMenu
 
 from . import patchcanvas
 from .patchcanvas import CallbackAct, PortMode, PortType, BoxLayoutMode
 from .base_elements import Port, GroupPosFlag, PortTypesViewFlag, PortgroupMem
 from .port_info_dialog import CanvasPortInfoDialog
+from .port_menu import PortMenu
 
 if TYPE_CHECKING:
     from .patchbay_manager import PatchbayManager
@@ -145,6 +147,14 @@ class Callbacker:
 
     def _ports_disconnect(self, connection_id: int):
         pass
+
+    def _port_menu_call(self, group_id: int, port_id: int, connect_only: bool,
+                       x: int, y: int):
+        print('slslsls', group_id, port_id, '::', x, y)
+        menu = PortMenu(self.mng, group_id, port_id)
+        menu.addAction('zpzpp')
+        menu.addAction('smsmsms')
+        menu.exec(QPoint(x, y))
 
     def _bg_right_click(self, x: int, y: int):
         if self.mng.canvas_menu is not None:

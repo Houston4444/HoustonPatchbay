@@ -327,8 +327,9 @@ class PortWidget(ConnectableWidget):
         self.parentItem().setFlag(QGraphicsItem.ItemIsMovable, False)
 
         # precise the menu start point to still view the port
-        # and be able to read its portgroup name.        
-        menu.show()
+        # and be able to read its portgroup name.
+        if not is_only_connect:      
+            menu.show()
         
         start_point = canvas.scene.screen_position(
             self.scenePos() + QPointF(0.0, self._port_height))
@@ -346,7 +347,13 @@ class PortWidget(ConnectableWidget):
             start_point = canvas.scene.screen_position(
                 self.scenePos() + QPointF(self._port_width + more, self._port_height))
         
-        act_selected = menu.exec(start_point)
+        if not is_only_connect:
+            act_selected = menu.exec(start_point)
+        else:
+            act_selected = None
+            canvas.callback(
+                CallbackAct.PORT_MENU_CALL, self._group_id, self._port_id,
+                False, start_point.x(), start_point.y())
         
         if act_selected is act_x_info:
             canvas.callback(CallbackAct.PORT_INFO, self._group_id, self._port_id)

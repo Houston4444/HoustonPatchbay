@@ -28,6 +28,9 @@ class SignalsObject(QObject):
     max_port_width_changed = pyqtSignal(int)
     default_zoom_changed = pyqtSignal(int)
     scene_scale_changed = pyqtSignal(float)
+    
+    connection_added = pyqtSignal(int)
+    connection_removed = pyqtSignal(int)
 
     def __init__(self):
         QObject.__init__(self)

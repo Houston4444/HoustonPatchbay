@@ -4,8 +4,8 @@ import logging
 import operator
 from pathlib import Path
 from dataclasses import dataclass
+from sqlite3 import connect
 from typing import TYPE_CHECKING, Any, Callable, Optional, Union
-from unittest.mock import patch
 
 from PyQt5.QtGui import QCursor, QGuiApplication
 from PyQt5.QtWidgets import QMainWindow, QMessageBox, QWidget
@@ -793,13 +793,16 @@ class PatchbayManager:
             return
 
         for connection in self.connections:
-            if (connection.port_out == port_out
-                    and connection.port_in == port_in):
+            if (connection.port_out is port_out
+                    and connection.port_in is port_in):
                 return
 
         connection = Connection(self, self._next_connection_id, port_out, port_in)
         self._next_connection_id += 1
         self.connections.append(connection)
+        
+        # send signal for any context menu with connections
+        self.sg.connection_added.emit(connection.connection_id)
         connection.add_to_canvas()
 
     @later_by_batch()
@@ -813,6 +816,7 @@ class PatchbayManager:
             if (connection.port_out == port_out
                     and connection.port_in == port_in):
                 self.connections.remove(connection)
+                self.sg.connection_removed.emit(connection.connection_id)
                 connection.remove_from_canvas()
                 break
 

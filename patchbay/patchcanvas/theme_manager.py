@@ -35,7 +35,6 @@ class ThemeManager:
         self._theme_file_timer = QTimer()
         self._theme_file_timer.setInterval(400)
         self._theme_file_timer.timeout.connect(self._check_theme_file_modified)
-        
 
     @staticmethod
     def default_theme_paths(source_theme_dir: Path=None) -> list[Path]:
