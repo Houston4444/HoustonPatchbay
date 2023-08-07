@@ -235,24 +235,13 @@ class CheckFrame(QFrame):
 
 
 class PortgroupConnectionsMenu(QMenu):
-    def __init__(self, mng: 'PatchbayManager', group_id: int, portgrp_id: int,
-                 parent=None):
-        QMenu.__init__(self, 'Connections', parent)
+    def __init__(self, mng: 'PatchbayManager',
+                 po: Union[Portgroup, Port], parent=None):
+        QMenu.__init__(self, 'Connect', parent)
         self._mng = mng
         mng.sg.patch_may_have_changed.connect(self._patch_may_have_change)
         
-        for group in mng.groups:
-            if group.group_id == group_id:
-                for portgroup in group.portgroups:
-                    if portgroup.portgroup_id == portgrp_id:
-                        self._portgrp = portgroup
-                        break
-                else:
-                    continue
-                break
-        else:
-            return
-        
+        self._po = po        
         self._widgets = dict[Union[Port, Portgroup], CheckFrame]()
         
         for group in mng.groups:
@@ -260,14 +249,13 @@ class PortgroupConnectionsMenu(QMenu):
             last_portgrp_id = 0
             
             for port in group.ports:
-                
-                if (port.type is self._portgrp.port_type()
-                        and port.mode() is self._portgrp.port_mode.opposite()):
+                if (port.type is self._port_type()
+                        and port.mode() is self._port_mode().opposite()):
                     if gp_menu is None:
                         gp_menu = QMenu(group.name, self)
                         gp_menu.setIcon(QIcon.fromTheme(group.client_icon))
 
-                    if port.portgroup_id:
+                    if isinstance(self._po, Portgroup) and port.portgroup_id:
                         if port.portgroup_id == last_portgrp_id:
                             continue
 
@@ -288,6 +276,11 @@ class PortgroupConnectionsMenu(QMenu):
                         
                         last_portgrp_id = port.portgroup_id
                     
+                    elif isinstance(self._po, Port) and port.portgroup_id:
+                        pg_pos, pg_len = group.port_pg_pos(port.port_id)
+                        check_frame = CheckFrame(port, port.display_name, '', self,
+                                                 pg_pos, pg_len)
+                        self._widgets[port] = check_frame                  
                     else:
                         check_frame = CheckFrame(port, port.display_name, '', self)
                         self._widgets[port] = check_frame
@@ -299,72 +292,61 @@ class PortgroupConnectionsMenu(QMenu):
             if gp_menu is not None:
                 self.addMenu(gp_menu)
                 
-            self._patch_may_have_change()
+        self._patch_may_have_change()
+    
+    def _ports(self, po: Union[Port, Portgroup, None]=None) -> list[Port]:
+        if po is not None:
+            if isinstance(po, Portgroup):
+                return po.ports
+            return [po]
         
+        if isinstance(self._po, Portgroup):
+            return self._po.ports
+        return [self._po]
+    
+    def _port_type(self) -> PortType:
+        if isinstance(self._po, Portgroup):
+            return self._po.port_type()
+        return self._po.type
+    
+    def _port_mode(self) -> PortMode:
+        if isinstance(self._po, Portgroup):
+            return self._po.port_mode
+        return self._po.mode()
+    
     def connection_asked_from_box(self, po: Union[Port, Portgroup], yesno: bool):
-        if isinstance(po, Port):
-            if yesno:
-                if po.mode() is PortMode.OUTPUT:
-                    for port_in in self._portgrp.ports:
-                        canvas.callback(
-                            CallbackAct.PORTS_CONNECT,
-                            po.group_id, po.port_id,
-                            port_in.group_id, port_in.port_id)
-                else:
-                    for port_out in self._portgrp.ports:
+        out_ports, in_ports = self._ports(), self._ports(po)
+        if self._port_mode() is PortMode.INPUT:
+            out_ports, in_ports = in_ports, out_ports
+            
+        conns = [c for c in self._mng.connections
+                    if c.port_out in out_ports
+                    and c.port_in in in_ports]
+
+        for i in range(len(out_ports)):
+            port_out = out_ports[i]
+            for j in range(len(in_ports)):
+                port_in = in_ports[j]
+
+                if yesno and (i % len(in_ports) == j
+                                or j % len(out_ports) == i):
+                    for conn in conns:
+                        if (conn.port_out is port_out
+                                and conn.port_in is port_in):
+                            break
+                    else:
                         canvas.callback(
                             CallbackAct.PORTS_CONNECT,
                             port_out.group_id, port_out.port_id,
-                            po.group_id, po.port_id)
-            else:
-                if po.mode() is PortMode.OUTPUT:
-                    for conn in self._mng.connections:
-                        if (conn.port_out is po
-                                and conn.port_in in self._portgrp.ports):
-                            canvas.callback(
-                                CallbackAct.PORTS_DISCONNECT,
-                                conn.connection_id)
+                            port_in.group_id, port_in.port_id)
                 else:
-                    for conn in self._mng.connections:
-                        if (conn.port_out in self._portgrp.ports
-                                and conn.port_in is po):
+                    for conn in conns:
+                        if (conn.port_out is port_out
+                                and conn.port_in is port_in):
                             canvas.callback(
                                 CallbackAct.PORTS_DISCONNECT,
                                 conn.connection_id)
-
-        elif isinstance(po, Portgroup):           
-            pg_out, pg_in = self._portgrp, po
-            if self._portgrp.port_mode is PortMode.INPUT:
-                pg_out, pg_in = pg_in, pg_out
-            
-            conns = [c for c in self._mng.connections
-                     if c.port_out in pg_out.ports
-                        and c.port_in in pg_in.ports]
-
-            for i in range(len(pg_out.ports)):
-                port_out = pg_out.ports[i]
-                for j in range(len(pg_in.ports)):
-                    port_in = pg_in.ports[j]
-
-                    if yesno and (i % len(pg_in.ports) == j
-                                  or j % len(pg_out.ports) == i):
-                        for conn in conns:
-                            if (conn.port_out is port_out
-                                    and conn.port_in is port_in):
-                                break
-                        else:
-                            canvas.callback(
-                                CallbackAct.PORTS_CONNECT,
-                                port_out.group_id, port_out.port_id,
-                                port_in.group_id, port_in.port_id)
-                    else:
-                        for conn in conns:
-                            if (conn.port_out is port_out
-                                    and conn.port_in is port_in):
-                                canvas.callback(
-                                    CallbackAct.PORTS_DISCONNECT,
-                                    conn.connection_id)
-                                break
+                            break
 
     def _get_connection_status(
             self, po_conns: list[Connection],
@@ -397,27 +379,27 @@ class PortgroupConnectionsMenu(QMenu):
         return 2
 
     def _patch_may_have_change(self):
-        if self._portgrp.port_mode is PortMode.OUTPUT:
+        if self._port_mode() is PortMode.OUTPUT:
             conns = [c for c in self._mng.connections
-                     if c.port_out in self._portgrp.ports]
+                     if c.port_out in self._ports()]
 
             for po, check_frame in self._widgets.items():
-                in_ports = po.ports if isinstance(po, Portgroup) else [po]
+                in_ports = self._ports(po)
                 check_frame.set_check_state(
                     self._get_connection_status(
                         [c for c in conns if c.port_in in in_ports],
-                        self._portgrp.ports, in_ports))
+                         self._ports(), in_ports))
                 
         else:
             conns = [c for c in self._mng.connections
-                     if c.port_in in self._portgrp.ports]
+                     if c.port_in in self._po.ports]
             
             for po, check_frame in self._widgets.items():
-                out_ports = po.ports if isinstance(po, Portgroup) else [po]
+                out_ports = self._ports(po)
                 check_frame.set_check_state(
                     self._get_connection_status(
                         [c for c in conns if c.port_out in out_ports], 
-                        out_ports, self._portgrp.ports))
+                        out_ports, self._ports()))
 
 
 class PortConnectionsMenu(QMenu):
@@ -500,8 +482,9 @@ class PortMenu(QMenu):
     def __init__(self, mng: 'PatchbayManager', group_id: int, port_id: int):
         self._mng = mng
         QMenu.__init__(self)
-        
-        conn_menu = PortConnectionsMenu(mng, group_id, port_id, self)       
+        port = mng.get_port_from_id(group_id, port_id)
+        conn_menu = PortgroupConnectionsMenu(mng, port, self)      
+        # conn_menu = PortConnectionsMenu(mng, group_id, port_id, self) 
         self._port = self._mng.get_port_from_id(group_id, port_id)
         if self._port is None:
             return
@@ -514,6 +497,18 @@ class PortgroupMenu(QMenu):
         self._mng = mng
         QMenu.__init__(self)
         
-        conn_menu = PortgroupConnectionsMenu(mng, group_id, portgrp_id)
+        for group in mng.groups:
+            if group.group_id == group_id:
+                for portgroup in group.portgroups:
+                    if portgroup.portgroup_id == portgrp_id:
+                        portgrp = portgroup
+                        break
+                else:
+                    continue
+                break
+        else:
+            return
+        
+        conn_menu = PortgroupConnectionsMenu(mng, portgrp)
         
         self.addMenu(conn_menu)
