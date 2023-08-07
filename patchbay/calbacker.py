@@ -6,7 +6,7 @@ from . import patchcanvas
 from .patchcanvas import CallbackAct, PortMode, PortType, BoxLayoutMode
 from .base_elements import Port, GroupPosFlag, PortTypesViewFlag, PortgroupMem
 from .port_info_dialog import CanvasPortInfoDialog
-from .port_menu import PortMenu
+from .port_menu import PortMenu, PortgroupMenu
 
 if TYPE_CHECKING:
     from .patchbay_manager import PatchbayManager
@@ -154,6 +154,12 @@ class Callbacker:
         menu = PortMenu(self.mng, group_id, port_id)
         menu.addAction('zpzpp')
         menu.addAction('smsmsms')
+        menu.exec(QPoint(x, y))
+        
+    def _portgroup_menu_call(self, group_id: int, port_id: int, connect_only: bool,
+                             x: int, y: int):
+        menu = PortgroupMenu(self.mng, group_id, port_id)
+        menu.addAction('zpzpp')
         menu.exec(QPoint(x, y))
 
     def _bg_right_click(self, x: int, y: int):

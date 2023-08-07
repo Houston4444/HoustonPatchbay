@@ -214,7 +214,15 @@ class PortgroupWidget(ConnectableWidget):
         if is_only_connect:
             act_x_setasmono.setVisible(False)
         
-        act_selected = menu.exec_(start_point)
+        if not is_only_connect:
+            act_selected = menu.exec(start_point)
+        else:
+            act_selected = None
+            canvas.callback(
+                CallbackAct.PORTGROUP_MENU_CALL, self._group_id, self._portgrp_id,
+                False, start_point.x(), start_point.y())
+        
+        # act_selected = menu.exec_(start_point)
         
         if act_selected is act_x_setasmono:
             QTimer.singleShot(0, self._split_to_monos)
