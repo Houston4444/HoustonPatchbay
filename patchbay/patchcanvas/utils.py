@@ -281,7 +281,7 @@ def get_group_icon(group_id: int, port_mode: int, dark=True) -> QIcon:
     return get_icon(
         group.box_type, group.icon_name, port_mode, dark)
 
-def get_icon(icon_type: int, icon_name: str, port_mode: int, dark=True) -> QIcon:
+def get_icon(icon_type: BoxType, icon_name: str, port_mode: PortMode, dark=True) -> QIcon:
     if icon_type in (BoxType.CLIENT, BoxType.APPLICATION):
         icon = QIcon.fromTheme(icon_name)
 
@@ -330,7 +330,7 @@ def get_icon(icon_type: int, icon_name: str, port_mode: int, dark=True) -> QIcon
 
 @easy_log
 def connect_ports(group_id_1: int, port_id_1: int,
-                  group_id_2: int, port_id_2:int):    
+                  group_id_2: int, port_id_2: int):    
     port_1 = canvas.get_port(group_id_1, port_id_1)
     port_2 = canvas.get_port(group_id_2, port_id_2)
     if not(port_1 and port_2):

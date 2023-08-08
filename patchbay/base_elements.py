@@ -584,11 +584,15 @@ class Group:
 
         self.mdata_icon = ''
 
+        self.cnv_name = ''
+        self.cnv_box_type = BoxType.APPLICATION
+        self.cnv_icon_name = ''
+
     def __repr__(self) -> str:
         return f"Group({self.name})"
 
     def port_pg_pos(self, port_id: int) -> tuple[int, int]:
-        '''returns the port portgroup position index'''
+        '''returns the port portgroup position index and portgroup len'''
         portgroup_id = 0
 
         for port in self.ports:
@@ -604,9 +608,7 @@ class Group:
                 i = 0
                 for port in portgroup.ports:
                     if port.port_id == port_id:
-                        print('kkccc', port_id, [p.port_id for p in portgroup.ports])
                         return (i, len(portgroup.ports))
-                    print('zappi', port_id)
                     i += 1
 
         return (0, 1)
@@ -635,6 +637,10 @@ class Group:
         layout_modes_ = dict[PortMode, BoxLayoutMode]()
         for port_mode in (PortMode.INPUT, PortMode.OUTPUT, PortMode.BOTH):
             layout_modes_[port_mode] = gpos.get_layout_mode(port_mode.value)
+        
+        self.cnv_name = display_name
+        self.cnv_box_type = box_type
+        self.cnv_icon_name = icon_name
         
         patchcanvas.add_group(
             self.group_id, display_name, split,
@@ -683,6 +689,7 @@ class Group:
         display_name = self.name
         if self.manager.use_graceful_names:
             display_name = self.display_name
+        self.canvas_attrs['display_name'] = display_name
         
         patchcanvas.rename_group(self.group_id, display_name)
 

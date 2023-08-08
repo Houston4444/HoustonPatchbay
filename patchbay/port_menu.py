@@ -7,10 +7,10 @@ from PyQt5.QtGui import QIcon, QColor, QKeyEvent
 from PyQt5.QtCore import Qt
 
 
-from .patchcanvas import canvas, CallbackAct
+from .patchcanvas import canvas, CallbackAct, BoxType
 from .patchcanvas.theme import StyleAttributer
-from .patchcanvas.utils import get_portgroup_name_from_ports_names
-from .base_elements import Connection, Port, Portgroup, PortType, PortSubType, PortMode
+from .patchcanvas.utils import get_portgroup_name_from_ports_names, get_icon, is_dark_theme
+from .base_elements import Connection, Port, Portgroup, PortType, PortSubType, PortMode, Group
 
 if TYPE_CHECKING:
     from patchbay_manager import PatchbayManager
@@ -117,7 +117,7 @@ class PortCheckBox(QCheckBox):
 class CheckFrame(QFrame):
     def __init__(self, p_object: Union[Port, Portgroup],
                  port_name: str, port_name_end: str,
-                 parent: 'PortConnectionsMenu', pg_pos=0, pg_len=1):
+                 parent: 'PortgroupConnectionsMenu', pg_pos=0, pg_len=1):
         QFrame.__init__(self, parent)
         # self.setMinimumSize(QSize(100, 18))
         
@@ -180,10 +180,12 @@ class CheckFrame(QFrame):
         if isinstance(po, Port) and po.portgroup_id:
             if self._pg_pos == 0:
                 margin_texts.pop(BOTTOM)
-                radius_text = "border-bottom-left-radius: 0px; border-bottom-right-radius: 0px"
+                radius_text = ("border-bottom-left-radius: 0px; "
+                               "border-bottom-right-radius: 0px")
             elif self._pg_pos + 1 == self._pg_len:
                 margin_texts.pop(TOP)
-                radius_text = "border-top-left-radius: 0px; border-top-right-radius: 0px"
+                radius_text = ("border-top-left-radius: 0px; "
+                               "border-top-right-radius: 0px")
                 
             if self._pg_pos != 0:
                 border_texts[TOP] = f"border-top: 0px solid transparent"
@@ -234,6 +236,39 @@ class CheckFrame(QFrame):
         self.setFocus()
 
 
+class GroupConnectMenu(QMenu):
+    def __init__(self, group: Group, po: Union[Port, Portgroup],
+                 parent: 'PortgroupConnectionsMenu'):
+        short_group_name = group.cnv_name        
+        if len(short_group_name) > 15 and '/' in short_group_name:
+            short_group_name = short_group_name.partition('/')[2]
+
+        QMenu.__init__(self, short_group_name, parent)
+        self.hovered.connect(self._mouse_hover_menu)
+        
+        theme = canvas.theme.box        
+        if group.cnv_box_type is BoxType.CLIENT:
+            theme = theme.client
+        elif group.cnv_box_type is BoxType.HARDWARE:
+            theme = theme.hardware
+
+        bg_color = theme.background_color().name(QColor.HexArgb)
+        border_color = theme.fill_pen().color().name(QColor.HexArgb)
+        
+        self.setStyleSheet(
+            "QMenu{"
+                f"background-color:{bg_color}; "
+                f"border: 2px solid {border_color}; "
+                f"border-radius:4px"
+            "}")
+        self.setMinimumWidth(70)
+        self.setMinimumHeight(50)
+
+    def _mouse_hover_menu(self, action: QWidgetAction):
+        # for better use with keyboard
+        action.defaultWidget().setFocus()
+
+
 class PortgroupConnectionsMenu(QMenu):
     def __init__(self, mng: 'PatchbayManager',
                  po: Union[Portgroup, Port], parent=None):
@@ -252,8 +287,12 @@ class PortgroupConnectionsMenu(QMenu):
                 if (port.type is self._port_type()
                         and port.mode() is self._port_mode().opposite()):
                     if gp_menu is None:
-                        gp_menu = QMenu(group.name, self)
-                        gp_menu.setIcon(QIcon.fromTheme(group.client_icon))
+                        gp_menu = GroupConnectMenu(group, self._po, self)
+                        gp_menu.setIcon(
+                            get_icon(
+                                group.cnv_box_type, group.cnv_icon_name,
+                                self._port_mode().opposite(),
+                                dark=is_dark_theme(self)))
 
                     if isinstance(self._po, Portgroup) and port.portgroup_id:
                         if port.portgroup_id == last_portgrp_id:
@@ -392,90 +431,14 @@ class PortgroupConnectionsMenu(QMenu):
                 
         else:
             conns = [c for c in self._mng.connections
-                     if c.port_in in self._po.ports]
-            
+                     if c.port_in in self._ports()]
+
             for po, check_frame in self._widgets.items():
                 out_ports = self._ports(po)
                 check_frame.set_check_state(
                     self._get_connection_status(
                         [c for c in conns if c.port_out in out_ports], 
                         out_ports, self._ports()))
-
-
-class PortConnectionsMenu(QMenu):
-    def __init__(self, mng: 'PatchbayManager', group_id: int, port_id: int,
-                 parent=None):
-        QMenu.__init__(self, 'Connections', parent)
-        self._mng = mng
-        mng.sg.patch_may_have_changed.connect(self._patch_may_have_change)
-        
-        self._port = self._mng.get_port_from_id(group_id, port_id)
-        if self._port is None:
-            return
-        
-        self._widgets = dict[Union[Port, Portgroup], CheckFrame]()
-        
-        for group in mng.groups:
-            gp_menu = None
-            
-            for port in group.ports:
-                if (port.type is self._port.type
-                        and port.mode() is self._port.mode().opposite()):
-                    if gp_menu is None:
-                        gp_menu = QMenu(group.name, self)
-                        gp_menu.setIcon(QIcon.fromTheme(group.client_icon))
-
-                    pg_pos, pg_len = group.port_pg_pos(port.port_id)
-                    check_frame = CheckFrame(port, port.display_name, '', self,
-                                             pg_pos, pg_len)
-                    action = QWidgetAction(self)
-                    action.setDefaultWidget(check_frame)
-                    self._widgets[port] = check_frame
-                    gp_menu.addAction(action)
-
-            if gp_menu is not None:
-                self.addMenu(gp_menu)
-        
-        self._patch_may_have_change()
-        
-    def connection_asked_from_box(self, po: Union[Port, Portgroup], yesno: bool):        
-        if isinstance(po, Port):
-            if yesno:
-                if self._port.mode() is PortMode.OUTPUT:
-                    canvas.callback(
-                        CallbackAct.PORTS_CONNECT,
-                        self._port.group_id, self._port.port_id,
-                        po.group_id, po.port_id)
-                else:
-                    canvas.callback(
-                        CallbackAct.PORTS_CONNECT,
-                        po.group_id, po.port_id,
-                        self._port.group_id, self._port.port_id)
-            else:
-                if self._port.mode() is PortMode.OUTPUT:
-                    for conn in self._mng.connections:
-                        if conn.port_out is self._port and conn.port_in is po:
-                            canvas.callback(
-                                CallbackAct.PORTS_DISCONNECT, conn.connection_id)
-                            break
-                else:
-                    for conn in self._mng.connections:
-                        if conn.port_out is po and conn.port_in is self._port:
-                            canvas.callback(
-                                CallbackAct.PORTS_DISCONNECT, conn.connection_id)
-                            break
-            
-    def _patch_may_have_change(self):
-        if self._port.mode() is PortMode.OUTPUT:
-            connected_ports = [c.port_in for c in self._mng.connections
-                               if c.port_out is self._port]
-        else:
-            connected_ports = [c.port_out for c in self._mng.connections
-                               if c.port_in is self._port]
-            
-        for po, check_frame in self._widgets.items():
-            check_frame.set_check_state(
-                2 if po in connected_ports else 0)
 
 
 class PortMenu(QMenu):
