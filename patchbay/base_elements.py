@@ -350,6 +350,7 @@ class Port:
     in_canvas = False
     order = None
     uuid = 0 # will contains the real JACK uuid
+    cnv_name = ''
 
     # given by JACK metadatas
     pretty_name = ''
@@ -421,8 +422,6 @@ class Port:
         if self.in_canvas:
             return
 
-        if not self.manager.port_type_shown(self.full_type()):
-            return
 
         display_name = self.display_name
         
@@ -432,11 +431,16 @@ class Port:
         if not self.manager.use_graceful_names:
             display_name = self.short_name()
 
-        self.in_canvas = True
+        self.cnv_name = display_name
+
+        if not self.manager.port_type_shown(self.full_type()):
+            return
 
         patchcanvas.add_port(
             self.group_id, self.port_id, display_name,
             self.mode(), self.type, self.subtype)
+
+        self.in_canvas = True
 
     def remove_from_canvas(self):
         if self.manager.very_fast_operation:
@@ -449,9 +453,6 @@ class Port:
         self.in_canvas = False
 
     def rename_in_canvas(self):
-        if not self.in_canvas:
-            return
-
         display_name = self.display_name
         if self.pretty_name:
             display_name = self.pretty_name
@@ -459,6 +460,11 @@ class Port:
         if not self.manager.use_graceful_names:
             display_name = self.short_name()
 
+        self.cnv_name = display_name
+
+        if not self.in_canvas:
+            return
+        
         patchcanvas.rename_port(
             self.group_id, self.port_id, display_name)
 

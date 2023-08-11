@@ -1,10 +1,12 @@
 
+from cProfile import label
 from typing import TYPE_CHECKING, Union
 from PyQt5.QtWidgets import (
     QMenu, QCheckBox, QFrame, QLabel, QHBoxLayout,
-    QSpacerItem, QSizePolicy, QWidgetAction)
-from PyQt5.QtGui import QIcon, QColor, QKeyEvent
-from PyQt5.QtCore import Qt
+    QSpacerItem, QSizePolicy, QWidgetAction,
+    QApplication)
+from PyQt5.QtGui import QIcon, QColor, QKeyEvent, QPixmap
+from PyQt5.QtCore import Qt, QSize
 
 
 from .patchcanvas import canvas, CallbackAct, BoxType
@@ -15,6 +17,7 @@ from .base_elements import Connection, Port, Portgroup, PortType, PortSubType, P
 if TYPE_CHECKING:
     from patchbay_manager import PatchbayManager
 
+_translate = QApplication.translate
 
 def theme_css(theme: StyleAttributer) -> str:
     pen = theme.fill_pen()
@@ -269,69 +272,18 @@ class GroupConnectMenu(QMenu):
         action.defaultWidget().setFocus()
 
 
-class PortgroupConnectionsMenu(QMenu):
+class AbstractConnectionsMenu(QMenu):
     def __init__(self, mng: 'PatchbayManager',
                  po: Union[Portgroup, Port], parent=None):
-        QMenu.__init__(self, 'Connect', parent)
+        QMenu.__init__(self, '', parent)
+        
         self._mng = mng
-        mng.sg.patch_may_have_changed.connect(self._patch_may_have_change)
-        
-        self._po = po        
-        self._widgets = dict[Union[Port, Portgroup], CheckFrame]()
-        
-        for group in mng.groups:
-            gp_menu = None
-            last_portgrp_id = 0
-            
-            for port in group.ports:
-                if (port.type is self._port_type()
-                        and port.mode() is self._port_mode().opposite()):
-                    if gp_menu is None:
-                        gp_menu = GroupConnectMenu(group, self._po, self)
-                        gp_menu.setIcon(
-                            get_icon(
-                                group.cnv_box_type, group.cnv_icon_name,
-                                self._port_mode().opposite(),
-                                dark=is_dark_theme(self)))
-
-                    if isinstance(self._po, Portgroup) and port.portgroup_id:
-                        if port.portgroup_id == last_portgrp_id:
-                            continue
-
-                        for portgroup in group.portgroups:
-                            if portgroup.portgroup_id == port.portgroup_id:
-                                portgrp_name = get_portgroup_name_from_ports_names(
-                                    [p.display_name for p in portgroup.ports])
-                                end_name = '/'.join(
-                                    [p.display_name.replace(portgrp_name, '', 1)
-                                     for p in portgroup.ports])
-                                
-                                check_frame = CheckFrame(
-                                    portgroup, portgrp_name, end_name, self)
-                                self._widgets[portgroup] = check_frame
-                                break
-                        else:
-                            continue
-                        
-                        last_portgrp_id = port.portgroup_id
-                    
-                    elif isinstance(self._po, Port) and port.portgroup_id:
-                        pg_pos, pg_len = group.port_pg_pos(port.port_id)
-                        check_frame = CheckFrame(port, port.display_name, '', self,
-                                                 pg_pos, pg_len)
-                        self._widgets[port] = check_frame                  
-                    else:
-                        check_frame = CheckFrame(port, port.display_name, '', self)
-                        self._widgets[port] = check_frame
-                                
-                    action = QWidgetAction(self)
-                    action.setDefaultWidget(check_frame)
-                    gp_menu.addAction(action)
-
-            if gp_menu is not None:
-                self.addMenu(gp_menu)
-                
-        self._patch_may_have_change()
+        self._po = po
+    
+    def _display_name(self, port: Port) -> str:
+        if port.full_type() == (PortType.AUDIO_JACK, PortSubType.CV):
+            return f"CV | {port.cnv_name}"
+        return port.cnv_name
     
     def _ports(self, po: Union[Port, Portgroup, None]=None) -> list[Port]:
         if po is not None:
@@ -352,6 +304,148 @@ class PortgroupConnectionsMenu(QMenu):
         if isinstance(self._po, Portgroup):
             return self._po.port_mode
         return self._po.mode()
+
+    def _get_connection_status(
+            self, po_conns: list[Connection],
+            out_ports: list[Port], in_ports: list[Port]) -> int:
+        if not po_conns:
+            return 0
+        
+        has_irregular = False
+        missing_regulars = False
+        
+        for i in range(len(out_ports)):
+            port_out = out_ports[i]
+            for j in range(len(in_ports)):
+                port_in = in_ports[j]
+                regular = (i % len(in_ports) == j
+                           or j % len(out_ports) == i)
+
+                for conn in po_conns:
+                    if (conn.port_out is port_out
+                            and conn.port_in is port_in):
+                        if not regular:
+                            has_irregular = True
+                        break
+                else:
+                    if regular:
+                        missing_regulars = True
+
+        if has_irregular or missing_regulars:
+            return 1
+        return 2
+
+
+class PortgroupConnectionsMenu(AbstractConnectionsMenu):
+    def __init__(self, mng: 'PatchbayManager',
+                 po: Union[Portgroup, Port], parent=None):
+        AbstractConnectionsMenu.__init__(self, mng, po, parent)
+        self.setTitle(_translate('patchbay', 'Connect'))
+        dark = '-dark' if is_dark_theme(self) else ''
+        self.setIcon(
+            QIcon(QPixmap(':scalable/breeze%s/lines-connector' % dark)))
+        mng.sg.patch_may_have_changed.connect(self._patch_may_have_change)
+
+        self._widgets = dict[Union[Port, Portgroup], CheckFrame]()
+        has_dangerous = self._fill_all_ports()
+        if has_dangerous:
+            self._fill_all_ports(dangerous=True)
+        self._patch_may_have_change()
+    
+    def _is_connection_dangerous(self, port: Port) -> bool:
+        t_type, t_subtype = self._po.full_type()
+        p_type, p_subtype = port.full_type()
+        
+        if t_type is not PortType.AUDIO_JACK:
+            return False
+        
+        if t_subtype is p_subtype:
+            return False
+        
+        if t_subtype is PortSubType.CV:
+            return self._port_mode() is PortMode.OUTPUT
+        
+        if p_subtype is PortSubType.CV:
+            return port.mode() is PortMode.OUTPUT
+        
+        return False
+    
+    def _fill_all_ports(self, dangerous=False) -> bool:
+        main_menu = self
+        if dangerous:
+            if self._po.full_type()[1] is PortSubType.CV:
+                dangerous_name = _translate(
+                    'patchbay', 'Audio | DANGEROUS !!!')
+            else:
+                dangerous_name = _translate(
+                    'patchbay', 'CV | DANGEROUS !!!')
+            main_menu = QMenu(dangerous_name, self)
+            main_menu.setIcon(QIcon.fromTheme('emblem-warning'))
+        
+        has_dangerous_ports = False
+
+        for group in self._mng.groups:
+            gp_menu = None
+            last_portgrp_id = 0
+            
+            for port in group.ports:
+                if (port.type is self._port_type()
+                        and port.mode() is self._port_mode().opposite()):
+                    if self._is_connection_dangerous(port) != dangerous:
+                        has_dangerous_ports = True
+                        continue
+                    
+                    if gp_menu is None:
+                        gp_menu = GroupConnectMenu(group, self._po, main_menu)
+                        gp_menu.setIcon(
+                            get_icon(
+                                group.cnv_box_type, group.cnv_icon_name,
+                                self._port_mode().opposite(),
+                                dark=is_dark_theme(self)))
+
+                    if isinstance(self._po, Portgroup) and port.portgroup_id:
+                        if port.portgroup_id == last_portgrp_id:
+                            continue
+
+                        for portgroup in group.portgroups:
+                            if portgroup.portgroup_id == port.portgroup_id:
+                                portgrp_name = get_portgroup_name_from_ports_names(
+                                    [p.cnv_name for p in portgroup.ports])
+                                end_name = '/'.join(
+                                    [p.cnv_name.replace(portgrp_name, '', 1)
+                                     for p in portgroup.ports])
+                                
+                                check_frame = CheckFrame(
+                                    portgroup, portgrp_name, end_name, self)
+                                self._widgets[portgroup] = check_frame
+                                break
+                        else:
+                            continue
+                        
+                        last_portgrp_id = port.portgroup_id
+                    
+                    elif isinstance(self._po, Port) and port.portgroup_id:
+                        pg_pos, pg_len = group.port_pg_pos(port.port_id)
+                        check_frame = CheckFrame(port, self._display_name(port),
+                                                 '', self, pg_pos, pg_len)
+                        self._widgets[port] = check_frame                  
+                    else:
+                        check_frame = CheckFrame(port, self._display_name(port),
+                                                 '', self)
+                        self._widgets[port] = check_frame
+                                
+                    action = QWidgetAction(self)
+                    action.setDefaultWidget(check_frame)
+                    gp_menu.addAction(action)
+
+            if gp_menu is not None:
+                main_menu.addMenu(gp_menu)
+
+        if dangerous:
+            self.addSeparator()
+            self.addMenu(main_menu)
+
+        return has_dangerous_ports
     
     def connection_asked_from_box(self, po: Union[Port, Portgroup], yesno: bool):
         out_ports, in_ports = self._ports(), self._ports(po)
@@ -441,18 +535,82 @@ class PortgroupConnectionsMenu(QMenu):
                         out_ports, self._ports()))
 
 
+class DisconnectMenu(AbstractConnectionsMenu):
+    def __init__(self, mng: 'PatchbayManager', po: Union[Port, Portgroup],
+                 parent: QMenu):
+        AbstractConnectionsMenu.__init__(self, mng, po, parent)
+        self.setTitle(_translate('patchbay', 'Disconnect'))
+        dark = '-dark' if is_dark_theme(self) else ''
+        self.setIcon(
+            QIcon(QPixmap(':scalable/breeze%s/lines-disconnector' % dark)))
+        
+        self.setSeparatorsCollapsible(False)
+        
+        if self._port_mode() is PortMode.OUTPUT:
+            conn_ports = [c.port_in for c in self._mng.connections
+                          if c.port_out in self._ports()]
+        else:
+            conn_ports = [c.port_out for c in self._mng.connections
+                          if c.port_in in self._ports()]
+        
+        for group in self._mng.groups:
+            group_section_exists = False
+            for port in group.ports:
+                if port in conn_ports:
+                    # if isinstance(self._po, Portgroup) and port.portgroup_id:
+                    #     for portgroup in group.portgroups:
+                    #         if portgroup.portgroup_id == port.portgroup_id:
+                    #             status = self._get_connection_status(
+                    #                 conn_ports, self._ports(), self._ports(portgroup))
+                    #             if status == 2:
+                    #                 pass
+                    #             break
+                    
+                    if not group_section_exists:
+                        group_icon = get_icon(
+                            group.cnv_box_type, group.cnv_icon_name,
+                            self._port_mode().opposite(),
+                            dark=is_dark_theme(self))
+                        
+                        widget = QFrame()
+                        widget.layout = QHBoxLayout(widget)
+                        widget.layout.setSpacing(4)
+                        widget.layout.setContentsMargins(4, 4, 4, 4)
+                        label_icon = QLabel()
+                        label_icon.setPixmap(group_icon.pixmap(QSize(16, 16)))
+                        widget.layout.addWidget(label_icon)
+                        label_name = QLabel(group.cnv_name)
+                        label_name.setStyleSheet("color=red")
+                        widget.layout.addWidget(QLabel(group.cnv_name))
+                        spacer = QSpacerItem(2, 2, QSizePolicy.Expanding, QSizePolicy.Minimum)
+                        widget.layout.addSpacerItem(spacer)
+                        
+                        action = QWidgetAction(self)
+                        action.setDefaultWidget(widget)
+                        action.setSeparator(True)
+                        self.addAction(action)
+                        group_section_exists = True
+                    
+                    check_frame = CheckFrame(port, self._display_name(port),'', self)
+                    port_action = QWidgetAction(self)
+                    port_action.setDefaultWidget(check_frame)
+                    # self.addAction('     ' + self._display_name(port))
+                    self.addAction(port_action)
+
 class PortMenu(QMenu):
     def __init__(self, mng: 'PatchbayManager', group_id: int, port_id: int):
         self._mng = mng
         QMenu.__init__(self)
         port = mng.get_port_from_id(group_id, port_id)
-        conn_menu = PortgroupConnectionsMenu(mng, port, self)      
+        conn_menu = PortgroupConnectionsMenu(mng, port, self)
+        disconn_menu = DisconnectMenu(mng, port, self)    
         # conn_menu = PortConnectionsMenu(mng, group_id, port_id, self) 
         self._port = self._mng.get_port_from_id(group_id, port_id)
         if self._port is None:
             return
 
         self.addMenu(conn_menu)
+        self.addMenu(disconn_menu)
         
 
 class PortgroupMenu(QMenu):
@@ -473,5 +631,7 @@ class PortgroupMenu(QMenu):
             return
         
         conn_menu = PortgroupConnectionsMenu(mng, portgrp)
+        disconn_menu = DisconnectMenu(mng, portgroup, self)   
         
         self.addMenu(conn_menu)
+        self.addMenu(disconn_menu)
