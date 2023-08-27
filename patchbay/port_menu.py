@@ -1,12 +1,12 @@
 
-from cProfile import label
+from enum import IntEnum
 from typing import TYPE_CHECKING, Union
 from PyQt5.QtWidgets import (
     QMenu, QCheckBox, QFrame, QLabel, QHBoxLayout,
     QSpacerItem, QSizePolicy, QWidgetAction,
-    QApplication)
+    QApplication, QAction)
 from PyQt5.QtGui import QIcon, QColor, QKeyEvent, QPixmap
-from PyQt5.QtCore import Qt, QSize
+from PyQt5.QtCore import Qt, QSize, QPoint
 
 
 from .patchcanvas import canvas, CallbackAct, BoxType
@@ -25,6 +25,12 @@ def theme_css(theme: StyleAttributer) -> str:
     return (f"background-color: {theme.background_color().name(QColor.HexArgb)};"
             f"color: {theme.text_color().name(QColor.HexArgb)};"
             f"border: {pen.widthF()}px solid {pen.color().name(QColor.HexArgb)}")
+
+
+class ConnState(IntEnum):
+    NONE = 0
+    IRREGULAR = 1
+    REGULAR = 2
 
     
 class PortCheckBox(QCheckBox):
@@ -112,7 +118,7 @@ class PortCheckBox(QCheckBox):
 
     def nextCheckState(self):
         po = self._p_object
-        port_id = po.port_id if isinstance(po, Port) else -1
+        # port_id = po.port_id if isinstance(po, Port) else -1
         
         self._parent.connection_asked_from_box(po, not self.isChecked())
 
@@ -310,10 +316,10 @@ class AbstractConnectionsMenu(QMenu):
 
     def _get_connection_status(
             self, po_conns: list[Connection],
-            out_ports: list[Port], in_ports: list[Port]) -> int:
+            out_ports: list[Port], in_ports: list[Port]) -> ConnState:
         if not po_conns:
-            return 0
-        
+            return ConnState.NONE
+
         has_irregular = False
         missing_regulars = False
         
@@ -335,8 +341,8 @@ class AbstractConnectionsMenu(QMenu):
                         missing_regulars = True
 
         if has_irregular or missing_regulars:
-            return 1
-        return 2
+            return ConnState.IRREGULAR
+        return ConnState.REGULAR
 
     def connection_asked_from_box(self, po: Union[Port, Portgroup], yesno: bool):
         out_ports, in_ports = self._ports(), self._ports(po)
@@ -506,48 +512,24 @@ class ConnectMenu(AbstractConnectionsMenu):
 
         return has_dangerous_ports
 
-    def _get_connection_status(
-            self, po_conns: list[Connection],
-            out_ports: list[Port], in_ports: list[Port]) -> int:
-        if not po_conns:
-            return 0
-        
-        has_irregular = False
-        missing_regulars = False
-        
-        for i in range(len(out_ports)):
-            port_out = out_ports[i]
-            for j in range(len(in_ports)):
-                port_in = in_ports[j]
-                regular = (i % len(in_ports) == j
-                           or j % len(out_ports) == i)
-
-                for conn in po_conns:
-                    if (conn.port_out is port_out
-                            and conn.port_in is port_in):
-                        if not regular:
-                            has_irregular = True
-                        break
-                else:
-                    if regular:
-                        missing_regulars = True
-
-        if has_irregular or missing_regulars:
-            return 1
-        return 2
-
 
 class DisconnectMenu(AbstractConnectionsMenu):
     def __init__(self, mng: 'PatchbayManager', po: Union[Port, Portgroup],
                  parent: QMenu):
         AbstractConnectionsMenu.__init__(self, mng, po, parent)
+        self.hovered.connect(self._mouse_hover_menu)
         self.setTitle(_translate('patchbay', 'Disconnect'))
         dark = '-dark' if is_dark_theme(self) else ''
         self.setIcon(
             QIcon(QPixmap(':scalable/breeze%s/lines-disconnector' % dark)))
         
         self.setSeparatorsCollapsible(False)
+
+        self.disco_all_act = QAction(_translate('patchbay', 'Disconnect All'))
+        self._fill_all_ports()
+        self._patch_may_have_change()
         
+    def _fill_all_ports(self):
         if self._port_mode() is PortMode.OUTPUT:
             conn_ports = [c.port_in for c in self._mng.connections
                           if c.port_out in self._ports()]
@@ -555,21 +537,14 @@ class DisconnectMenu(AbstractConnectionsMenu):
             conn_ports = [c.port_out for c in self._mng.connections
                           if c.port_in in self._ports()]
         
+        skip_separator = True
+        
         for group in self._mng.groups:
             group_section_exists = False
             last_portgrp_id = 0
             
             for port in group.ports:
                 if port in conn_ports:
-                    # if isinstance(self._po, Portgroup) and port.portgroup_id:
-                    #     for portgroup in group.portgroups:
-                    #         if portgroup.portgroup_id == port.portgroup_id:
-                    #             status = self._get_connection_status(
-                    #                 conn_ports, self._ports(), self._ports(portgroup))
-                    #             if status == 2:
-                    #                 pass
-                    #             break
-                    
                     if not group_section_exists:
                         group_icon = get_icon(
                             group.cnv_box_type, group.cnv_icon_name,
@@ -592,6 +567,12 @@ class DisconnectMenu(AbstractConnectionsMenu):
                         action = QWidgetAction(self)
                         action.setDefaultWidget(widget)
                         action.setSeparator(True)
+                        
+                        # add separator if it is not the fisrt group
+                        if not skip_separator:
+                            self.addSeparator()
+                        skip_separator = False
+                        
                         self.addAction(action)
                         group_section_exists = True
                     
@@ -618,49 +599,78 @@ class DisconnectMenu(AbstractConnectionsMenu):
                     
                     else:
                         check_frame = CheckFrame(port, self._display_name(port),'', self)
+                        self._check_frames[port] = check_frame
 
-                    check_frame.set_check_state(2)
-                    port_action = QWidgetAction(self)
-                    port_action.setDefaultWidget(check_frame)
-                    self._check_frames[port] = check_frame
-                    # self.addAction('     ' + self._display_name(port))
-                    self.addAction(port_action)
+                    po_action = QWidgetAction(self)
+                    po_action.setDefaultWidget(check_frame)
+                    self.addAction(po_action)
+        
+        self.addSeparator()
+        self.addAction(self.disco_all_act)
 
-class PortMenu(QMenu):
-    def __init__(self, mng: 'PatchbayManager', group_id: int, port_id: int):
-        self._mng = mng
-        QMenu.__init__(self)
-        port = mng.get_port_from_id(group_id, port_id)
-        conn_menu = ConnectMenu(mng, port, self)
-        disconn_menu = DisconnectMenu(mng, port, self)    
-        # conn_menu = PortConnectionsMenu(mng, group_id, port_id, self) 
-        self._port = self._mng.get_port_from_id(group_id, port_id)
-        if self._port is None:
+    def _mouse_hover_menu(self, action: QWidgetAction):
+        # for better use with keyboard
+        if not isinstance(action, QWidgetAction):
             return
 
-        self.addMenu(conn_menu)
-        self.addMenu(disconn_menu)
+        action.defaultWidget().setFocus()
         
+    def has_connections(self) -> bool:
+        return bool(self._check_frames)
 
-class PortgroupMenu(QMenu):
-    def __init__(self, mng: 'PatchbayManager', group_id: int, portgrp_id: int):
+
+class PoMenu(AbstractConnectionsMenu):
+    def __init__(self, mng: 'PatchbayManager', po: Union[Port, Portgroup]):
         self._mng = mng
-        QMenu.__init__(self)
+        AbstractConnectionsMenu.__init__(self, mng, po)
+        self.conn_menu = ConnectMenu(mng, po)
+        self.disconn_menu = DisconnectMenu(mng, po, self)   
         
-        for group in mng.groups:
-            if group.group_id == group_id:
-                for portgroup in group.portgroups:
-                    if portgroup.portgroup_id == portgrp_id:
-                        portgrp = portgroup
-                        break
-                else:
-                    continue
-                break
-        else:
-            return
+        self.addMenu(self.conn_menu)
+        if self.disconn_menu.has_connections():
+            self.addMenu(self.disconn_menu)
         
-        conn_menu = ConnectMenu(mng, portgrp)
-        disconn_menu = DisconnectMenu(mng, portgroup, self)   
+        self.disco_all_act = QAction(_translate('patchbay', 'Disconnect All'))
+        self.disco_all_act.setEnabled(self._has_visible_conns())
+        self.addAction(self.disco_all_act)
         
-        self.addMenu(conn_menu)
-        self.addMenu(disconn_menu)
+    def _has_visible_conns(self) -> bool:
+        if self._port_mode() is PortMode.OUTPUT:
+            for conn in [c for c in self._mng.connections if c.in_canvas]:
+                if conn.port_out in self._ports():
+                    return True
+            return False
+        
+        if self._port_mode() is PortMode.INPUT:
+            for conn in [c for c in self._mng.connections if c.in_canvas]:
+                if conn.port_in in self._ports():
+                    return True
+            return False
+
+    def _disconnect_all(self, visible_only=False):
+        if visible_only:
+            if self._port_mode() is PortMode.OUTPUT:
+                conn_ids = [c.connection_id for c in self._mng.connections
+                            if c.in_canvas and c.port_out in self._ports()]
+            else:
+                conn_ids = [c.connection_id for c in self._mng.connections
+                            if c.in_canvas and c.port_in in self._ports()]
+        else:   
+            if self._port_mode() is PortMode.OUTPUT:
+                conn_ids = [c.connection_id for c in self._mng.connections
+                            if c.port_out in self._ports()]
+            else:
+                conn_ids = [c.connection_id for c in self._mng.connections
+                            if c.port_in in self._ports()]
+
+        for conn_id in conn_ids:
+            canvas.callback(CallbackAct.PORTS_DISCONNECT, conn_id)
+    
+    def exec(self, pos: QPoint) -> QAction:
+        action = AbstractConnectionsMenu.exec(self, pos)
+        if action is self.disconn_menu.disco_all_act:
+            self._disconnect_all()
+        if action is self.disco_all_act:
+            self._disconnect_all(visible_only=True)
+        return action
+        

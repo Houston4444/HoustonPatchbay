@@ -6,7 +6,7 @@ from . import patchcanvas
 from .patchcanvas import CallbackAct, PortMode, PortType, BoxLayoutMode
 from .base_elements import Port, GroupPosFlag, PortTypesViewFlag, PortgroupMem
 from .port_info_dialog import CanvasPortInfoDialog
-from .port_menu import PortMenu, PortgroupMenu
+from .port_menu import PoMenu
 
 if TYPE_CHECKING:
     from .patchbay_manager import PatchbayManager
@@ -150,16 +150,26 @@ class Callbacker:
 
     def _port_menu_call(self, group_id: int, port_id: int, connect_only: bool,
                        x: int, y: int):
-        print('slslsls', group_id, port_id, '::', x, y)
-        menu = PortMenu(self.mng, group_id, port_id)
-        menu.addAction('zpzpp')
-        menu.addAction('smsmsms')
+        port = self.mng.get_port_from_id(group_id, port_id)
+        menu = PoMenu(self.mng, port)
         menu.exec(QPoint(x, y))
         
-    def _portgroup_menu_call(self, group_id: int, port_id: int, connect_only: bool,
+    def _portgroup_menu_call(self, group_id: int, portgrp_id: int, connect_only: bool,
                              x: int, y: int):
-        menu = PortgroupMenu(self.mng, group_id, port_id)
-        menu.addAction('zpzpp')
+        for group in self.mng.groups:
+            if group.group_id != group_id:
+                continue
+            
+            for portgroup in group.portgroups:
+                if portgroup.portgroup_id == portgrp_id:
+                    break
+            else:
+                continue
+            break
+        else:
+            return
+                
+        menu = PoMenu(self.mng, portgroup)
         menu.exec(QPoint(x, y))
 
     def _bg_right_click(self, x: int, y: int):
