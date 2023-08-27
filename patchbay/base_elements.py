@@ -396,7 +396,7 @@ class Port:
                 return long_name.partition(': ')[2]
 
         if self.full_name.startswith('Midi-Bridge:'):
-            # supress 'Midi-Bridge:' at port name begginning
+            # suppress 'Midi-Bridge:' at port name begginning
             long_name = self.full_name.partition(':')[2]
             if ') ' in long_name:
                 # normal case, name is after ') '

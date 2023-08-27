@@ -1101,6 +1101,7 @@ class PatchbayManager:
                     port_short_name = ':'.join(port.full_name.split(':')[5:])
                 else:
                     port_short_name = port.full_name.partition(':')[2]
+
                 contents += f'{port_short_name}\n'
                 
                 if port.pretty_name or port.order:
