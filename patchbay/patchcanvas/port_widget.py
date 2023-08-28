@@ -255,82 +255,13 @@ class PortWidget(ConnectableWidget):
         canvas.menu_shown = True
         is_only_connect = bool(
             QApplication.keyboardModifiers() & Qt.ControlModifier)
-        
-        if is_only_connect:
-            menu = ConnectMenu(self._port)
-        else:
-            menu = ConnectableContextMenu(self._port)
-
-        act_x_sep_1 = menu.addSeparator()
-
-        if (not is_only_connect
-                and self._port_type == PortType.AUDIO_JACK
-                and not self._port_subtype is PortSubType.CV
-                and not self._portgrp_id):
-            stereo_menu = QMenu(_translate('patchbay', "Set as Stereo with"), menu)
-            menu.addMenu(stereo_menu)
-
-            # get list of available mono ports settables as stereo with port
-            port_id_cousin_list = list[int]()
-
-            for port in canvas.list_ports(group_id=self._group_id):
-                if (port.port_mode is self._port_mode
-                        and port.port_type is self._port_type
-                        and port.port_subtype is self._port_subtype):
-                    port_id_cousin_list.append(port.port_id)
-
-            selfport_index = port_id_cousin_list.index(self._port_id)
-            at_least_one = False
-
-            if selfport_index > 0:
-                previous_port_id = port_id_cousin_list[selfport_index - 1]
-                previous_port = canvas.get_port(self._group_id, previous_port_id)
-                if previous_port and not previous_port.portgrp_id:
-                    pp_action = stereo_menu.addAction(previous_port.port_name)
-                    pp_action.setData((previous_port, self._port))
-                    pp_action.triggered.connect(canvas.qobject.portgroup_the_ports)
-                    at_least_one = True
-                
-            if selfport_index < len(port_id_cousin_list) - 1:
-                next_port_id = port_id_cousin_list[selfport_index + 1]
-                next_port = canvas.get_port(self._group_id, next_port_id)
-                if next_port and not next_port.portgrp_id:
-                    np_action = stereo_menu.addAction(next_port.port_name)
-                    np_action.setData((self._port, next_port))
-                    np_action.triggered.connect(canvas.qobject.portgroup_the_ports)
-                    at_least_one = True
-
-            if not at_least_one:
-                act_x_setasstereo = stereo_menu.addAction('no available mono port')
-                act_x_setasstereo.setEnabled(False)
-
-        act_x_info = menu.addAction(_translate('patchbay', "Get &Info"))
-        act_x_info.setIcon(QIcon.fromTheme('dialog-information'))
-        act_x_rename = menu.addAction(_translate('patchbay', "&Rename"))
-
-        if not features.port_info:
-            act_x_info.setVisible(False)
-
-        if not features.port_rename:
-            act_x_rename.setVisible(False)
-
-        if not (features.port_info and features.port_rename):
-            act_x_sep_1.setVisible(False)
-
-        if is_only_connect:
-            act_x_info.setVisible(False)
-            act_x_rename.setVisible(False)
-            act_x_sep_1.setVisible(False)
 
         # prevent a bug that moves the box on mouse click after click to 
         # quit the menu if the two clic are at same point.
-        self.parentItem().setFlag(QGraphicsItem.ItemIsMovable, False)
+        # self.parentItem().setFlag(QGraphicsItem.ItemIsMovable, False)
 
         # precise the menu start point to still view the port
         # and be able to read its portgroup name.
-        if not is_only_connect:      
-            menu.show()
-        
         start_point = canvas.scene.screen_position(
             self.scenePos() + QPointF(0.0, self._port_height))
         
@@ -343,28 +274,18 @@ class PortWidget(ConnectableWidget):
         bottom_screen = QApplication.desktop().screenGeometry().bottom()
         more = 12 if self._port_mode is PortMode.OUTPUT else 0
 
-        if start_point.y() + menu.height() > bottom_screen:
+        if start_point.y() + 250 > bottom_screen:
             start_point = canvas.scene.screen_position(
                 self.scenePos() + QPointF(self._port_width + more, self._port_height))
         
-        if not is_only_connect:
-            act_selected = menu.exec(start_point)
-        else:
-            act_selected = None
-            canvas.callback(
-                CallbackAct.PORT_MENU_CALL, self._group_id, self._port_id,
-                False, start_point.x(), start_point.y())
-        
-        if act_selected is act_x_info:
-            canvas.callback(CallbackAct.PORT_INFO, self._group_id, self._port_id)
+        canvas.callback(
+            CallbackAct.PORT_MENU_CALL, self._group_id, self._port_id,
+            is_only_connect, start_point.x(), start_point.y())
 
-        elif act_selected is act_x_rename:
-            canvas.callback(CallbackAct.PORT_RENAME, self._group_id, self._port_id)
-            
-        if act_selected is None:
-            canvas.menu_click_pos = QCursor.pos()
-        else:
-            self.parentItem().setFlag(QGraphicsItem.ItemIsMovable, True)
+        # if act_selected is None:
+        #     canvas.menu_click_pos = QCursor.pos()
+        # else:
+        #     self.parentItem().setFlag(QGraphicsItem.ItemIsMovable, True)
 
     def boundingRect(self):
         if self._portgrp_id:

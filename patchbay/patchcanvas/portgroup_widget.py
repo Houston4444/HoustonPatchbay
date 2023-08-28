@@ -145,10 +145,6 @@ class PortgroupWidget(ConnectableWidget):
         
         return self._theme.get_text_width(self._print_name)
 
-    def _split_to_monos(self):
-        canvas_callback(CallbackAct.PORTGROUP_REMOVE,
-                        self._group_id, self._portgrp_id)
-
     def ensure_selection_with_ports(self):
         for port_widget in self._ports_widgets:
             if not port_widget.isSelected():
@@ -189,49 +185,26 @@ class PortgroupWidget(ConnectableWidget):
 
         is_only_connect = bool(
             QApplication.keyboardModifiers() & Qt.ControlModifier)
-
-        if is_only_connect:
-            menu = ConnectMenu(self._portgrp)
-        else:
-            menu = ConnectableContextMenu(self._portgrp)
-
-        act_x_setasmono = menu.addAction(
-            _translate('patchbay', "Split to Monos"))
         
-        self.parentItem().setFlag(QGraphicsItem.ItemIsMovable, False)
+        # self.parentItem().setFlag(QGraphicsItem.ItemIsMovable, False)
         
-        menu.show()
         start_point = canvas.scene.screen_position(
             self.scenePos() + QPointF(0.0, self.boundingRect().bottom()))
         bottom_screen = QApplication.desktop().screenGeometry().bottom()
         more = 12 if self._port_mode is PortMode.OUTPUT else 0
 
-        if start_point.y() + menu.height() > bottom_screen:
+        if start_point.y() + 250 > bottom_screen:
             start_point = canvas.scene.screen_position(
                 self.scenePos() + QPointF(self._portgrp_width + more, self._portgrp_height))
         
-        if is_only_connect:
-            act_x_setasmono.setVisible(False)
+        canvas.callback(
+            CallbackAct.PORTGROUP_MENU_CALL, self._group_id, self._portgrp_id,
+            is_only_connect, start_point.x(), start_point.y())
         
-        if not is_only_connect:
-            act_selected = menu.exec(start_point)
-        else:
-            act_selected = None
-            canvas.callback(
-                CallbackAct.PORTGROUP_MENU_CALL, self._group_id, self._portgrp_id,
-                False, start_point.x(), start_point.y())
-        
-        # act_selected = menu.exec_(start_point)
-        
-        if act_selected is act_x_setasmono:
-            QTimer.singleShot(0, self._split_to_monos)
-        
-        if act_selected is None:
-            canvas.menu_click_pos = QCursor.pos()
-        else:
-            self.parentItem().setFlag(QGraphicsItem.ItemIsMovable, True)
-
-        event.accept()
+        # if act_selected is None:
+        #     canvas.menu_click_pos = QCursor.pos()
+        # else:
+        #     self.parentItem().setFlag(QGraphicsItem.ItemIsMovable, True)
 
     def boundingRect(self) -> QRectF:
         if self._port_mode is PortMode.INPUT:

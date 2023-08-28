@@ -777,6 +777,8 @@ class PoMenu(AbstractConnectionsMenu):
             port_info_act = self.addAction(_translate('patchbay', "Get &Info"))
             port_info_act.setIcon(QIcon.fromTheme('dialog-information'))            
             port_info_act.triggered.connect(self._display_port_infos)
+            
+        print('dodd', self.sizeHint().height())
         
     def _get_existing_conns_flag(self) -> ExistingConns:
         existing_conns = ExistingConns.NONE
