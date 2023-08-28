@@ -6,13 +6,16 @@ from PyQt5.QtWidgets import (
     QSpacerItem, QSizePolicy, QWidgetAction,
     QApplication, QAction)
 from PyQt5.QtGui import QIcon, QColor, QKeyEvent, QPixmap
-from PyQt5.QtCore import Qt, QSize, pyqtSlot
+from PyQt5.QtCore import Qt, QSize, pyqtSlot, QEvent
 
 
 from .patchcanvas import canvas, CallbackAct, BoxType
 from .patchcanvas.theme import StyleAttributer
-from .patchcanvas.utils import get_portgroup_name_from_ports_names, get_icon, is_dark_theme
-from .base_elements import Connection, Port, Portgroup, PortType, PortSubType, PortMode, Group
+from .patchcanvas.utils import (
+    get_portgroup_name_from_ports_names, get_icon, is_dark_theme)
+from .base_elements import (
+    Connection, Port, Portgroup, PortType,
+    PortSubType, PortMode, Group)
 
 if TYPE_CHECKING:
     from patchbay_manager import PatchbayManager
@@ -44,14 +47,14 @@ class PortCheckBox(QCheckBox):
                  parent: 'CheckFrame', pg_pos=0, pg_len=1):
         QCheckBox.__init__(self, "", parent)
         self.setTristate(True)
-        self._p_object = p_object
+        self._po = p_object
         self._parent = parent
         self._pg_pos = pg_pos
         self._pg_len = pg_len
         self.set_theme()
 
     def set_theme(self):        
-        po = self._p_object
+        po = self._po
         
         full_theme = canvas.theme
         theme = full_theme.port
@@ -123,10 +126,8 @@ class PortCheckBox(QCheckBox):
         #         f"border: 3px solid {ind_bg}}}")
 
     def nextCheckState(self):
-        po = self._p_object
-        # port_id = po.port_id if isinstance(po, Port) else -1
-        
-        self._parent.connection_asked_from_box(po, not self.isChecked())
+        self._parent.connection_asked_from_box(
+            self._po, not self.isChecked())
 
 
 class CheckFrame(QFrame):
@@ -417,10 +418,17 @@ class ConnectMenu(AbstractConnectionsMenu):
         self.setIcon(
             QIcon(QPixmap(':scalable/breeze%s/lines-connector' % dark)))
         
+        self._gp_menus = list[GroupConnectMenu]()
 
         has_dangerous = self._fill_all_ports()
         if has_dangerous:
             self._fill_all_ports(dangerous=True)
+                
+        # all groups menus have the same (max) width
+        max_width = max([m.sizeHint().width() for m in self._gp_menus])        
+        for gp_menu in self._gp_menus:
+            gp_menu.setMinimumWidth(max_width)
+        
         self._patch_may_have_change()
     
     def _is_connection_dangerous(self, port: Port) -> bool:
@@ -473,6 +481,7 @@ class ConnectMenu(AbstractConnectionsMenu):
                                 group.cnv_box_type, group.cnv_icon_name,
                                 self._port_mode().opposite(),
                                 dark=is_dark_theme(self)))
+                        self._gp_menus.append(gp_menu)
 
                     if isinstance(self._po, Portgroup) and port.portgroup_id:
                         if port.portgroup_id == last_portgrp_id:
@@ -524,6 +533,9 @@ class DisconnectMenu(AbstractConnectionsMenu):
                  parent: QMenu):
         AbstractConnectionsMenu.__init__(self, mng, po, parent)
         self.hovered.connect(self._mouse_hover_menu)
+
+        self._one_frame_checked = False
+
         self.setTitle(_translate('patchbay', 'Disconnect'))
         dark = '-dark' if is_dark_theme(self) else ''
         self.setIcon(
@@ -614,8 +626,9 @@ class DisconnectMenu(AbstractConnectionsMenu):
                 po_action.setDefaultWidget(check_frame)
                 self.addAction(po_action)
         
-        self.addSeparator()
-        self.addAction(self.disco_all_act)
+        if len(self._check_frames) >= 2:
+            self.addSeparator()
+            self.addAction(self.disco_all_act)
 
     def _mouse_hover_menu(self, action: QWidgetAction):
         # for better use with keyboard
@@ -623,14 +636,32 @@ class DisconnectMenu(AbstractConnectionsMenu):
             return
 
         action.defaultWidget().setFocus()
+    
+    def connection_asked_from_box(self, po: Union[Port, Portgroup], yesno: bool):
+        super().connection_asked_from_box(po, yesno)
+        self._one_frame_checked = True
         
+        if len(self._check_frames) < 2:
+            parent: QMenu = self.parent()
+            parent.close()
+    
     def has_connections(self) -> bool:
         return bool(self._check_frames)
+
+    def enterEvent(self, event: QEvent):
+        super().enterEvent(event)
+        self._one_frame_checked = False
+
+    # close the disconnect menu if at least one port has been unchecked
+    def leaveEvent(self, event: QEvent):
+        super().leaveEvent(event)
+        if self._one_frame_checked:
+            parent: QMenu = self.parent()
+            parent.close()
 
 
 class PoMenu(AbstractConnectionsMenu):
     def __init__(self, mng: 'PatchbayManager', po: Union[Port, Portgroup]):
-        self._mng = mng
         AbstractConnectionsMenu.__init__(self, mng, po)
         self.conn_menu = ConnectMenu(mng, po)
         self.disconn_menu = DisconnectMenu(mng, po, self)   
@@ -644,7 +675,8 @@ class PoMenu(AbstractConnectionsMenu):
         if self.disconn_menu.has_connections():
             self.addMenu(self.disconn_menu)
         
-        disco_all_act = self.addAction(_translate('patchbay', 'Disconnect All'))
+        disco_all_act = self.addAction(
+            _translate('patchbay', 'Disconnect All'))
         disco_all_act.setIcon(disconn_icon)
         
         existing_conns = self._get_existing_conns_flag()
@@ -689,55 +721,56 @@ class PoMenu(AbstractConnectionsMenu):
         self.addSeparator()
         
         # Add mono <-> stereo tools
-        if isinstance(self._po, Portgroup):
-            self.split_to_monos_act = QAction(
-                _translate('patchbay', 'Split to Monos'))
-            self.split_to_monos_act.triggered.connect(self._split_to_monos)
-            self.addAction(self.split_to_monos_act)
-        
-        elif isinstance(self._po, Port) and not self._po.portgroup_id:
-            set_as_stereo_menu = QMenu(
-                _translate('patchbay', 'Set as stereo with...'),
-                self)
+        if self._po.full_type() == (PortType.AUDIO_JACK, PortSubType.REGULAR):
+            if isinstance(self._po, Portgroup):
+                self.split_to_monos_act = QAction(
+                    _translate('patchbay', 'Split to Monos'))
+                self.split_to_monos_act.triggered.connect(self._split_to_monos)
+                self.addAction(self.split_to_monos_act)
             
-            for group in self._mng.groups:
-                if group.group_id != self._po.group_id:
-                    continue
+            elif isinstance(self._po, Port) and not self._po.portgroup_id:
+                set_as_stereo_menu = QMenu(
+                    _translate('patchbay', 'Set as stereo with...'),
+                    self)
                 
-                previous_port: Port = None
-                next_port: Port = None
-                port_found = False
-                
-                for port in group.ports:
-                    if port.full_type() != self._po.full_type():
+                for group in self._mng.groups:
+                    if group.group_id != self._po.group_id:
                         continue
                     
-                    if not port_found:
-                        if port is self._po:
-                            port_found = True
-                        elif port.portgroup_id:
-                            previous_port = None
+                    previous_port: Port = None
+                    next_port: Port = None
+                    port_found = False
+                    
+                    for port in group.ports:
+                        if port.full_type() != self._po.full_type():
+                            continue
+                        
+                        if not port_found:
+                            if port is self._po:
+                                port_found = True
+                            elif port.portgroup_id:
+                                previous_port = None
+                            else:
+                                previous_port = port
                         else:
-                            previous_port = port
-                    else:
-                        if not port.portgroup_id:
-                            next_port = port
-                        break
-            
-            self.mono_ports_acts = list[QAction]()
-            
-            for mono_port in (previous_port, next_port):
-                if mono_port is None:
-                    continue
+                            if not port.portgroup_id:
+                                next_port = port
+                            break
                 
-                act = QAction(mono_port.cnv_name, set_as_stereo_menu)
-                act.setData(mono_port)
-                act.triggered.connect(self._set_as_stereo_with)
-                self.mono_ports_acts.append(act)
-                set_as_stereo_menu.addAction(act)
+                self.mono_ports_acts = list[QAction]()
                 
-            if previous_port or next_port:
-                self.addMenu(set_as_stereo_menu)
+                for mono_port in (previous_port, next_port):
+                    if mono_port is None:
+                        continue
+                    
+                    act = QAction(mono_port.cnv_name, set_as_stereo_menu)
+                    act.setData(mono_port)
+                    act.triggered.connect(self._set_as_stereo_with)
+                    self.mono_ports_acts.append(act)
+                    set_as_stereo_menu.addAction(act)
+                    
+                if previous_port or next_port:
+                    self.addMenu(set_as_stereo_menu)
         
         # add info dialog command
         if isinstance(self._po, Port):
