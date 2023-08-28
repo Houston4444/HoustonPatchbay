@@ -1,5 +1,5 @@
 
-from enum import IntEnum
+from enum import IntEnum, IntFlag
 from typing import TYPE_CHECKING, Union
 from PyQt5.QtWidgets import (
     QMenu, QCheckBox, QFrame, QLabel, QHBoxLayout,
@@ -31,6 +31,12 @@ class ConnState(IntEnum):
     NONE = 0
     IRREGULAR = 1
     REGULAR = 2
+
+
+class ExistingConns(IntFlag):
+    NONE = 0x0
+    VISIBLE = 0x1
+    HIDDEN = 0x2
 
     
 class PortCheckBox(QCheckBox):
@@ -297,11 +303,11 @@ class AbstractConnectionsMenu(QMenu):
     def _ports(self, po: Union[Port, Portgroup, None]=None) -> list[Port]:
         if po is not None:
             if isinstance(po, Portgroup):
-                return po.ports
+                return list(po.ports)
             return [po]
         
         if isinstance(self._po, Portgroup):
-            return self._po.ports
+            return list(self._po.ports)
         return [self._po]
     
     def _port_type(self) -> PortType:
@@ -629,26 +635,79 @@ class PoMenu(AbstractConnectionsMenu):
         self.conn_menu = ConnectMenu(mng, po)
         self.disconn_menu = DisconnectMenu(mng, po, self)   
         
+        dark = '-dark' if is_dark_theme(self) else ''
+        disconn_icon = QIcon(
+            QPixmap(':scalable/breeze%s/lines-disconnector' % dark))
+        self.disconn_menu.setIcon(disconn_icon)
+        
         self.addMenu(self.conn_menu)
         if self.disconn_menu.has_connections():
             self.addMenu(self.disconn_menu)
         
         self.disco_all_act = QAction(_translate('patchbay', 'Disconnect All'))
-        self.disco_all_act.setEnabled(self._has_visible_conns())
+        self.disco_all_act.setIcon(disconn_icon)
+        
+        existing_conns = self._get_existing_conns_flag()
+        self.disco_all_act.setEnabled(
+            bool(existing_conns & ExistingConns.VISIBLE))
+        if existing_conns & ExistingConns.HIDDEN:
+            self.disco_all_act.setText(
+                _translate('patchbay', 'Disconnect All (visible)'))
+        
         self.addAction(self.disco_all_act)
         
-    def _has_visible_conns(self) -> bool:
+        # Add clipboard menu
+        self.clipboard_menu = QMenu(_translate('patchbay', 'Clipboard'), self)
+        self.clipboard_menu.setIcon(QIcon.fromTheme('edit-paste'))
+        
+        # self.clipboard_menu.setIcon()
+        self.cb_cut_act = QAction(_translate('patchbay', 'Cut connections'))
+        self.cb_copy_act = QAction(_translate('patchbay', 'Copy connections'))
+        self.cb_paste_act = QAction(_translate('patchbay', 'Paste connections'))
+        self.cb_cut_act.setIcon(QIcon.fromTheme('edit-cut'))
+        self.cb_copy_act.setIcon(QIcon.fromTheme('edit-copy'))
+        self.cb_paste_act.setIcon(QIcon.fromTheme('edit-paste'))
+        
+        self.disconn_menu.disco_all_act.triggered.connect(self._disconnect_all)
+        self.disco_all_act.triggered.connect(self._disconnect_all_visible)
+        self.cb_cut_act.triggered.connect(self._cb_cut)
+        self.cb_copy_act.triggered.connect(self._cb_copy)
+        self.cb_paste_act.triggered.connect(self._cb_paste)
+        
+        if not existing_conns & ExistingConns.VISIBLE:
+            self.cb_cut_act.setEnabled(False)
+            self.cb_copy_act.setEnabled(False)
+        
+        self.clipboard_menu.addAction(self.cb_cut_act)
+        self.clipboard_menu.addAction(self.cb_copy_act)
+
+        if self._mng.connections_clipboard.is_compatible(self._ports()):
+            self.clipboard_menu.addAction(self.cb_paste_act)
+        
+        self.addMenu(self.clipboard_menu)
+        
+    def _get_existing_conns_flag(self) -> ExistingConns:
+        existing_conns = ExistingConns.NONE
+
         if self._port_mode() is PortMode.OUTPUT:
-            for conn in [c for c in self._mng.connections if c.in_canvas]:
+            for conn in self._mng.connections:
                 if conn.port_out in self._ports():
-                    return True
-            return False
+                    if conn.in_canvas:
+                        existing_conns |= ExistingConns.VISIBLE
+                    else:
+                        existing_conns |= ExistingConns.HIDDEN
+                        
+            return existing_conns
         
         if self._port_mode() is PortMode.INPUT:
-            for conn in [c for c in self._mng.connections if c.in_canvas]:
+            for conn in self._mng.connections:
                 if conn.port_in in self._ports():
-                    return True
-            return False
+                    if conn.in_canvas:
+                        existing_conns |= ExistingConns.VISIBLE
+                    else:
+                        existing_conns |= ExistingConns.HIDDEN
+                        
+            return existing_conns
 
     def _disconnect_all(self, visible_only=False):
         if visible_only:
@@ -668,12 +727,16 @@ class PoMenu(AbstractConnectionsMenu):
 
         for conn_id in conn_ids:
             canvas.callback(CallbackAct.PORTS_DISCONNECT, conn_id)
+
+    def _disconnect_all_visible(self):
+        self._disconnect_all(visible_only=True)
+
+    def _cb_cut(self):
+        self._mng.connections_clipboard.cb_cut(self._ports())
     
-    def exec(self, pos: QPoint) -> QAction:
-        action = AbstractConnectionsMenu.exec(self, pos)
-        if action is self.disconn_menu.disco_all_act:
-            self._disconnect_all()
-        if action is self.disco_all_act:
-            self._disconnect_all(visible_only=True)
-        return action
+    def _cb_copy(self):
+        self._mng.connections_clipboard.cb_copy(self._ports())
+        
+    def _cb_paste(self):
+        self._mng.connections_clipboard.cb_paste(self._ports())
         

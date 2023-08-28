@@ -4,7 +4,6 @@ import logging
 import operator
 from pathlib import Path
 from dataclasses import dataclass
-from sqlite3 import connect
 from typing import TYPE_CHECKING, Any, Callable, Optional, Union
 
 from PyQt5.QtGui import QCursor, QGuiApplication
@@ -25,6 +24,7 @@ from .filter_frame import FilterFrame
 from .base_elements import (
     Connection, GroupPos, Port, PortTypesViewFlag, Portgroup, Group,
     JackPortFlag, PortgroupMem, ToolDisplayed, TransportPosition)
+from .conns_clipboard import ConnClipboard
 from .calbacker import Callbacker
 
 
@@ -127,6 +127,8 @@ class PatchbayManager:
         self.filter_frame: FilterFrame = None
         
         self._manual_path: Path = None
+
+        self.connections_clipboard = ConnClipboard(self)
 
         self.server_is_started = True
 
