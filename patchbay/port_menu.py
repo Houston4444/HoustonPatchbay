@@ -644,48 +644,51 @@ class PoMenu(AbstractConnectionsMenu):
         if self.disconn_menu.has_connections():
             self.addMenu(self.disconn_menu)
         
-        self.disco_all_act = QAction(_translate('patchbay', 'Disconnect All'))
-        self.disco_all_act.setIcon(disconn_icon)
+        disco_all_act = self.addAction(_translate('patchbay', 'Disconnect All'))
+        disco_all_act.setIcon(disconn_icon)
         
         existing_conns = self._get_existing_conns_flag()
-        self.disco_all_act.setEnabled(
+        disco_all_act.setEnabled(
             bool(existing_conns & ExistingConns.VISIBLE))
         if existing_conns & ExistingConns.HIDDEN:
-            self.disco_all_act.setText(
+            disco_all_act.setText(
                 _translate('patchbay', 'Disconnect All (visible)'))
         
-        self.addAction(self.disco_all_act)
-        
+        disco_all_act.triggered.connect(self._disconnect_all_visible)
+        self.disconn_menu.disco_all_act.triggered.connect(self._disconnect_all)
+
         # Add clipboard menu
         self.clipboard_menu = QMenu(_translate('patchbay', 'Clipboard'), self)
         self.clipboard_menu.setIcon(QIcon.fromTheme('edit-paste'))
         
-        self.cb_cut_act = QAction(_translate('patchbay', 'Cut connections'))
-        self.cb_copy_act = QAction(_translate('patchbay', 'Copy connections'))
-        self.cb_paste_act = QAction(_translate('patchbay', 'Paste connections'))
-        self.cb_cut_act.setIcon(QIcon.fromTheme('edit-cut'))
-        self.cb_copy_act.setIcon(QIcon.fromTheme('edit-copy'))
-        self.cb_paste_act.setIcon(QIcon.fromTheme('edit-paste'))
+        cb_cut_act = self.clipboard_menu.addAction(
+            _translate('patchbay', 'Cut connections'))
+        cb_copy_act = self.clipboard_menu.addAction(
+            _translate('patchbay', 'Copy connections'))
+        cb_paste_act = QAction(
+            _translate('patchbay', 'Paste connections'),
+            self.clipboard_menu)
+
+        cb_cut_act.setIcon(QIcon.fromTheme('edit-cut'))
+        cb_copy_act.setIcon(QIcon.fromTheme('edit-copy'))
+        cb_paste_act.setIcon(QIcon.fromTheme('edit-paste'))
         
-        self.disconn_menu.disco_all_act.triggered.connect(self._disconnect_all)
-        self.disco_all_act.triggered.connect(self._disconnect_all_visible)
-        self.cb_cut_act.triggered.connect(self._cb_cut)
-        self.cb_copy_act.triggered.connect(self._cb_copy)
-        self.cb_paste_act.triggered.connect(self._cb_paste)
+        cb_cut_act.triggered.connect(self._cb_cut)
+        cb_copy_act.triggered.connect(self._cb_copy)
+        cb_paste_act.triggered.connect(self._cb_paste)
         
         if not existing_conns & ExistingConns.VISIBLE:
-            self.cb_cut_act.setEnabled(False)
-            self.cb_copy_act.setEnabled(False)
-        
-        self.clipboard_menu.addAction(self.cb_cut_act)
-        self.clipboard_menu.addAction(self.cb_copy_act)
+            cb_cut_act.setEnabled(False)
+            cb_copy_act.setEnabled(False)
 
         if self._mng.connections_clipboard.is_compatible(self._ports()):
-            self.clipboard_menu.addAction(self.cb_paste_act)
+            self.clipboard_menu.addAction(cb_paste_act)
         
         self.addMenu(self.clipboard_menu)
         
         self.addSeparator()
+        
+        # Add mono <-> stereo tools
         if isinstance(self._po, Portgroup):
             self.split_to_monos_act = QAction(
                 _translate('patchbay', 'Split to Monos'))
@@ -693,7 +696,7 @@ class PoMenu(AbstractConnectionsMenu):
             self.addAction(self.split_to_monos_act)
         
         elif isinstance(self._po, Port) and not self._po.portgroup_id:
-            self.set_as_stereo_menu = QMenu(
+            set_as_stereo_menu = QMenu(
                 _translate('patchbay', 'Set as stereo with...'),
                 self)
             
@@ -727,15 +730,16 @@ class PoMenu(AbstractConnectionsMenu):
                 if mono_port is None:
                     continue
                 
-                act = QAction(mono_port.cnv_name)
+                act = QAction(mono_port.cnv_name, set_as_stereo_menu)
                 act.setData(mono_port)
                 act.triggered.connect(self._set_as_stereo_with)
                 self.mono_ports_acts.append(act)
-                self.set_as_stereo_menu.addAction(act)
+                set_as_stereo_menu.addAction(act)
                 
             if previous_port or next_port:
-                self.addMenu(self.set_as_stereo_menu)
-                
+                self.addMenu(set_as_stereo_menu)
+        
+        # add info dialog command
         if isinstance(self._po, Port):
             port_info_act = self.addAction(_translate('patchbay', "Get &Info"))
             port_info_act.setIcon(QIcon.fromTheme('dialog-information'))            
