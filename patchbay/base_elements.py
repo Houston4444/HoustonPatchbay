@@ -510,8 +510,9 @@ class Portgroup:
 
         self.in_canvas = False
 
-        for port in self.ports:
-            port.portgroup_id = portgroup_id
+        if len(self.ports) >= 2:
+            for port in self.ports:
+                port.portgroup_id = portgroup_id
 
     def port_type(self):
         if not self.ports:

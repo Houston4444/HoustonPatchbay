@@ -88,7 +88,7 @@ class CallbackAct(IntEnum):
     GROUP_WRAP = 6           # group_id: int, folded: bool
     GROUP_LAYOUT_CHANGE = 7  # group_id: int, layout_mode: BoxLayoutMode, splitted_mode: PortMode
     GROUP_SELECTED = 8       # group_id: int, splitted_mode: PortMode
-    PORTGROUP_ADD = 9        # group_id: int, portgrp_id: int, port_mode: PortMode,
+    PORTGROUP_ADD = 9        # group_id: int, port_mode: PortMode,
                              #      port_type: PortType, port_ids: tuple[int]
     PORTGROUP_REMOVE = 10    # group_id: int, portgrp_id: int
     PORT_INFO = 11           # group_id: int, port_id: int

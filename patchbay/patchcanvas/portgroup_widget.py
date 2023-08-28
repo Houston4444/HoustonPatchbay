@@ -19,7 +19,6 @@
 
 
 # Imports (Global)
-from cgitb import text
 import logging
 from math import floor
 from typing import TYPE_CHECKING

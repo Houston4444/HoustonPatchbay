@@ -6,7 +6,7 @@ from PyQt5.QtWidgets import (
     QSpacerItem, QSizePolicy, QWidgetAction,
     QApplication, QAction)
 from PyQt5.QtGui import QIcon, QColor, QKeyEvent, QPixmap
-from PyQt5.QtCore import Qt, QSize, QPoint
+from PyQt5.QtCore import Qt, QSize, pyqtSlot
 
 
 from .patchcanvas import canvas, CallbackAct, BoxType
@@ -660,7 +660,6 @@ class PoMenu(AbstractConnectionsMenu):
         self.clipboard_menu = QMenu(_translate('patchbay', 'Clipboard'), self)
         self.clipboard_menu.setIcon(QIcon.fromTheme('edit-paste'))
         
-        # self.clipboard_menu.setIcon()
         self.cb_cut_act = QAction(_translate('patchbay', 'Cut connections'))
         self.cb_copy_act = QAction(_translate('patchbay', 'Copy connections'))
         self.cb_paste_act = QAction(_translate('patchbay', 'Paste connections'))
@@ -685,6 +684,62 @@ class PoMenu(AbstractConnectionsMenu):
             self.clipboard_menu.addAction(self.cb_paste_act)
         
         self.addMenu(self.clipboard_menu)
+        
+        self.addSeparator()
+        if isinstance(self._po, Portgroup):
+            self.split_to_monos_act = QAction(
+                _translate('patchbay', 'Split to Monos'))
+            self.split_to_monos_act.triggered.connect(self._split_to_monos)
+            self.addAction(self.split_to_monos_act)
+        
+        elif isinstance(self._po, Port) and not self._po.portgroup_id:
+            self.set_as_stereo_menu = QMenu(
+                _translate('patchbay', 'Set as stereo with...'),
+                self)
+            
+            for group in self._mng.groups:
+                if group.group_id != self._po.group_id:
+                    continue
+                
+                previous_port: Port = None
+                next_port: Port = None
+                port_found = False
+                
+                for port in group.ports:
+                    if port.full_type() != self._po.full_type():
+                        continue
+                    
+                    if not port_found:
+                        if port is self._po:
+                            port_found = True
+                        elif port.portgroup_id:
+                            previous_port = None
+                        else:
+                            previous_port = port
+                    else:
+                        if not port.portgroup_id:
+                            next_port = port
+                        break
+            
+            self.mono_ports_acts = list[QAction]()
+            
+            for mono_port in (previous_port, next_port):
+                if mono_port is None:
+                    continue
+                
+                act = QAction(mono_port.cnv_name)
+                act.setData(mono_port)
+                act.triggered.connect(self._set_as_stereo_with)
+                self.mono_ports_acts.append(act)
+                self.set_as_stereo_menu.addAction(act)
+                
+            if previous_port or next_port:
+                self.addMenu(self.set_as_stereo_menu)
+                
+        if isinstance(self._po, Port):
+            port_info_act = self.addAction(_translate('patchbay', "Get &Info"))
+            port_info_act.setIcon(QIcon.fromTheme('dialog-information'))            
+            port_info_act.triggered.connect(self._display_port_infos)
         
     def _get_existing_conns_flag(self) -> ExistingConns:
         existing_conns = ExistingConns.NONE
@@ -728,15 +783,43 @@ class PoMenu(AbstractConnectionsMenu):
         for conn_id in conn_ids:
             canvas.callback(CallbackAct.PORTS_DISCONNECT, conn_id)
 
+    @pyqtSlot()
     def _disconnect_all_visible(self):
         self._disconnect_all(visible_only=True)
 
+    @pyqtSlot()
     def _cb_cut(self):
         self._mng.connections_clipboard.cb_cut(self._ports())
     
+    @pyqtSlot()
     def _cb_copy(self):
         self._mng.connections_clipboard.cb_copy(self._ports())
-        
+
+    @pyqtSlot()
     def _cb_paste(self):
         self._mng.connections_clipboard.cb_paste(self._ports())
+
+    @pyqtSlot()
+    def _split_to_monos(self):
+        if not isinstance(self._po, Portgroup):
+            return
+        
+        canvas.callback(CallbackAct.PORTGROUP_REMOVE,
+                        self._po.group_id, self._po.portgroup_id)
+        
+    @pyqtSlot()
+    def _set_as_stereo_with(self):
+        port: Port = self.sender().data()
+        
+        canvas.callback(CallbackAct.PORTGROUP_ADD, port.group_id,
+                        port.mode(), port.type,
+                        (self._po.port_id, port.port_id))
+        
+    @pyqtSlot()
+    def _display_port_infos(self):
+        if not isinstance(self._po, Port):
+            return
+        
+        canvas.callback(
+            CallbackAct.PORT_INFO, self._po.group_id, self._po.port_id)
         
