@@ -23,13 +23,12 @@ import logging
 from math import floor
 from typing import TYPE_CHECKING
 
-from PyQt5.QtCore import QPointF, QRectF, Qt, QTimer
+from PyQt5.QtCore import QPointF, QRectF, Qt
 from PyQt5.QtGui import (QFontMetrics, QPainter, QBrush,
-                         QPolygonF, QLinearGradient, QPen, QCursor)
+                         QPolygonF, QLinearGradient, QPen)
 from PyQt5.QtWidgets import QApplication, QGraphicsItem
 
 # Imports (Custom)
-from .utils import canvas_callback
 from .connectable_widget import ConnectableWidget
 from .init_values import (
     CanvasItemType,
@@ -38,7 +37,6 @@ from .init_values import (
     CallbackAct,
     PortMode,
     PortType)
-from .connect_menu import ConnectMenu, ConnectableContextMenu
 
 if TYPE_CHECKING:
     from .box_widget import BoxWidget

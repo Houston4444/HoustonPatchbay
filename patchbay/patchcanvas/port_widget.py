@@ -3,7 +3,7 @@
 
 # PatchBay Canvas engine using QGraphicsView/Scene
 # Copyright (C) 2010-2019 Filipe Coelho <falktx@falktx.com>
-# Copyright (C) 2019-2022 Mathieu Picot <picotmathieu@gmail.com>
+# Copyright (C) 2019-2023 Mathieu Picot <picotmathieu@gmail.com>
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License as
@@ -27,8 +27,8 @@ from typing import TYPE_CHECKING
 from PyQt5.QtCore import Qt, QPointF, QRectF
 from PyQt5.QtGui import (
     QBrush, QFontMetrics, QPainter, QPen, QPolygonF,
-    QLinearGradient, QIcon, QCursor, QColor)
-from PyQt5.QtWidgets import QGraphicsItem, QMenu, QApplication
+    QLinearGradient, QColor)
+from PyQt5.QtWidgets import QGraphicsItem, QApplication
 
 
 # Imports (Custom)
@@ -37,23 +37,18 @@ from .init_values import (
     PortObject,
     PortSubType,
     canvas,
-    features,
     CallbackAct,
     PortMode,
     PortType)
 
 from .utils import canvas_callback
 from .connectable_widget import ConnectableWidget
-from .connect_menu import ConnectMenu, ConnectableContextMenu
 from .line_widget import LineWidget
 
 if TYPE_CHECKING:
     from .box_widget import BoxWidget
     from .portgroup_widget import PortgroupWidget
     
-
-# --------------------
-_translate = QApplication.translate
 
 # --------------------
 
