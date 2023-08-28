@@ -544,66 +544,69 @@ class DisconnectMenu(AbstractConnectionsMenu):
             last_portgrp_id = 0
             
             for port in group.ports:
-                if port in conn_ports:
-                    if not group_section_exists:
-                        group_icon = get_icon(
-                            group.cnv_box_type, group.cnv_icon_name,
-                            self._port_mode().opposite(),
-                            dark=is_dark_theme(self))
-                        
-                        widget = QFrame()
-                        widget.layout = QHBoxLayout(widget)
-                        widget.layout.setSpacing(4)
-                        widget.layout.setContentsMargins(4, 4, 4, 4)
-                        label_icon = QLabel()
-                        label_icon.setPixmap(group_icon.pixmap(QSize(16, 16)))
-                        widget.layout.addWidget(label_icon)
-                        label_name = QLabel(group.cnv_name)
-                        label_name.setStyleSheet("color=red")
-                        widget.layout.addWidget(QLabel(group.cnv_name))
-                        spacer = QSpacerItem(2, 2, QSizePolicy.Expanding, QSizePolicy.Minimum)
-                        widget.layout.addSpacerItem(spacer)
-                        
-                        action = QWidgetAction(self)
-                        action.setDefaultWidget(widget)
-                        action.setSeparator(True)
-                        
-                        # add separator if it is not the fisrt group
-                        if not skip_separator:
-                            self.addSeparator()
-                        skip_separator = False
-                        
-                        self.addAction(action)
-                        group_section_exists = True
-                    
-                    if isinstance(self._po, Portgroup) and port.portgroup_id:
-                        if port.portgroup_id == last_portgrp_id:
-                            continue
+                if port not in conn_ports:
+                    continue
 
-                        for portgroup in group.portgroups:
-                            if portgroup.portgroup_id == port.portgroup_id:
-                                portgrp_name = get_portgroup_name_from_ports_names(
-                                    [p.cnv_name for p in portgroup.ports])
-                                end_name = '/'.join(
-                                    [p.cnv_name.replace(portgrp_name, '', 1)
-                                     for p in portgroup.ports])
-                                
-                                check_frame = CheckFrame(
-                                    portgroup, portgrp_name, end_name, self)
-                                self._check_frames[portgroup] = check_frame
-                                break
-                        else:
-                            continue
-                        
-                        last_portgrp_id = port.portgroup_id
+                if not group_section_exists:
+                    group_icon = get_icon(
+                        group.cnv_box_type, group.cnv_icon_name,
+                        self._port_mode().opposite(),
+                        dark=is_dark_theme(self))
                     
+                    widget = QFrame()
+                    widget.layout = QHBoxLayout(widget)
+                    widget.layout.setSpacing(4)
+                    widget.layout.setContentsMargins(4, 4, 4, 4)
+                    label_icon = QLabel()
+                    label_icon.setPixmap(group_icon.pixmap(QSize(16, 16)))
+                    widget.layout.addWidget(label_icon)
+                    label_name = QLabel(group.cnv_name)
+                    label_name.setStyleSheet("color=red")
+                    widget.layout.addWidget(QLabel(group.cnv_name))
+                    spacer = QSpacerItem(2, 2, QSizePolicy.Expanding, QSizePolicy.Minimum)
+                    widget.layout.addSpacerItem(spacer)
+                    
+                    action = QWidgetAction(self)
+                    action.setDefaultWidget(widget)
+                    action.setSeparator(True)
+                    
+                    # add separator if it is not the fisrt group
+                    if not skip_separator:
+                        self.addSeparator()
+                    skip_separator = False
+                    
+                    self.addAction(action)
+                    group_section_exists = True
+                
+                if isinstance(self._po, Portgroup) and port.portgroup_id:
+                    if port.portgroup_id == last_portgrp_id:
+                        continue
+
+                    for portgroup in group.portgroups:
+                        if portgroup.portgroup_id == port.portgroup_id:
+                            portgrp_name = get_portgroup_name_from_ports_names(
+                                [p.cnv_name for p in portgroup.ports])
+                            end_name = '/'.join(
+                                [p.cnv_name.replace(portgrp_name, '', 1)
+                                    for p in portgroup.ports])
+                            
+                            check_frame = CheckFrame(
+                                portgroup, portgrp_name, end_name, self)
+                            self._check_frames[portgroup] = check_frame
+                            break
                     else:
-                        check_frame = CheckFrame(port, self._display_name(port),'', self)
-                        self._check_frames[port] = check_frame
+                        continue
+                    
+                    last_portgrp_id = port.portgroup_id
+                
+                else:
+                    check_frame = CheckFrame(
+                        port, self._display_name(port),'', self)
+                    self._check_frames[port] = check_frame
 
-                    po_action = QWidgetAction(self)
-                    po_action.setDefaultWidget(check_frame)
-                    self.addAction(po_action)
+                po_action = QWidgetAction(self)
+                po_action.setDefaultWidget(check_frame)
+                self.addAction(po_action)
         
         self.addSeparator()
         self.addAction(self.disco_all_act)

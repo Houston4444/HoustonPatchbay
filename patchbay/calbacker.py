@@ -153,7 +153,7 @@ class Callbacker:
         port = self.mng.get_port_from_id(group_id, port_id)
         menu = PoMenu(self.mng, port)
         menu.exec(QPoint(x, y))
-        
+
     def _portgroup_menu_call(self, group_id: int, portgrp_id: int, connect_only: bool,
                              x: int, y: int):
         for group in self.mng.groups:

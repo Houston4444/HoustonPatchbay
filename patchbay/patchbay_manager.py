@@ -320,19 +320,25 @@ class PatchbayManager:
 
     def port_type_shown(self, full_port_type: tuple[PortType, PortSubType]) -> bool:
         port_type, sub_type = full_port_type
+
         if port_type is PortType.MIDI_JACK:
             return bool(self.port_types_view & PortTypesViewFlag.MIDI)
+
         if port_type is PortType.AUDIO_JACK:
             if sub_type is PortSubType.REGULAR:
                 return bool(self.port_types_view & PortTypesViewFlag.AUDIO)
             elif sub_type is PortSubType.CV:
                 return bool(self.port_types_view & PortTypesViewFlag.CV)
             elif sub_type is (PortSubType.REGULAR | PortSubType.CV):
-                return bool(self.port_types_view & (PortTypesViewFlag.AUDIO
-                                                    | PortTypesViewFlag.CV))
+                return bool(
+                    self.port_types_view & (PortTypesViewFlag.AUDIO
+                                            | PortTypesViewFlag.CV)
+                    == PortTypesViewFlag.AUDIO | PortTypesViewFlag.CV)
+
         if port_type is PortType.MIDI_ALSA:
             return bool(self.alsa_midi_enabled
                         and self.port_types_view & PortTypesViewFlag.ALSA)
+
         if port_type is PortType.VIDEO:
             return bool(self.port_types_view & PortTypesViewFlag.VIDEO)
 
@@ -487,6 +493,8 @@ class PatchbayManager:
         for group in self.groups:
             group.change_port_types_view()
             groups_and_pos[group] = self.get_group_position(group.name)
+
+        print('hey groos')
 
         for connection in self.connections:
             connection.add_to_canvas()
