@@ -5,7 +5,7 @@ from PyQt5.QtWidgets import (
     QMenu, QCheckBox, QFrame, QLabel, QHBoxLayout,
     QSpacerItem, QSizePolicy, QWidgetAction,
     QApplication, QAction)
-from PyQt5.QtGui import QIcon, QColor, QKeyEvent, QPixmap
+from PyQt5.QtGui import QIcon, QColor, QKeyEvent, QPixmap, QMouseEvent
 from PyQt5.QtCore import Qt, QSize, pyqtSlot, QEvent
 
 
@@ -527,6 +527,10 @@ class ConnectMenu(AbstractConnectionsMenu):
 
         return has_dangerous_ports
 
+    def leaveEvent(self, event: QMouseEvent):
+        # prevent to close the menu accidentaly when the mouse 
+        # leaves the menu area
+        event.ignore()
 
 class DisconnectMenu(AbstractConnectionsMenu):
     def __init__(self, mng: 'PatchbayManager', po: Union[Port, Portgroup],
@@ -777,8 +781,6 @@ class PoMenu(AbstractConnectionsMenu):
             port_info_act = self.addAction(_translate('patchbay', "Get &Info"))
             port_info_act.setIcon(QIcon.fromTheme('dialog-information'))            
             port_info_act.triggered.connect(self._display_port_infos)
-            
-        print('dodd', self.sizeHint().height())
         
     def _get_existing_conns_flag(self) -> ExistingConns:
         existing_conns = ExistingConns.NONE
