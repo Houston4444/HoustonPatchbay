@@ -1,11 +1,13 @@
 from typing import TYPE_CHECKING
 from PyQt5.QtCore import QPoint
+from PyQt5.QtGui import QCursor
 
 from . import patchcanvas
 from .patchcanvas import CallbackAct, PortMode, PortType, BoxLayoutMode
-from .base_elements import Port, GroupPosFlag, PortTypesViewFlag, PortgroupMem
+from .base_elements import Port, GroupPosFlag, PortgroupMem
 from .port_info_dialog import CanvasPortInfoDialog
 from .port_menu import PoMenu, ConnectMenu
+from .group_menu import GroupMenu
 
 if TYPE_CHECKING:
     from .patchbay_manager import PatchbayManager
@@ -79,6 +81,12 @@ class Callbacker:
         group = self.mng.get_group_from_id(group_id)
         if group is not None:
             group.set_layout_mode(port_mode, layout_mode)
+    
+    def _group_menu_call(self, group_id: int, port_mode: PortMode):
+        group = self.mng.get_group_from_id(group_id)
+        if group is not None:
+            menu = GroupMenu(self.mng, group, port_mode)
+            menu.exec(QCursor().pos())
     
     def _portgroup_add(self, group_id: int, port_mode: PortMode,
                        port_type: PortType, port_ids: tuple[int]):

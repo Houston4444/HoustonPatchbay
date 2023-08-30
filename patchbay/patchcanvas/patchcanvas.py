@@ -1262,6 +1262,34 @@ def select_filtered_group_box(group_id: int, n_select=1):
             n_widget += 1
 
 @patchbay_api
+def get_box_true_layout(group_id: int, port_mode: PortMode) -> BoxLayoutMode:
+    '''Should never return BoxLayoutMode.AUTO'''
+    group = canvas.get_group(group_id)
+    if group_id is None:
+        return BoxLayoutMode.AUTO
+    
+    if port_mode & PortMode.OUTPUT:
+        return group.widgets[0]._current_layout_mode
+    
+    return group.widgets[1]._current_layout_mode
+
+@patchbay_api
+def get_box_current_port_mode(group_id: int) -> PortMode:
+    group = canvas.get_group(group_id)
+    if group is None:
+        return PortMode.NULL
+
+    widgets = [b for b in group.widgets if b is not None]
+    
+    if not widgets:
+        return PortMode.NULL
+    
+    if (len(widgets)) == 1:
+        return group.widgets[0].get_current_port_mode()
+    
+    return PortMode.BOTH
+
+@patchbay_api
 def get_number_of_boxes(group_id: int) -> int:
     group = canvas.get_group(group_id)
     if group is None:

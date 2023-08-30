@@ -754,7 +754,17 @@ class BoxWidgetMoth(QGraphicsItem):
             act_x_split_join.setVisible(False)
 
         self.setFlag(QGraphicsItem.ItemIsMovable, False)
-        act_selected = menu.exec_(event.screenPos())
+        
+        is_only_connect = bool(
+            QApplication.keyboardModifiers() & Qt.ControlModifier)
+        
+        if not is_only_connect:
+            canvas.callback(CallbackAct.GROUP_MENU_CALL,
+                            self._group_id,
+                            self._current_port_mode)
+            act_selected = None
+        else:
+            act_selected = menu.exec_(event.screenPos())
 
         if act_selected is None:
             pass
