@@ -21,7 +21,6 @@
 # Imports (Global)
 import logging
 from math import floor
-from re import A
 from typing import TYPE_CHECKING
 
 from PyQt5.QtCore import Qt, QPointF, QRectF
