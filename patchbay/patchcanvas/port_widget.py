@@ -250,10 +250,6 @@ class PortWidget(ConnectableWidget):
         is_only_connect = bool(
             QApplication.keyboardModifiers() & Qt.ControlModifier)
 
-        # prevent a bug that moves the box on mouse click after click to 
-        # quit the menu if the two clic are at same point.
-        # self.parentItem().setFlag(QGraphicsItem.ItemIsMovable, False)
-
         # precise the menu start point to still view the port
         # and be able to read its portgroup name.
         start_point = canvas.scene.screen_position(
@@ -275,11 +271,6 @@ class PortWidget(ConnectableWidget):
         canvas.callback(
             CallbackAct.PORT_MENU_CALL, self._group_id, self._port_id,
             is_only_connect, start_point.x(), start_point.y())
-
-        # if act_selected is None:
-        #     canvas.menu_click_pos = QCursor.pos()
-        # else:
-        #     self.parentItem().setFlag(QGraphicsItem.ItemIsMovable, True)
 
     def boundingRect(self):
         if self._portgrp_id:

@@ -5,8 +5,8 @@ from PyQt5.QtWidgets import (
     QMenu, QCheckBox, QFrame, QLabel, QHBoxLayout,
     QSpacerItem, QSizePolicy, QWidgetAction,
     QApplication, QAction)
-from PyQt5.QtGui import QIcon, QColor, QKeyEvent, QPixmap, QMouseEvent
-from PyQt5.QtCore import Qt, QSize, pyqtSlot, QEvent
+from PyQt5.QtGui import QIcon, QColor, QKeyEvent, QPixmap, QMouseEvent, QCursor
+from PyQt5.QtCore import Qt, QSize, pyqtSlot, QEvent, QPoint
 
 
 from .patchcanvas import canvas, CallbackAct, BoxType
@@ -320,6 +320,12 @@ class AbstractConnectionsMenu(QMenu):
         
         self._check_frames = dict[Union[Port, Portgroup], CheckFrame]()
         self.group_min_width = 50
+    
+    def exec(self, start_pos: QPoint) -> QAction:
+        action = super().exec(start_pos)
+        if action is None:
+            canvas.menu_click_pos = QCursor().pos()
+        return action
     
     def _display_name(self, port: Port) -> str:
         if port.full_type() == (PortType.AUDIO_JACK, PortSubType.CV):
@@ -804,7 +810,7 @@ class PoMenu(AbstractConnectionsMenu):
             port_info_act = self.addAction(_translate('patchbay', "Get &Info"))
             port_info_act.setIcon(QIcon.fromTheme('dialog-information'))            
             port_info_act.triggered.connect(self._display_port_infos)
-        
+    
     def _get_existing_conns_flag(self) -> ExistingConns:
         existing_conns = ExistingConns.NONE
 

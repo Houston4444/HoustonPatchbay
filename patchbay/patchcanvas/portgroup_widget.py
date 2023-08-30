@@ -184,7 +184,7 @@ class PortgroupWidget(ConnectableWidget):
         is_only_connect = bool(
             QApplication.keyboardModifiers() & Qt.ControlModifier)
         
-        # self.parentItem().setFlag(QGraphicsItem.ItemIsMovable, False)
+        self.parentItem().setFlag(QGraphicsItem.ItemIsMovable, False)
         
         start_point = canvas.scene.screen_position(
             self.scenePos() + QPointF(0.0, self.boundingRect().bottom()))
@@ -198,11 +198,6 @@ class PortgroupWidget(ConnectableWidget):
         canvas.callback(
             CallbackAct.PORTGROUP_MENU_CALL, self._group_id, self._portgrp_id,
             is_only_connect, start_point.x(), start_point.y())
-        
-        # if act_selected is None:
-        #     canvas.menu_click_pos = QCursor.pos()
-        # else:
-        #     self.parentItem().setFlag(QGraphicsItem.ItemIsMovable, True)
 
     def boundingRect(self) -> QRectF:
         if self._port_mode is PortMode.INPUT:
