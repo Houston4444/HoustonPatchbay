@@ -39,6 +39,11 @@ class DisconnectMenu(QMenu):
                     out_groups.add(
                         self._mng.get_group_from_id(conn.port_out.group_id))
 
+        if not out_groups and not in_groups:
+            no_conn_act = self.addAction(_translate('patchbay', 'No connections'))
+            no_conn_act.setEnabled(False)
+            return
+
         use_dark_icon = utils.is_dark_theme(self)
 
         for group in self._mng.groups:
