@@ -255,12 +255,14 @@ class CheckFrame(QFrame):
 class GroupConnectMenu(QMenu):
     def __init__(self, group: Group, po: Union[Port, Portgroup],
                  parent: 'ConnectMenu'):
+        self._group = group
         short_group_name = group.cnv_name        
         if len(short_group_name) > 15 and '/' in short_group_name:
             short_group_name = short_group_name.partition('/')[2]
 
         QMenu.__init__(self, short_group_name, parent)
         self.hovered.connect(self._mouse_hover_menu)
+        self.aboutToShow.connect(self._about_to_show)
         
         theme = canvas.theme.box        
         if group.cnv_box_type is BoxType.CLIENT:
@@ -279,10 +281,32 @@ class GroupConnectMenu(QMenu):
             "}")
         self.setMinimumWidth(70)
         self.setMinimumHeight(50)
+        
+        self._check_frame_templates = list[tuple]()
+        self._elements_added = False
 
     def _mouse_hover_menu(self, action: QWidgetAction):
         # for better use with keyboard
         action.defaultWidget().setFocus()
+    
+    def _about_to_show(self):
+        parent: AbstractConnectionsMenu = self.parent()
+        self.setMinimumWidth(parent.group_min_width)
+
+        if not self._elements_added:
+            for cft in self._check_frame_templates:
+                check_frame = CheckFrame(*cft)
+                parent._check_frames[cft[0]] = check_frame
+
+                action = QWidgetAction(self)
+                action.setDefaultWidget(check_frame)
+                self.addAction(action)
+            self._elements_added = True
+            
+        parent.set_group_min_width(self.sizeHint().width())
+    
+    def prepare_check_frame(self, *args):
+        self._check_frame_templates.append(args)
 
 
 class AbstractConnectionsMenu(QMenu):
@@ -295,6 +319,7 @@ class AbstractConnectionsMenu(QMenu):
         self._po = po
         
         self._check_frames = dict[Union[Port, Portgroup], CheckFrame]()
+        self.group_min_width = 50
     
     def _display_name(self, port: Port) -> str:
         if port.full_type() == (PortType.AUDIO_JACK, PortSubType.CV):
@@ -408,6 +433,9 @@ class AbstractConnectionsMenu(QMenu):
                         [c for c in conns if c.port_out in out_ports], 
                         out_ports, self._ports()))
 
+    def set_group_min_width(self, value: int):
+        self.group_min_width = max(self.group_min_width, value)
+
 
 class ConnectMenu(AbstractConnectionsMenu):
     def __init__(self, mng: 'PatchbayManager',
@@ -464,7 +492,7 @@ class ConnectMenu(AbstractConnectionsMenu):
         has_dangerous_ports = False
 
         for group in self._mng.groups:
-            gp_menu = None
+            gp_menu: GroupConnectMenu = None
             last_portgrp_id = 0
             
             for port in group.ports:
@@ -495,9 +523,8 @@ class ConnectMenu(AbstractConnectionsMenu):
                                     [p.cnv_name.replace(portgrp_name, '', 1)
                                      for p in portgroup.ports])
                                 
-                                check_frame = CheckFrame(
+                                gp_menu.prepare_check_frame(
                                     portgroup, portgrp_name, end_name, self)
-                                self._check_frames[portgroup] = check_frame
                                 break
                         else:
                             continue
@@ -506,17 +533,13 @@ class ConnectMenu(AbstractConnectionsMenu):
                     
                     elif isinstance(self._po, Port) and port.portgroup_id:
                         pg_pos, pg_len = group.port_pg_pos(port.port_id)
-                        check_frame = CheckFrame(port, self._display_name(port),
-                                                 '', self, pg_pos, pg_len)
-                        self._check_frames[port] = check_frame                  
+                        gp_menu.prepare_check_frame(
+                            port, self._display_name(port),
+                            '', self, pg_pos, pg_len)
+               
                     else:
-                        check_frame = CheckFrame(port, self._display_name(port),
-                                                 '', self)
-                        self._check_frames[port] = check_frame
-                                
-                    action = QWidgetAction(self)
-                    action.setDefaultWidget(check_frame)
-                    gp_menu.addAction(action)
+                        gp_menu.prepare_check_frame(
+                            port, self._display_name(port), '', self)
 
             if gp_menu is not None:
                 main_menu.addMenu(gp_menu)
