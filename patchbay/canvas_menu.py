@@ -2,10 +2,12 @@
 from typing import TYPE_CHECKING
 from PyQt5.QtGui import QIcon, QDesktopServices
 from PyQt5.QtWidgets import QMenu, QApplication
-from PyQt5.QtCore import QLocale, QUrl
+from PyQt5.QtCore import QLocale, QUrl, pyqtSlot
 
 from . import patchcanvas
+from .patchcanvas import utils
 from .base_elements import PortType, PortTypesViewFlag
+
 
 if TYPE_CHECKING:
     from .patchbay_manager import PatchbayManager
@@ -49,6 +51,12 @@ class CanvasMenu(QMenu):
         self.action_find_box.setIcon(QIcon.fromTheme('edit-find'))
         self.action_find_box.triggered.connect(
             patchbay_manager.sg.filters_bar_toggle_wanted.emit)
+
+        self.show_hiddens_menu = QMenu(
+            _translate('patchbay', 'Show hidden boxes'), self)
+        self.show_hiddens_menu.setIcon(QIcon.fromTheme('show_table_row'))
+        self.show_hiddens_menu.aboutToShow.connect(self._list_hidden_groups)
+        self.addMenu(self.show_hiddens_menu)
 
         self.port_types_menu = QMenu(_translate('patchbay', 'Type filter'), self)
         self.port_types_menu.setIcon(QIcon.fromTheme('view-filter'))
@@ -180,6 +188,47 @@ class CanvasMenu(QMenu):
             self.action_all_types.setText(
                 _translate('patchbay', 'AUDIO | MIDI | CV'))
 
+    @pyqtSlot()
+    def _list_hidden_groups(self):
+        self.show_hiddens_menu.clear()
+        
+        dark = utils.is_dark_theme(self)
+        has_hiddens = False
+        
+        for group in self.patchbay_manager.groups:
+            if group.current_position.hidden_sides:
+                group_act = self.show_hiddens_menu.addAction(
+                    group.cnv_name)
+                group_act.setIcon(utils.get_icon(
+                        group.cnv_box_type, group.cnv_icon_name,
+                        group.current_position.hidden_sides,
+                        dark=dark))
+                group_act.setData(group.group_id)
+                group_act.triggered.connect(self._show_hidden_group)
+                has_hiddens = True
+                
+        if has_hiddens:
+            self.show_hiddens_menu.addSeparator()
+            display_all_act = self.show_hiddens_menu.addAction(
+                _translate('patchbay', 'Display all boxes'))
+            display_all_act.setIcon(QIcon.fromTheme('show_table_row'))
+            display_all_act.triggered.connect(
+                self._show_all_hidden_groups)
+        else:
+            no_hiddens_act = self.show_hiddens_menu.addAction(
+                _translate('patchbay', 'All boxes are visible.'))
+            no_hiddens_act.setEnabled(False)
+        
+    
+    @pyqtSlot()
+    def _show_hidden_group(self):
+        group_id: int = self.sender().data()
+        self.patchbay_manager.restore_group_hidden_sides(group_id)
+    
+    @pyqtSlot()
+    def _show_all_hidden_groups(self):
+        self.patchbay_manager.restore_all_group_hidden_sides()
+    
     def internal_manual(self):
         short_locale = 'en'
         manual_dir = self.patchbay_manager._manual_path

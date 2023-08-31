@@ -302,7 +302,8 @@ class GroupConnectMenu(QMenu):
                 action.setDefaultWidget(check_frame)
                 self.addAction(action)
             self._elements_added = True
-            
+            parent._patch_may_have_change()
+
         parent.set_group_min_width(self.sizeHint().width())
     
     def prepare_check_frame(self, *args):
@@ -457,12 +458,7 @@ class ConnectMenu(AbstractConnectionsMenu):
         has_dangerous = self._fill_all_ports()
         if has_dangerous:
             self._fill_all_ports(dangerous=True)
-                
-        # all groups menus have the same (max) width
-        max_width = max([m.sizeHint().width() for m in self._gp_menus])        
-        for gp_menu in self._gp_menus:
-            gp_menu.setMinimumWidth(max_width)
-        
+
         self._patch_may_have_change()
     
     def _is_connection_dangerous(self, port: Port) -> bool:

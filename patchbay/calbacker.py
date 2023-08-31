@@ -59,17 +59,19 @@ class Callbacker:
     
     def _group_move(self, group_id: int, port_mode: PortMode, x: int, y: int):
         group = self.mng.get_group_from_id(group_id)
-        if group is not None:
-            gpos = group.current_position
+        if group is None:
+            return
+        
+        gpos = group.current_position
 
-            if port_mode is PortMode.NULL:
-                gpos.null_xy = (x, y)
-            elif port_mode is PortMode.INPUT:
-                gpos.in_xy = (x, y)
-            elif port_mode is PortMode.OUTPUT:
-                gpos.out_xy = (x, y)
+        if port_mode is PortMode.NULL:
+            gpos.null_xy = (x, y)
+        elif port_mode is PortMode.INPUT:
+            gpos.in_xy = (x, y)
+        elif port_mode is PortMode.OUTPUT:
+            gpos.out_xy = (x, y)
 
-            group.save_current_position()
+        group.save_current_position()
     
     def _group_wrap(self, group_id: int, splitted_mode, yesno: bool):
         group = self.mng.get_group_from_id(group_id)
@@ -82,6 +84,15 @@ class Callbacker:
         if group is not None:
             group.set_layout_mode(port_mode, layout_mode)
     
+    def _group_hide_box(self, group_id: int, port_mode: PortMode):
+        group = self.mng.get_group_from_id(group_id)
+        if group is None:
+            return
+        
+        # group.current_position.hidden_sides = port_mode
+        
+        self.mng.set_group_hidden_sides(group_id, port_mode)
+
     def _group_menu_call(self, group_id: int, port_mode: PortMode):
         group = self.mng.get_group_from_id(group_id)
         if group is not None:

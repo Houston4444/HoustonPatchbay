@@ -124,6 +124,7 @@ class GroupPos:
     out_xy: tuple[int, int]
     flags: int = 0
     layout_modes: dict[PortMode, BoxLayoutMode]
+    hidden_sides: PortMode = PortMode.NULL
     fully_set: bool = True
     
     def __init__(self):
@@ -157,6 +158,7 @@ class GroupPos:
         out_xy = src['out_xy']
         flags = src['flags']
         layout_modes = src['layout_modes']
+        hidden_sides = src.get('hidden_sides')
         
         gpos = GroupPos()
         
@@ -190,6 +192,12 @@ class GroupPos:
                 except:
                     pass
         
+        if isinstance(hidden_sides, int):
+            try:
+                gpos.hidden_sides = PortMode(hidden_sides)
+            except:
+                gpos.hidden_sides = PortMode.NULL
+        
         return gpos
 
     def copy(self) -> 'GroupPos':
@@ -201,7 +209,7 @@ class GroupPos:
         self.__dict__ = other.__dict__.copy()
 
     def as_serializable_dict(self):
-        return {'port_types_view': int(self.port_types_view),
+        return {'port_types_view': self.port_types_view.value,
                 'group_name': self.group_name,
                 'null_zone': self.null_zone,
                 'in_zone': self.in_zone,
@@ -210,8 +218,9 @@ class GroupPos:
                 'in_xy': self.in_xy,
                 'out_xy': self.out_xy,
                 'flags': self.flags,
-                'layout_modes': self.layout_modes}
-        
+                'layout_modes': self.layout_modes,
+                'hidden_sides': self.hidden_sides.value}
+
     def set_layout_mode(self, port_mode: PortMode, layout_mode: BoxLayoutMode):
         self.layout_modes[port_mode] = layout_mode
 
@@ -310,6 +319,9 @@ class Connection:
         if not self.manager.port_type_shown(self.full_type()):
             return
 
+        if not (self.port_out.in_canvas and self.port_in.in_canvas):
+            return
+
         self.in_canvas = True
 
         patchcanvas.connect_ports(
@@ -366,6 +378,7 @@ class Port:
         self.flags = flags
         self.uuid = uuid
         self.subtype = PortSubType.REGULAR
+        self.group: 'Group' = None
 
         if (self.type is PortType.AUDIO_JACK
                 and self.flags & JackPortFlag.IS_CONTROL_VOLTAGE):
@@ -422,22 +435,24 @@ class Port:
         if self.in_canvas:
             return
 
-
-        display_name = self.display_name
+        cnv_name = self.display_name
         
         if self.pretty_name:
-            display_name = self.pretty_name
+            cnv_name = self.pretty_name
         
         if not self.manager.use_graceful_names:
-            display_name = self.short_name()
+            cnv_name = self.short_name()
 
-        self.cnv_name = display_name
+        self.cnv_name = cnv_name
 
         if not self.manager.port_type_shown(self.full_type()):
             return
 
+        if self.group.current_position.hidden_sides & self.mode():
+            return
+
         patchcanvas.add_port(
-            self.group_id, self.port_id, display_name,
+            self.group_id, self.port_id, cnv_name,
             self.mode(), self.type, self.subtype)
 
         self.in_canvas = True
@@ -780,6 +795,7 @@ class Group:
 
     def add_port(self, port: Port):
         port.group_id = self.group_id
+        port.group = self
         port_full_name = port.full_name
 
         if (port_full_name.startswith('a2j:')

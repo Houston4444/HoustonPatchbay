@@ -5,6 +5,7 @@ import operator
 from pathlib import Path
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, Callable, Optional, Union
+from unittest.mock import patch
 
 from PyQt5.QtGui import QCursor, QGuiApplication
 from PyQt5.QtWidgets import QMainWindow, QMessageBox, QWidget
@@ -346,6 +347,79 @@ class PatchbayManager:
 
         return False
 
+    def set_group_hidden_sides(self, group_id: int, port_mode: PortMode):
+        group = self.get_group_from_id(group_id)
+        if group is None:
+            return
+        
+        group.current_position.hidden_sides |= port_mode
+        group.save_current_position()
+
+        self.optimize_operation(True)
+        
+        if port_mode & PortMode.OUTPUT:
+            for conn in self.connections:
+                if conn.port_out.group_id == group_id:
+                    conn.remove_from_canvas()
+                    
+            for portgroup in group.portgroups:
+                if portgroup.port_mode is PortMode.OUTPUT:
+                    portgroup.remove_from_canvas()
+                    
+            for port in group.ports:
+                if port.mode() is PortMode.OUTPUT:
+                    port.remove_from_canvas()
+                    
+        if port_mode & PortMode.INPUT:
+            for conn in self.connections:
+                if conn.port_in.group_id == group_id:
+                    conn.remove_from_canvas()
+                    
+            for portgroup in group.portgroups:
+                if portgroup.port_mode is PortMode.INPUT:
+                    portgroup.remove_from_canvas()
+                    
+            for port in group.ports:
+                if port.mode() is PortMode.INPUT:
+                    port.remove_from_canvas()
+                    
+        self.optimize_operation(False)
+        patchcanvas.redraw_group(group_id)
+
+    def restore_group_hidden_sides(self, group_id: int):
+        group = self.get_group_from_id(group_id)
+        if group is None:
+            return
+        
+        group.current_position.hidden_sides = PortMode.NULL
+        group.save_current_position()
+        
+        self.optimize_operation(True)
+
+        group.add_all_ports_to_canvas()
+        
+        for conn in self.connections:
+            if (conn.port_out.group is group
+                    or conn.port_in.group is group):
+                conn.add_to_canvas()
+                
+        self.optimize_operation(False)
+        patchcanvas.redraw_group(group_id)
+
+    def restore_all_group_hidden_sides(self):
+        self.optimize_operation(True)
+        
+        for group in self.groups:
+            if group.current_position.hidden_sides:
+                group.current_position.hidden_sides = PortMode.NULL
+                group.add_all_ports_to_canvas()
+        
+        for conn in self.connections:
+            conn.add_to_canvas()
+            
+        self.optimize_operation(False)
+        patchcanvas.redraw_all_groups()
+
     def get_group_from_name(self, group_name: str) -> Union[Group, None]:
         return self._groups_by_name.get(group_name)
 
@@ -495,8 +569,6 @@ class PatchbayManager:
         for group in self.groups:
             group.change_port_types_view()
             groups_and_pos[group] = self.get_group_position(group.name)
-
-        print('hey groos')
 
         for connection in self.connections:
             connection.add_to_canvas()

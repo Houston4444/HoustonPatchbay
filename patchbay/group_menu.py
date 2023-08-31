@@ -174,10 +174,16 @@ class GroupMenu(QMenu):
             _translate('patchbay', 'Change layout'))
         change_layout_act.setIcon(QIcon.fromTheme('view-split-left-right'))
         
+        # entry 'hide the box'
+        hide_box_act = self.addAction(
+            _translate('patchbay', 'Hide'))
+        hide_box_act.setIcon(QIcon.fromTheme('hide_table_row'))
+        
         disco_all_act.triggered.connect(self._disconnect_all)
         wrap_act.triggered.connect(self._wrap)
         auto_layout_act.triggered.connect(self._auto_layout)
         change_layout_act.triggered.connect(self._change_layout)
+        hide_box_act.triggered.connect(self._hide_box)
     
     def _disconnect_all(self):
         if self._port_mode & PortMode.OUTPUT:
@@ -231,4 +237,7 @@ class GroupMenu(QMenu):
                         self._group.group_id, self._port_mode,
                         next_layout)
     
-    
+    @pyqtSlot()
+    def _hide_box(self):
+        canvas.callback(CallbackAct.GROUP_HIDE_BOX,
+                        self._group.group_id, self._port_mode)
