@@ -361,6 +361,7 @@ class PatchbayManager:
             for conn in self.connections:
                 if conn.port_out.group_id == group_id:
                     conn.remove_from_canvas()
+                    conn.port_in.set_hidden_conn_in_canvas(conn, True)
                     
             for portgroup in group.portgroups:
                 if portgroup.port_mode is PortMode.OUTPUT:
@@ -374,6 +375,7 @@ class PatchbayManager:
             for conn in self.connections:
                 if conn.port_in.group_id == group_id:
                     conn.remove_from_canvas()
+                    conn.port_out.set_hidden_conn_in_canvas(conn, True)
                     
             for portgroup in group.portgroups:
                 if portgroup.port_mode is PortMode.INPUT:
@@ -382,7 +384,7 @@ class PatchbayManager:
             for port in group.ports:
                 if port.mode() is PortMode.INPUT:
                     port.remove_from_canvas()
-                    
+
         self.optimize_operation(False)
         patchcanvas.redraw_group(group_id)
 
@@ -398,11 +400,21 @@ class PatchbayManager:
 
         group.add_all_ports_to_canvas()
         
-        for conn in self.connections:
-            if (conn.port_out.group is group
-                    or conn.port_in.group is group):
-                conn.add_to_canvas()
+        # for conn in self.connections:
+        #     if (conn.port_out.group is group
+        #             or conn.port_in.group is group):
+        #         conn.add_to_canvas()
                 
+        for conn in self.connections:
+            if conn.port_out.group is group:
+                conn.add_to_canvas()
+                if conn.in_canvas and conn.port_in.in_canvas:
+                    conn.port_in.set_hidden_conn_in_canvas(conn, False)
+            if conn.port_in.group is group:
+                conn.add_to_canvas()
+                if conn.in_canvas and conn.port_out.in_canvas:
+                    conn.port_out.set_hidden_conn_in_canvas(conn, False)
+
         self.optimize_operation(False)
         patchcanvas.redraw_group(group_id)
 
@@ -1077,6 +1089,11 @@ class PatchbayManager:
                     
             for conn in conns_to_clean:
                 self.connections.remove(conn)
+        
+        # check 
+        for conn in self.connections:
+            conn.port_out.set_hidden_conn_in_canvas(conn, not conn.in_canvas)
+            conn.port_in.set_hidden_conn_in_canvas(conn, not conn.in_canvas)
         
         self.optimize_operation(False)
         self.delayed_orders.clear()

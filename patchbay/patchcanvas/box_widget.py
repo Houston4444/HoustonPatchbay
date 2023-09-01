@@ -1222,3 +1222,6 @@ class BoxWidget(BoxWidgetMoth):
         for port in self._port_list:
             if port.widget is not None:
                 port.widget.update()
+                if port.hidden_conn_widget is not None:
+                    port.hidden_conn_widget.update_line_pos()
+                    port.hidden_conn_widget.update()

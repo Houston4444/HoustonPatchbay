@@ -485,6 +485,9 @@ class BoxWidgetMoth(QGraphicsItem):
         if forced or self.pos() != self._last_pos:
             for line in self._connection_lines:                
                 line.update_line_pos(fast_move=fast_move)
+            for port in self._port_list:
+                if port.hidden_conn_widget is not None:
+                    port.hidden_conn_widget.update_line_pos()
 
         self._last_pos = self.pos()
 

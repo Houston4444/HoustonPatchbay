@@ -320,6 +320,10 @@ class Connection:
             return
 
         if not (self.port_out.in_canvas and self.port_in.in_canvas):
+            if self.port_out.in_canvas:
+                self.port_out.set_hidden_conn_in_canvas(self, True)
+            elif self.port_in.in_canvas:
+                self.port_in.set_hidden_conn_in_canvas(self, True)
             return
 
         self.in_canvas = True
@@ -332,6 +336,9 @@ class Connection:
     def remove_from_canvas(self):
         if self.manager.very_fast_operation:
             return
+
+        # for port in (self.port_in, self.port_out):
+        #     port.set_hidden_conn_in_canvas(self, False)
 
         if not self.in_canvas:
             return
@@ -363,6 +370,7 @@ class Port:
     order = None
     uuid = 0 # will contains the real JACK uuid
     cnv_name = ''
+    has_hidden_conn_in_canvas = False
 
     # given by JACK metadatas
     pretty_name = ''
@@ -386,6 +394,11 @@ class Port:
         elif (self.type is PortType.MIDI_JACK
                 and self.full_name.startswith(('a2j:', 'Midi-Bridge:'))):
             self.subtype = PortSubType.A2J
+            
+        self.conns_hidden_in_canvas = set[Connection]()
+
+    def __repr__(self) -> str:
+            return f"Port({self.full_name})"
 
     def mode(self) -> PortMode:
         if self.flags & JackPortFlag.IS_OUTPUT:
@@ -488,6 +501,24 @@ class Port:
             return
         
         patchcanvas.select_port(self.group_id, self.port_id)
+
+    def set_hidden_conn_in_canvas(self, conn: Connection, yesno: bool):
+        if not self.in_canvas:
+            return
+
+        has_hidden_conns = bool(self.conns_hidden_in_canvas)
+
+        if yesno:
+            self.conns_hidden_in_canvas.add(conn)
+        elif conn in self.conns_hidden_in_canvas:
+            self.conns_hidden_in_canvas.remove(conn)
+        
+        if has_hidden_conns == bool(self.conns_hidden_in_canvas):
+            return
+
+        patchcanvas.port_has_hidden_connection(
+            self.group_id, self.port_id,
+            bool(self.conns_hidden_in_canvas))
 
     def __lt__(self, other: 'Port'):
         if self.type != other.type:

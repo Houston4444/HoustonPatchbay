@@ -18,7 +18,6 @@
 # For a full copy of the GNU General Public License see the doc/GPL.txt file.
 
 from enum import Enum
-import time
 from typing import TYPE_CHECKING
 
 from PyQt5.QtCore import Qt

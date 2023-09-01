@@ -25,6 +25,7 @@ from PyQt5.QtCore import (pyqtSlot, QObject, QPoint, QPointF, QRectF,
                           QSettings, QTimer, pyqtSignal)
 from PyQt5.QtWidgets import QAction, QMainWindow
 
+
 # local imports
 from .init_values import (
     CanvasItemType,
@@ -51,6 +52,7 @@ from .utils import canvas_callback, get_new_group_pos
 from .box_widget import BoxWidget
 from .port_widget import PortWidget
 from .line_widget import LineWidget
+from .hidden_conn_widget import HiddenConnWidget
 from .theme_manager import ThemeManager
 from .scene import PatchScene
 from .scene_view import PatchGraphicsView
@@ -837,6 +839,7 @@ def add_port(group_id: int, port_id: int, port_name: str,
     port.portgrp_id = 0
     port.port_subtype = port_subtype
     port.widget = PortWidget(port, box_widget)
+    port.hidden_conn_widget = None
     port.widget.setVisible(not box_widget.is_wrapped())
     canvas.add_port(port)
 
@@ -861,6 +864,10 @@ def remove_port(group_id: int, port_id: int):
         _logger.critical(f"{_logging_str} - Port is in portgroup " 
                             f"{port.portgrp_id}, remove it before !")
         return
+
+    if port.hidden_conn_widget is not None:
+        canvas.scene.removeItem(port.hidden_conn_widget)
+    del port.hidden_conn_widget
 
     item = port.widget
     box = None
@@ -897,6 +904,31 @@ def rename_port(group_id: int, port_id: int, new_port_name: str):
 
     port.widget.parentItem().update_positions()
 
+    QTimer.singleShot(0, canvas.scene.update)
+
+@patchbay_api
+def port_has_hidden_connection(group_id: int, port_id: int, yesno: bool):
+    port = canvas.get_port(group_id, port_id)
+    if port is None:
+        _logger.critical(
+            f"{_logging_str} - Unable to find port to set hidden connection")
+        return 
+
+    if bool(port.hidden_conn_widget is None) == bool(not yesno):
+        return
+
+    if yesno:
+        port.hidden_conn_widget = HiddenConnWidget(port.widget)
+        canvas.scene.addItem(port.hidden_conn_widget)
+        
+    else:
+        canvas.scene.removeItem(port.hidden_conn_widget)
+        del port.hidden_conn_widget
+        port.hidden_conn_widget = None
+        
+    if canvas.loading_items:
+        return
+    
     QTimer.singleShot(0, canvas.scene.update)
 
 @patchbay_api

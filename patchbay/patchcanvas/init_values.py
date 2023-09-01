@@ -35,6 +35,7 @@ if TYPE_CHECKING:
     from .portgroup_widget import PortgroupWidget
     from .line_widget import LineWidget
     from .patchcanvas import CanvasObject
+    from .hidden_conn_widget import HiddenConnWidget
 
 
 # Maximum Id for a plugin, treated as invalid/zero if above this value
@@ -162,7 +163,8 @@ class CanvasItemType(IntEnum):
     PORTGROUP = QGraphicsItem.UserType + 4
     BEZIER_LINE = QGraphicsItem.UserType + 5
     BEZIER_LINE_MOV = QGraphicsItem.UserType + 6
-    RUBBERBAND = QGraphicsItem.UserType + 7
+    HIDDEN_CONN = QGraphicsItem.UserType + 7
+    RUBBERBAND = QGraphicsItem.UserType + 8
 
 
 # Canvas options
@@ -235,9 +237,11 @@ class PortObject(ConnectableObject):
     port_name: str
     widget: object
     portgrp: object
+    hidden_conn_widget: object
     if TYPE_CHECKING:
         widget: PortWidget
         portgrp: 'PortgrpObject'
+        hidden_conn_widget: Optional[HiddenConnWidget]
 
     pg_pos = 0 # index in the portgroup (if any)
     pg_len = 1 # length of the portgroup (if any)
