@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from enum import IntFlag, IntEnum, auto
-from typing import TYPE_CHECKING, Any, Union
+from typing import TYPE_CHECKING, Any, Union, Optional
 
 from .patchcanvas import (patchcanvas, PortMode, PortType, BoxType,
                           BoxLayoutMode, BoxSplitMode, PortSubType)
@@ -316,14 +316,13 @@ class Connection:
         if self.in_canvas:
             return
 
-        if not self.manager.port_type_shown(self.full_type()):
-            return
 
         if not (self.port_out.in_canvas and self.port_in.in_canvas):
-            if self.port_out.in_canvas:
-                self.port_out.set_hidden_conn_in_canvas(self, True)
-            elif self.port_in.in_canvas:
-                self.port_in.set_hidden_conn_in_canvas(self, True)
+            if not (self.port_out.in_canvas or self.port_in.in_canvas):
+                return
+
+            for port in (self.port_out, self.port_in):
+                port.set_hidden_conn_in_canvas(self, True)
             return
 
         self.in_canvas = True
@@ -332,15 +331,17 @@ class Connection:
             self.connection_id,
             self.port_out.group_id, self.port_out.port_id,
             self.port_in.group_id, self.port_in.port_id)
+        
+        for port in (self.port_out, self.port_in):
+            port.set_hidden_conn_in_canvas(self, False)
 
     def remove_from_canvas(self):
         if self.manager.very_fast_operation:
             return
 
-        # for port in (self.port_in, self.port_out):
-        #     port.set_hidden_conn_in_canvas(self, False)
-
         if not self.in_canvas:
+            for port in (self.port_out, self.port_in):
+                port.set_hidden_conn_in_canvas(self, False)
             return
 
         patchcanvas.disconnect_ports(self.connection_id)
@@ -370,7 +371,6 @@ class Port:
     order = None
     uuid = 0 # will contains the real JACK uuid
     cnv_name = ''
-    has_hidden_conn_in_canvas = False
 
     # given by JACK metadatas
     pretty_name = ''
@@ -441,7 +441,7 @@ class Port:
         self.last_digit_to_add = ''
         self.rename_in_canvas()
 
-    def add_to_canvas(self):
+    def add_to_canvas(self, gpos: Optional[GroupPos]=None):
         if self.manager.very_fast_operation:
             return
         
@@ -461,7 +461,10 @@ class Port:
         if not self.manager.port_type_shown(self.full_type()):
             return
 
-        if self.group.current_position.hidden_sides & self.mode():
+        if gpos is None:
+            gpos = self.group.current_position
+
+        if gpos.hidden_sides & self.mode():
             return
 
         patchcanvas.add_port(
@@ -469,6 +472,25 @@ class Port:
             self.mode(), self.type, self.subtype)
 
         self.in_canvas = True
+        
+        if self.conns_hidden_in_canvas:
+            visible_conns = set[Connection]()
+            for conn in self.conns_hidden_in_canvas:
+                for other_port in (conn.port_out, conn.port_in):
+                    if other_port is self:
+                        continue
+                    
+                    if other_port.in_canvas:
+                        visible_conns.add(conn)
+                        other_port.set_hidden_conn_in_canvas(conn, False)
+            
+            for conn in visible_conns:
+                self.set_hidden_conn_in_canvas(conn, False)
+                
+        if self.conns_hidden_in_canvas:
+            patchcanvas.port_has_hidden_connection(
+                self.group_id, self.port_id,
+                bool(self.conns_hidden_in_canvas))
 
     def remove_from_canvas(self):
         if self.manager.very_fast_operation:
@@ -479,6 +501,12 @@ class Port:
 
         patchcanvas.remove_port(self.group_id, self.port_id)
         self.in_canvas = False
+
+        if self.conns_hidden_in_canvas:
+            for conn in self.conns_hidden_in_canvas:
+                for other_port in (conn.port_out, conn.port_in):
+                    if other_port is self:
+                        continue
 
     def rename_in_canvas(self):
         display_name = self.display_name
@@ -503,9 +531,6 @@ class Port:
         patchcanvas.select_port(self.group_id, self.port_id)
 
     def set_hidden_conn_in_canvas(self, conn: Connection, yesno: bool):
-        if not self.in_canvas:
-            return
-
         has_hidden_conns = bool(self.conns_hidden_in_canvas)
 
         if yesno:
@@ -513,6 +538,9 @@ class Port:
         elif conn in self.conns_hidden_in_canvas:
             self.conns_hidden_in_canvas.remove(conn)
         
+        if not self.in_canvas:
+            return
+
         if has_hidden_conns == bool(self.conns_hidden_in_canvas):
             return
 
@@ -670,7 +698,7 @@ class Group:
         for port in self.ports:
             port.rename_in_canvas()
 
-    def add_to_canvas(self, split=BoxSplitMode.UNDEF):
+    def add_to_canvas(self):
         if self.in_canvas:
             return
 
@@ -742,7 +770,7 @@ class Group:
         display_name = self.name
         if self.manager.use_graceful_names:
             display_name = self.display_name
-        self.canvas_attrs['display_name'] = display_name
+        self.cnv_name = display_name
         
         patchcanvas.rename_group(self.group_id, display_name)
 

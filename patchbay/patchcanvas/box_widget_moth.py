@@ -508,11 +508,19 @@ class BoxWidgetMoth(QGraphicsItem):
         else:
             self.setOpacity(1.0)
 
+        for port in self._port_list:
+            if port.hidden_conn_widget is not None:
+                port.hidden_conn_widget.semi_hide(yesno)
+
     def update_opacity(self):
         if not self._is_semi_hidden:
             return
-        
+
         self.setOpacity(options.semi_hide_opacity)
+        for port in self._port_list:
+            if port.hidden_conn_widget is not None:
+                port.hidden_conn_widget.update_line_gradient()
+                port.hidden_conn_widget.update()
 
     def _has_side_title(self):
         return bool(

@@ -463,10 +463,6 @@ class PatchSceneMoth(QGraphicsScene):
         self._cursor_zoom_area = QCursor(
             QPixmap(f":/cursors/zoom-area-{cur_color}.png"), 8, 7)
 
-        for connection in canvas.list_connections():
-            if connection.widget is not None:
-                connection.widget.update_theme()
-
     def drawBackground(self, painter, rect):
         painter.save()
         painter.setPen(Qt.NoPen)

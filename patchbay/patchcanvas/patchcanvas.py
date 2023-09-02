@@ -838,8 +838,10 @@ def add_port(group_id: int, port_id: int, port_name: str,
     port.port_type = port_type
     port.portgrp_id = 0
     port.port_subtype = port_subtype
-    port.widget = PortWidget(port, box_widget)
+    port.hidden_conn_ids = set[int]()
     port.hidden_conn_widget = None
+    port.widget = PortWidget(port, box_widget)
+    
     port.widget.setVisible(not box_widget.is_wrapped())
     canvas.add_port(port)
 
@@ -1068,7 +1070,8 @@ def connect_ports(connection_id: int, group_out_id: int, port_out_id: int,
 def disconnect_ports(connection_id: int):
     connection = canvas.get_connection(connection_id)
     if connection is None:
-        _logger.critical(f"{_logging_str} - unable to find connection ports")
+        _logger.critical(
+            f"{_logging_str} - unable to find connection ports")
         return
     
     tmp_conn = connection.copy_no_widget()
