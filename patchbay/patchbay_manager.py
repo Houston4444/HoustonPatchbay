@@ -393,6 +393,7 @@ class PatchbayManager:
 
         self.optimize_operation(False)
         patchcanvas.redraw_group(group_id)
+        patchcanvas.canvas.scene.resize_the_scene()
 
     def restore_group_hidden_sides(self, group_id: int):
         group = self.get_group_from_id(group_id)
@@ -406,14 +407,14 @@ class PatchbayManager:
 
         group.add_to_canvas()
         group.add_all_ports_to_canvas()
-        
                 
         for conn in self.connections:
-            if conn.port_out.group is group or conn.port_in is group:
+            if conn.port_out.group is group or conn.port_in.group is group:
                 conn.add_to_canvas()
 
         self.optimize_operation(False)
         patchcanvas.redraw_group(group_id)
+        patchcanvas.canvas.scene.resize_the_scene()
 
     def restore_all_group_hidden_sides(self):
         self.optimize_operation(True)
@@ -576,11 +577,11 @@ class PatchbayManager:
             group.add_to_canvas()
 
             for port in group.ports:
-                if not new_gpos.hidden_sides & port.mode():
-                    port.add_to_canvas(new_gpos)
+                # if not new_gpos.hidden_sides & port.mode():
+                    port.add_to_canvas(gpos=new_gpos)
                     
             for portgroup in group.portgroups:
-                if not new_gpos.hidden_sides & portgroup.port_mode:
+                # if not new_gpos.hidden_sides & portgroup.port_mode:
                     portgroup.add_to_canvas()
                     
             groups_and_pos[group] = new_gpos
@@ -595,7 +596,6 @@ class PatchbayManager:
         for group, gpos in groups_and_pos.items():            
             group.set_group_position(gpos, view_change=True)
 
-        patchcanvas.repulse_all_boxes()
         self.sg.port_types_view_changed.emit(self.port_types_view)
 
     # --- options triggers ---

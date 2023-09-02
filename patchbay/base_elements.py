@@ -316,7 +316,6 @@ class Connection:
         if self.in_canvas:
             return
 
-
         if not (self.port_out.in_canvas and self.port_in.in_canvas):
             if not (self.port_out.in_canvas or self.port_in.in_canvas):
                 return
@@ -950,7 +949,7 @@ class Group:
 
         for port_mode, layout_mode in group_position.layout_modes.items():
             patchcanvas.set_group_layout_mode(
-                self.group_id, port_mode, layout_mode)
+                self.group_id, port_mode, layout_mode, prevent_overlap=False)
 
         patchcanvas.move_group_boxes(
             self.group_id, gpos.null_xy, gpos.in_xy, gpos.out_xy)

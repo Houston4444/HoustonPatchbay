@@ -1029,7 +1029,8 @@ class BoxWidget(BoxWidgetMoth):
 
         self._painter_path = painter_path
         
-    def update_positions(self, even_animated=False, without_connections=False):
+    def update_positions(self, even_animated=False, without_connections=False,
+                         prevent_overlap=True):
         if canvas.loading_items:
             return
 
@@ -1205,8 +1206,9 @@ class BoxWidget(BoxWidgetMoth):
         if not without_connections:
             self.repaint_lines(forced=True)
 
-        if not (self._wrapping or self._unwrapping) and self.isVisible():
-            canvas.scene.deplace_boxes_from_repulsers([self])
+        if prevent_overlap:
+            if not (self._wrapping or self._unwrapping) and self.isVisible():
+                canvas.scene.deplace_boxes_from_repulsers([self])
 
         self.update_positions_pending = False
         self.update()

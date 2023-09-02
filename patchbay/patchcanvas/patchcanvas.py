@@ -593,9 +593,11 @@ def redraw_all_groups(force_no_prevent_overlap=False):
     prevent_overlap = options.prevent_overlap
     options.elastic = False
     options.prevent_overlap = False
-        
+
     for box in canvas.list_boxes():
-        box.update_positions(without_connections=True)
+        box.update_positions(
+            without_connections=True,
+            prevent_overlap=False)
     
     for connection in canvas.list_connections():
         if connection.widget is not None:
@@ -700,7 +702,8 @@ def wrap_group_box(group_id: int, port_mode: int, yesno: bool,
 
 @patchbay_api
 def set_group_layout_mode(group_id: int, port_mode: PortMode,
-                          layout_mode: BoxLayoutMode):
+                          layout_mode: BoxLayoutMode,
+                          prevent_overlap=True):
     group = canvas.get_group(group_id)
     if group is None:
         _logger.warning(
@@ -714,7 +717,7 @@ def set_group_layout_mode(group_id: int, port_mode: PortMode,
 
     for box in group.widgets:
         if box is not None:
-            box.update_positions()
+            box.update_positions(prevent_overlap=prevent_overlap)
                         
 
 # ------------------------------------------------------------------------

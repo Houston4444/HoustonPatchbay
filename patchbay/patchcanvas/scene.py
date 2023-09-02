@@ -69,7 +69,7 @@ class ToMoveBox:
 class PatchScene(PatchSceneMoth):
     " This class part of the scene is for repulsive boxes option"
     " because the algorythm is not simple and takes a lot of lines."
-    " See scene_abstract.py for others scene methods."
+    " See scene_moth.py for others scene methods."
     def __init__(self, view: QGraphicsView):
         PatchSceneMoth.__init__(self, view)
         self._full_repulse_boxes = set[BoxWidget]()
@@ -270,7 +270,7 @@ class PatchScene(PatchSceneMoth):
             for item_to_move in items_to_move:
                 item = item_to_move.item
                 irect = item_to_move.rect
-                    
+
                 # evaluate in which direction should go the box
                 direction = get_direction(srect, irect, wanted_directions)
                 to_move_boxes.append(ToMoveBox([direction], item, irect, repulser))
