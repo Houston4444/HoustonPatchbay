@@ -424,6 +424,11 @@ class PatchbayManager:
                 group.current_position.hidden_sides = PortMode.NULL
                 group.add_all_ports_to_canvas()
         
+        # forget all hidden boxes even if these boxes are not
+        # currently present in the patchbay.
+        for gpos in self.group_positions:
+            gpos.hidden_sides = PortMode.NULL
+        
         for conn in self.connections:
             conn.add_to_canvas()
             

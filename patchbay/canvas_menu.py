@@ -206,7 +206,14 @@ class CanvasMenu(QMenu):
                 group_act.setData(group.group_id)
                 group_act.triggered.connect(self._show_hidden_group)
                 has_hiddens = True
-                
+        
+        if not has_hiddens:
+            for gpos in self.patchbay_manager.group_positions:
+                if gpos.port_types_view is self.patchbay_manager.port_types_view:
+                    if gpos.hidden_sides:
+                        has_hiddens = True
+                        break                
+        
         if has_hiddens:
             self.show_hiddens_menu.addSeparator()
             display_all_act = self.show_hiddens_menu.addAction(
@@ -218,8 +225,7 @@ class CanvasMenu(QMenu):
             no_hiddens_act = self.show_hiddens_menu.addAction(
                 _translate('patchbay', 'All boxes are visible.'))
             no_hiddens_act.setEnabled(False)
-        
-    
+
     @pyqtSlot()
     def _show_hidden_group(self):
         group_id: int = self.sender().data()
