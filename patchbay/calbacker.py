@@ -43,20 +43,21 @@ class Callbacker:
             on_place = not bool(
                 group.current_position.flags & GroupPosFlag.HAS_BEEN_SPLITTED)
             self.patchcanvas.split_group(
-                group_id, on_place=on_place)
+                group_id, on_place=True)
             group.current_position.flags |= GroupPosFlag.SPLITTED
             group.current_position.flags |= GroupPosFlag.HAS_BEEN_SPLITTED
             group.save_current_position()
 
-    def _group_join(self, group_id: int):
-        self.patchcanvas.animate_before_join(group_id)
+    def _group_join(self, group_id: int, origin_box_mode=PortMode.NULL):
+        self.patchcanvas.animate_before_join(
+            group_id, origin_box_mode=origin_box_mode)
     
     def _group_joined(self, group_id: int):
         group = self.mng.get_group_from_id(group_id)
         if group is not None:
             group.current_position.flags &= ~GroupPosFlag.SPLITTED
             group.save_current_position()
-    
+
     def _group_move(self, group_id: int, port_mode: PortMode, x: int, y: int):
         group = self.mng.get_group_from_id(group_id)
         if group is None:

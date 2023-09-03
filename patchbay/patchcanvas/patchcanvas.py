@@ -20,10 +20,9 @@
 # global imports
 import logging
 from pathlib import Path
-from typing import Callable, Optional
+from typing import Callable
 from PyQt5.QtCore import (pyqtSlot, QObject, QPoint, QPointF, QRectF,
                           QSettings, QTimer, pyqtSignal)
-from PyQt5.QtWidgets import QAction, QMainWindow
 
 
 # local imports
@@ -48,7 +47,7 @@ from .init_values import (
     BoxType,
 )
 
-from .utils import canvas_callback, get_new_group_pos
+from .utils import get_new_group_pos
 from .box_widget import BoxWidget
 from .port_widget import PortWidget
 from .line_widget import LineWidget
@@ -87,42 +86,13 @@ class CanvasObject(QObject):
 
     def __init__(self, parent=None):
         QObject.__init__(self, parent)
-        self.groups_to_join = list[int]()
+        self.groups_to_join = list[tuple[GroupObject, PortMode]]()
         self.move_boxes_finished.connect(self.join_after_move)
 
     @pyqtSlot()
-    def port_context_menu_disconnect(self):
-        try:
-            con_ids_list = list(self.sender().data())
-        except:
-            return
-
-        for connection_id in con_ids_list:
-            if type(connection_id) != int:
-                continue
-
-            canvas_callback(CallbackAct.PORTS_DISCONNECT, connection_id)
-
-    @pyqtSlot()
-    def portgroup_the_ports(self):
-        try:
-            sender = self.sender()
-            assert isinstance(sender, QAction)
-            all_data = sender.data()
-            assert isinstance(all_data, tuple) and len(all_data) == 2
-        except:
-            return
-        
-        all_data: tuple[PortObject, PortObject]
-        
-        canvas_callback(
-            CallbackAct.PORTGROUP_ADD,
-            all_data[0].group_id, all_data[0].port_mode, all_data[0].port_type,
-            tuple([p.port_id for p in all_data]))
-
     def join_after_move(self):
-        for group_id in self.groups_to_join:
-            join_group(group_id)
+        for group, origin_box_mode in self.groups_to_join:
+            join_group(group.group_id, origin_box_mode)
 
         self.groups_to_join.clear()
 
@@ -423,12 +393,12 @@ def split_group(group_id: int, on_place=False):
 
     item = group.widgets[0]
     tmp_group = group.copy_no_widget()
-        
+
     if on_place and item is not None:
         pos = item.pos()
         rect = item.boundingRect()
-        y = int(pos.y())
         x = int(pos.x())
+        y = int(pos.y())
         tmp_group.in_pos = QPoint(x - int(rect.width() / 2), y)
         tmp_group.out_pos = QPoint(x + int(rect.width() / 2), y)
 
@@ -500,7 +470,7 @@ def split_group(group_id: int, on_place=False):
     QTimer.singleShot(0, canvas.scene.update)
 
 @patchbay_api
-def join_group(group_id: int):
+def join_group(group_id: int, origin_box_mode=PortMode.NULL):
     item = None
     s_item = None
 
@@ -541,10 +511,18 @@ def join_group(group_id: int):
     remove_group(group_id, save_positions=False)
 
     g = tmp_group
+    
+    if origin_box_mode is PortMode.OUTPUT:
+        xy = (g.out_pos.x(), g.out_pos.y())
+    elif origin_box_mode is PortMode.INPUT:
+        xy = (g.in_pos.x(), g.out_pos.y())
+    else:
+        xy = (g.null_pos.x(), g.null_pos.y())
+    
     # Step 3 - Re-create Item, now together
     add_group(group_id, g.group_name, BoxSplitMode.NO,
               g.box_type, g.icon_name, g.layout_modes,
-              null_xy=(g.null_pos.x(), g.null_pos.y()),
+              null_xy=xy,
               in_xy=(g.in_pos.x(), g.in_pos.y()),
               out_xy=(g.out_pos.x(), g.out_pos.y()))
 
@@ -638,20 +616,29 @@ def redraw_group(group_id: int, ensure_visible=False):
                 break
 
 @patchbay_api
-def animate_before_join(group_id: int):
-    canvas.qobject.groups_to_join.append(group_id)
+def animate_before_join(group_id: int,
+                        origin_box_mode: PortMode=PortMode.NULL):
     group = canvas.get_group(group_id)
     if group is None:
         return
 
+    canvas.qobject.groups_to_join.append((group, origin_box_mode))
+
+    if origin_box_mode is PortMode.OUTPUT:
+        x, y = group.out_pos.x(), group.out_pos.y()
+    elif origin_box_mode is PortMode.INPUT:
+        x, y = group.in_pos.x(), group.in_pos.y()
+    else:
+        x, y = group.null_pos.x(), group.null_pos.y()
+
     for widget in group.widgets:
         canvas.scene.add_box_to_animation(
-            widget, group.null_pos.x(), group.null_pos.y(), joining=True)
+            widget, x, y, joining=True)
 
 @patchbay_api
 def move_group_boxes(
         group_id: int, null_xy: tuple[int, int], in_xy: tuple[int, int],
-        out_xy: tuple[int, int], animate=True):
+        out_xy: tuple[int, int], animate=True, force=False):
     group = canvas.get_group(group_id)
     if group is None:
         return
@@ -676,7 +663,9 @@ def move_group_boxes(
 
             box_pos = box.pos()
 
-            if int(box_pos.x()) == xy[0] and int(box_pos.y()) == xy[1]:
+            if (not force
+                    and int(box_pos.x()) == xy[0]
+                    and int(box_pos.y()) == xy[1]):
                 continue
 
             canvas.scene.add_box_to_animation(
@@ -724,7 +713,6 @@ def set_group_layout_mode(group_id: int, port_mode: PortMode,
     for box in group.widgets:
         if box is not None:
             box.update_positions(prevent_overlap=prevent_overlap)
-                        
 
 # ------------------------------------------------------------------------
 

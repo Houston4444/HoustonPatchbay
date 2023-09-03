@@ -21,6 +21,7 @@ class JackPortFlag(IntFlag):
 class GroupPosFlag(IntFlag):
     # used in some config files,
     # it explains why some numbers are missing.
+    NONE = 0x00
     SPLITTED = 0x04
     WRAPPED_INPUT = 0x10
     WRAPPED_OUTPUT = 0x20
@@ -122,7 +123,7 @@ class GroupPos:
     null_xy: tuple[int, int]
     in_xy: tuple[int, int]
     out_xy: tuple[int, int]
-    flags: int = 0
+    flags: GroupPosFlag = GroupPosFlag.NONE
     layout_modes: dict[PortMode, BoxLayoutMode]
     hidden_sides: PortMode = PortMode.NULL
     fully_set: bool = True
@@ -132,6 +133,8 @@ class GroupPos:
         self.in_xy = (0, 0)
         self.out_xy = (0, 0)
         self.layout_modes = dict[PortMode, BoxLayoutMode]()
+        for port_mode in (PortMode.INPUT, PortMode.OUTPUT, PortMode.BOTH):
+            self.layout_modes[port_mode] = BoxLayoutMode.AUTO
     
     @staticmethod
     def _is_point(value: Any) -> bool:
@@ -148,16 +151,16 @@ class GroupPos:
 
     @staticmethod
     def from_serialized_dict(src: dict[str, Any]) -> 'GroupPos':
-        port_types_view = src['port_types_view']
-        group_name = src['group_name']
-        null_zone = src['null_zone']
-        out_zone = src['out_zone']
-        in_zone = src['in_zone']
-        null_xy = src['null_xy']
-        in_xy = src['in_xy']
-        out_xy = src['out_xy']
-        flags = src['flags']
-        layout_modes = src['layout_modes']
+        port_types_view = src.get('port_types_view')
+        group_name = src.get('group_name')
+        null_zone = src.get('null_zone')
+        out_zone = src.get('out_zone')
+        in_zone = src.get('in_zone')
+        null_xy = src.get('null_xy')
+        in_xy = src.get('in_xy')
+        out_xy = src.get('out_xy')
+        flags = src.get('flags')
+        layout_modes = src.get('layout_modes')
         hidden_sides = src.get('hidden_sides')
         
         gpos = GroupPos()
@@ -180,15 +183,12 @@ class GroupPos:
         if GroupPos._is_point(out_xy):
             gpos.out_xy = tuple(out_xy)
         if isinstance(flags, int):
-            try:
-                gpos.flags = GroupPosFlag(flags)
-            except:
-                pass
+            gpos.flags = GroupPosFlag(flags)
 
         if isinstance(layout_modes, dict):
             for key, value in layout_modes.items():
                 try:
-                    gpos.layout_modes[PortMode(int(key))] = BoxLayoutMode(int(value))
+                    gpos.layout_modes[PortMode(key)] = BoxLayoutMode(value)
                 except:
                     pass
         
@@ -208,18 +208,50 @@ class GroupPos:
     def eat(self, other: 'GroupPos'):
         self.__dict__ = other.__dict__.copy()
 
-    def as_serializable_dict(self):
-        return {'port_types_view': self.port_types_view.value,
-                'group_name': self.group_name,
-                'null_zone': self.null_zone,
-                'in_zone': self.in_zone,
-                'out_zone': self.out_zone,
-                'null_xy': self.null_xy,
-                'in_xy': self.in_xy,
-                'out_xy': self.out_xy,
-                'flags': self.flags,
-                'layout_modes': self.layout_modes,
-                'hidden_sides': self.hidden_sides.value}
+    def as_serializable_dict(self, minimal=False):
+        if not minimal:
+            return {'port_types_view': self.port_types_view.value,
+                    'group_name': self.group_name,
+                    'null_zone': self.null_zone,
+                    'in_zone': self.in_zone,
+                    'out_zone': self.out_zone,
+                    'null_xy': self.null_xy,
+                    'in_xy': self.in_xy,
+                    'out_xy': self.out_xy,
+                    'flags': self.flags,
+                    'layout_modes': self.layout_modes,
+                    'hidden_sides': self.hidden_sides.value}
+        
+        out_dict = {'port_types_view': self.port_types_view.value,
+                    'group_name': self.group_name}
+        
+        if self.null_zone:
+            out_dict['null_zone'] = self.null_zone
+        if self.in_zone:
+            out_dict['in_zone'] = self.in_zone
+        if self.out_zone:
+            out_dict['out_zone'] = self.out_zone
+
+        if self.null_xy != (0, 0):
+            out_dict['null_xy'] = self.null_xy
+        if self.in_xy != (0, 0):
+            out_dict['in_xy'] = self.in_xy
+        if self.out_xy != (0, 0):
+            out_dict['out_xy'] = self.out_xy
+        if self.flags is not GroupPosFlag.NONE:
+            out_dict['flags'] = self.flags.value
+
+        layout_modes = dict[int, int]()
+        for port_mode, box_layout_mode in self.layout_modes.items():
+            if box_layout_mode is not BoxLayoutMode.AUTO:
+                layout_modes[port_mode.value] = box_layout_mode.value
+        if layout_modes:
+            out_dict['layout_modes'] = layout_modes
+            
+        if self.hidden_sides:
+            out_dict['hidden_sides'] = self.hidden_sides.value
+
+        return out_dict
 
     def set_layout_mode(self, port_mode: PortMode, layout_mode: BoxLayoutMode):
         self.layout_modes[port_mode] = layout_mode
@@ -952,7 +984,8 @@ class Group:
                 self.group_id, port_mode, layout_mode, prevent_overlap=False)
 
         patchcanvas.move_group_boxes(
-            self.group_id, gpos.null_xy, gpos.in_xy, gpos.out_xy)
+            self.group_id, gpos.null_xy, gpos.in_xy, gpos.out_xy,
+            force=view_change)
 
         prevent_overlap = not view_change
 

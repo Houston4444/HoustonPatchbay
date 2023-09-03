@@ -1234,9 +1234,23 @@ class PatchbayManager:
             (c.port_out.full_name, c.port_in.full_name)
             for c in self.connections]
         file_dict['group_positions'] = [
-            gpos.as_serializable_dict() for gpos in self.group_positions
+            gpos.as_serializable_dict(minimal=True) for gpos in self.group_positions
             if self.get_group_from_name(gpos.group_name) is not None]
-        
+
+        gprops = {}
+
+        for gpos in self.group_positions:
+            ptv = gprops.get(gpos.port_types_view)
+            if ptv is None:
+                gprops[gpos.port_types_view] = ptv = {}
+            
+            base_dict = gpos.as_serializable_dict(minimal=True)
+            base_dict.__delitem__('port_types_view')
+            base_dict.__delitem__('group_name')
+            ptv[gpos.group_name] = base_dict
+            
+        file_dict['group_properties'] = gprops
+
         portgroups = list[dict[str, Any]]()
         for pg_mem in self.portgroups_memory:
             group = self.get_group_from_name(pg_mem.group_name)
