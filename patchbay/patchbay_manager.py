@@ -413,17 +413,17 @@ class PatchbayManager:
                 conn.add_to_canvas()
 
         self.optimize_operation(False)
-        patchcanvas.redraw_group(group_id)
+        patchcanvas.redraw_group(group_id, ensure_visible=True)
         patchcanvas.canvas.scene.resize_the_scene()
 
     def restore_all_group_hidden_sides(self):
         self.optimize_operation(True)
-        
+
         for group in self.groups:
             if group.current_position.hidden_sides:
                 group.current_position.hidden_sides = PortMode.NULL
                 group.add_all_ports_to_canvas()
-        
+
         # forget all hidden boxes even if these boxes are not
         # currently present in the patchbay.
         for gpos in self.group_positions:

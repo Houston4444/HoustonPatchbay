@@ -620,7 +620,7 @@ def redraw_all_groups(force_no_prevent_overlap=False):
         QTimer.singleShot(0, canvas.scene.update)
 
 @patchbay_api
-def redraw_group(group_id: int):
+def redraw_group(group_id: int, ensure_visible=False):
     group = canvas.get_group(group_id)
     if group is None:
         return
@@ -629,7 +629,13 @@ def redraw_group(group_id: int):
         if box is not None:
             box.update_positions()
 
-    QTimer.singleShot(0, canvas.scene.update)
+    canvas.scene.update()
+
+    if ensure_visible:
+        for box in group.widgets:
+            if box is not None:
+                canvas.scene.center_view_on(box)
+                break
 
 @patchbay_api
 def animate_before_join(group_id: int):
