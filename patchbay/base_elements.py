@@ -114,6 +114,22 @@ class ToolDisplayed(IntFlag):
         return return_td
 
 
+class BoxFlags(IntFlag):
+    NONE = 0x00
+    WRAPPED = auto()
+    HIDDEN = auto()
+    
+
+class BoxPos:
+    pos: tuple[int, int]
+    zone: str = ''
+    layout_mode: BoxLayoutMode = BoxLayoutMode.AUTO
+    flags: BoxFlags = BoxFlags.NONE
+
+    def __init__(self) -> None:
+        self.pos = (0, 0)
+
+
 class GroupPos:
     port_types_view: PortTypesViewFlag = PortTypesViewFlag.NONE
     group_name: str = ""
@@ -126,6 +142,8 @@ class GroupPos:
     flags: GroupPosFlag = GroupPosFlag.NONE
     layout_modes: dict[PortMode, BoxLayoutMode]
     hidden_sides: PortMode = PortMode.NULL
+    boxes: dict[PortMode, BoxPos]
+    splitted: bool = False
     fully_set: bool = True
     
     def __init__(self):
@@ -135,6 +153,11 @@ class GroupPos:
         self.layout_modes = dict[PortMode, BoxLayoutMode]()
         for port_mode in (PortMode.INPUT, PortMode.OUTPUT, PortMode.BOTH):
             self.layout_modes[port_mode] = BoxLayoutMode.AUTO
+        
+        self.boxes = dict[PortMode, BoxPos]()
+        
+        for port_mode in (PortMode.INPUT, PortMode.OUTPUT, PortMode.BOTH):
+            self.boxes[port_mode] = BoxPos()
     
     @staticmethod
     def _is_point(value: Any) -> bool:
@@ -197,6 +220,32 @@ class GroupPos:
                 gpos.hidden_sides = PortMode(hidden_sides)
             except:
                 gpos.hidden_sides = PortMode.NULL
+        
+        for port_mode in PortMode.INPUT, PortMode.OUTPUT, PortMode.BOTH:
+            if port_mode is PortMode.INPUT:
+                gpos.boxes[port_mode].zone = in_zone
+                gpos.boxes[port_mode].pos = in_xy
+                wrapped = bool(gpos.flags & GroupPosFlag.WRAPPED_INPUT)
+            elif port_mode is PortMode.OUTPUT:
+                gpos.boxes[port_mode].zone = out_zone
+                gpos.boxes[port_mode].pos = out_xy
+                wrapped = bool(gpos.flags & GroupPosFlag.WRAPPED_OUTPUT)
+            else:
+                gpos.boxes[port_mode].zone = null_zone
+                gpos.boxes[port_mode].pos = null_xy
+                wrapped = bool(gpos.flags & (GroupPosFlag.WRAPPED_INPUT
+                                             | GroupPosFlag.WRAPPED_OUTPUT)
+                               == (GroupPosFlag.WRAPPED_INPUT
+                                   | GroupPosFlag.WRAPPED_OUTPUT))
+            
+            gpos.boxes[port_mode].layout_mode = gpos.layout_modes[port_mode]
+            hidden = bool(gpos.hidden_sides & port_mode == port_mode)
+            box_flags = BoxFlags.NONE
+            if wrapped:
+                box_flags |= BoxFlags.WRAPPED
+            if hidden:
+                box_flags |= BoxFlags.HIDDEN
+            gpos.boxes[port_mode].flags = box_flags
         
         return gpos
 
@@ -763,19 +812,21 @@ class Group:
 
         if do_split:
             gpos.flags |= GroupPosFlag.HAS_BEEN_SPLITTED
-            patchcanvas.wrap_group_box(
-                self.group_id, PortMode.INPUT,
-                bool(gpos.flags & GroupPosFlag.WRAPPED_INPUT),
-                animate=False)
-            patchcanvas.wrap_group_box(
-                self.group_id, PortMode.OUTPUT,
-                bool(gpos.flags & GroupPosFlag.WRAPPED_OUTPUT),
-                animate=False)
+            for port_mode in PortMode.INPUT, PortMode.OUTPUT:
+                patchcanvas.wrap_group_box(
+                    self.group_id, port_mode,
+                    bool(gpos.boxes[port_mode].flags & BoxFlags.WRAPPED),
+                    animate=False)
+            # patchcanvas.wrap_group_box(
+            #     self.group_id, PortMode.OUTPUT,
+            #     bool(gpos.flags & GroupPosFlag.WRAPPED_OUTPUT),
+            #     animate=False)
         else:
             patchcanvas.wrap_group_box(
                 self.group_id, PortMode.NULL,
-                bool(gpos.flags & GroupPosFlag.WRAPPED_INPUT
-                     and gpos.flags & GroupPosFlag.WRAPPED_OUTPUT),
+                bool(gpos.boxes[PortMode.BOTH].flags & BoxFlags.WRAPPED),
+                # bool(gpos.flags & GroupPosFlag.WRAPPED_INPUT
+                #      and gpos.flags & GroupPosFlag.WRAPPED_OUTPUT),
                 animate=False)
             
         if self.has_gui:
@@ -994,19 +1045,16 @@ class Group:
             if not ex_gpos_flags & GroupPosFlag.SPLITTED:
                 patchcanvas.split_group(self.group_id)
 
-            patchcanvas.wrap_group_box(
-                self.group_id, PortMode.INPUT,
-                bool(gpos.flags & GroupPosFlag.WRAPPED_INPUT),
-                prevent_overlap=prevent_overlap)
-            patchcanvas.wrap_group_box(
-                self.group_id, PortMode.OUTPUT,
-                bool(gpos.flags & GroupPosFlag.WRAPPED_OUTPUT),
-                prevent_overlap=prevent_overlap)
+            for port_mode in PortMode.INPUT, PortMode.OUTPUT: 
+                patchcanvas.wrap_group_box(
+                    self.group_id, port_mode,
+                    bool(gpos.boxes[port_mode] & BoxFlags.WRAPPED),
+                    prevent_overlap=prevent_overlap)
+                
         else:
             patchcanvas.wrap_group_box(
                 self.group_id, PortMode.NULL,
-                bool(gpos.flags & (GroupPosFlag.WRAPPED_INPUT
-                                   | GroupPosFlag.WRAPPED_OUTPUT)),
+                bool(gpos.boxes[PortMode.BOTH].flags & BoxFlags.WRAPPED),
                 prevent_overlap=prevent_overlap)
 
             if ex_gpos_flags & GroupPosFlag.SPLITTED:
@@ -1021,17 +1069,29 @@ class Group:
         
         patchcanvas.set_group_layout_mode(self.group_id, port_mode, layout_mode)
 
-    def wrap_box(self, port_mode: int, yesno: bool):
-        wrap_flag = GroupPosFlag.WRAPPED_OUTPUT | GroupPosFlag.WRAPPED_INPUT
-        if port_mode == PortMode.INPUT:
-            wrap_flag = GroupPosFlag.WRAPPED_INPUT
-        elif port_mode == PortMode.OUTPUT:
-            wrap_flag = GroupPosFlag.WRAPPED_OUTPUT
-
+    def wrap_box(self, port_mode: PortMode, yesno: bool):
+        true_port_mode = port_mode
+        if port_mode is PortMode.NULL:
+            true_port_mode = PortMode.BOTH
+        
+        print('yoollo', port_mode, yesno)
+        box_pos = self.current_position.boxes[true_port_mode]
+        
         if yesno:
-            self.current_position.flags |= wrap_flag
+            box_pos.flags |= BoxFlags.WRAPPED
         else:
-            self.current_position.flags &= ~wrap_flag
+            box_pos.flags &= ~BoxFlags.WRAPPED
+        
+        # wrap_flag = GroupPosFlag.WRAPPED_OUTPUT | GroupPosFlag.WRAPPED_INPUT
+        # if port_mode == PortMode.INPUT:
+        #     wrap_flag = GroupPosFlag.WRAPPED_INPUT
+        # elif port_mode == PortMode.OUTPUT:
+        #     wrap_flag = GroupPosFlag.WRAPPED_OUTPUT
+
+        # if yesno:
+        #     self.current_position.flags |= wrap_flag
+        # else:
+        #     self.current_position.flags &= ~wrap_flag
 
         self.save_current_position()
 

@@ -245,7 +245,7 @@ def add_group(group_id: int, group_name: str, split=BoxSplitMode.UNDEF,
     group.widgets.append(None)
 
     if split == BoxSplitMode.YES:
-        group_box.set_split(True, PortMode.OUTPUT)
+        group_box.set_port_mode(PortMode.OUTPUT)
 
         if features.handle_group_pos:
             new_pos = _get_stored_canvas_position(
@@ -258,7 +258,7 @@ def add_group(group_id: int, group_name: str, split=BoxSplitMode.UNDEF,
                 group_box.setPos(group.out_pos)
             
         group_sbox = BoxWidget(group_id, group_name, icon_type, icon_name)
-        group_sbox.set_split(True, PortMode.INPUT)
+        group_sbox.set_port_mode(PortMode.INPUT)
 
         group.widgets[1] = group_sbox
 
@@ -276,7 +276,7 @@ def add_group(group_id: int, group_name: str, split=BoxSplitMode.UNDEF,
         group_sbox.setZValue(canvas.last_z_value)
 
     else:
-        group_box.set_split(False)
+        group_box.set_port_mode(PortMode.BOTH)
 
         if features.handle_group_pos:
             group_box.setPos(_get_stored_canvas_position(
@@ -296,10 +296,10 @@ def add_group(group_id: int, group_name: str, split=BoxSplitMode.UNDEF,
     if split_animated:
         for box in group.widgets:
             if box is not None:
-                if box.get_splitted_mode() is PortMode.OUTPUT:
+                if box.get_port_mode() is PortMode.OUTPUT:
                     canvas.scene.add_box_to_animation(
                         box, group.out_pos.x(), group.out_pos.y())
-                elif box.get_splitted_mode() is PortMode.INPUT:
+                elif box.get_port_mode() is PortMode.INPUT:
                     canvas.scene.add_box_to_animation(
                         box, group.in_pos.x(), group.in_pos.y())
 
@@ -683,15 +683,17 @@ def move_group_boxes(
                                           force_anim=animate)
 
 @patchbay_api
-def wrap_group_box(group_id: int, port_mode: int, yesno: bool,
+def wrap_group_box(group_id: int, port_mode: PortMode, yesno: bool,
                    animate=True, prevent_overlap=True):
     group = canvas.get_group(group_id)
     if group is None:
         return
 
+    print('asazpzp', group_id, port_mode, yesno, [p.get_port_mode() for p in group.widgets if p is not None])
+    
     for box in group.widgets:
         if (box is not None
-                and box.get_splitted_mode() == port_mode):
+                and box.get_port_mode() is port_mode):
             box.set_wrapped(yesno, animate=animate,
                             prevent_overlap=prevent_overlap)
 
@@ -821,7 +823,7 @@ def add_port(group_id: int, port_id: int, port_name: str,
 
     n = 0
     if (group.split
-            and group.widgets[0].get_splitted_mode() != port_mode
+            and group.widgets[0].get_port_mode() != port_mode
             and group.widgets[1] is not None):
         n = 1
 
@@ -989,8 +991,9 @@ def add_portgroup(group_id: int, portgrp_id: int, port_mode: PortMode,
         if box is None:
             continue
 
-        if (not box.is_splitted()
-                or box.get_splitted_mode() == port_mode):
+        if box.get_port_mode() & port_mode:
+        # if (not box.is_splitted()
+        #         or box.get_splitted_mode() == port_mode):
             portgrp.widget = box.add_portgroup_from_group(portgrp)
 
             if not canvas.loading_items:
@@ -1311,15 +1314,12 @@ def get_box_current_port_mode(group_id: int) -> PortMode:
     if group is None:
         return PortMode.NULL
 
-    widgets = [b for b in group.widgets if b is not None]
+    port_mode = PortMode.NULL
+    for box in group.widgets:
+        if box is not None:
+            port_mode |= box.get_current_port_mode()
     
-    if not widgets:
-        return PortMode.NULL
-    
-    if (len(widgets)) == 1:
-        return group.widgets[0].get_current_port_mode()
-    
-    return PortMode.BOTH
+    return port_mode
 
 @patchbay_api
 def get_number_of_boxes(group_id: int) -> int:

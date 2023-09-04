@@ -1247,6 +1247,7 @@ class PatchbayManager:
             base_dict = gpos.as_serializable_dict(minimal=True)
             base_dict.__delitem__('port_types_view')
             base_dict.__delitem__('group_name')
+
             ptv[gpos.group_name] = base_dict
             
         file_dict['group_properties'] = gprops

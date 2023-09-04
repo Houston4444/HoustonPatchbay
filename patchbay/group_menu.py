@@ -3,7 +3,7 @@ from PyQt5.QtWidgets import QMenu, QApplication
 from PyQt5.QtCore import pyqtSlot
 from PyQt5.QtGui import QIcon, QPixmap
 
-from .base_elements import Group, PortMode, GroupPosFlag, BoxLayoutMode
+from .base_elements import BoxFlags, Group, PortMode, GroupPosFlag, BoxLayoutMode
 from .patchcanvas import canvas, CallbackAct, patchcanvas, utils
 if TYPE_CHECKING:
     from .patchbay_manager import PatchbayManager
@@ -143,15 +143,18 @@ class GroupMenu(QMenu):
                 split_act.setIcon(QIcon.fromTheme('split'))
                 split_act.triggered.connect(self._split)
         
-        # detect if this box is wrapped
-        wrap_flag = GroupPosFlag.WRAPPED_OUTPUT | GroupPosFlag.WRAPPED_INPUT
-        if self._port_mode is PortMode.INPUT:
-            wrap_flag = GroupPosFlag.WRAPPED_INPUT
-        elif self._port_mode is PortMode.OUTPUT:
-            wrap_flag = GroupPosFlag.WRAPPED_OUTPUT
+        # # detect if this box is wrapped
+        # wrap_flag = GroupPosFlag.WRAPPED_OUTPUT | GroupPosFlag.WRAPPED_INPUT
+        # if self._port_mode is PortMode.INPUT:
+        #     wrap_flag = GroupPosFlag.WRAPPED_INPUT
+        # elif self._port_mode is PortMode.OUTPUT:
+        #     wrap_flag = GroupPosFlag.WRAPPED_OUTPUT
 
-        self._is_wrapped = bool(
-            self._group.current_position.flags & wrap_flag == wrap_flag)
+        # self._is_wrapped = bool(
+        #     self._group.current_position.flags & wrap_flag == wrap_flag)
+        box_pos = self._group.current_position.boxes[self._port_mode]
+        self._is_wrapped = bool(box_pos.flags & BoxFlags.WRAPPED)
+        print('is wrapped', self._is_wrapped, self._port_mode)
         
         wrap_title = _translate('patchbay', 'Wrap')
         wrap_icon = QIcon.fromTheme('pan-up-symbolic')
@@ -213,6 +216,7 @@ class GroupMenu(QMenu):
 
     @pyqtSlot()
     def _wrap(self):
+        print('_warrrap', self._group.group_id, self._port_mode, not self._is_wrapped)
         canvas.callback(CallbackAct.GROUP_WRAP,
                         self._group.group_id, self._port_mode, not self._is_wrapped)
         

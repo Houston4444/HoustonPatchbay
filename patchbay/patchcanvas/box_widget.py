@@ -1047,18 +1047,24 @@ class BoxWidget(BoxWidgetMoth):
         self._port_list.clear()
         self._portgrp_list.clear()
         
-        if self._splitted:
-            for port in canvas.list_ports(group_id=self._group_id):
-                if port.port_mode is self._splitted_mode:
-                    self._port_list.append(port)
-            
-            if self._port_list:
-                self._current_port_mode = self._splitted_mode
-        else:
-            for port in canvas.list_ports(group_id=self._group_id):
+        
+        for port in canvas.list_ports(group_id=self._group_id):
+            if port.port_mode & self._port_mode:
                 self._port_list.append(port)
-                # used to know present port modes (INPUT or OUTPUT or BOTH)
                 self._current_port_mode |= port.port_mode
+        
+        # if self._splitted:
+        #     for port in canvas.list_ports(group_id=self._group_id):
+        #         if port.port_mode is self._port_mode:
+        #             self._port_list.append(port)
+            
+        #     if self._port_list:
+        #         self._current_port_mode = self._port_mode
+        # else:
+        #     for port in canvas.list_ports(group_id=self._group_id):
+        #         self._port_list.append(port)
+        #         # used to know present port modes (INPUT or OUTPUT or BOTH)
+        #         self._current_port_mode |= port.port_mode
 
         for portgrp in canvas.list_portgroups(group_id=self._group_id):
             if self._current_port_mode & portgrp.port_mode:

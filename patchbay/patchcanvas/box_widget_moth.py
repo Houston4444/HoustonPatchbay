@@ -127,8 +127,7 @@ class BoxWidgetMoth(QGraphicsItem):
         self._ports_y_start = self._header_height
 
         self._last_pos = QPointF()
-        self._splitted = False
-        self._splitted_mode = PortMode.NULL
+        self._port_mode = PortMode.BOTH
         self._current_port_mode = PortMode.NULL # depends of present ports
 
         self._cursor_moving = False
@@ -157,11 +156,8 @@ class BoxWidgetMoth(QGraphicsItem):
 
         # Icon
         if box_type in (BoxType.HARDWARE, BoxType.MONITOR):
-            port_mode = PortMode.NULL
-            if self._splitted:
-                port_mode = self._splitted_mode
             self.top_icon = IconSvgWidget(
-                box_type, icon_name, port_mode, self)
+                box_type, icon_name, self._port_mode, self)
         else:
             self.top_icon = IconPixmapWidget(box_type, icon_name, self)
             if self.top_icon.is_null():
@@ -234,11 +230,8 @@ class BoxWidgetMoth(QGraphicsItem):
         return (self._box_type is BoxType.MONITOR
                 and self._icon_name in ('monitor_playback', 'monitor_capture'))
 
-    def is_splitted(self):
-        return self._splitted
-
-    def get_splitted_mode(self):
-        return self._splitted_mode
+    def get_port_mode(self):
+        return self._port_mode
 
     def get_current_port_mode(self):
         return self._current_port_mode
@@ -279,10 +272,7 @@ class BoxWidgetMoth(QGraphicsItem):
             self.remove_icon_from_scene()
 
         if box_type == BoxType.HARDWARE and (not icon_name or icon_name == 'a2j'):
-            port_mode = PortMode.NULL
-            if self._splitted:
-                port_mode = self._splitted_mode
-            self.top_icon = IconSvgWidget(box_type, icon_name, port_mode, self)
+            self.top_icon = IconSvgWidget(box_type, icon_name, self._port_mode, self)
             return
 
         if self.top_icon is not None:
@@ -303,20 +293,18 @@ class BoxWidgetMoth(QGraphicsItem):
         self._gui_visible = visible
         self.update()
 
-    def set_split(self, split, mode=PortMode.NULL):
-        self._splitted = split
-        self._splitted_mode = mode
+    def set_port_mode(self, mode=PortMode.BOTH):
+        self._port_mode = mode
         self._current_port_mode = mode
         
         if self._is_hardware:
             self.set_icon(BoxType.HARDWARE, self._icon_name)
         
         if self.shadow is not None:
-            if split:
-                if mode is PortMode.INPUT:
-                    self.shadow.setOffset(4, 2)
-                elif mode is PortMode.OUTPUT:
-                    self.shadow.setOffset(-4, 2)
+            if mode is PortMode.INPUT:
+                self.shadow.setOffset(4, 2)
+            elif mode is PortMode.OUTPUT:
+                self.shadow.setOffset(-4, 2)
             else:
                 self.shadow.setOffset(0, 2)
 
@@ -411,15 +399,14 @@ class BoxWidgetMoth(QGraphicsItem):
 
     def hide_ports_for_wrap(self, hide: bool):
         for portgrp in canvas.list_portgroups(group_id=self._group_id):
-            if self._splitted and self._splitted_mode != portgrp.port_mode:
+            if not portgrp.port_mode & self._port_mode:
                 continue
 
             if portgrp.widget is not None:
                 portgrp.widget.setVisible(not hide)
 
         for port in canvas.list_ports(group_id=self._group_id):
-            if (self._splitted
-                    and self._splitted_mode != port.port_mode):
+            if not port.port_mode & self._port_mode:
                 continue
 
             if port.widget is not None:
@@ -551,7 +538,7 @@ class BoxWidgetMoth(QGraphicsItem):
             if wrap:
                 canvas_callback(
                     CallbackAct.GROUP_WRAP, self._group_id,
-                    self._splitted_mode, False)
+                    self._port_mode, False)
                 return True
             
         elif self._unwrap_triangle_pos is not UnwrapButton.NONE:
@@ -567,7 +554,7 @@ class BoxWidgetMoth(QGraphicsItem):
             if trirect.contains(scene_pos):
                 canvas_callback(
                     CallbackAct.GROUP_WRAP, self._group_id,
-                    self._splitted_mode, True)
+                    self._port_mode, True)
                 return True
         
         return False
@@ -583,7 +570,7 @@ class BoxWidgetMoth(QGraphicsItem):
             if bool(value):
                 canvas_callback(
                     CallbackAct.GROUP_SELECTED, self._group_id,
-                    self._splitted_mode)
+                    self._port_mode)
 
         return super().itemChange(change, value)
 
@@ -596,7 +583,7 @@ class BoxWidgetMoth(QGraphicsItem):
 
         canvas.callback(CallbackAct.GROUP_MENU_CALL,
                         self._group_id,
-                        self._current_port_mode)
+                        self._port_mode)
 
         canvas.menu_click_pos = QCursor.pos()
 
@@ -718,7 +705,7 @@ class BoxWidgetMoth(QGraphicsItem):
 
     def send_move_callback(self):
         canvas_callback(CallbackAct.GROUP_MOVE, self._group_id,
-                        self._splitted_mode, round(self.x()), round(self.y()))
+                        self._port_mode, round(self.x()), round(self.y()))
 
         group = canvas.get_group(self._group_id)
         if group is None:
@@ -729,11 +716,11 @@ class BoxWidgetMoth(QGraphicsItem):
         
         pos = QPoint(round(self.x()), round(self.y()))
 
-        if self._splitted_mode is PortMode.NULL:
+        if self._port_mode is PortMode.BOTH:
             group.null_pos = pos
-        elif self._splitted_mode is PortMode.INPUT:
+        elif self._port_mode is PortMode.INPUT:
             group.in_pos = pos
-        elif self._splitted_mode is PortMode.OUTPUT:
+        elif self._port_mode is PortMode.OUTPUT:
             group.out_pos = pos
 
     def fix_pos_after_move(self):

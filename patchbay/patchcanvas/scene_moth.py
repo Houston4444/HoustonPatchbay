@@ -854,7 +854,7 @@ class PatchSceneMoth(QGraphicsScene):
             for item in self.get_selected_boxes():
                 item.check_item_pos()
                 self.scene_group_moved.emit(
-                    item.get_group_id(), item.get_splitted_mode(),
+                    item.get_group_id(), item.get_port_mode(),
                     item.scenePos())
 
             if len(self.selectedItems()) > 1:
