@@ -22,9 +22,11 @@ from .canvas_menu import CanvasMenu
 from .options_dialog import CanvasOptionsDialog
 from .filter_frame import FilterFrame
 from .base_elements import (
-    Connection, GroupPos, Port, PortTypesViewFlag,
+    GroupPos, PortTypesViewFlag,
     JackPortFlag, PortgroupMem, ToolDisplayed, TransportPosition)
 from .base_group import Group
+from .base_connection import Connection
+from .base_port import Port
 from .base_portgroup import Portgroup
 from .conns_clipboard import ConnClipboard
 from .calbacker import Callbacker

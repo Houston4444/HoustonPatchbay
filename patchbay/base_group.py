@@ -2,8 +2,6 @@ from typing import TYPE_CHECKING, Union
 
 
 from .base_elements import (
-    Port,
-    Connection,
     BoxType,
     GroupPos,
     GroupPosFlag,
@@ -14,7 +12,9 @@ from .base_elements import (
     PortSubType,
     JackPortFlag,
     PortgroupMem)
+from .base_port import Port
 from .base_portgroup import Portgroup
+from .base_connection import Connection
 
 from .patchcanvas import patchcanvas
 

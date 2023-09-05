@@ -3,7 +3,7 @@ from PyQt5.QtWidgets import QMenu, QApplication
 from PyQt5.QtCore import pyqtSlot
 from PyQt5.QtGui import QIcon, QPixmap
 
-from .base_elements import BoxFlag, PortMode, GroupPosFlag, BoxLayoutMode
+from .base_elements import PortMode, GroupPosFlag, BoxLayoutMode
 from .base_group import Group
 from .patchcanvas import canvas, CallbackAct, patchcanvas, utils
 if TYPE_CHECKING:

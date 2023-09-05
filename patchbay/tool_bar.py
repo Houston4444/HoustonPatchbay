@@ -1,10 +1,9 @@
 
-from typing import TYPE_CHECKING
 from PyQt5.QtWidgets import (
     QToolBar, QLabel, QMenu,
     QApplication, QAction)
 from PyQt5.QtGui import QMouseEvent, QIcon
-from PyQt5.QtCore import pyqtSignal, Qt, QPoint, QSize
+from PyQt5.QtCore import Qt, QPoint
 
 
 from .base_elements import ToolDisplayed

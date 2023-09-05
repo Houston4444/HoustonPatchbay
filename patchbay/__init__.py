@@ -1,5 +1,7 @@
 from .patchbay_manager import PatchbayManager, patchcanvas
-from .base_elements import Port, Portgroup
+from .base_port import Port
+from .base_portgroup import Portgroup
+from .base_connection import Connection
 from .base_group import Group
 from .calbacker import Callbacker
 from .tools_widgets import  PatchbayToolsWidget

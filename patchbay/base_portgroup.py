@@ -1,6 +1,7 @@
 from typing import TYPE_CHECKING
 
-from .base_elements import PortMode, Port, PortType, PortSubType
+from .base_elements import PortMode, PortType, PortSubType
+from .base_port import Port
 from .patchcanvas import patchcanvas
 
 if TYPE_CHECKING:

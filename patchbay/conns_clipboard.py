@@ -1,7 +1,8 @@
 
 from typing import TYPE_CHECKING
 
-from .base_elements import PortMode, Port
+from .base_elements import PortMode
+from .base_port import Port
 from .patchcanvas import canvas
 from .patchcanvas.init_values import CallbackAct
 
