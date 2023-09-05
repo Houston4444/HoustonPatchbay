@@ -3,7 +3,8 @@ from PyQt5.QtWidgets import QMenu, QApplication
 from PyQt5.QtCore import pyqtSlot
 from PyQt5.QtGui import QIcon, QPixmap
 
-from .base_elements import BoxFlag, Group, PortMode, GroupPosFlag, BoxLayoutMode
+from .base_elements import BoxFlag, PortMode, GroupPosFlag, BoxLayoutMode
+from .base_group import Group
 from .patchcanvas import canvas, CallbackAct, patchcanvas, utils
 if TYPE_CHECKING:
     from .patchbay_manager import PatchbayManager
@@ -147,11 +148,13 @@ class GroupMenu(QMenu):
                 split_act.setIcon(QIcon.fromTheme('split'))
                 split_act.triggered.connect(self._split)
 
-        box_pos = self._group.current_position.boxes[self._port_mode]        
+        box_pos = self._group.current_position.boxes[self._port_mode]
+        self._is_wrapped = box_pos.is_wrapped()
+        
         wrap_title = _translate('patchbay', 'Wrap')
         wrap_icon = QIcon.fromTheme('pan-up-symbolic')
 
-        if box_pos.is_wrapped():
+        if self._is_wrapped:
             wrap_title = _translate('patchbay', 'Unwrap')
             wrap_icon = QIcon.fromTheme('pan-down-symbolic')
 
@@ -209,9 +212,9 @@ class GroupMenu(QMenu):
 
     @pyqtSlot()
     def _wrap(self):
-        print('_warrrap', self._group.group_id, self._port_mode, not self._is_wrapped)
         canvas.callback(CallbackAct.GROUP_WRAP,
-                        self._group.group_id, self._port_mode, not self._is_wrapped)
+                        self._group.group_id, self._port_mode,
+                        not self._is_wrapped)
         
     @pyqtSlot()
     def _auto_layout(self):

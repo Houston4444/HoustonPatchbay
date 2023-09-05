@@ -1,5 +1,6 @@
 from .patchbay_manager import PatchbayManager, patchcanvas
-from .base_elements import Group, Port, Portgroup
+from .base_elements import Port, Portgroup
+from .base_group import Group
 from .calbacker import Callbacker
 from .tools_widgets import  PatchbayToolsWidget
 from .port_info_dialog import CanvasPortInfoDialog

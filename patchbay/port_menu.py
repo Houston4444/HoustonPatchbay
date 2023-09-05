@@ -15,7 +15,8 @@ from .patchcanvas.utils import (
     get_portgroup_name_from_ports_names, get_icon, is_dark_theme)
 from .base_elements import (
     Connection, Port, Portgroup, PortType,
-    PortSubType, PortMode, Group)
+    PortSubType, PortMode)
+from .base_group import Group
 
 if TYPE_CHECKING:
     from patchbay_manager import PatchbayManager

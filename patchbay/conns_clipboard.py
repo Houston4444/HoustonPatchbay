@@ -1,9 +1,10 @@
 
 from typing import TYPE_CHECKING
 
-from .base_elements import PortType, PortMode, Port
+from .base_elements import PortMode, Port
 from .patchcanvas import canvas
 from .patchcanvas.init_values import CallbackAct
+
 if TYPE_CHECKING:
     from patchbay_manager import PatchbayManager
 

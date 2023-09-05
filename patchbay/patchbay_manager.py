@@ -5,7 +5,6 @@ import operator
 from pathlib import Path
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, Callable, Optional, Union
-from unittest.mock import patch
 
 from PyQt5.QtGui import QCursor, QGuiApplication
 from PyQt5.QtWidgets import QMainWindow, QMessageBox, QWidget
@@ -23,8 +22,9 @@ from .canvas_menu import CanvasMenu
 from .options_dialog import CanvasOptionsDialog
 from .filter_frame import FilterFrame
 from .base_elements import (
-    Connection, GroupPos, Port, PortTypesViewFlag, Portgroup, Group,
+    Connection, GroupPos, Port, PortTypesViewFlag, Portgroup, 
     JackPortFlag, PortgroupMem, ToolDisplayed, TransportPosition)
+from .base_group import Group
 from .conns_clipboard import ConnClipboard
 from .calbacker import Callbacker
 
