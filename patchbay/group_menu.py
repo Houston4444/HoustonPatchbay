@@ -3,7 +3,7 @@ from PyQt5.QtWidgets import QMenu, QApplication
 from PyQt5.QtCore import pyqtSlot
 from PyQt5.QtGui import QIcon, QPixmap
 
-from .base_elements import BoxFlags, Group, PortMode, GroupPosFlag, BoxLayoutMode
+from .base_elements import BoxFlag, Group, PortMode, GroupPosFlag, BoxLayoutMode
 from .patchcanvas import canvas, CallbackAct, patchcanvas, utils
 if TYPE_CHECKING:
     from .patchbay_manager import PatchbayManager
@@ -128,10 +128,14 @@ class GroupMenu(QMenu):
 
         self.addSeparator()
 
-        cur_port_mode = patchcanvas.get_box_current_port_mode(
-            self._group.group_id)
+        current_port_mode = PortMode.NULL
+        for port in group.ports:
+            if port.in_canvas:
+                current_port_mode |= port.mode()
+                if current_port_mode is PortMode.BOTH:
+                    break
 
-        if cur_port_mode is PortMode.BOTH:
+        if current_port_mode is PortMode.BOTH:
             if (self._group.current_position.flags & GroupPosFlag.SPLITTED):
                 join_act = self.addAction(
                     _translate('patchbay', 'Join'))
@@ -142,23 +146,12 @@ class GroupMenu(QMenu):
                     _translate('patchbay', 'Split'))
                 split_act.setIcon(QIcon.fromTheme('split'))
                 split_act.triggered.connect(self._split)
-        
-        # # detect if this box is wrapped
-        # wrap_flag = GroupPosFlag.WRAPPED_OUTPUT | GroupPosFlag.WRAPPED_INPUT
-        # if self._port_mode is PortMode.INPUT:
-        #     wrap_flag = GroupPosFlag.WRAPPED_INPUT
-        # elif self._port_mode is PortMode.OUTPUT:
-        #     wrap_flag = GroupPosFlag.WRAPPED_OUTPUT
 
-        # self._is_wrapped = bool(
-        #     self._group.current_position.flags & wrap_flag == wrap_flag)
-        box_pos = self._group.current_position.boxes[self._port_mode]
-        self._is_wrapped = bool(box_pos.flags & BoxFlags.WRAPPED)
-        print('is wrapped', self._is_wrapped, self._port_mode)
-        
+        box_pos = self._group.current_position.boxes[self._port_mode]        
         wrap_title = _translate('patchbay', 'Wrap')
         wrap_icon = QIcon.fromTheme('pan-up-symbolic')
-        if self._is_wrapped:
+
+        if box_pos.is_wrapped():
             wrap_title = _translate('patchbay', 'Unwrap')
             wrap_icon = QIcon.fromTheme('pan-down-symbolic')
 

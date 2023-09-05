@@ -689,8 +689,6 @@ def wrap_group_box(group_id: int, port_mode: PortMode, yesno: bool,
     if group is None:
         return
 
-    print('asazpzp', group_id, port_mode, yesno, [p.get_port_mode() for p in group.widgets if p is not None])
-    
     for box in group.widgets:
         if (box is not None
                 and box.get_port_mode() is port_mode):
@@ -1307,19 +1305,6 @@ def get_box_true_layout(group_id: int, port_mode: PortMode) -> BoxLayoutMode:
         return group.widgets[0]._current_layout_mode
     
     return group.widgets[1]._current_layout_mode
-
-@patchbay_api
-def get_box_current_port_mode(group_id: int) -> PortMode:
-    group = canvas.get_group(group_id)
-    if group is None:
-        return PortMode.NULL
-
-    port_mode = PortMode.NULL
-    for box in group.widgets:
-        if box is not None:
-            port_mode |= box.get_current_port_mode()
-    
-    return port_mode
 
 @patchbay_api
 def get_number_of_boxes(group_id: int) -> int:
