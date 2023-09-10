@@ -128,13 +128,6 @@ class BoxType(IntEnum):
     INTERNAL = 8
 
 
-# Split Option
-class BoxSplitMode(IntEnum):
-    UNDEF = 0
-    NO = 1
-    YES = 2
-
-
 # define the way ports are put in a box
 class BoxLayoutMode(IntEnum):
     AUTO = 0
@@ -142,6 +135,45 @@ class BoxLayoutMode(IntEnum):
     LARGE = 2
 
 
+class BoxFlag(IntFlag):
+    NONE = 0x00
+    WRAPPED = auto()
+    HIDDEN = auto()
+    
+
+class BoxPos:
+    pos: tuple[int, int]
+    zone: str = ''
+    layout_mode: BoxLayoutMode = BoxLayoutMode.AUTO
+    flags: BoxFlag = BoxFlag.NONE
+
+    def __init__(self) -> None:
+        self.pos = (0, 0)
+    
+    def _set_flag(self, flag: BoxFlag, yesno: bool):
+        if yesno:
+            self.flags |= flag
+        else:
+            self.flags &= ~flag
+    
+    def is_wrapped(self) -> bool:
+        return bool(self.flags & BoxFlag.WRAPPED)
+    
+    def is_hidden(self) -> bool:
+        return bool(self.flags & BoxFlag.HIDDEN)
+
+    def set_wrapped(self, yesno: bool):
+        self._set_flag(BoxFlag.WRAPPED, yesno)
+            
+    def set_hidden(self, yesno: bool):
+        self._set_flag(BoxFlag.HIDDEN, yesno)
+
+    def copy(self) -> 'BoxPos':
+        new_box_pos = BoxPos()
+        new_box_pos.__dict__ = self.__dict__.copy()
+        return new_box_pos
+
+    
 # For Repulsive boxes
 class Direction(IntEnum):
     NONE = 0
@@ -198,10 +230,11 @@ class CanvasFeaturesObject:
 class GroupObject:
     group_id: int
     group_name: str
-    split: int
+    splitted: bool
     box_type: int
     icon_name: str
     layout_modes: dict[PortMode, BoxLayoutMode]
+    box_poses: dict[PortMode, BoxPos]
     plugin_id: int
     plugin_ui: int # to verify
     plugin_inline: int # to verify
@@ -275,7 +308,7 @@ class PortgrpObject(ConnectableObject):
     def __init__(self):
         self.ports = list[PortObject]()
 
-    def copy_no_widget(self) -> 'PortObject':
+    def copy_no_widget(self) -> 'PortgrpObject':
         portgrp_copy = PortgrpObject()
         portgrp_copy.__dict__ = self.__dict__.copy()
         portgrp_copy.widget = None

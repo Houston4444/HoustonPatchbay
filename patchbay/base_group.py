@@ -4,8 +4,6 @@ from typing import TYPE_CHECKING, Union
 from .base_elements import (
     BoxType,
     GroupPos,
-    GroupPosFlag,
-    BoxSplitMode,
     BoxLayoutMode,
     PortMode,
     PortType,
@@ -82,10 +80,8 @@ class Group:
 
         box_type, icon_name = self._get_box_type_and_icon()
 
-        do_split = bool(self.current_position.flags & GroupPosFlag.SPLITTED)
-        split = BoxSplitMode.YES if do_split else BoxSplitMode.NO
-
         gpos = self.current_position
+        do_split = gpos.is_splitted()
 
         self.display_name = self.display_name.replace('.0/', '/').replace('_', ' ')
         
@@ -95,21 +91,22 @@ class Group:
         
         layout_modes_ = dict[PortMode, BoxLayoutMode]()
         for port_mode in (PortMode.INPUT, PortMode.OUTPUT, PortMode.BOTH):
-            layout_modes_[port_mode] = gpos.get_layout_mode(port_mode)
+            layout_modes_[port_mode] = gpos.boxes[port_mode].layout_mode
         
         self.cnv_name = display_name
         self.cnv_box_type = box_type
         self.cnv_icon_name = icon_name
         
         patchcanvas.add_group(
-            self.group_id, display_name, split,
+            self.group_id, display_name, do_split,
             box_type, icon_name, layout_modes=layout_modes_,
-            null_xy=gpos.null_xy, in_xy=gpos.in_xy, out_xy=gpos.out_xy)
+            null_xy=gpos.boxes[PortMode.BOTH].pos,
+            in_xy=gpos.boxes[PortMode.INPUT].pos,
+            out_xy=gpos.boxes[PortMode.OUTPUT].pos)
 
         self.in_canvas = True
 
         if do_split:
-            gpos.flags |= GroupPosFlag.HAS_BEEN_SPLITTED
             for port_mode in PortMode.INPUT, PortMode.OUTPUT:
                 patchcanvas.wrap_group_box(
                     self.group_id, port_mode,
@@ -147,6 +144,47 @@ class Group:
         self.cnv_name = display_name
         
         patchcanvas.rename_group(self.group_id, display_name)
+
+    def split_in_canvas(self):
+        box_rect = patchcanvas.get_box_rect(self.group_id, PortMode.BOTH)
+
+        self.manager.optimize_operation(True)
+        for conn in self.manager.connections:
+            if conn.port_out.group is self or conn.port_in.group is self:
+                conn.remove_from_canvas()
+
+        self.remove_all_ports_from_canvas()
+        gpos = self.current_position
+
+        self.remove_from_canvas()
+        
+        self.current_position.set_splitted(True)
+        wrapped = gpos.boxes[PortMode.BOTH].is_wrapped()
+        for port_mode in PortMode.INPUT, PortMode.OUTPUT:
+            gpos.boxes[port_mode].pos = gpos.boxes[PortMode.BOTH].pos
+            gpos.boxes[port_mode].set_wrapped(
+                gpos.boxes[PortMode.BOTH].is_wrapped())
+        
+        self.add_to_canvas()
+        self.add_all_ports_to_canvas()
+
+        for conn in self.manager.connections:
+            if conn.port_out.group is self or conn.port_in.group is self:
+                conn.add_to_canvas()
+
+        self.manager.optimize_operation(False)
+        patchcanvas.redraw_group(self.group_id)
+        patchcanvas.move_splitted_boxes_on_place(
+            self.group_id, box_rect.width())
+
+    def join_in_canvas(self):
+        self.manager.optimize_operation(True)
+        for conn in self.manager.connections:
+            if conn.port_out.group is self or conn.port_in.group is self:
+                conn.remove_from_canvas()
+
+        self.remove_all_ports_from_canvas()
+        gpos = self.current_position
 
     def _get_box_type_and_icon(self) -> tuple[BoxType, str]:
         box_type = BoxType.APPLICATION
@@ -247,7 +285,7 @@ class Group:
 
             if not self.current_position.fully_set:
                 if self._is_hardware:
-                    self.current_position.flags |= GroupPosFlag.SPLITTED
+                    self.current_position.set_splitted(True)
                 self.current_position.fully_set = True
                 self.save_current_position()
 
@@ -318,42 +356,50 @@ class Group:
         if not self.in_canvas:
             return
 
-        ex_gpos_flags = self.current_position.flags
+        ex_gpos_splitted = self.current_position.is_splitted()
         self.current_position = group_position
         gpos = self.current_position
 
-        for port_mode, layout_mode in group_position.layout_modes.items():
+        for port_mode, box_pos in group_position.boxes.items():
             patchcanvas.set_group_layout_mode(
-                self.group_id, port_mode, layout_mode, prevent_overlap=False)
+                self.group_id, port_mode, box_pos.layout_mode,
+                prevent_overlap=False)
+
+        for port_mode, box_pos in group_position.boxes.items():
+            patchcanvas.set_group_layout_mode(
+                self.group_id, port_mode, box_pos.layout_mode,
+                prevent_overlap=False)
 
         patchcanvas.move_group_boxes(
-            self.group_id, gpos.null_xy, gpos.in_xy, gpos.out_xy,
+            self.group_id,
+            gpos.boxes,
             force=view_change)
 
         prevent_overlap = not view_change
 
         # restore split and wrapped modes
-        if gpos.flags & GroupPosFlag.SPLITTED:
-            if not ex_gpos_flags & GroupPosFlag.SPLITTED:
-                patchcanvas.split_group(self.group_id)
+        if gpos.is_splitted():
+            if not ex_gpos_splitted:
+                # patchcanvas.split_group(self.group_id)
+                self.split_in_canvas()
 
             for port_mode in PortMode.INPUT, PortMode.OUTPUT: 
                 patchcanvas.wrap_group_box(
                     self.group_id, port_mode,
                     gpos.boxes[port_mode].is_wrapped(),
                     prevent_overlap=prevent_overlap)
-                
+
         else:
             patchcanvas.wrap_group_box(
                 self.group_id, PortMode.NULL,
                 gpos.boxes[PortMode.BOTH].is_wrapped(),
                 prevent_overlap=prevent_overlap)
 
-            if ex_gpos_flags & GroupPosFlag.SPLITTED:
+            if ex_gpos_splitted:
                 patchcanvas.animate_before_join(self.group_id)
 
     def set_layout_mode(self, port_mode: PortMode, layout_mode: BoxLayoutMode):
-        self.current_position.set_layout_mode(port_mode, layout_mode)
+        self.current_position.boxes[port_mode].layout_mode = layout_mode
         self.save_current_position()
 
         if not self.in_canvas:
@@ -988,3 +1034,10 @@ class Group:
 
         for portgroup in self.portgroups:
             portgroup.add_to_canvas()
+            
+    def remove_all_ports_from_canvas(self):
+        for portgroup in self.portgroups:
+            portgroup.remove_from_canvas()
+        
+        for port in self.ports:
+            port.remove_from_canvas()

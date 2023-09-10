@@ -499,7 +499,9 @@ class PatchbayManager:
         gpos.fully_set = False
         gpos.port_types_view = self.port_types_view
         gpos.group_name = group_name
-        gpos.null_xy, gpos.in_xy, gpos.out_xy = get_new_group_positions()
+        for port_mode, xy in get_new_group_positions().items():
+            gpos.boxes[port_mode].pos = xy
+
         self.group_positions.append(gpos)
         self.save_group_position(gpos)
         return gpos

@@ -58,7 +58,7 @@ def easy_log(func):
         return func(*args, **kwargs)
     return wrapper
 
-def get_new_group_positions() -> tuple[tuple[int, int], tuple[int, int], tuple[int, int]]:
+def get_new_group_positions() -> dict[PortMode, tuple[int, int]]:
     def get_middle_empty_positions(scene_rect: QRectF) -> tuple[int, int]:
         if scene_rect.isNull():
             return ((0, 200))
@@ -129,13 +129,15 @@ def get_new_group_positions() -> tuple[tuple[int, int], tuple[int, int], tuple[i
 
     rect = canvas.scene.get_new_scene_rect()
     if rect.isNull():
-        return ((200, 0), (400, 0), (0, 0))
+        return {PortMode.BOTH: (200, 0),
+                PortMode.INPUT: (400, 0),
+                PortMode.OUTPUT: (0, 0)}
 
     y = rect.bottom()
 
-    return (get_middle_empty_positions(rect),
-            (400, int(y)),
-            (0, int(y)))
+    return {PortMode.BOTH: get_middle_empty_positions(rect),
+            PortMode.INPUT: (400, int(y)),
+            PortMode.OUTPUT: (0, int(y))}
 
 @easy_log
 def get_new_group_pos(horizontal: bool):
@@ -320,7 +322,7 @@ def get_icon(icon_type: BoxType, icon_name: str, port_mode: PortMode, dark=True)
         
         if port_mode is PortMode.INPUT:
             icon.addFile(prefix + "monitor_capture.svg")
-        elif port_mode is PortMode.OUTPUT:
+        else:
             icon.addFile(prefix + "monitor_playback.svg")
 
     elif icon_type == BoxType.INTERNAL:

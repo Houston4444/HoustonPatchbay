@@ -5,6 +5,7 @@ from PyQt5.QtGui import QCursor
 from . import patchcanvas
 from .patchcanvas import CallbackAct, PortMode, PortType, BoxLayoutMode
 from .base_elements import GroupPosFlag, PortgroupMem
+from .base_port import Port
 from .port_info_dialog import CanvasPortInfoDialog
 from .port_menu import PoMenu, ConnectMenu
 from .group_menu import GroupMenu
@@ -40,12 +41,10 @@ class Callbacker:
     def _group_split(self, group_id: int):        
         group = self.mng.get_group_from_id(group_id)
         if group is not None:
-            on_place = not bool(
-                group.current_position.flags & GroupPosFlag.HAS_BEEN_SPLITTED)
-            self.patchcanvas.split_group(
-                group_id, on_place=True)
-            group.current_position.flags |= GroupPosFlag.SPLITTED
-            group.current_position.flags |= GroupPosFlag.HAS_BEEN_SPLITTED
+            group.split_in_canvas()
+            # self.patchcanvas.split_group(
+            #     group_id, on_place=True)
+            # group.current_position.set_splitted(True)
             group.save_current_position()
 
     def _group_join(self, group_id: int, origin_box_mode=PortMode.NULL):
@@ -55,7 +54,7 @@ class Callbacker:
     def _group_joined(self, group_id: int):
         group = self.mng.get_group_from_id(group_id)
         if group is not None:
-            group.current_position.flags &= ~GroupPosFlag.SPLITTED
+            group.current_position.set_splitted(False)
             group.save_current_position()
 
     def _group_move(self, group_id: int, port_mode: PortMode, x: int, y: int):
@@ -63,15 +62,7 @@ class Callbacker:
         if group is None:
             return
         
-        gpos = group.current_position
-
-        if port_mode is PortMode.NULL:
-            gpos.null_xy = (x, y)
-        elif port_mode is PortMode.INPUT:
-            gpos.in_xy = (x, y)
-        elif port_mode is PortMode.OUTPUT:
-            gpos.out_xy = (x, y)
-
+        group.current_position.boxes[port_mode].pos = (x, y)
         group.save_current_position()
     
     def _group_wrap(self, group_id: int, splitted_mode, yesno: bool):

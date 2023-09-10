@@ -137,7 +137,7 @@ class GroupMenu(QMenu):
                     break
 
         if current_port_mode is PortMode.BOTH:
-            if (self._group.current_position.flags & GroupPosFlag.SPLITTED):
+            if self._group.current_position.is_splitted():
                 join_act = self.addAction(
                     _translate('patchbay', 'Join'))
                 join_act.setIcon(QIcon.fromTheme('join'))
@@ -166,7 +166,7 @@ class GroupMenu(QMenu):
             _translate('patchbay', 'Automatic layout'))
         auto_layout_act.setIcon(QIcon.fromTheme('auto-scale-x'))
         auto_layout_act.setVisible(
-            self._group.current_position.get_layout_mode(port_mode)
+            self._group.current_position.boxes[port_mode].layout_mode
             is not BoxLayoutMode.AUTO)
         
         change_layout_act = self.addAction(

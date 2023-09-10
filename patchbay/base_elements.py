@@ -3,7 +3,7 @@ from enum import IntFlag, IntEnum, auto
 from typing import TYPE_CHECKING, Any
 
 from .patchcanvas import (patchcanvas, PortMode, PortType, BoxType,
-                          BoxLayoutMode, BoxSplitMode, PortSubType)
+                          BoxLayoutMode, PortSubType, BoxPos)
 
 
 # Port Flags as defined by JACK
@@ -20,10 +20,10 @@ class GroupPosFlag(IntFlag):
     # used in some config files,
     # it explains why some numbers are missing.
     NONE = 0x00
-    SPLITTED = 0x04
-    WRAPPED_INPUT = 0x10
-    WRAPPED_OUTPUT = 0x20
-    HAS_BEEN_SPLITTED = 0x40
+    SPLITTED = 0x04          # still used
+    WRAPPED_INPUT = 0x10     # used for old config
+    WRAPPED_OUTPUT = 0x20    # used fot old config
+    HAS_BEEN_SPLITTED = 0x40 # Not used anymore
 
 
 class PortTypesViewFlag(IntFlag):
@@ -112,64 +112,19 @@ class ToolDisplayed(IntFlag):
         return return_td
 
 
-class BoxFlag(IntFlag):
-    NONE = 0x00
-    WRAPPED = auto()
-    HIDDEN = auto()
-    
 
-class BoxPos:
-    pos: tuple[int, int]
-    zone: str = ''
-    layout_mode: BoxLayoutMode = BoxLayoutMode.AUTO
-    flags: BoxFlag = BoxFlag.NONE
-
-    def __init__(self) -> None:
-        self.pos = (0, 0)
-    
-    def _set_flag(self, flag: BoxFlag, yesno: bool):
-        if yesno:
-            self.flags |= flag
-        else:
-            self.flags &= ~flag
-    
-    def is_wrapped(self) -> bool:
-        return bool(self.flags & BoxFlag.WRAPPED)
-    
-    def _is_hidden(self) -> bool:
-        return bool(self.flags & BoxFlag.HIDDEN)
-
-    def set_wrapped(self, yesno: bool):
-        self._set_flag(BoxFlag.WRAPPED, yesno)
-            
-    def set_hidden(self, yesno: bool):
-        self._set_flag(BoxFlag.HIDDEN, yesno)
 
 
 class GroupPos:
     port_types_view: PortTypesViewFlag = PortTypesViewFlag.NONE
     group_name: str = ""
-    null_zone: str = ""
-    in_zone: str = ""
-    out_zone: str = ""
-    null_xy: tuple[int, int]
-    in_xy: tuple[int, int]
-    out_xy: tuple[int, int]
     flags: GroupPosFlag = GroupPosFlag.NONE
-    layout_modes: dict[PortMode, BoxLayoutMode]
     hidden_sides: PortMode = PortMode.NULL
     boxes: dict[PortMode, BoxPos]
     splitted: bool = False
     fully_set: bool = True
     
     def __init__(self):
-        self.null_xy = (0, 0)
-        self.in_xy = (0, 0)
-        self.out_xy = (0, 0)
-        self.layout_modes = dict[PortMode, BoxLayoutMode]()
-        for port_mode in (PortMode.INPUT, PortMode.OUTPUT, PortMode.BOTH):
-            self.layout_modes[port_mode] = BoxLayoutMode.AUTO
-        
         self.boxes = dict[PortMode, BoxPos]()
         
         for port_mode in (PortMode.INPUT, PortMode.OUTPUT, PortMode.BOTH):
@@ -192,9 +147,9 @@ class GroupPos:
     def from_serialized_dict(src: dict[str, Any]) -> 'GroupPos':
         port_types_view = src.get('port_types_view')
         group_name = src.get('group_name')
-        null_zone = src.get('null_zone')
-        out_zone = src.get('out_zone')
         in_zone = src.get('in_zone')
+        out_zone = src.get('out_zone')
+        both_zone = src.get('null_zone')
         null_xy = src.get('null_xy')
         in_xy = src.get('in_xy')
         out_xy = src.get('out_xy')
@@ -205,32 +160,11 @@ class GroupPos:
         gpos = GroupPos()
         
         if isinstance(port_types_view, int):
-            gpos.port_types_view = PortTypesViewFlag(
-                port_types_view & PortTypesViewFlag.ALL)
+            gpos.port_types_view = PortTypesViewFlag(port_types_view)
         if isinstance(group_name, str):
             gpos.group_name = group_name
-        if isinstance(null_zone, str):
-            gpos.null_zone = null_zone
-        if isinstance(in_zone, str):
-            gpos.in_zone = in_zone
-        if isinstance(out_zone, str):
-            gpos.out_zone = out_zone
-        if GroupPos._is_point(null_xy):
-            gpos.null_xy = tuple(null_xy)
-        if GroupPos._is_point(in_xy):
-            gpos.in_xy = tuple(in_xy)
-        if GroupPos._is_point(out_xy):
-            gpos.out_xy = tuple(out_xy)
         if isinstance(flags, int):
             gpos.flags = GroupPosFlag(flags)
-
-        if isinstance(layout_modes, dict):
-            for key, value in layout_modes.items():
-                try:
-                    gpos.layout_modes[PortMode(key)] = BoxLayoutMode(value)
-                except:
-                    pass
-        
         if isinstance(hidden_sides, int):
             try:
                 gpos.hidden_sides = PortMode(hidden_sides)
@@ -239,29 +173,34 @@ class GroupPos:
         
         for port_mode in PortMode.INPUT, PortMode.OUTPUT, PortMode.BOTH:
             if port_mode is PortMode.INPUT:
-                gpos.boxes[port_mode].zone = in_zone
-                gpos.boxes[port_mode].pos = in_xy
+                if isinstance(in_zone, str):
+                    gpos.boxes[port_mode].zone = in_zone
+                if GroupPos._is_point(in_xy):
+                    gpos.boxes[port_mode].pos = in_xy
                 wrapped = bool(gpos.flags & GroupPosFlag.WRAPPED_INPUT)
             elif port_mode is PortMode.OUTPUT:
-                gpos.boxes[port_mode].zone = out_zone
-                gpos.boxes[port_mode].pos = out_xy
+                if isinstance(out_zone, str):
+                    gpos.boxes[port_mode].zone = out_zone
+                if GroupPos._is_point(out_xy):
+                    gpos.boxes[port_mode].pos = out_xy
                 wrapped = bool(gpos.flags & GroupPosFlag.WRAPPED_OUTPUT)
             else:
-                gpos.boxes[port_mode].zone = null_zone
-                gpos.boxes[port_mode].pos = null_xy
+                if isinstance(both_zone, str):
+                    gpos.boxes[port_mode].zone = both_zone
+                if GroupPos._is_point(null_xy):
+                    gpos.boxes[port_mode].pos = null_xy
                 wrapped = bool(gpos.flags & (GroupPosFlag.WRAPPED_INPUT
                                              | GroupPosFlag.WRAPPED_OUTPUT)
                                == (GroupPosFlag.WRAPPED_INPUT
                                    | GroupPosFlag.WRAPPED_OUTPUT))
             
-            gpos.boxes[port_mode].layout_mode = gpos.layout_modes[port_mode]
-            hidden = bool(gpos.hidden_sides & port_mode == port_mode)
-            box_flags = BoxFlag.NONE
-            if wrapped:
-                box_flags |= BoxFlag.WRAPPED
-            if hidden:
-                box_flags |= BoxFlag.HIDDEN
-            gpos.boxes[port_mode].flags = box_flags
+            try:
+                gpos.boxes[port_mode].layout_mode = BoxLayoutMode(
+                    layout_modes[int(port_mode)])
+            except:
+                pass
+
+            gpos.boxes[port_mode].set_wrapped(wrapped)
         
         return gpos
 
@@ -277,54 +216,61 @@ class GroupPos:
         if not minimal:
             return {'port_types_view': self.port_types_view.value,
                     'group_name': self.group_name,
-                    'null_zone': self.null_zone,
-                    'in_zone': self.in_zone,
-                    'out_zone': self.out_zone,
-                    'null_xy': self.null_xy,
-                    'in_xy': self.in_xy,
-                    'out_xy': self.out_xy,
+                    # 'null_zone': self.null_zone,
+                    # 'in_zone': self.in_zone,
+                    # 'out_zone': self.out_zone,
+                    # 'null_xy': self.null_xy,
+                    # 'in_xy': self.in_xy,
+                    # 'out_xy': self.out_xy,
                     'flags': self.flags,
-                    'layout_modes': self.layout_modes,
+                    # 'layout_modes': self.layout_modes,
                     'hidden_sides': self.hidden_sides.value}
         
         out_dict = {'port_types_view': self.port_types_view.value,
                     'group_name': self.group_name}
         
-        if self.null_zone:
-            out_dict['null_zone'] = self.null_zone
-        if self.in_zone:
-            out_dict['in_zone'] = self.in_zone
-        if self.out_zone:
-            out_dict['out_zone'] = self.out_zone
+        # if self.null_zone:
+        #     out_dict['null_zone'] = self.null_zone
+        # if self.in_zone:
+        #     out_dict['in_zone'] = self.in_zone
+        # if self.out_zone:
+        #     out_dict['out_zone'] = self.out_zone
 
-        if self.null_xy != (0, 0):
-            out_dict['null_xy'] = self.null_xy
-        if self.in_xy != (0, 0):
-            out_dict['in_xy'] = self.in_xy
-        if self.out_xy != (0, 0):
-            out_dict['out_xy'] = self.out_xy
+        # if self.null_xy != (0, 0):
+        #     out_dict['null_xy'] = self.null_xy
+        # if self.in_xy != (0, 0):
+        #     out_dict['in_xy'] = self.in_xy
+        # if self.out_xy != (0, 0):
+        #     out_dict['out_xy'] = self.out_xy
         if self.flags is not GroupPosFlag.NONE:
             out_dict['flags'] = self.flags.value
 
         layout_modes = dict[int, int]()
-        for port_mode, box_layout_mode in self.layout_modes.items():
-            if box_layout_mode is not BoxLayoutMode.AUTO:
-                layout_modes[port_mode.value] = box_layout_mode.value
+        
+        for port_mode, box_pos in self.boxes.items():
+            if box_pos.layout_mode is not BoxLayoutMode.AUTO:
+                layout_modes[port_mode.value] = box_pos.layout_mode.value
         if layout_modes:
             out_dict['layout_modes'] = layout_modes
             
         if self.hidden_sides:
             out_dict['hidden_sides'] = self.hidden_sides.value
+            
+        out_dict['null_xy'] = self.boxes[PortMode.BOTH].pos
+        out_dict['in_xy'] = self.boxes[PortMode.INPUT].pos
+        out_dict['out_xy'] = self.boxes[PortMode.OUTPUT].pos
 
         return out_dict
-
-    def set_layout_mode(self, port_mode: PortMode, layout_mode: BoxLayoutMode):
-        self.layout_modes[port_mode] = layout_mode
-
-    def get_layout_mode(self, port_mode: PortMode) -> BoxLayoutMode:
-        if port_mode in self.layout_modes.keys():
-            return self.layout_modes[port_mode]
-        return BoxLayoutMode.AUTO
+    
+    def is_splitted(self) -> bool:
+        return bool(self.flags & GroupPosFlag.SPLITTED)
+    
+    def set_splitted(self, yesno: bool):
+        if yesno:
+            self.flags |= GroupPosFlag.SPLITTED
+        else:
+            self.flags &= ~GroupPosFlag.SPLITTED
+        
 
 
 class PortgroupMem:
