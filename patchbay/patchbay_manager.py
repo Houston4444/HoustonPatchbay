@@ -206,6 +206,8 @@ class PatchbayManager:
                 options.inline_displays = False
                 options.elastic = self._settings.value(
                     'Canvas/elastic', True, type=bool)
+                options.borders_navigation = self._settings.value(
+                    'Canvas/borders_navigation', True, type=bool)
                 options.prevent_overlap = self._settings.value(
                     'Canvas/prevent_overlap', True, type=bool)
                 options.max_port_width = self._settings.value(
@@ -530,13 +532,13 @@ class PatchbayManager:
         patchcanvas.change_theme(theme_name)
 
     def set_elastic_canvas(self, yesno: int):
-        patchcanvas.set_elastic(yesno)
+        patchcanvas.set_elastic(bool(yesno))
 
     def set_borders_navigation(self, yesno: int):
-        patchcanvas.set_borders_navigation(yesno)
+        patchcanvas.set_borders_navigation(bool(yesno))
 
     def set_prevent_overlap(self, yesno: int):
-        patchcanvas.set_prevent_overlap(yesno)
+        patchcanvas.set_prevent_overlap(bool(yesno))
 
     def toggle_graceful_names(self):
         self.set_use_graceful_names(not self.use_graceful_names)
