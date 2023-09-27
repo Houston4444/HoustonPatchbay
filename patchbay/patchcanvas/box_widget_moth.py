@@ -204,7 +204,7 @@ class BoxWidgetMoth(QGraphicsItem):
         self._title_under_icon = False
         self._painter_path = QPainterPath()
                 
-        self.update_positions()
+        # self.update_positions()
 
         canvas.scene.addItem(self)
         QTimer.singleShot(0, self.fix_pos)

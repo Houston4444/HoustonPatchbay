@@ -177,6 +177,10 @@ class Group:
         patchcanvas.move_splitted_boxes_on_place(
             self.group_id, box_rect.width())
 
+    def prepare_join(self):
+        box_rect = patchcanvas.get_box_rect(self.group_id, PortMode.BOTH)
+        print('pzoed', box_rect.width(), box_rect.height())
+
     def join_in_canvas(self):
         self.manager.optimize_operation(True)
         for conn in self.manager.connections:

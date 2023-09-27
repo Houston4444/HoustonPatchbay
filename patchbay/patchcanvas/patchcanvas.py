@@ -389,6 +389,13 @@ def get_box_rect(group_id: int, port_mode: PortMode) -> QRectF:
         return QRectF()
     
     if bool(port_mode is PortMode.BOTH) == group.splitted:
+        if port_mode is PortMode.BOTH:
+            widget = BoxWidget(group_id, group.group_name,
+                               BoxType.APPLICATION, group.icon_name)
+            rectf = widget.get_dummy_rect()
+            canvas.scene.removeItem(widget)
+            del widget
+            return rectf
         return QRectF()
     
     if port_mode in (PortMode.BOTH, PortMode.INPUT):

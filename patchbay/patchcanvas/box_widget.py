@@ -1046,25 +1046,11 @@ class BoxWidget(BoxWidgetMoth):
         self._current_port_mode = PortMode.NULL
         self._port_list.clear()
         self._portgrp_list.clear()
-        
-        
+
         for port in canvas.list_ports(group_id=self._group_id):
             if port.port_mode & self._port_mode:
                 self._port_list.append(port)
                 self._current_port_mode |= port.port_mode
-        
-        # if self._splitted:
-        #     for port in canvas.list_ports(group_id=self._group_id):
-        #         if port.port_mode is self._port_mode:
-        #             self._port_list.append(port)
-            
-        #     if self._port_list:
-        #         self._current_port_mode = self._port_mode
-        # else:
-        #     for port in canvas.list_ports(group_id=self._group_id):
-        #         self._port_list.append(port)
-        #         # used to know present port modes (INPUT or OUTPUT or BOTH)
-        #         self._current_port_mode |= port.port_mode
 
         for portgrp in canvas.list_portgroups(group_id=self._group_id):
             if self._current_port_mode & portgrp.port_mode:
@@ -1233,3 +1219,48 @@ class BoxWidget(BoxWidgetMoth):
                 if port.hidden_conn_widget is not None:
                     port.hidden_conn_widget.update_line_pos()
                     port.hidden_conn_widget.update()
+                    
+    def get_dummy_rect(self) -> QRectF:
+        '''Used only for dummy box, to know its size before joining'''
+        self._current_port_mode = PortMode.NULL
+        self._port_list.clear()
+        self._portgrp_list.clear()
+
+        for port in canvas.list_ports(group_id=self._group_id):
+            if port.port_mode & self._port_mode:
+                self._port_list.append(port)
+                self._current_port_mode |= port.port_mode
+
+        for portgrp in canvas.list_portgroups(group_id=self._group_id):
+            if self._current_port_mode & portgrp.port_mode:
+                self._portgrp_list.append(portgrp)
+
+        align_port_types = self._should_align_port_types()
+
+        geo_dict = self._get_geometry_dict(align_port_types)
+        last_in_pos = geo_dict['last_in_pos']
+        last_out_pos = geo_dict['last_out_pos']
+        last_inout_pos = geo_dict['last_inout_pos']
+        max_in_width = geo_dict['max_in_width']
+        max_out_width = geo_dict['max_out_width']
+        # last_port_mode = geo_dict['last_port_mode']
+        
+        box_theme = self.get_theme()
+        down_height = box_theme.fill_pen().widthF()
+        height_for_ports = max(last_in_pos, last_out_pos) + down_height
+        height_for_ports_one = last_inout_pos + down_height
+       
+        self._width_in = max_in_width
+        self._width_out = max_out_width
+
+        titles_dict = self._choose_title_layout(
+            height_for_ports, height_for_ports_one,
+            max_in_width, max_out_width)
+        # self._header_width = titles_dict['header_width']
+        # self._header_height = titles_dict['header_height']
+        # one_column = titles_dict['one_column']
+        box_width = titles_dict['box_width']
+        box_height = titles_dict['box_height']
+        # self._ports_y_start = titles_dict['ports_y_start']
+        
+        return QRectF(0.0, 0.0, float(box_width), float(box_height))
