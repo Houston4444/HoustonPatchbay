@@ -240,14 +240,12 @@ def add_group(group_id: int, group_name: str, split: bool,
     group.widgets = list[BoxWidget]()
 
     if split:
-        out_box = BoxWidget(group)
-        out_box.set_port_mode(PortMode.OUTPUT)
+        out_box = BoxWidget(group, PortMode.OUTPUT)
         out_box.setPos(bx_poses[PortMode.OUTPUT].to_point())
         canvas.last_z_value += 1
         out_box.setZValue(canvas.last_z_value)
 
-        in_box = BoxWidget(group)
-        in_box.set_port_mode(PortMode.INPUT)
+        in_box = BoxWidget(group, PortMode.INPUT)
         in_box.setPos(bx_poses[PortMode.INPUT].to_point())
         canvas.last_z_value += 1
         in_box.setZValue(canvas.last_z_value)
@@ -255,8 +253,7 @@ def add_group(group_id: int, group_name: str, split: bool,
         group.widgets = [out_box, in_box]
 
     else:
-        box = BoxWidget(group)
-        box.set_port_mode(PortMode.BOTH)
+        box = BoxWidget(group, PortMode.BOTH)
         box.setPos(bx_poses[PortMode.BOTH].to_point())
         canvas.last_z_value += 1
         box.setZValue(canvas.last_z_value)
@@ -367,7 +364,7 @@ def get_box_rect(group_id: int, port_mode: PortMode) -> QRectF:
     
     if bool(port_mode is PortMode.BOTH) == group.splitted:
         if port_mode is PortMode.BOTH:
-            widget = BoxWidget(group)
+            widget = BoxWidget(group, port_mode)
             rectf = widget.get_dummy_rect()
             canvas.scene.removeItem(widget)
             del widget
@@ -546,7 +543,7 @@ def join_group(group_id: int, origin_box_mode=PortMode.NULL):
     item_in_rect = QRectF(item_in.sceneBoundingRect())
     item_out_rect = QRectF(item_out.sceneBoundingRect())
 
-    tmp_widget = BoxWidget(group)
+    tmp_widget = BoxWidget(group, PortMode.BOTH)
     if group.handle_client_gui:
         tmp_widget.set_optional_gui_state(group.gui_visible)
     tmp_rect = QRectF(tmp_widget.get_dummy_rect())

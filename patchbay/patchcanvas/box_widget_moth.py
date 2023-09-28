@@ -90,7 +90,7 @@ class DisconnectElement:
 
 
 class BoxWidgetMoth(QGraphicsItem):
-    def __init__(self, group: GroupObject):
+    def __init__(self, group: GroupObject, port_mode: PortMode):
         QGraphicsItem.__init__(self)
         self.setCacheMode(QGraphicsItem.DeviceCoordinateCache)
 
@@ -118,7 +118,7 @@ class BoxWidgetMoth(QGraphicsItem):
         self._ports_y_start = self._header_height
 
         self._last_pos = QPointF()
-        self._port_mode = PortMode.BOTH
+        self._port_mode = port_mode
         self._current_port_mode = PortMode.NULL # depends of present ports
 
         self._cursor_moving = False
@@ -129,7 +129,7 @@ class BoxWidgetMoth(QGraphicsItem):
 
         self._connection_lines = list[LineWidget]()
 
-        self._is_hardware = bool(group.box_type == BoxType.HARDWARE)
+        self._is_hardware = bool(group.box_type is BoxType.HARDWARE)
         self._icon_name = group.icon_name
 
         self._title_lines = list[TitleLine]()
@@ -174,6 +174,13 @@ class BoxWidgetMoth(QGraphicsItem):
             self.shadow.set_fake_parent(self)
             self.shadow.set_theme(shadow_theme)
             self.setGraphicsEffect(self.shadow)
+            
+            if port_mode is PortMode.INPUT:
+                self.shadow.setOffset(4, 2)
+            elif port_mode is PortMode.OUTPUT:
+                self.shadow.setOffset(-4, 2)
+            elif port_mode is PortMode.BOTH:
+                self.shadow.setOffset(0, 2)
 
         # Final touches
         self.setFlags(QGraphicsItem.ItemIsFocusable
@@ -285,21 +292,6 @@ class BoxWidgetMoth(QGraphicsItem):
         self._can_handle_gui = True
         self._gui_visible = visible
         self.update()
-
-    def set_port_mode(self, mode=PortMode.BOTH):
-        self._port_mode = mode
-        self._current_port_mode = mode
-        
-        if self._is_hardware:
-            self.set_icon(BoxType.HARDWARE, self._icon_name)
-        
-        if self.shadow is not None:
-            if mode is PortMode.INPUT:
-                self.shadow.setOffset(4, 2)
-            elif mode is PortMode.OUTPUT:
-                self.shadow.setOffset(-4, 2)
-            else:
-                self.shadow.setOffset(0, 2)
 
     def set_group_name(self, group_name: str):
         self._group_name = group_name

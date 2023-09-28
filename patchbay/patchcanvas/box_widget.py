@@ -47,8 +47,8 @@ class TitleOn(IntEnum):
 
 
 class BoxWidget(BoxWidgetMoth):
-    def __init__(self, group: GroupObject):
-        BoxWidgetMoth.__init__(self, group)
+    def __init__(self, group: GroupObject, port_mode: PortMode):
+        BoxWidgetMoth.__init__(self, group, port_mode)
         self.update_positions_pending = False
         self._ex_width = self._width
         self._ex_height = self._height
