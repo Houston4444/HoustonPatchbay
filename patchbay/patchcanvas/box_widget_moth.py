@@ -23,19 +23,19 @@ from struct import pack
 from sip import voidptr
 import sys
 from enum import Enum
-from PyQt5.QtCore import Qt, QPoint, QPointF, QRectF, QTimer
+from PyQt5.QtCore import Qt, QPointF, QRectF, QTimer
 from PyQt5.QtGui import (QCursor, QFontMetrics, QImage, QFont,
                          QLinearGradient, QPainter, QPen, QPolygonF,
-                         QColor, QIcon, QPixmap, QPainterPath, QBrush)
-from PyQt5.QtWidgets import QGraphicsItem, QMenu, QApplication
+                         QColor, QPainterPath, QBrush)
+from PyQt5.QtWidgets import QGraphicsItem, QApplication
 
 from .init_values import (
     CanvasItemType,
     GroupObject,
     PortObject,
     PortgrpObject,
+    InlineDisplay,
     canvas,
-    features,
     options,
     CallbackAct,
     PortMode,
@@ -44,7 +44,7 @@ from .init_values import (
     BoxType,
     Direction)
 
-from .utils import canvas_callback, is_dark_theme, get_icon
+from .utils import canvas_callback
 from .box_widget_shadow import BoxWidgetShadow
 from .icon_widget import IconSvgWidget, IconPixmapWidget
 from .port_widget import PortWidget
@@ -52,7 +52,6 @@ from .portgroup_widget import PortgroupWidget
 from .line_widget import LineWidget
 from .theme import BoxStyleAttributer
 
-_translate = QApplication.translate
 _logger = logging.getLogger(__name__)
 
 
@@ -91,14 +90,6 @@ class DisconnectElement:
 
 
 class BoxWidgetMoth(QGraphicsItem):
-    # inline display is not usable in RaySession or Patchance
-    # but this patchcanvas module has been forked from Carla
-    # and all about inline_display has been kept (we never know)
-    # but never tested.
-    INLINE_DISPLAY_DISABLED = 0
-    INLINE_DISPLAY_ENABLED  = 1
-    INLINE_DISPLAY_CACHED   = 2
-
     def __init__(self, group: GroupObject):
         QGraphicsItem.__init__(self)
         self.setCacheMode(QGraphicsItem.DeviceCoordinateCache)
@@ -111,7 +102,7 @@ class BoxWidgetMoth(QGraphicsItem):
         # plugin Id, < 0 if invalid
         self._plugin_id = -1
         self._plugin_ui = False
-        self._plugin_inline = self.INLINE_DISPLAY_DISABLED
+        self._plugin_inline = InlineDisplay.DISABLED
 
         # Base Variables
         self._width = 50
@@ -238,8 +229,8 @@ class BoxWidgetMoth(QGraphicsItem):
         return self._current_port_mode
     
     def redraw_inline_display(self):
-        if self._plugin_inline == self.INLINE_DISPLAY_CACHED:
-            self._plugin_inline = self.INLINE_DISPLAY_ENABLED
+        if self._plugin_inline is InlineDisplay.CACHED:
+            self._plugin_inline = InlineDisplay.ENABLED
             self.update()
 
     def remove_as_plugin(self):
@@ -264,8 +255,9 @@ class BoxWidgetMoth(QGraphicsItem):
 
         self._plugin_id = plugin_id
         self._plugin_ui = has_ui
-        self._plugin_inline = (self.INLINE_DISPLAY_ENABLED if has_inline_display
-                               else self.INLINE_DISPLAY_DISABLED)
+        self._plugin_inline = (
+            InlineDisplay.ENABLED if has_inline_display
+            else InlineDisplay.DISABLED)
         self.update()
 
     def set_icon(self, box_type: BoxType, icon_name: str):
@@ -1142,7 +1134,7 @@ class BoxWidgetMoth(QGraphicsItem):
             painter.drawPolygon(hw_poly_bt)
 
     def _paint_inline_display(self, painter: QPainter):
-        if self._plugin_inline == self.INLINE_DISPLAY_DISABLED:
+        if self._plugin_inline is InlineDisplay.DISABLED:
             return
         if not options.inline_displays:
             return
@@ -1153,7 +1145,7 @@ class BoxWidgetMoth(QGraphicsItem):
 
         if (self._plugin_id >= 0
                 and self._plugin_id <= MAX_PLUGIN_ID_ALLOWED
-                and (self._plugin_inline == self.INLINE_DISPLAY_ENABLED
+                and (self._plugin_inline is InlineDisplay.ENABLED
                      or self._inline_scaling != scaling)):
             data = canvas.callback(CallbackAct.INLINE_DISPLAY, self._plugin_id,
                                    int(inwidth*scaling), int(inheight*scaling))
@@ -1169,7 +1161,7 @@ class BoxWidgetMoth(QGraphicsItem):
                 voidptr(self._inline_data), data['width'], data['height'],
                 data['stride'], QImage.Format_ARGB32)
             self._inline_scaling = scaling
-            self._plugin_inline = self.INLINE_DISPLAY_CACHED
+            self._plugin_inline = InlineDisplay.CACHED
 
         if self._inline_image is None:
             sys.stderr.write("ERROR: inline display image is None for\n",

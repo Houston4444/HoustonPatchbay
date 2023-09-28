@@ -17,6 +17,7 @@
 #
 # For a full copy of the GNU General Public License see the doc/GPL.txt file.
 
+from tkinter import DISABLED
 from typing import TYPE_CHECKING, Iterator, Optional, Union
 from enum import IntEnum, IntFlag, auto
 
@@ -126,6 +127,16 @@ class BoxType(IntEnum):
     LADISH_ROOM = 6
     CLIENT = 7
     INTERNAL = 8
+
+
+# inline display is not usable in RaySession or Patchance
+# but this patchcanvas module has been forked from Carla
+# and all about inline_display has been kept (we never know)
+# but never tested.
+class InlineDisplay(IntEnum):
+    DISABLED = 0
+    ENABLED = 1
+    CACHED = 2
 
 
 # define the way ports are put in a box

@@ -10,6 +10,7 @@ from PyQt5.QtWidgets import QGraphicsItem
 from .init_values import (
     canvas,
     options,
+    InlineDisplay,
     BoxLayoutMode,
     PortMode,
     PortType,
@@ -587,7 +588,7 @@ class BoxWidget(BoxWidgetMoth):
             for i in range(1, 8):
                 max_title_size = 0
                 max_header_width = 50
-                if self._plugin_inline != self.INLINE_DISPLAY_DISABLED:
+                if self._plugin_inline is not InlineDisplay.DISABLED:
                     max_header_width = 200
                 
                 title_lines = self._split_title(i)
