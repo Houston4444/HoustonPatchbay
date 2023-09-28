@@ -213,7 +213,7 @@ def set_loading_items(yesno: bool):
 
 @patchbay_api
 def add_group(group_id: int, group_name: str, split: bool,
-              icon_type=BoxType.APPLICATION, icon_name='', layout_modes={},
+              box_type=BoxType.APPLICATION, icon_name='', layout_modes={},
               box_poses : Optional[dict[PortMode, BoxPos]]=None,
               null_xy=(0, 0), in_xy=(0, 0), out_xy=(0, 0),
               split_animated=False):
@@ -225,14 +225,12 @@ def add_group(group_id: int, group_name: str, split: bool,
         box_poses = {PortMode.INPUT: BoxPos(),
                      PortMode.OUTPUT: BoxPos(),
                      PortMode.BOTH : BoxPos()}
-
-    group_box = BoxWidget(group_id, group_name, icon_type, icon_name)
     
     group = GroupObject()
     group.group_id = group_id
     group.group_name = group_name
     group.splitted = split
-    group.box_type = icon_type
+    group.box_type = box_type
     group.box_poses = box_poses
     group.icon_name = icon_name
     group.layout_modes = layout_modes
@@ -245,6 +243,9 @@ def add_group(group_id: int, group_name: str, split: bool,
     group.in_pos = QPoint(*in_xy)
     group.out_pos = QPoint(*out_xy)
     group.widgets = list[BoxWidget]()
+
+    group_box = BoxWidget(group)
+
     group.widgets.append(group_box)
     group.widgets.append(None)
 
@@ -256,7 +257,7 @@ def add_group(group_id: int, group_name: str, split: bool,
         else:
             group_box.setPos(group.out_pos)
             
-        group_sbox = BoxWidget(group_id, group_name, icon_type, icon_name)
+        group_sbox = BoxWidget(group)
         group_sbox.set_port_mode(PortMode.INPUT)
 
         group.widgets[1] = group_sbox
@@ -390,8 +391,7 @@ def get_box_rect(group_id: int, port_mode: PortMode) -> QRectF:
     
     if bool(port_mode is PortMode.BOTH) == group.splitted:
         if port_mode is PortMode.BOTH:
-            widget = BoxWidget(group_id, group.group_name,
-                               BoxType.APPLICATION, group.icon_name)
+            widget = BoxWidget(group)
             rectf = widget.get_dummy_rect()
             canvas.scene.removeItem(widget)
             del widget
@@ -464,13 +464,12 @@ def split_group(group_id: int, on_place=False):
     item = group.widgets[0]
     tmp_group = group.copy_no_widget()
 
+    ex_rect = QRectF(item.sceneBoundingRect())
+
     if on_place and item is not None:
         pos = item.pos()
-        rect = item.boundingRect()
-        x = int(pos.x())
-        y = int(pos.y())
-        tmp_group.in_pos = QPoint(x - int(rect.width() / 2), y)
-        tmp_group.out_pos = QPoint(x + int(rect.width() / 2), y)
+        tmp_group.in_pos = pos.toPoint()
+        tmp_group.out_pos = pos.toPoint()
 
     wrap = item.is_wrapped()
 
@@ -527,22 +526,33 @@ def split_group(group_id: int, on_place=False):
 
     canvas.loading_items = False
     
+    full_width = canvas.theme.box_spacing
+    
     for box in canvas.get_group(group_id).widgets:
         if box is not None:
             box.set_wrapped(wrap, animate=False)
-            box.update_positions(even_animated=True)
+            box.update_positions(even_animated=True, prevent_overlap=False)
+            full_width += box.boundingRect().width()
             
+    for box in canvas.get_group(group_id).widgets:
+        if box is not None:
             if box.get_current_port_mode() is PortMode.OUTPUT:
-                canvas.scene.add_box_to_animation(box, g.out_pos.x(), g.out_pos.y())
+                canvas.scene.add_box_to_animation(
+                    box,
+                    ex_rect.right() + (full_width - ex_rect.width()) / 2 - box.boundingRect().width(),
+                    ex_rect.y())
             else:
-                canvas.scene.add_box_to_animation(box, g.in_pos.x(), g.in_pos.y())
+                canvas.scene.add_box_to_animation(
+                    box,
+                    ex_rect.left() - (full_width - ex_rect.width()) / 2,
+                    g.in_pos.y())
 
     QTimer.singleShot(0, canvas.scene.update)
 
 @patchbay_api
 def join_group(group_id: int, origin_box_mode=PortMode.NULL):
-    item = None
-    s_item = None
+    item_in = None
+    item_out = None
 
     # Step 1 - Store all Item data
     group = canvas.get_group(group_id)
@@ -554,10 +564,20 @@ def join_group(group_id: int, origin_box_mode=PortMode.NULL):
         _logger.error(f"{_logging_str} - group is not splitted")
         return
 
-    item, s_item = group.widgets
+    item_out, item_in = group.widgets
+    item_in_rect = QRectF(item_in.sceneBoundingRect())
+    item_out_rect = QRectF(item_out.sceneBoundingRect())
+
+    tmp_widget = BoxWidget(group)
+    if group.handle_client_gui:
+        tmp_widget.set_optional_gui_state(group.gui_visible)
+    tmp_rect = QRectF(tmp_widget.get_dummy_rect())
+    canvas.scene.removeItem(tmp_widget)
+    del tmp_widget
+
     tmp_group = group.copy_no_widget()
 
-    wrap = item.is_wrapped() and s_item.is_wrapped()
+    wrap = item_in.is_wrapped() and item_out.is_wrapped()
 
     portgrps_data = [pg.copy_no_widget() for pg in
                      canvas.list_portgroups(group_id=group_id)]
@@ -583,9 +603,10 @@ def join_group(group_id: int, origin_box_mode=PortMode.NULL):
     g = tmp_group
     
     if origin_box_mode is PortMode.OUTPUT:
-        xy = (g.out_pos.x(), g.out_pos.y())
+        xy = (int(item_out_rect.right() - tmp_rect.width()),
+              int(item_out_rect.top()))
     elif origin_box_mode is PortMode.INPUT:
-        xy = (g.in_pos.x(), g.out_pos.y())
+        xy = (int(item_in_rect.x()), int(item_out_rect.y()))
     else:
         xy = (g.null_pos.x(), g.null_pos.y())
     
@@ -623,7 +644,6 @@ def join_group(group_id: int, origin_box_mode=PortMode.NULL):
     redraw_group(group_id)
 
     canvas.callback(CallbackAct.GROUP_JOINED, group_id)
-
     QTimer.singleShot(0, canvas.scene.update)
 
 @patchbay_api

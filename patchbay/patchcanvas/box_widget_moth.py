@@ -31,6 +31,7 @@ from PyQt5.QtWidgets import QGraphicsItem, QMenu, QApplication
 
 from .init_values import (
     CanvasItemType,
+    GroupObject,
     PortObject,
     PortgrpObject,
     canvas,
@@ -98,15 +99,14 @@ class BoxWidgetMoth(QGraphicsItem):
     INLINE_DISPLAY_ENABLED  = 1
     INLINE_DISPLAY_CACHED   = 2
 
-    def __init__(self, group_id: int, group_name: str,
-                 box_type: int, icon_name: str):
+    def __init__(self, group: GroupObject):
         QGraphicsItem.__init__(self)
         self.setCacheMode(QGraphicsItem.DeviceCoordinateCache)
 
         # Save Variables, useful for later
-        self._group_id = group_id
-        self._group_name = group_name
-        self._box_type = box_type
+        self._group_id = group.group_id
+        self._group_name = group.group_name
+        self._box_type = group.box_type
 
         # plugin Id, < 0 if invalid
         self._plugin_id = -1
@@ -138,8 +138,8 @@ class BoxWidgetMoth(QGraphicsItem):
 
         self._connection_lines = list[LineWidget]()
 
-        self._is_hardware = bool(box_type == BoxType.HARDWARE)
-        self._icon_name = icon_name
+        self._is_hardware = bool(group.box_type == BoxType.HARDWARE)
+        self._icon_name = group.icon_name
 
         self._title_lines = list[TitleLine]()
         self._header_line_left = None
@@ -155,11 +155,12 @@ class BoxWidgetMoth(QGraphicsItem):
         self._portgrp_list = list[PortgrpObject]()
 
         # Icon
-        if box_type in (BoxType.HARDWARE, BoxType.MONITOR):
+        if group.box_type in (BoxType.HARDWARE, BoxType.MONITOR):
             self.top_icon = IconSvgWidget(
-                box_type, icon_name, self._port_mode, self)
+                group.box_type, group.icon_name, self._port_mode, self)
         else:
-            self.top_icon = IconPixmapWidget(box_type, icon_name, self)
+            self.top_icon = IconPixmapWidget(
+                group.box_type, group.icon_name, self)
             if self.top_icon.is_null():
                 top_icon = self.top_icon
                 self.top_icon = None

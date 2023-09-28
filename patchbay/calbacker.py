@@ -41,17 +41,13 @@ class Callbacker:
     def _group_split(self, group_id: int):        
         group = self.mng.get_group_from_id(group_id)
         if group is not None:
-            group.split_in_canvas()
-            # self.patchcanvas.split_group(
-            #     group_id, on_place=True)
-            # group.current_position.set_splitted(True)
+            # group.split_in_canvas()
+            self.patchcanvas.split_group(
+                group_id, on_place=True)
+            group.current_position.set_splitted(True)
             group.save_current_position()
 
     def _group_join(self, group_id: int, origin_box_mode=PortMode.NULL):
-        for group in self.mng.groups:
-            if group.group_id == group_id:
-                group.prepare_join()
-                break
         self.patchcanvas.animate_before_join(
             group_id, origin_box_mode=origin_box_mode)
     

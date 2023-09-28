@@ -6,6 +6,7 @@ from PyQt5.QtCore import QRectF
 from PyQt5.QtGui import QPainterPath
 from PyQt5.QtWidgets import QGraphicsItem
 
+
 from .init_values import (
     canvas,
     options,
@@ -13,7 +14,8 @@ from .init_values import (
     PortMode,
     PortType,
     PortSubType,
-    BoxType)
+    BoxType,
+    GroupObject)
 
 from .utils import get_portgroup_name_from_ports_names
 from .box_widget_moth import BoxWidgetMoth, UnwrapButton, TitleLine
@@ -44,10 +46,8 @@ class TitleOn(IntEnum):
 
 
 class BoxWidget(BoxWidgetMoth):
-    def __init__(self, group_id: int, group_name: str,
-                 icon_type: int, icon_name: str):
-        BoxWidgetMoth.__init__(
-            self, group_id, group_name, icon_type, icon_name)
+    def __init__(self, group: GroupObject):
+        BoxWidgetMoth.__init__(self, group)
         self.update_positions_pending = False
         self._ex_width = self._width
         self._ex_height = self._height
@@ -1092,7 +1092,7 @@ class BoxWidget(BoxWidgetMoth):
             self._ports_y_start = titles_dict['ports_y_start']
 
             self._width = box_width
-        
+            
             # wrapped/unwrapped sizes
             normal_height = box_height
             normal_width = box_width
@@ -1256,11 +1256,8 @@ class BoxWidget(BoxWidgetMoth):
         titles_dict = self._choose_title_layout(
             height_for_ports, height_for_ports_one,
             max_in_width, max_out_width)
-        # self._header_width = titles_dict['header_width']
-        # self._header_height = titles_dict['header_height']
-        # one_column = titles_dict['one_column']
+
         box_width = titles_dict['box_width']
         box_height = titles_dict['box_height']
-        # self._ports_y_start = titles_dict['ports_y_start']
         
         return QRectF(0.0, 0.0, float(box_width), float(box_height))

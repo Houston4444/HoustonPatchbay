@@ -177,19 +177,6 @@ class Group:
         patchcanvas.move_splitted_boxes_on_place(
             self.group_id, box_rect.width())
 
-    def prepare_join(self):
-        box_rect = patchcanvas.get_box_rect(self.group_id, PortMode.BOTH)
-        print('pzoed', box_rect.width(), box_rect.height())
-
-    def join_in_canvas(self):
-        self.manager.optimize_operation(True)
-        for conn in self.manager.connections:
-            if conn.port_out.group is self or conn.port_in.group is self:
-                conn.remove_from_canvas()
-
-        self.remove_all_ports_from_canvas()
-        gpos = self.current_position
-
     def _get_box_type_and_icon(self) -> tuple[BoxType, str]:
         box_type = BoxType.APPLICATION
         icon_name = self.name.partition('.')[0].lower()
@@ -369,10 +356,10 @@ class Group:
                 self.group_id, port_mode, box_pos.layout_mode,
                 prevent_overlap=False)
 
-        for port_mode, box_pos in group_position.boxes.items():
-            patchcanvas.set_group_layout_mode(
-                self.group_id, port_mode, box_pos.layout_mode,
-                prevent_overlap=False)
+        # for port_mode, box_pos in group_position.boxes.items():
+        #     patchcanvas.set_group_layout_mode(
+        #         self.group_id, port_mode, box_pos.layout_mode,
+        #         prevent_overlap=False)
 
         patchcanvas.move_group_boxes(
             self.group_id,
@@ -384,8 +371,8 @@ class Group:
         # restore split and wrapped modes
         if gpos.is_splitted():
             if not ex_gpos_splitted:
-                # patchcanvas.split_group(self.group_id)
-                self.split_in_canvas()
+                patchcanvas.split_group(self.group_id)
+                # self.split_in_canvas()
 
             for port_mode in PortMode.INPUT, PortMode.OUTPUT: 
                 patchcanvas.wrap_group_box(
