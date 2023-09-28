@@ -242,17 +242,26 @@ class GroupPos:
         #     out_dict['in_xy'] = self.in_xy
         # if self.out_xy != (0, 0):
         #     out_dict['out_xy'] = self.out_xy
-        if self.flags is not GroupPosFlag.NONE:
-            out_dict['flags'] = self.flags.value
 
         layout_modes = dict[int, int]()
+        
+        flags = self.flags
         
         for port_mode, box_pos in self.boxes.items():
             if box_pos.layout_mode is not BoxLayoutMode.AUTO:
                 layout_modes[port_mode.value] = box_pos.layout_mode.value
+            if box_pos.is_wrapped():
+                if port_mode & PortMode.OUTPUT:
+                    flags |= GroupPosFlag.WRAPPED_OUTPUT
+                if port_mode & PortMode.INPUT:
+                    flags |= GroupPosFlag.WRAPPED_INPUT
+                
         if layout_modes:
             out_dict['layout_modes'] = layout_modes
             
+        if self.flags is not GroupPosFlag.NONE:
+            out_dict['flags'] = flags.value
+
         if self.hidden_sides:
             out_dict['hidden_sides'] = self.hidden_sides.value
             

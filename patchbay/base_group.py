@@ -103,21 +103,10 @@ class Group:
             box_poses=gpos.boxes)
 
         self.in_canvas = True
-
-        if do_split:
-            for port_mode in PortMode.INPUT, PortMode.OUTPUT:
-                patchcanvas.wrap_group_box(
-                    self.group_id, port_mode,
-                    gpos.boxes[port_mode].is_wrapped(),
-                    animate=False)
-        else:
-            patchcanvas.wrap_group_box(
-                self.group_id, PortMode.BOTH,
-                gpos.boxes[PortMode.BOTH].is_wrapped(),
-                animate=False)
             
         if self.has_gui:
-            patchcanvas.set_optional_gui_state(self.group_id, self.gui_visible)
+            patchcanvas.set_optional_gui_state(
+                self.group_id, self.gui_visible)
 
     def remove_from_canvas(self):
         if not self.in_canvas:
