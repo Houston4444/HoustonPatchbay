@@ -147,8 +147,18 @@ class BoxPos:
     layout_mode: BoxLayoutMode = BoxLayoutMode.AUTO
     flags: BoxFlag = BoxFlag.NONE
 
-    def __init__(self) -> None:
+    def __init__(self, box_pos: Optional['BoxPos']=None) -> None:
+        if box_pos:
+            self.pos = tuple(box_pos.pos)
+            self.zone = box_pos.zone
+            self.layout_mode = box_pos.layout_mode
+            self.flags = box_pos.flags
+            return
+
         self.pos = (0, 0)
+    
+    def __repr__(self) -> str:
+        return f"BoxPos({self.pos})"
     
     def _set_flag(self, flag: BoxFlag, yesno: bool):
         if yesno:
@@ -167,6 +177,15 @@ class BoxPos:
             
     def set_hidden(self, yesno: bool):
         self._set_flag(BoxFlag.HIDDEN, yesno)
+
+    def to_point(self) -> QPoint:
+        return QPoint(*self.pos)
+    
+    def to_pointf(self) -> QPointF:
+        return QPointF(*self.pos)
+
+    def set_pos_from_pt(self, point: Union[QPoint, QPointF]):
+        self.pos = (int(point.x()), int(point.y()))
 
     def copy(self) -> 'BoxPos':
         new_box_pos = BoxPos()
@@ -238,9 +257,6 @@ class GroupObject:
     plugin_id: int
     plugin_ui: int # to verify
     plugin_inline: int # to verify
-    null_pos: QPoint
-    in_pos: QPoint
-    out_pos: QPoint
     handle_client_gui: bool
     gui_visible: bool
     widgets: list

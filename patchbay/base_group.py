@@ -100,9 +100,7 @@ class Group:
         patchcanvas.add_group(
             self.group_id, display_name, do_split,
             box_type, icon_name, layout_modes=layout_modes_,
-            null_xy=gpos.boxes[PortMode.BOTH].pos,
-            in_xy=gpos.boxes[PortMode.INPUT].pos,
-            out_xy=gpos.boxes[PortMode.OUTPUT].pos)
+            box_poses=gpos.boxes)
 
         self.in_canvas = True
 

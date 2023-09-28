@@ -214,24 +214,21 @@ def set_loading_items(yesno: bool):
 @patchbay_api
 def add_group(group_id: int, group_name: str, split: bool,
               box_type=BoxType.APPLICATION, icon_name='', layout_modes={},
-              box_poses : Optional[dict[PortMode, BoxPos]]=None,
-              null_xy=(0, 0), in_xy=(0, 0), out_xy=(0, 0),
-              split_animated=False):
+              box_poses : dict[PortMode, BoxPos]={}):
     if canvas.get_group(group_id) is not None:
         _logger.error(f"{_logging_str} - group already exists.")
         return
 
-    if box_poses is None:
-        box_poses = {PortMode.INPUT: BoxPos(),
-                     PortMode.OUTPUT: BoxPos(),
-                     PortMode.BOTH : BoxPos()}
-    
+    bx_poses = dict[PortMode, BoxPos]()
+    for port_mode in PortMode.OUTPUT, PortMode.INPUT, PortMode.BOTH:
+        box_pos = box_poses.get(port_mode)
+        bx_poses[port_mode] = BoxPos() if box_pos is None else BoxPos(box_pos)
+
     group = GroupObject()
     group.group_id = group_id
     group.group_name = group_name
     group.splitted = split
     group.box_type = box_type
-    group.box_poses = box_poses
     group.icon_name = icon_name
     group.layout_modes = layout_modes
     group.plugin_id = -1
@@ -239,57 +236,36 @@ def add_group(group_id: int, group_name: str, split: bool,
     group.plugin_inline = False
     group.handle_client_gui = False
     group.gui_visible = False
-    group.null_pos = QPoint(*null_xy)
-    group.in_pos = QPoint(*in_xy)
-    group.out_pos = QPoint(*out_xy)
+    group.box_poses = bx_poses
     group.widgets = list[BoxWidget]()
 
-    group_box = BoxWidget(group)
-
-    group.widgets.append(group_box)
-    group.widgets.append(None)
-
     if split:
-        group_box.set_port_mode(PortMode.OUTPUT)
-
-        if split_animated:
-            group_box.setPos(group.null_pos)
-        else:
-            group_box.setPos(group.out_pos)
-            
-        group_sbox = BoxWidget(group)
-        group_sbox.set_port_mode(PortMode.INPUT)
-
-        group.widgets[1] = group_sbox
-
-        if split_animated:
-            group_sbox.setPos(group.null_pos)
-        else:
-            group_sbox.setPos(group.in_pos)
-
+        out_box = BoxWidget(group)
+        out_box.set_port_mode(PortMode.OUTPUT)
+        out_box.setPos(bx_poses[PortMode.OUTPUT].to_point())
         canvas.last_z_value += 1
-        group_sbox.setZValue(canvas.last_z_value)
+        out_box.setZValue(canvas.last_z_value)
+
+        in_box = BoxWidget(group)
+        in_box.set_port_mode(PortMode.INPUT)
+        in_box.setPos(bx_poses[PortMode.INPUT].to_point())
+        canvas.last_z_value += 1
+        in_box.setZValue(canvas.last_z_value)
+
+        group.widgets = [out_box, in_box]
 
     else:
-        group_box.set_port_mode(PortMode.BOTH)
-        group_box.setPos(group.null_pos)
+        box = BoxWidget(group)
+        box.set_port_mode(PortMode.BOTH)
+        box.setPos(bx_poses[PortMode.BOTH].to_point())
+        canvas.last_z_value += 1
+        box.setZValue(canvas.last_z_value)
+        group.widgets = [box, None]
 
-    canvas.last_z_value += 1
-    group_box.setZValue(canvas.last_z_value)
     canvas.add_group(group)
 
     if canvas.loading_items:
         return
-
-    if split_animated:
-        for box in group.widgets:
-            if box is not None:
-                if box.get_port_mode() is PortMode.OUTPUT:
-                    canvas.scene.add_box_to_animation(
-                        box, group.out_pos.x(), group.out_pos.y())
-                elif box.get_port_mode() is PortMode.INPUT:
-                    canvas.scene.add_box_to_animation(
-                        box, group.in_pos.x(), group.in_pos.y())
 
     QTimer.singleShot(0, canvas.scene.update)
 
@@ -468,8 +444,12 @@ def split_group(group_id: int, on_place=False):
 
     if on_place and item is not None:
         pos = item.pos()
-        tmp_group.in_pos = pos.toPoint()
-        tmp_group.out_pos = pos.toPoint()
+        # tmp_group.in_pos = pos.toPoint()
+        # tmp_group.out_pos = pos.toPoint()
+        for port_mode in PortMode.INPUT, PortMode.OUTPUT:
+            box_pos = tmp_group.box_poses[port_mode]
+            box_pos.set_pos_from_pt(pos)
+            box_pos.set_wrapped(item.is_wrapped())
 
     wrap = item.is_wrapped()
 
@@ -500,10 +480,7 @@ def split_group(group_id: int, on_place=False):
     # Step 3 - Re-create Item, now split
     add_group(group_id, g.group_name, True,
               g.box_type, g.icon_name, g.layout_modes,
-              null_xy=(g.null_pos.x(), g.null_pos.y()),
-              in_xy=(g.in_pos.x(), g.in_pos.y()),
-              out_xy=(g.out_pos.x(), g.out_pos.y()),
-              split_animated=True)
+              box_poses=g.box_poses)
 
     if g.handle_client_gui:
         set_optional_gui_state(group_id, g.gui_visible)
@@ -539,13 +516,14 @@ def split_group(group_id: int, on_place=False):
             if box.get_current_port_mode() is PortMode.OUTPUT:
                 canvas.scene.add_box_to_animation(
                     box,
-                    ex_rect.right() + (full_width - ex_rect.width()) / 2 - box.boundingRect().width(),
+                    ex_rect.right() + (full_width - ex_rect.width()) / 2
+                        - box.boundingRect().width(),
                     ex_rect.y())
             else:
                 canvas.scene.add_box_to_animation(
                     box,
                     ex_rect.left() - (full_width - ex_rect.width()) / 2,
-                    g.in_pos.y())
+                    ex_rect.y())
 
     QTimer.singleShot(0, canvas.scene.update)
 
@@ -603,19 +581,17 @@ def join_group(group_id: int, origin_box_mode=PortMode.NULL):
     g = tmp_group
     
     if origin_box_mode is PortMode.OUTPUT:
-        xy = (int(item_out_rect.right() - tmp_rect.width()),
-              int(item_out_rect.top()))
+        g.box_poses[PortMode.BOTH].pos = (
+            int(item_out_rect.right() - tmp_rect.width()),
+            int(item_out_rect.top()))
     elif origin_box_mode is PortMode.INPUT:
-        xy = (int(item_in_rect.x()), int(item_out_rect.y()))
-    else:
-        xy = (g.null_pos.x(), g.null_pos.y())
+        g.box_poses[PortMode.BOTH].pos = (
+            int(item_in_rect.x()), int(item_out_rect.y()))
     
     # Step 3 - Re-create Item, now together
     add_group(group_id, g.group_name, False,
               g.box_type, g.icon_name, g.layout_modes,
-              null_xy=xy,
-              in_xy=(g.in_pos.x(), g.in_pos.y()),
-              out_xy=(g.out_pos.x(), g.out_pos.y()))
+              box_poses=g.box_poses)
 
     if g.handle_client_gui:
         set_optional_gui_state(group_id, g.gui_visible)
@@ -715,11 +691,11 @@ def animate_before_join(group_id: int,
     canvas.qobject.groups_to_join.append((group, origin_box_mode))
 
     if origin_box_mode is PortMode.OUTPUT:
-        x, y = group.out_pos.x(), group.out_pos.y()
+        x, y = int(group.widgets[0].pos().x()), int(group.widgets[0].pos().y())
     elif origin_box_mode is PortMode.INPUT:
-        x, y = group.in_pos.x(), group.in_pos.y()
+        x, y = int(group.widgets[1].pos().x()), int(group.widgets[1].pos().y())
     else:
-        x, y = group.null_pos.x(), group.null_pos.y()
+        x, y = group.box_poses[PortMode.BOTH].pos
 
     for widget in group.widgets:
         canvas.scene.add_box_to_animation(

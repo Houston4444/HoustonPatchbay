@@ -714,15 +714,9 @@ class BoxWidgetMoth(QGraphicsItem):
                 "send_move_callback - "
                 f"Box has no group_id {self._group_id} in canvas")
             return
-        
-        pos = QPoint(round(self.x()), round(self.y()))
 
-        if self._port_mode is PortMode.BOTH:
-            group.null_pos = pos
-        elif self._port_mode is PortMode.INPUT:
-            group.in_pos = pos
-        elif self._port_mode is PortMode.OUTPUT:
-            group.out_pos = pos
+        group.box_poses[self._port_mode].pos = (
+            round(self.x()), round(self.y()))
 
     def fix_pos_after_move(self):
         for box in canvas.scene.get_selected_boxes():
