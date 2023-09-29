@@ -338,11 +338,6 @@ class Group:
                 self.group_id, port_mode, box_pos.layout_mode,
                 prevent_overlap=False)
 
-        # for port_mode, box_pos in group_position.boxes.items():
-        #     patchcanvas.set_group_layout_mode(
-        #         self.group_id, port_mode, box_pos.layout_mode,
-        #         prevent_overlap=False)
-
         patchcanvas.move_group_boxes(
             self.group_id,
             gpos.boxes,
@@ -354,7 +349,6 @@ class Group:
         if gpos.is_splitted():
             if not ex_gpos_splitted:
                 patchcanvas.split_group(self.group_id)
-                # self.split_in_canvas()
 
             for port_mode in PortMode.INPUT, PortMode.OUTPUT: 
                 patchcanvas.wrap_group_box(
@@ -385,6 +379,7 @@ class Group:
         if port_mode is PortMode.NULL:
             true_port_mode = PortMode.BOTH
         
+        print('Ahoolze', self.current_position.port_types_view)
         box_pos = self.current_position.boxes[true_port_mode]
         box_pos.set_wrapped(yesno)
         self.save_current_position()

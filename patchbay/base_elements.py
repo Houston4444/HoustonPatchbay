@@ -245,6 +245,8 @@ class GroupPos:
 
         layout_modes = dict[int, int]()
         flags = self.flags
+        flags &= ~GroupPosFlag.WRAPPED_INPUT
+        flags &= ~GroupPosFlag.WRAPPED_OUTPUT
         
         for port_mode, box_pos in self.boxes.items():
             if box_pos.layout_mode is not BoxLayoutMode.AUTO:
@@ -258,7 +260,7 @@ class GroupPos:
                 
         if layout_modes:
             out_dict['layout_modes'] = layout_modes
-            
+        
         if self.flags is not GroupPosFlag.NONE:
             out_dict['flags'] = flags.value
 
