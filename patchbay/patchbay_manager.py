@@ -529,14 +529,19 @@ class PatchbayManager:
             connection.remove_from_canvas()
         
         for group in self.groups:
-            group.remove_all_ports()
+            for portgroup in group.portgroups:
+                portgroup.remove_from_canvas()
+            
+            for port in group.ports:
+                port.remove_from_canvas()
+
             group.remove_from_canvas()
             group.add_to_canvas()
-            group.add_all_ports_to_canvas()            
+            group.add_all_ports_to_canvas()
         
         for connection in self.connections:
             connection.add_to_canvas()
-        
+
         self.optimize_operation(False)
         patchcanvas.redraw_all_groups()
 

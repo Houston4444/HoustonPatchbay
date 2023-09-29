@@ -65,8 +65,8 @@ class BoxWidget(BoxWidgetMoth):
              if p.portgrp_id == portgrp_id])
 
     def _should_align_port_types(self) -> bool:
-        ''' check if we can align port types
-            eg, align first midi input to first midi output '''
+        '''check if we can align port types
+           eg, align first midi input to first midi output'''
         port_types_aligner = list[tuple[int, int]]()
         
         for port_type, port_subtype in list_port_types_and_subs():
@@ -636,6 +636,7 @@ class BoxWidget(BoxWidgetMoth):
 
         sizes_tuples = list[tuple[int, int, bool, TitleOn]]()
         layout_mode = self._layout_mode
+        hws = canvas.theme.hardware_rack_width * 2 if self._is_hardware else 0
         
         if self._current_port_mode in (PortMode.INPUT, PortMode.OUTPUT):
             # splitted box
@@ -646,26 +647,26 @@ class BoxWidget(BoxWidgetMoth):
                 # calculate area with title on side
                 for i in range(1, lines_choice_max + 1):
                     sizes_tuples.append(
-                        ((ports_width + all_title_templates[i]['header_width'])
-                        * max(all_title_templates[i]['header_height'],
-                              height_for_ports + ports_y_start_min),
+                        ((hws + ports_width + all_title_templates[i]['header_width'])
+                        * (hws + max(all_title_templates[i]['header_height'],
+                                 height_for_ports + ports_y_start_min)),
                         i, False, TitleOn.SIDE))
 
                 if self.has_top_icon():
                     # calculate area with title on side (title under the icon)
                     for i in range(1, lines_choice_max + 1):
                         sizes_tuples.append(
-                            ((ports_width + all_title_templates[i]['title_width'] + 16)
-                            * max(all_title_templates[i]['header_height'] + 28,
-                                  height_for_ports + ports_y_start_min),
+                            ((hws + ports_width + all_title_templates[i]['title_width'] + 16)
+                            * (hws + max(all_title_templates[i]['header_height'] + 28,
+                                         height_for_ports + ports_y_start_min)),
                             i, False, TitleOn.SIDE_UNDER_ICON))
             
             if layout_mode in (BoxLayoutMode.AUTO, BoxLayoutMode.HIGH):
                 # calculate area with title on top
                 for i in range(1, lines_choice_max + 1):
                     sizes_tuples.append(
-                        (max(all_title_templates[i]['header_width'], width_for_ports)
-                        * (all_title_templates[i]['header_height'] + height_for_ports),
+                        (hws + max(all_title_templates[i]['header_width'], width_for_ports)
+                        * (hws + all_title_templates[i]['header_height'] + height_for_ports),
                         i, False, TitleOn.TOP))
         else:
             # --- grouped box ---
@@ -675,8 +676,8 @@ class BoxWidget(BoxWidgetMoth):
                     and options.box_grouped_auto_layout_ratio < 2.0):
                 for i in range(1, lines_choice_max + 1):
                     sizes_tuples.append(
-                        (max(all_title_templates[i]['header_width'], width_for_ports_one)
-                        * (all_title_templates[i]['header_height'] + height_for_ports_one)
+                        (hws + max(all_title_templates[i]['header_width'], width_for_ports_one)
+                        * (hws + all_title_templates[i]['header_height'] + height_for_ports_one)
                         * options.box_grouped_auto_layout_ratio,
                         i, True, TitleOn.TOP))
 
@@ -685,8 +686,8 @@ class BoxWidget(BoxWidgetMoth):
                     and options.box_grouped_auto_layout_ratio > 0.0):
                 for i in range(1, lines_choice_max + 1):
                     sizes_tuples.append(
-                        (max(all_title_templates[i]['header_width'], width_for_ports)
-                        * (all_title_templates[i]['header_height'] + height_for_ports),
+                        (hws + max(all_title_templates[i]['header_width'], width_for_ports)
+                        * (hws + all_title_templates[i]['header_height'] + height_for_ports),
                         i, False, TitleOn.TOP))
         
         # sort areas and choose the first one (the littlest area)
@@ -1028,6 +1029,9 @@ class BoxWidget(BoxWidgetMoth):
                     border_radius + epsd, border_radius - line_hinting + epsd))
                 painter_path = painter_path.united(top_right_path)
 
+        # if self._is_hardware:
+        #     hws = canvas.theme.hardware_rack_width
+        #     painter_path.translate(hws, hws)
         self._painter_path = painter_path
         
     def update_positions(self, even_animated=False, without_connections=False,
@@ -1080,6 +1084,7 @@ class BoxWidget(BoxWidgetMoth):
        
         self._width_in = max_in_width
         self._width_out = max_out_width
+        hws = canvas.theme.hardware_rack_width if self._is_hardware else 0
 
         if not (self._wrapping or self._unwrapping):
             titles_dict = self._choose_title_layout(
@@ -1088,8 +1093,8 @@ class BoxWidget(BoxWidgetMoth):
             self._header_width = titles_dict['header_width']
             self._header_height = titles_dict['header_height']
             one_column = titles_dict['one_column']
-            box_width = titles_dict['box_width']
-            box_height = titles_dict['box_height']
+            box_width = titles_dict['box_width'] # without hardware rack
+            box_height = titles_dict['box_height'] # without hardware rack
             self._ports_y_start = titles_dict['ports_y_start']
 
             self._width = box_width
