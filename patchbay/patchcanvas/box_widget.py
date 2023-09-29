@@ -635,7 +635,7 @@ class BoxWidget(BoxWidgetMoth):
         # depending on BoxLayoutMode and number of lines for box title.
 
         sizes_tuples = list[tuple[int, int, bool, TitleOn]]()
-        layout_mode = self._get_layout_mode_for_this()
+        layout_mode = self._layout_mode
         
         if self._current_port_mode in (PortMode.INPUT, PortMode.OUTPUT):
             # splitted box

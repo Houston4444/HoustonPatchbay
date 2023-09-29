@@ -263,7 +263,6 @@ class GroupObject:
     splitted: bool
     box_type: int
     icon_name: str
-    layout_modes: dict[PortMode, BoxLayoutMode]
     box_poses: dict[PortMode, BoxPos]
     plugin_id: int
     plugin_ui: int # to verify

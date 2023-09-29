@@ -89,18 +89,13 @@ class Group:
         if self.manager.use_graceful_names:
             display_name = self.display_name
         
-        layout_modes_ = dict[PortMode, BoxLayoutMode]()
-        for port_mode in (PortMode.INPUT, PortMode.OUTPUT, PortMode.BOTH):
-            layout_modes_[port_mode] = gpos.boxes[port_mode].layout_mode
-        
         self.cnv_name = display_name
         self.cnv_box_type = box_type
         self.cnv_icon_name = icon_name
         
         patchcanvas.add_group(
             self.group_id, display_name, do_split,
-            box_type, icon_name, layout_modes=layout_modes_,
-            box_poses=gpos.boxes)
+            box_type, icon_name, box_poses=gpos.boxes)
 
         self.in_canvas = True
             

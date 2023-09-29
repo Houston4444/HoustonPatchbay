@@ -193,12 +193,12 @@ class GroupPos:
                                              | GroupPosFlag.WRAPPED_OUTPUT)
                                == (GroupPosFlag.WRAPPED_INPUT
                                    | GroupPosFlag.WRAPPED_OUTPUT))
-            
+
             try:
                 gpos.boxes[port_mode].layout_mode = BoxLayoutMode(
-                    layout_modes[int(port_mode)])
+                    layout_modes[str(int(port_mode))])
             except:
-                pass
+                gpos.boxes[port_mode].layout_mode = BoxLayoutMode.AUTO
 
             gpos.boxes[port_mode].set_wrapped(wrapped)
         
@@ -244,12 +244,12 @@ class GroupPos:
         #     out_dict['out_xy'] = self.out_xy
 
         layout_modes = dict[int, int]()
-        
         flags = self.flags
         
         for port_mode, box_pos in self.boxes.items():
             if box_pos.layout_mode is not BoxLayoutMode.AUTO:
                 layout_modes[port_mode.value] = box_pos.layout_mode.value
+
             if box_pos.is_wrapped():
                 if port_mode & PortMode.OUTPUT:
                     flags |= GroupPosFlag.WRAPPED_OUTPUT

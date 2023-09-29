@@ -213,7 +213,7 @@ def set_loading_items(yesno: bool):
 
 @patchbay_api
 def add_group(group_id: int, group_name: str, split: bool,
-              box_type=BoxType.APPLICATION, icon_name='', layout_modes={},
+              box_type=BoxType.APPLICATION, icon_name='',
               box_poses : dict[PortMode, BoxPos]={}):
     if canvas.get_group(group_id) is not None:
         _logger.error(f"{_logging_str} - group already exists.")
@@ -230,7 +230,6 @@ def add_group(group_id: int, group_name: str, split: bool,
     group.splitted = split
     group.box_type = box_type
     group.icon_name = icon_name
-    group.layout_modes = layout_modes
     group.plugin_id = -1
     group.plugin_ui = False
     group.plugin_inline = False
@@ -476,7 +475,7 @@ def split_group(group_id: int, on_place=False):
 
     # Step 3 - Re-create Item, now split
     add_group(group_id, g.group_name, True,
-              g.box_type, g.icon_name, g.layout_modes,
+              g.box_type, g.icon_name,
               box_poses=g.box_poses)
 
     if g.handle_client_gui:
@@ -587,7 +586,7 @@ def join_group(group_id: int, origin_box_mode=PortMode.NULL):
     
     # Step 3 - Re-create Item, now together
     add_group(group_id, g.group_name, False,
-              g.box_type, g.icon_name, g.layout_modes,
+              g.box_type, g.icon_name,
               box_poses=g.box_poses)
 
     if g.handle_client_gui:
@@ -763,13 +762,14 @@ def set_group_layout_mode(group_id: int, port_mode: PortMode,
             "set_group_layout_mode, no group with group_id {group_id}")
         return
     
-    group.layout_modes[port_mode] = layout_mode
+    group.box_poses[port_mode].layout_mode = layout_mode
     
     if canvas.loading_items:
         return
 
     for box in group.widgets:
-        if box is not None:
+        if box is not None and box._port_mode is port_mode:
+            box.set_layout_mode(layout_mode)
             box.update_positions(prevent_overlap=prevent_overlap)
 
 # ------------------------------------------------------------------------

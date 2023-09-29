@@ -200,6 +200,7 @@ class BoxWidgetMoth(QGraphicsItem):
         self._can_handle_gui = False # used for optional-gui switch
         self._gui_visible = False
 
+        self._layout_mode = group.box_poses[port_mode].layout_mode
         self._current_layout_mode = BoxLayoutMode.LARGE
         self._title_under_icon = False
         self._painter_path = QPainterPath()
@@ -208,17 +209,6 @@ class BoxWidgetMoth(QGraphicsItem):
 
         canvas.scene.addItem(self)
         QTimer.singleShot(0, self.fix_pos)
-
-    def _get_layout_mode_for_this(self):
-        group = canvas.get_group(self._group_id)
-        if group is None:
-            # TODO log something
-            return BoxLayoutMode.AUTO
-        
-        if self._current_port_mode in group.layout_modes.keys():
-            return group.layout_modes[self._current_port_mode]
-        else:
-            return BoxLayoutMode.AUTO
 
     def get_group_id(self):
         return self._group_id
@@ -235,6 +225,9 @@ class BoxWidgetMoth(QGraphicsItem):
 
     def get_current_port_mode(self):
         return self._current_port_mode
+    
+    def set_layout_mode(self, layout_mode: BoxLayoutMode):
+        self._layout_mode = layout_mode
     
     def redraw_inline_display(self):
         if self._plugin_inline is InlineDisplay.CACHED:
