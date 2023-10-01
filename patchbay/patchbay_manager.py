@@ -1250,17 +1250,17 @@ class PatchbayManager:
         gprops = {}
 
         for gpos in self.group_positions:
-            ptv = gprops.get(gpos.port_types_view)
-            if ptv is None:
-                gprops[gpos.port_types_view] = ptv = {}
-            
-            base_dict = gpos.as_serializable_dict(minimal=True)
-            base_dict.__delitem__('port_types_view')
-            base_dict.__delitem__('group_name')
+            ptv_str = gpos.port_types_view.to_config_str()
+            if not ptv_str:
+                continue
 
-            ptv[gpos.group_name] = base_dict
-            
-        file_dict['group_properties'] = gprops
+            ptv_dict = gprops.get(ptv_str)
+            if ptv_dict is None:
+                gprops[ptv_str] = ptv_dict = {}
+
+            ptv_dict[gpos.group_name] = gpos.as_new_dict()
+        
+        file_dict['views'] = {'n0': gprops}
 
         portgroups = list[dict[str, Any]]()
         for pg_mem in self.portgroups_memory:
@@ -1278,9 +1278,31 @@ class PatchbayManager:
         
         file_dict['portgroups'] = portgroups
         
+        json_str = json.dumps(file_dict, indent=2)
+        final_str = ''
+        comp_line = ''
+
+        for line in json_str.splitlines():
+            if line.strip() == '"pos": [':
+                comp_line = line
+                continue
+            
+            if comp_line:
+                comp_line += line.strip()
+                if comp_line.endswith(','):
+                    comp_line += ' '
+
+                if line.strip() == ']':
+                    final_str += comp_line
+                    final_str += '\n'
+                    comp_line = ''
+            else:
+                final_str += line
+                final_str += '\n'
+        
         try:
             with open(path, 'w') as f:
-                json.dump(file_dict, f, indent=2)
+                f.write(final_str)
             return True
         except Exception as e:
             _logger.error(f'Failed to save patchichi file: {str(e)}')

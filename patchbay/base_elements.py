@@ -2,8 +2,9 @@ from dataclasses import dataclass
 from enum import IntFlag, IntEnum, auto
 from typing import TYPE_CHECKING, Any
 
-from .patchcanvas import (patchcanvas, PortMode, PortType, BoxType,
-                          BoxLayoutMode, PortSubType, BoxPos)
+from .patchcanvas import (
+    patchcanvas, PortMode, PortType, BoxType,
+    BoxLayoutMode, PortSubType, BoxPos, BoxFlag)
 
 
 # Port Flags as defined by JACK
@@ -34,6 +35,37 @@ class PortTypesViewFlag(IntFlag):
     VIDEO = 0x08
     ALSA = 0x10
     ALL = AUDIO | MIDI | CV | VIDEO | ALSA
+    
+    def to_config_str(self):
+        if self is PortTypesViewFlag.ALL:
+            return 'ALL'
+
+        str_list = list[str]()        
+        for ptv in PortTypesViewFlag:
+            if ptv in (PortTypesViewFlag.NONE, PortTypesViewFlag.ALL):
+                continue
+
+            if self & ptv:
+                str_list.append(ptv.name)
+        return '|'.join(str_list)
+    
+    @staticmethod
+    def from_config_str(input_str: str) -> 'PortTypesViewFlag':
+        if input_str.upper() == 'ALL':
+            return PortTypesViewFlag.ALL
+
+        ret = PortTypesViewFlag.NONE
+
+        names = [nm.upper() for nm in input_str.split('|')]
+        for ptv in PortTypesViewFlag:
+            if ptv in (PortTypesViewFlag.NONE, PortTypesViewFlag.ALL):
+                continue
+                
+            if ptv.name in names:
+                ret |= ptv
+
+        return ret                   
+            
 
 
 @dataclass
@@ -211,6 +243,50 @@ class GroupPos:
 
     def eat(self, other: 'GroupPos'):
         self.__dict__ = other.__dict__.copy()
+
+    def as_new_dict(self) -> dict:
+        d = {}
+        
+        splitted = bool(self.flags & GroupPosFlag.SPLITTED)
+        if splitted:
+            d['flags'] = GroupPosFlag.SPLITTED.name
+        
+        boxes_dict = dict[PortMode, dict]()
+        
+        for port_mode, box in self.boxes.items():
+            if port_mode is PortMode.BOTH and splitted:
+                continue
+            
+            if not splitted and port_mode is not PortMode.BOTH:
+                continue
+            
+            box_dict = {'pos': box.pos}
+            if box.layout_mode is not BoxLayoutMode.AUTO:
+                box_dict['layout_mode'] = box.layout_mode.name
+
+            box_flag_list = list[str]()
+            for box_flag in BoxFlag:
+                if box.flags & box_flag:
+                    box_flag_list.append(box_flag.name)
+            
+            if box_flag_list:
+                box_dict['flags'] = '|'.join(box_flag_list)
+            
+            port_mode_names = list[str]()
+            for p_mode in PortMode.INPUT, PortMode.OUTPUT:
+                if port_mode & port_mode:
+                    port_mode_names.append(p_mode.name)
+            
+            if not port_mode_names:
+                # should not happen
+                # TODO log
+                continue
+            
+            boxes_dict['|'.join(port_mode_names)] = box_dict
+        
+        d['boxes'] = boxes_dict
+        
+        return d
 
     def as_serializable_dict(self, minimal=False):
         if not minimal:

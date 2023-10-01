@@ -312,6 +312,7 @@ class PortObject(ConnectableObject):
         port_copy = PortObject()
         port_copy.__dict__ = self.__dict__.copy()
         port_copy.widget = None
+        port_copy.hidden_conn_widget = None
         return port_copy
 
     def get_port_ids(self) -> tuple[int]:

@@ -44,6 +44,7 @@ from .init_values import (
     PortMode,
     BoxLayoutMode,
     BoxType,
+    BoxFlag,
     BoxPos
 )
 
@@ -892,7 +893,6 @@ def add_port(group_id: int, port_id: int, port_name: str,
     port.port_type = port_type
     port.portgrp_id = 0
     port.port_subtype = port_subtype
-    port.hidden_conn_ids = set[int]()
     port.hidden_conn_widget = None
     port.widget = PortWidget(port, box_widget)
     
