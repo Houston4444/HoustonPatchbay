@@ -144,9 +144,6 @@ class ToolDisplayed(IntFlag):
         return return_td
 
 
-
-
-
 class GroupPos:
     port_types_view: PortTypesViewFlag = PortTypesViewFlag.NONE
     group_name: str = ""
@@ -239,10 +236,76 @@ class GroupPos:
     def copy(self) -> 'GroupPos':
         group_pos = GroupPos()
         group_pos.__dict__ = self.__dict__.copy()
+        for port_mode, box_pos in self.boxes.items():
+            group_pos.boxes[port_mode] = box_pos.copy()
         return group_pos
 
     def eat(self, other: 'GroupPos'):
         self.__dict__ = other.__dict__.copy()
+
+    @staticmethod
+    def from_new_dict(ptv: PortTypesViewFlag, group_name: str,
+                      in_dict: dict) -> 'GroupPos':
+        gpos = GroupPos()
+        gpos.port_types_view = ptv
+        gpos.group_name = group_name
+
+        flags_str = in_dict.get('flags')
+        if isinstance(flags_str, str):
+            if flags_str.upper() == 'SPLITTED':
+                gpos.flags |= GroupPosFlag.SPLITTED
+
+        boxes_dict = in_dict.get('boxes')
+        if isinstance(boxes_dict, dict):
+            for port_mode_str, box_dict in boxes_dict.items():
+                if not (isinstance(port_mode_str, str)
+                        and isinstance(box_dict, dict)):
+                    continue
+
+                port_mode = PortMode.NULL
+                for pmode_str in port_mode_str.split('|'):
+                    for p_mode in PortMode.INPUT, PortMode.OUTPUT:
+                        if p_mode.name == pmode_str.upper():
+                            port_mode |= p_mode
+                
+                gpos.boxes[port_mode] = BoxPos()
+                
+                for key, value in box_dict.items():
+                    if key == 'pos':
+                        if not (isinstance(value, list)
+                                and len(value) == 2
+                                and isinstance(value[0], int)
+                                and isinstance(value[1], int)):
+                            continue
+                        
+                        gpos.boxes[port_mode].pos = tuple(value)
+                    
+                    elif key == 'flags':
+                        if not isinstance(value, str):
+                            continue
+                        
+                        flags_str_list = [v.upper() for v in value.split('|')]
+                        
+                        box_flags = BoxFlag.NONE
+                        for box_flag in BoxFlag:
+                            if box_flag.name in flags_str_list:
+                                box_flags |= box_flag
+                        
+                        gpos.boxes[port_mode].flags = box_flags
+                        
+                    elif key == 'layout_mode':
+                        if not isinstance(value, str):
+                            continue
+                        
+                        layout_mode = BoxLayoutMode.AUTO
+                        if value.upper() == 'LARGE':
+                            layout_mode = BoxLayoutMode.LARGE
+                        elif value.upper() == 'HIGH':
+                            layout_mode = BoxLayoutMode.HIGH
+                        
+                        gpos.boxes[port_mode].layout_mode = layout_mode
+        
+        return gpos
 
     def as_new_dict(self) -> dict:
         d = {}
@@ -252,29 +315,32 @@ class GroupPos:
             d['flags'] = GroupPosFlag.SPLITTED.name
         
         boxes_dict = dict[PortMode, dict]()
-        
+
         for port_mode, box in self.boxes.items():
             if port_mode is PortMode.BOTH and splitted:
                 continue
-            
             if not splitted and port_mode is not PortMode.BOTH:
                 continue
-            
+
             box_dict = {'pos': box.pos}
             if box.layout_mode is not BoxLayoutMode.AUTO:
                 box_dict['layout_mode'] = box.layout_mode.name
 
+            
             box_flag_list = list[str]()
             for box_flag in BoxFlag:
                 if box.flags & box_flag:
                     box_flag_list.append(box_flag.name)
             
+            if self.port_types_view is PortTypesViewFlag.ALL:
+                print('"ZOOl', self.group_name, port_mode, box.flags, box_flag_list)
             if box_flag_list:
                 box_dict['flags'] = '|'.join(box_flag_list)
+                print(port_mode, box_dict['flags'])
             
             port_mode_names = list[str]()
             for p_mode in PortMode.INPUT, PortMode.OUTPUT:
-                if port_mode & port_mode:
+                if port_mode & p_mode:
                     port_mode_names.append(p_mode.name)
             
             if not port_mode_names:
@@ -285,6 +351,10 @@ class GroupPos:
             boxes_dict['|'.join(port_mode_names)] = box_dict
         
         d['boxes'] = boxes_dict
+        
+        if self.group_name == 'jack_mixer':
+            print(self.port_types_view)
+            print(d)
         
         return d
 
@@ -355,8 +425,16 @@ class GroupPos:
     def set_splitted(self, yesno: bool):
         if yesno:
             self.flags |= GroupPosFlag.SPLITTED
+            wrapped = self.boxes[PortMode.BOTH].is_wrapped()
+            self.boxes[PortMode.INPUT].set_wrapped(wrapped)
+            self.boxes[PortMode.OUTPUT].set_wrapped(wrapped)
+            
         else:
             self.flags &= ~GroupPosFlag.SPLITTED
+            wrapped = (self.boxes[PortMode.INPUT].is_wrapped()
+                       and self.boxes[PortMode.OUTPUT].is_wrapped())
+            self.boxes[PortMode.BOTH].set_wrapped(wrapped)
+
         
 
 

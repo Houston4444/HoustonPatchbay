@@ -379,7 +379,6 @@ class Group:
         if port_mode is PortMode.NULL:
             true_port_mode = PortMode.BOTH
         
-        print('Ahoolze', self.current_position.port_types_view)
         box_pos = self.current_position.boxes[true_port_mode]
         box_pos.set_wrapped(yesno)
         self.save_current_position()

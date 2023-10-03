@@ -208,11 +208,19 @@ class CanvasMenu(QMenu):
                 has_hiddens = True
         
         if not has_hiddens:
-            for gpos in self.patchbay_manager.group_positions:
-                if gpos.port_types_view is self.patchbay_manager.port_types_view:
-                    if gpos.hidden_sides:
-                        has_hiddens = True
-                        break                
+            ptv_view = self.patchbay_manager.views[
+                self.patchbay_manager.VIEW_NUMBER].get(
+                    self.patchbay_manager.port_types_view)
+            
+            for group_name, gpos in ptv_view.items():
+                if gpos.hidden_sides:
+                    has_hiddens = True
+                    break
+            # for gpos in self.patchbay_manager.group_positions:
+            #     if gpos.port_types_view is self.patchbay_manager.port_types_view:
+            #         if gpos.hidden_sides:
+            #             has_hiddens = True
+            #             break                
         
         if has_hiddens:
             self.show_hiddens_menu.addSeparator()
