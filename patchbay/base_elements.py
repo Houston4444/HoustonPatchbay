@@ -152,6 +152,7 @@ class GroupPos:
     boxes: dict[PortMode, BoxPos]
     splitted: bool = False
     fully_set: bool = True
+    has_sure_existence: bool = True
     
     def __init__(self):
         self.boxes = dict[PortMode, BoxPos]()
@@ -332,11 +333,8 @@ class GroupPos:
                 if box.flags & box_flag:
                     box_flag_list.append(box_flag.name)
             
-            if self.port_types_view is PortTypesViewFlag.ALL:
-                print('"ZOOl', self.group_name, port_mode, box.flags, box_flag_list)
             if box_flag_list:
                 box_dict['flags'] = '|'.join(box_flag_list)
-                print(port_mode, box_dict['flags'])
             
             port_mode_names = list[str]()
             for p_mode in PortMode.INPUT, PortMode.OUTPUT:
@@ -351,11 +349,7 @@ class GroupPos:
             boxes_dict['|'.join(port_mode_names)] = box_dict
         
         d['boxes'] = boxes_dict
-        
-        if self.group_name == 'jack_mixer':
-            print(self.port_types_view)
-            print(d)
-        
+
         return d
 
     def as_serializable_dict(self, minimal=False):

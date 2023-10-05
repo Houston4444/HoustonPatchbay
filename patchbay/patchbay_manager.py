@@ -492,11 +492,6 @@ class PatchbayManager:
         gpos = ptv_view.get(group_name)
         if gpos is not None:
             return gpos
-        
-        # for gpos in self.group_positions:
-        #     if (gpos.port_types_view is self.port_types_view
-        #             and gpos.group_name == group_name):
-        #         return gpos
 
         # prevent move to a new position in case of port_types_view change
         # if there is no remembered position for this group in new view
@@ -505,8 +500,8 @@ class PatchbayManager:
             # copy the group_position
             gpos = group.current_position.copy()
             gpos.port_types_view = self.port_types_view
+            gpos.has_sure_existence = False
             ptv_view[group_name] = gpos
-            # self.group_positions.append(gpos)
             self.save_group_position(gpos)
             return gpos
 
@@ -609,13 +604,18 @@ class PatchbayManager:
             group.add_to_canvas()
 
             for port in group.ports:
-                # if not new_gpos.hidden_sides & port.mode():
-                    port.add_to_canvas(gpos=new_gpos)
+                port.add_to_canvas(gpos=new_gpos)
                     
             for portgroup in group.portgroups:
-                # if not new_gpos.hidden_sides & portgroup.port_mode:
-                    portgroup.add_to_canvas()
-                    
+                portgroup.add_to_canvas()
+            
+            for port in group.ports:
+                if port.in_canvas:
+                    new_gpos.has_sure_existence = True
+                    break
+            else:
+                group.remove_from_canvas()
+            
             groups_and_pos[group] = new_gpos
 
         for conn in self.connections:
@@ -627,6 +627,8 @@ class PatchbayManager:
 
         for group, gpos in groups_and_pos.items():            
             group.set_group_position(gpos, view_change=True)
+
+        patchcanvas.repulse_all_boxes()
 
         self.sg.port_types_view_changed.emit(self.port_types_view)
 
@@ -1260,16 +1262,6 @@ class PatchbayManager:
         file_dict['connections'] = [
             (c.port_out.full_name, c.port_in.full_name)
             for c in self.connections]
-        # file_dict['group_positions'] = [
-        #     gpos.as_serializable_dict(minimal=True) for gpos in self.group_positions
-        #     if self.get_group_from_name(gpos.group_name) is not None]
-        
-        # file_dict['group_positions'] = list[dict]()
-        
-        # for pt_dict in self.views[self.VIEW_NUMBER].values():
-        #     for gpos in pt_dict.values():
-        #         if self.get_group_from_name(gpos.group_name) is not None:
-        #             file_dict['group_positions'].append(gpos.as_serializable_dict())
 
         gprops = {}
 
@@ -1277,26 +1269,12 @@ class PatchbayManager:
             ptv_str = ptv.to_config_str()
             if not ptv_str:
                 continue
-            
+
             gprops[ptv_str] = {}
             for group_name, gpos in pt_dict.items():
-                if group_name == 'jack_mixer':
-                    print('jakkddk')
-                gprops[ptv_str][group_name] = gpos.as_new_dict()                
-                if group_name == 'jack_mixer':
-                    print('mmixixer', gprops[ptv_str][group_name])
-                    print('dkdk', self.VIEW_NUMBER, ptv_str, group_name)
-        # for gpos in self.group_positions:
-        #     ptv_str = gpos.port_types_view.to_config_str()
-        #     if not ptv_str:
-        #         continue
+                if gpos.has_sure_existence:
+                    gprops[ptv_str][group_name] = gpos.as_new_dict()
 
-        #     ptv_dict = gprops.get(ptv_str)
-        #     if ptv_dict is None:
-        #         gprops[ptv_str] = ptv_dict = {}
-
-        #     ptv_dict[gpos.group_name] = gpos.as_new_dict()
-        
         file_dict['views'] = {'VIEW_0': gprops}
 
         portgroups = list[dict[str, Any]]()
@@ -1316,8 +1294,7 @@ class PatchbayManager:
         file_dict['portgroups'] = portgroups
         
         json_str = json.dumps(file_dict, indent=2)
-        print('allez')
-        print(json_str)
+
         final_str = ''
         comp_line = ''
 

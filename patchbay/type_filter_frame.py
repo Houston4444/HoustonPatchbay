@@ -38,6 +38,7 @@ class TypeFilterFrame(QFrame):
     
     def enable_alsa_midi(self, yesno: bool):
         self._alsa_midi_enabled = yesno
+        self.ui.checkBoxAlsaFilter.setChecked(yesno)
         self.ui.checkBoxAlsaFilter.setVisible(yesno)
     
     def _change_port_types_view(self):
@@ -51,31 +52,33 @@ class TypeFilterFrame(QFrame):
         
         port_types_view = PortTypesViewFlag.NONE
 
-        if audio_checked and midi_checked and cv_checked and alsa_checked:
-            port_types_view = PortTypesViewFlag.ALL
+        if audio_checked:
+            port_types_view |= PortTypesViewFlag.AUDIO
+        if midi_checked:
+            port_types_view |= PortTypesViewFlag.MIDI
+        if cv_checked:
+            port_types_view |= PortTypesViewFlag.CV
+        if self._alsa_midi_enabled and alsa_checked:
+            port_types_view |= PortTypesViewFlag.ALSA
+
+        # if all visible checkboxes are checked
+        # we consider port types view as PortTypesViewFlag.ALL
+        with_video = port_types_view | PortTypesViewFlag.VIDEO
+        if self._alsa_midi_enabled:
+            if with_video is PortTypesViewFlag.ALL:
+                port_types_view = PortTypesViewFlag.ALL
         else:
-            if audio_checked:
-                port_types_view |= PortTypesViewFlag.AUDIO
-            if midi_checked:
-                port_types_view |= PortTypesViewFlag.MIDI
-            if cv_checked:
-                port_types_view |= PortTypesViewFlag.CV
-            if alsa_checked:
-                port_types_view |= PortTypesViewFlag.ALSA
-                
+            if with_video | PortTypesViewFlag.ALSA is PortTypesViewFlag.ALL:
+                port_types_view = PortTypesViewFlag.ALL
+
         if port_types_view is PortTypesViewFlag.NONE:
-            if self._patchbay_mng.port_types_view is PortTypesViewFlag.AUDIO:
-                port_types_view = (
-                    PortTypesViewFlag.MIDI | PortTypesViewFlag.CV | PortTypesViewFlag.ALSA)
-            elif self._patchbay_mng.port_types_view is PortTypesViewFlag.MIDI:
-                port_types_view = (
-                    PortTypesViewFlag.AUDIO | PortTypesViewFlag.CV | PortTypesViewFlag.ALSA)
-            elif self._patchbay_mng.port_types_view is PortTypesViewFlag.CV:
-                port_types_view = (
-                    PortTypesViewFlag.AUDIO | PortTypesViewFlag.MIDI | PortTypesViewFlag.ALSA) 
-            elif self._patchbay_mng.port_types_view is PortTypesViewFlag.ALSA:
-                port_types_view = (
-                    PortTypesViewFlag.AUDIO | PortTypesViewFlag.MIDI | PortTypesViewFlag.CV)
+            # if no visible checkbox is checked, 
+            # invert the port types selection.
+            port_types_view = PortTypesViewFlag.ALL
+            port_types_view &= ~self._patchbay_mng.port_types_view
+            port_types_view &= ~PortTypesViewFlag.VIDEO
+            if not self._alsa_midi_enabled:
+                port_types_view &= ~PortTypesViewFlag.ALSA
         
         self._patchbay_mng.change_port_types_view(port_types_view)
     
