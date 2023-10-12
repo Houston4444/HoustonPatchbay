@@ -4,3 +4,7 @@ pulseaudio icon missing
 test pipewire
 
 voir : canvas initial_pos
+
+vérifier ouverture des gpos à l'ancienne
+bug repulsing vers le bas (double écart)
+

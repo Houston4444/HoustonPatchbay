@@ -17,13 +17,14 @@
 #
 # For a full copy of the GNU General Public License see the doc/GPL.txt file.
 
+import inspect
 import logging
 from math import ceil
 from struct import pack
 from sip import voidptr
 import sys
 from enum import Enum
-from PyQt5.QtCore import Qt, QPointF, QRectF, QTimer
+from PyQt5.QtCore import Qt, QPointF, QPoint, QRectF, QTimer
 from PyQt5.QtGui import (QCursor, QFontMetrics, QImage, QFont,
                          QLinearGradient, QPainter, QPen, QPolygonF,
                          QColor, QPainterPath, QBrush)
@@ -44,7 +45,7 @@ from .init_values import (
     BoxType,
     Direction)
 
-from .utils import canvas_callback
+from .utils import canvas_callback, nearest_on_grid
 from .box_widget_shadow import BoxWidgetShadow
 from .icon_widget import IconSvgWidget, IconPixmapWidget
 from .port_widget import PortWidget
@@ -208,7 +209,7 @@ class BoxWidgetMoth(QGraphicsItem):
         # self.update_positions()
 
         canvas.scene.addItem(self)
-        QTimer.singleShot(0, self.fix_pos)
+        # QTimer.singleShot(0, self.fix_pos)
 
     def get_group_id(self):
         return self._group_id
@@ -542,7 +543,7 @@ class BoxWidgetMoth(QGraphicsItem):
         return CanvasItemType.BOX
 
     # --- protected Qt Functions redefined here ---
-    # --
+    
     def itemChange(self, change, value):
         if change == QGraphicsItem.ItemSelectedHasChanged:
             self.reset_lines_z_value(bool(value))
@@ -679,12 +680,39 @@ class BoxWidgetMoth(QGraphicsItem):
         QGraphicsItem.mouseReleaseEvent(self, event)
     
     def fix_pos(self):
-        self.setX(round(self.x()))
-        self.setY(round(self.y()))
+        # self.setX(round(self.x()))
+        # self.setY(round(self.y()))
+        x, y = int(self.x()), int(self.y())
+        if self._is_hardware:
+            x -= canvas.theme.hardware_rack_width
+            y -= canvas.theme.hardware_rack_width
+
+        new_x, new_y = nearest_on_grid((x, y))
+        if self._is_hardware:
+            new_x += canvas.theme.hardware_rack_width
+            new_y += canvas.theme.hardware_rack_width
+        
+        if (x, y) == (new_x, new_y):
+            self.setPos(QPointF(x, y))
+            self.repaint_lines()
+        else:
+            canvas.scene.add_box_to_animation(self, new_x, new_y)
+
+    def set_top_left(self, xy: tuple[int, int]):        
+        if self._is_hardware:
+            point = QPointF(*xy)
+            point += QPointF(
+                canvas.theme.hardware_rack_width,
+                canvas.theme.hardware_rack_width)
+            self.setPos(point)
+        else:
+            self.setPos(QPointF(*xy))
 
     def send_move_callback(self):
         canvas_callback(CallbackAct.GROUP_MOVE, self._group_id,
-                        self._port_mode, round(self.x()), round(self.y()))
+                        self._port_mode,
+                        round(self.sceneBoundingRect().left()),
+                        round(self.sceneBoundingRect().top()))
 
         group = canvas.get_group(self._group_id)
         if group is None:

@@ -18,7 +18,9 @@ from .init_values import (
     BoxType,
     GroupObject)
 
-from .utils import get_portgroup_name_from_ports_names
+from .utils import (get_portgroup_name_from_ports_names,
+                    next_width_on_grid,
+                    next_height_on_grid)
 from .box_widget_moth import BoxWidgetMoth, UnwrapButton, TitleLine
 
 
@@ -539,11 +541,17 @@ class BoxWidget(BoxWidgetMoth):
                 title_lines = [TitleLine(self._group_name, theme)]
 
         return tuple(title_lines)
-    
+
+    def _get_area(self, width: int, height: int) -> int:
+        hwr = canvas.theme.hardware_rack_width if self._is_hardware else 0
+        
+        return (next_width_on_grid(hwr * 2 + width)
+                * next_height_on_grid(hwr * 2 + height))
+
     def _choose_title_layout(
         self, height_for_ports: int, height_for_ports_one: int,
         ports_in_width: int, ports_out_width: int) -> dict:
-        '''choose in how many lines should be splitted the title
+        '''choose in how many lines the title should be splitted
         and if the box layout should be large or high.
         returns a dict with all required variables and values'''
         
@@ -647,27 +655,37 @@ class BoxWidget(BoxWidgetMoth):
                 # calculate area with title on side
                 for i in range(1, lines_choice_max + 1):
                     sizes_tuples.append(
-                        ((hws + ports_width + all_title_templates[i]['header_width'])
-                        * (hws + max(all_title_templates[i]['header_height'],
-                                 height_for_ports + ports_y_start_min)),
-                        i, False, TitleOn.SIDE))
+                        (self._get_area(
+                            ports_width + all_title_templates[i]['header_width'],
+                            max(all_title_templates[i]['header_height'],
+                                height_for_ports + ports_y_start_min)),
+                         i, False, TitleOn.SIDE))
 
                 if self.has_top_icon():
                     # calculate area with title on side (title under the icon)
                     for i in range(1, lines_choice_max + 1):
                         sizes_tuples.append(
-                            ((hws + ports_width + all_title_templates[i]['title_width'] + 16)
-                            * (hws + max(all_title_templates[i]['header_height'] + 28,
-                                         height_for_ports + ports_y_start_min)),
-                            i, False, TitleOn.SIDE_UNDER_ICON))
-            
+                            (self._get_area(
+                                ports_width
+                                + all_title_templates[i]['title_width'] + 16,
+                                max(all_title_templates[i]['header_height'] + 28,
+                                    height_for_ports + ports_y_start_min)),
+                             i, False, TitleOn.SIDE_UNDER_ICON))
+                        
             if layout_mode in (BoxLayoutMode.AUTO, BoxLayoutMode.HIGH):
                 # calculate area with title on top
                 for i in range(1, lines_choice_max + 1):
+                    if 'mixer' in self._group_name and self._port_mode is PortMode.INPUT:
+                        print('TitleOn Top', i)
+                    
                     sizes_tuples.append(
-                        (hws + max(all_title_templates[i]['header_width'], width_for_ports)
-                        * (hws + all_title_templates[i]['header_height'] + height_for_ports),
-                        i, False, TitleOn.TOP))
+                        (self._get_area(
+                            max(all_title_templates[i]['header_width'],
+                                width_for_ports),
+                            all_title_templates[i]['header_height']
+                            + height_for_ports),
+                         i, False, TitleOn.TOP))
+                    
         else:
             # --- grouped box ---
             
@@ -676,19 +694,24 @@ class BoxWidget(BoxWidgetMoth):
                     and options.box_grouped_auto_layout_ratio < 2.0):
                 for i in range(1, lines_choice_max + 1):
                     sizes_tuples.append(
-                        (hws + max(all_title_templates[i]['header_width'], width_for_ports_one)
-                        * (hws + all_title_templates[i]['header_height'] + height_for_ports_one)
-                        * options.box_grouped_auto_layout_ratio,
-                        i, True, TitleOn.TOP))
+                        (self._get_area(
+                            max(all_title_templates[i]['header_width'],
+                                width_for_ports_one),
+                            all_title_templates[i]['header_height']
+                            + height_for_ports_one),
+                         i, True, TitleOn.TOP))
 
             # calculate area with input ports at left of output ports
             if (layout_mode in (BoxLayoutMode.AUTO, BoxLayoutMode.LARGE)
                     and options.box_grouped_auto_layout_ratio > 0.0):
                 for i in range(1, lines_choice_max + 1):
                     sizes_tuples.append(
-                        (hws + max(all_title_templates[i]['header_width'], width_for_ports)
-                        * (hws + all_title_templates[i]['header_height'] + height_for_ports),
-                        i, False, TitleOn.TOP))
+                        (self._get_area(
+                            max(all_title_templates[i]['header_width'],
+                                width_for_ports),
+                            all_title_templates[i]['header_height']
+                            + height_for_ports),
+                         i, False, TitleOn.TOP))
         
         # sort areas and choose the first one (the littlest area)
         sizes_tuples.sort()
@@ -1122,6 +1145,23 @@ class BoxWidget(BoxWidgetMoth):
                 self._current_port_mode is PortMode.BOTH
                 and self._current_layout_mode == BoxLayoutMode.HIGH)
         
+        # adapt box sizes to the grid
+        if self._is_hardware:
+            hwr = canvas.theme.hardware_rack_width
+            normal_width = \
+                next_width_on_grid(normal_width + hwr * 2) - 2 * hwr
+            normal_height = \
+                next_height_on_grid(normal_height + hwr * 2) - 2 * hwr
+            wrapped_width = \
+                next_width_on_grid(wrapped_width + hwr * 2) - 2 * hwr
+            wrapped_height = \
+                next_height_on_grid(wrapped_height + hwr * 2) - 2 * hwr
+        else:
+            normal_width = next_width_on_grid(normal_width)
+            normal_height = next_height_on_grid(normal_height)
+            wrapped_width = next_width_on_grid(wrapped_width)
+            wrapped_height = next_height_on_grid(wrapped_height)
+        
         last_in_pos += self._ports_y_start
         last_out_pos += self._ports_y_start
 
@@ -1177,8 +1217,10 @@ class BoxWidget(BoxWidgetMoth):
         self._unwrapped_height = normal_height
 
         # round self._height to the upper value
-        self._height = float(int(self._height + 0.99))
+        # self._height = float(int(self._height + 0.99))
         self._height = ceil(self._height)
+        
+        
 
         ports_y_segments_dict = self._set_ports_y_positions(
             align_port_types, self._ports_y_start, one_column)

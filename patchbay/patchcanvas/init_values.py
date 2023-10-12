@@ -3,7 +3,7 @@
 
 # PatchBay Canvas engine using QGraphicsView/Scene
 # Copyright (C) 2010-2019 Filipe Coelho <falktx@falktx.com>
-# Copyright (C) 2019-2022 Mathieu Picot <picotmathieu@gmail.com>
+# Copyright (C) 2019-2023 Mathieu Picot <picotmathieu@gmail.com>
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License as
@@ -17,7 +17,6 @@
 #
 # For a full copy of the GNU General Public License see the doc/GPL.txt file.
 
-from tkinter import DISABLED
 from typing import TYPE_CHECKING, Iterator, Optional, Union
 from enum import IntEnum, IntFlag, auto
 
@@ -50,14 +49,15 @@ class PortMode(IntFlag):
     BOTH = INPUT | OUTPUT
     
     def opposite(self) -> 'PortMode':
-        if self is self.INPUT:
-            return self.OUTPUT
-        if self is self.OUTPUT:
-            return self.INPUT
-        if self is self.BOTH:
-            return self.NULL
-        if self is self.NULL:
-            return self.BOTH
+        if self is PortMode.INPUT:
+            return PortMode.OUTPUT
+        if self is PortMode.OUTPUT:
+            return PortMode.INPUT
+        if self is PortMode.BOTH:
+            return PortMode.NULL
+        if self is PortMode.NULL:
+            return PortMode.BOTH
+        return PortMode.NULL
 
 
 class PortType(IntFlag):
@@ -243,6 +243,9 @@ class CanvasOptionsObject:
     semi_hide_opacity = 0.20
     default_zoom = 100
     box_grouped_auto_layout_ratio = 1.0
+    cell_x = 20
+    cell_y = 8
+    cell_margin = 2
 
 
 # Canvas features

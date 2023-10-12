@@ -21,14 +21,12 @@
 # Imports (Globals)
 import logging
 from math import floor
-import math
-from shutil import move
 import time
 from typing import Iterator
 
 from PyQt5.QtCore import (QT_VERSION, pyqtSignal, pyqtSlot,
                           Qt, QPoint, QPointF, QRectF, QTimer, QMarginsF)
-from PyQt5.QtGui import QCursor, QPixmap, QPolygonF, QBrush
+from PyQt5.QtGui import QCursor, QPixmap, QPolygonF, QBrush, QColor, QPen
 from PyQt5.QtWidgets import (QGraphicsRectItem, QGraphicsScene, QApplication,
                              QGraphicsView, QGraphicsItem)
 
@@ -47,7 +45,7 @@ from .box_widget import BoxWidget
 from .connectable_widget import ConnectableWidget
 from .line_widget import LineWidget
 from .icon_widget import IconPixmapWidget, IconSvgWidget
-
+from .grid import GridWidget
 
 _logger = logging.getLogger(__name__)
 
@@ -131,6 +129,12 @@ class PatchSceneMoth(QGraphicsScene):
         self._allowed_nav_directions = set[Direction]()
 
         self.flying_connectable = None
+
+        self._grid = GridWidget(self, style='chess')
+        self._grid.update_path()
+        self.sceneRectChanged.connect(self._grid.update_path)
+
+        self.addItem(self._grid)
 
         self.selectionChanged.connect(self._slot_selection_changed)
 

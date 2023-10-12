@@ -34,6 +34,7 @@ from .init_values import (
     CanvasItemType,
     PortgrpObject,
     canvas,
+    options,
     BoxType,
     PortMode,
     CallbackAct)
@@ -467,3 +468,78 @@ def is_dark_theme(widget: QWidget) -> bool:
         widget.palette().brush(QPalette.Active,
                                QPalette.WindowText).color().lightness()
         > 128)
+    
+def nearest_on_grid(xy: tuple[int, int]) -> tuple[int, int]:
+    x, y = xy
+    cell_x = options.cell_x
+    cell_y = options.cell_y
+    margin = options.cell_margin
+
+    ret_x = cell_x * (x // cell_x) + margin
+    if x - ret_x > cell_x / 2:
+        ret_x += cell_x
+    
+    ret_y = cell_y * (y // cell_y) + margin
+    if y - ret_y > cell_y / 2:
+        ret_y += cell_y
+    
+    return (ret_x, ret_y)
+
+def previous_left_on_grid(x: int) -> int:
+    cell_x = options.cell_x
+    margin = options.cell_margin
+    
+    ret = int(cell_x * (x // cell_x) + margin)
+    if ret > x:
+        ret -= cell_x
+    
+    return ret
+
+def next_left_on_grid(x: int) -> int:
+    cell_x = options.cell_x
+    margin = options.cell_margin
+    
+    ret = int(cell_x * (x // cell_x) + margin)
+    if ret < x:
+        ret += cell_x
+    
+    return ret
+
+def previous_top_on_grid(y: int) -> int:
+    cell_y = options.cell_y
+    margin = options.cell_margin
+    
+    ret = int(cell_y * (y // cell_y) + margin)
+    if ret > y:
+        ret -= cell_y
+    
+    return ret
+
+def next_top_on_grid(y: int) -> int:
+    cell_y = options.cell_y
+    margin = options.cell_margin
+    
+    ret = int(cell_y * (y // cell_y) + margin)
+    if ret < y:
+        ret += cell_y
+    
+    return ret
+
+def next_width_on_grid(width: Union[float, int]) -> int:
+    cell_x = options.cell_x
+    margin = options.cell_margin
+    ret = cell_x * (1 + (width // cell_x)) - 2 * margin
+    if ret < width:
+        ret += cell_x
+    
+    return int(ret)
+
+def next_height_on_grid(height: Union[float, int]) -> int:
+    cell_y = options.cell_y
+    margin = options.cell_margin
+    ret = cell_y * (1 + (height // cell_y)) - 2 * margin
+    if ret < height:
+        ret += cell_y
+    
+    return int(ret)
+    

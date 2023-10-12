@@ -20,14 +20,13 @@
 # global imports
 import logging
 from pathlib import Path
-from typing import Callable, Optional
-from PyQt5.QtCore import (pyqtSlot, QObject, QPoint, QPointF, QRectF,
+from typing import Callable
+from PyQt5.QtCore import (pyqtSlot, QObject, QPointF, QRectF,
                           QSettings, QTimer, pyqtSignal)
 
 
 # local imports
 from .init_values import (
-    CanvasItemType,
     PortSubType,
     PortType,
     canvas,
@@ -48,7 +47,7 @@ from .init_values import (
     BoxPos
 )
 
-from .utils import get_new_group_pos
+from .utils import nearest_on_grid
 from .box_widget import BoxWidget
 from .port_widget import PortWidget
 from .line_widget import LineWidget
@@ -56,6 +55,9 @@ from .hidden_conn_widget import HiddenConnWidget
 from .theme_manager import ThemeManager
 from .scene import PatchScene
 from .scene_view import PatchGraphicsView
+from .grid import GridWidget
+from .icon_widget import IconPixmapWidget, IconSvgWidget
+from .scene_moth import RubberbandRect
 
 _logger = logging.getLogger(__name__)
 # used by patchbay_api decorator to get function_name
@@ -179,12 +181,15 @@ def clear():
     canvas.scene.clearSelection()
 
     for item in canvas.scene.items():
-        if item.type() in (CanvasItemType.ICON, CanvasItemType.RUBBERBAND):
+        if isinstance(item, (IconPixmapWidget, IconSvgWidget,
+                             RubberbandRect, GridWidget)):
             continue
+
         canvas.scene.removeItem(item)
         del item
 
     canvas.initiated = False
+    # canvas.scene.addItem(canvas.scene._grid)
 
     QTimer.singleShot(0, canvas.scene.update)
 
@@ -241,12 +246,14 @@ def add_group(group_id: int, group_name: str, split: bool,
 
     if split:
         out_box = BoxWidget(group, PortMode.OUTPUT)
-        out_box.setPos(bx_poses[PortMode.OUTPUT].to_point())
+        # out_box.setPos(bx_poses[PortMode.OUTPUT].to_point())
+        out_box.set_top_left(nearest_on_grid(bx_poses[PortMode.OUTPUT].pos))
         canvas.last_z_value += 1
         out_box.setZValue(canvas.last_z_value)
 
         in_box = BoxWidget(group, PortMode.INPUT)
-        in_box.setPos(bx_poses[PortMode.INPUT].to_point())
+        # in_box.setPos(bx_poses[PortMode.INPUT].to_point())
+        in_box.set_top_left(nearest_on_grid(bx_poses[PortMode.INPUT].pos))
         canvas.last_z_value += 1
         in_box.setZValue(canvas.last_z_value)
 
@@ -254,7 +261,8 @@ def add_group(group_id: int, group_name: str, split: bool,
 
     else:
         box = BoxWidget(group, PortMode.BOTH)
-        box.setPos(bx_poses[PortMode.BOTH].to_point())
+        box.set_top_left(nearest_on_grid(bx_poses[PortMode.BOTH].pos))
+        # box.setPos(bx_poses[PortMode.BOTH].to_point())
         canvas.last_z_value += 1
         box.setZValue(canvas.last_z_value)
         group.widgets = [box, None]
@@ -708,7 +716,7 @@ def move_group_boxes(
 
     if group.splitted:
         for port_mode in (PortMode.OUTPUT, PortMode.INPUT):
-            xy = box_poses[port_mode].pos
+            xy = nearest_on_grid(box_poses[port_mode].pos)
 
             box = group.widgets[0]
             if port_mode is PortMode.INPUT:
@@ -732,7 +740,7 @@ def move_group_boxes(
             return
 
         box_pos = box.pos()
-        xy = box_poses[PortMode.BOTH].pos
+        xy = nearest_on_grid(box_poses[PortMode.BOTH].pos)
         if (not force
                 and int(box_pos.x()) == xy[0] and int(box_pos.y()) == xy[1]):
             return

@@ -26,6 +26,8 @@ from .init_values import (
     options,
     PortMode,
     Direction)
+from .utils import (previous_left_on_grid, next_left_on_grid,
+                    previous_top_on_grid, next_top_on_grid)
 
 from .scene_moth import PatchSceneMoth
 from .box_widget import BoxWidget
@@ -105,7 +107,8 @@ class PatchScene(PatchSceneMoth):
             return Direction.UP
         
         def repulse(direction: Direction, fixed, moving,
-                    fixed_port_mode: int, moving_port_mode: int) -> QRectF:
+                    fixed_port_mode: PortMode,
+                    moving_port_mode: PortMode) -> QRectF:
             ''' returns a QRectF to be placed at side of fixed_rect
                 where fixed_rect is an already determinated futur place
                 for a box '''
@@ -123,24 +126,33 @@ class PatchScene(PatchSceneMoth):
             x = rect.left()
             y = rect.top()
             
+            spacing = options.cell_margin * 2
+            
             if direction in (Direction.LEFT, Direction.RIGHT):
-                spacing = box_spacing
+                # spacing = box_spacing
 
                 if direction == Direction.LEFT:
                     if (fixed_port_mode & PortMode.INPUT
                             or moving_port_mode & PortMode.OUTPUT):
-                        spacing = box_spacing_hor
-                    x = fixed_rect.left() - spacing - rect.width()
-                    if x < 0:
-                        x -= 1.0
+                        x = previous_left_on_grid(
+                            fixed_rect.left() - rect.width() - 24)
+                    else: 
+                        x = previous_left_on_grid(
+                                fixed_rect.left() - rect.width() - spacing)
+                    # x = fixed_rect.left() - spacing - rect.width()
+                    # if x < 0:
+                    #     x -= 1.0
                     x = float(int(x))
                 else:
                     if (fixed_port_mode & PortMode.OUTPUT
                             or moving_port_mode & PortMode.INPUT):
-                        spacing = box_spacing_hor
-                    x = fixed_rect.right() + spacing
-                    if x < 0:
-                        x -= 1.0
+                        # spacing = box_spacing_hor
+                        x = next_left_on_grid(fixed_rect.right() + 24)
+                    else:
+                        x = next_left_on_grid(fixed_rect.right() + spacing)
+                    # x = fixed_rect.right() + spacing
+                    # if x < 0:
+                    #     x -= 1.0
                     x = float(int(x + 0.99))
 
                 top_diff = abs(fixed_rect.top() - rect.top())
@@ -153,14 +165,19 @@ class PatchScene(PatchSceneMoth):
             
             elif direction in (Direction.UP, Direction.DOWN):
                 if direction == Direction.UP:
-                    y = fixed_rect.top() - box_spacing - rect.height()
-                    if y < 0:
-                        y -= 1.0
+                    y = previous_top_on_grid(
+                        fixed_rect.top() - rect.height() - spacing)
+                    # y = fixed_rect.top() - box_spacing - rect.height()
+                    # if y < 0:
+                    #     y -= 1.0
                     y = float(int(y))
                 else:
-                    y = fixed_rect.bottom() + box_spacing
-                    if y < 0:
-                        y -= 1.0
+                    # y = next_top_on_grid(
+                    #     fixed_rect.bottom() + box_spacing)
+                    y = next_top_on_grid(fixed_rect.bottom() + spacing)
+                    # y = fixed_rect.bottom() + box_spacing
+                    # if y < 0:
+                    #     y -= 1.0
                     y = float(int(y + 0.99))
                 
                 left_diff = abs(fixed_rect.left() - rect.left())
@@ -175,7 +192,7 @@ class PatchScene(PatchSceneMoth):
 
         def rect_has_to_move_from(
                 repulser_rect: QRectF, rect: QRectF,
-                repulser_port_mode: int, rect_port_mode: int)->bool:
+                repulser_port_mode: PortMode, rect_port_mode: PortMode) -> bool:
             left_spacing = right_spacing = box_spacing
             
             if (repulser_port_mode & PortMode.INPUT
@@ -281,6 +298,7 @@ class PatchScene(PatchSceneMoth):
         # elements can be added to the list while iteration !!!
         for to_move_box in to_move_boxes:
             item, repulser = to_move_box.item, to_move_box.repulser
+            
             irect = item.boundingRect().translated(item.pos())
 
             directions = to_move_box.directions.copy()
@@ -355,7 +373,6 @@ class PatchScene(PatchSceneMoth):
             
             for moving_box in self.move_boxes:
                 mitem = moving_box.widget
-                assert isinstance(mitem, BoxWidget)
                 
                 if (mitem in [r.item for r in repulsers]
                         or moving_box.joining
@@ -381,6 +398,7 @@ class PatchScene(PatchSceneMoth):
             # now we decide where the box is moved
             pos_offset = item.boundingRect().topLeft()
             to_send_rect = new_rect.translated(- pos_offset)
+
             self.add_box_to_animation(
                 item, int(to_send_rect.left()), int(to_send_rect.top()))
 
@@ -395,6 +413,7 @@ class PatchScene(PatchSceneMoth):
             self, box_widget: BoxWidget, new_scene_rect: QRectF):
         neighbors = [box_widget]
         limit_top = box_widget.pos().y()
+        box_spacing = options.cell_margin * 2
         
         for neighbor in neighbors:
             srect = neighbor.boundingRect()
@@ -407,7 +426,7 @@ class PatchScene(PatchSceneMoth):
 
             for item in self.items(
                     srect.adjusted(0, 0, 0,
-                                   canvas.theme.box_spacing + 1)):
+                                   box_spacing + 1)):
                 if item not in neighbors and isinstance(item, BoxWidget):
                     nrect = item.boundingRect().translated(item.pos())
                     if nrect.top() >= limit_top:
