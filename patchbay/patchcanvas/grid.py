@@ -66,6 +66,9 @@ class GridWidget(QGraphicsPathItem):
         self.right_path: QPainterPath = None
         self.left_path_width = 0.0
         self.right_path_width = 0.0
+        
+        self._pointt = QPointF(0.0, 0.0)
+        
         self.update_path()
 
     def grid_path(self):
@@ -112,16 +115,14 @@ class GridWidget(QGraphicsPathItem):
         path = QPainterPath(QPointF(0.0, 0.0))
         true_cell_x = float(options.cell_x)
         true_cell_y = float(options.cell_y)
-        cell_x = true_cell_x * 5
-        cell_y = true_cell_y * 10
-        
-        print('cellls', cell_x, cell_y)
+        cell_x = true_cell_x * 10
+        cell_y = true_cell_y * 18
         
         rect = self._scene.sceneRect()
         
         x = rect.left()
         x -= x % (cell_x * 2)
-        x += cell_x / 2.0
+        # x += cell_x / 2.0
         y = rect.top()
         y -= y % (cell_y * 2)
         x_start = x
@@ -130,119 +131,191 @@ class GridWidget(QGraphicsPathItem):
         x += 2 * cell_x
         y += 2 * cell_y
         
+        
         # make the normal pattern
         orig_path = QPainterPath()
-        orig_path.moveTo(x, y)
-        orig_path.lineTo(x, y + cell_y)
-        orig_path.moveTo(x + cell_x, y + cell_y)
-        orig_path.lineTo(x + cell_x, y + 2.0 * cell_y)
+        orig_path.moveTo(x + cell_x / 2, y)
+        orig_path.lineTo(x + cell_x / 2, y + cell_y)
+        orig_path.moveTo(x + cell_x * 1.5, y + cell_y)
+        orig_path.lineTo(x + cell_x * 1.5, y + 2.0 * cell_y)
         self.orig_path = orig_path
 
-        total_x = math.floor((rect.right() - (x - cell_x / 2)) / (2 * cell_x)) 
+        total_x = math.floor((rect.right() - x) / (2 * cell_x)) 
         total_y = math.floor((rect.bottom() - y)/ (2 * cell_y))
-        
+
         y_path = y_multiply(orig_path, total_y, 2 * cell_y)
+        y_down = y + total_y * 2 * cell_y
+        x_right = x + total_x * 2 * cell_x
+
+        self._pointt = QPointF(x_right, y_down)
         
         # construct top 
         if rect.top() < y:
             top_path = QPainterPath()
             if y - rect.top() > cell_y:
-                top_path.moveTo(x, rect.top())
-                top_path.lineTo(x, y - cell_y)
-                top_path.moveTo(x + cell_x, y - cell_y)
-                top_path.lineTo(x + cell_x, y)
+                top_path.moveTo(x + cell_x / 2, rect.top())
+                top_path.lineTo(x + cell_x / 2, y - cell_y)
+                top_path.moveTo(x + cell_x * 1.5, y - cell_y)
+                top_path.lineTo(x + cell_x * 1.5, y)
             else:
-                top_path.moveTo(x + cell_x, rect.top())
-                top_path.lineTo(x + cell_x, y)
+                top_path.moveTo(x + cell_x * 1.5, rect.top())
+                top_path.lineTo(x + cell_x * 1.5, y)
 
             y_path.addPath(top_path)
         
         # construct bottom
         if rect.bottom() > y + total_y * 2 * cell_y:
             bot_path = QPainterPath()
-            y_down = y + total_y * 2 * cell_y
 
             if rect.bottom() - y_down > cell_y:
-                bot_path.moveTo(x, y_down)
-                bot_path.lineTo(x, y_down + cell_y)
-                bot_path.moveTo(x + cell_x, y_down + cell_y)
-                bot_path.lineTo(x + cell_x, rect.bottom())
+                bot_path.moveTo(x + cell_x / 2, y_down)
+                bot_path.lineTo(x + cell_x / 2, y_down + cell_y)
+                bot_path.moveTo(x + cell_x * 1.5, y_down + cell_y)
+                bot_path.lineTo(x + cell_x * 1.5, rect.bottom())
             else:
-                bot_path.moveTo(x, y_down)
-                bot_path.lineTo(x, rect.bottom())
+                bot_path.moveTo(x + cell_x / 2, y_down)
+                bot_path.lineTo(x + cell_x / 2, rect.bottom())
 
             y_path.addPath(bot_path)
 
         x_path = x_multiply(y_path, total_x, cell_x * 2)
 
-        sec_left_path = None
-
         # construct left
-        if rect.left() < x - cell_x / 2:
-            if x - cell_x / 2 - rect.left() > cell_x:
+        if rect.left() < x:
+            if x - rect.left() > cell_x:
                 left_path = QPainterPath()
-                left_width = x - cell_x / 2 - cell_x - rect.left()
-                left_path.moveTo(rect.left() + left_width / 2, y)
-                left_path.lineTo(rect.left() + left_width / 2, y + cell_y)
+                left_width = x - cell_x - rect.left()
+                left_pos = rect.left() + left_width / 2
+                left_path.moveTo(left_pos, y)
+                left_path.lineTo(left_pos, y + cell_y)
                 
                 sec_left_path = QPainterPath()
-                sec_left_path.moveTo(x - cell_x, y + cell_y)
-                sec_left_path.lineTo(x - cell_x, y + 2 * cell_y)
+                sec_left_path.moveTo(x - cell_x / 2, y + cell_y)
+                sec_left_path.lineTo(x - cell_x / 2, y + 2 * cell_y)
                 
+                self.left_path = y_multiply(left_path, total_y, cell_y * 2)
                 sec_lef_path = y_multiply(sec_left_path, total_y, cell_y * 2)
-                    
+
+                if y > rect.top():
+                    if y > rect.top() + cell_y:
+                        self.left_path.moveTo(left_pos, rect.top())
+                        self.left_path.lineTo(left_pos, y - cell_y)
+                        sec_lef_path.moveTo(x - cell_x / 2, y - cell_y)
+                        sec_lef_path.lineTo(x - cell_x / 2, y)
+                    else:
+                        sec_lef_path.moveTo(x - cell_x / 2, rect.top())
+                        sec_lef_path.lineTo(x - cell_x / 2, y)
+                
+                if rect.bottom() > y_down:
+                    if rect.bottom() > y_down + cell_y:
+                        self.left_path.moveTo(left_pos, y_down)
+                        self.left_path.lineTo(left_pos, y_down + cell_y)
+                        sec_lef_path.moveTo(x - cell_x / 2, y_down + cell_y)
+                        sec_lef_path.lineTo(x - cell_x / 2, rect.bottom())
+                    else:
+                        self.left_path.moveTo(left_pos, y_down)
+                        self.left_path.lineTo(left_pos, rect.bottom())
+                        
                 x_path.addPath(sec_lef_path)
                 
             else:
                 left_path = QPainterPath()
-                left_width = x - cell_x / 2 - rect.left()
+                left_width = x - rect.left()
+                left_pos = rect.left() + left_width / 2
                 left_path.moveTo(rect.left() + left_width / 2, y + cell_y)
                 left_path.lineTo(rect.left() + left_width / 2, y + 2 * cell_y)
-            
+                
+                self.left_path = y_multiply(left_path, total_y, cell_y * 2)
+                
+                if y > rect.top():
+                    if y > rect.top() + cell_y:
+                        self.left_path.moveTo(left_pos, y - cell_y)
+                        self.left_path.lineTo(left_pos, y)
+                    else:
+                        self.left_path.moveTo(left_pos, rect.top())
+                        self.left_path.lineTo(left_pos, y)
+                        
+                if rect.bottom() > y_down:
+                    if rect.bottom() > y_down + cell_y:
+                        self.left_path.moveTo(left_pos, y_down + cell_y)
+                        self.left_path.lineTo(left_pos, rect.bottom())
+                                
             self.left_path_width = left_width
-            self.left_path = y_multiply(left_path, total_y, cell_y * 2)
         else:
             self.left_path = None
-        
-        right_x = x - cell_x / 2 + total_x * 2 * cell_x
-        print('qplef', right_x, rect.right())
 
         # construct right
-        if rect.right() > right_x:
-            if rect.right() >= right_x + cell_x:
+        if rect.right() > x_right:
+            if rect.right() >= x_right + cell_x:
                 sec_right_path = QPainterPath()
-                sec_right_path.moveTo(right_x + cell_x / 2, y)
-                sec_right_path.lineTo(right_x + cell_x / 2, y + cell_y)
+                sec_right_path.moveTo(x_right + cell_x / 2, y)
+                sec_right_path.lineTo(x_right + cell_x / 2, y + cell_y)                
                 sec_rig_path = y_multiply(sec_right_path, total_y, cell_y * 2)
-                x_path.addPath(sec_rig_path)
                 
                 right_path = QPainterPath()
-                right_width = rect.right() - (right_x + cell_x)
-                right_path.moveTo(right_x + cell_x + right_width / 2, y + cell_y)
-                right_path.lineTo(right_x + cell_x + right_width / 2, y + 2 * cell_y)
+                right_width = rect.right() - (x_right + cell_x)
+                right_pos = rect.right() - right_width / 2
+
+                right_path.moveTo(right_pos, y + cell_y)
+                right_path.lineTo(right_pos, y + 2 * cell_y)
+                
+                self.right_path = y_multiply(right_path, total_y, cell_y * 2)
+
+                if y > rect.top():
+                    if y > rect.top() + cell_y:
+                        sec_rig_path.moveTo(x_right + cell_x / 2, rect.top())
+                        sec_rig_path.lineTo(x_right + cell_x / 2, y - cell_y)
+                        self.right_path.moveTo(right_pos, y - cell_y)
+                        self.right_path.lineTo(right_pos, y)
+                    else:
+                        self.right_path.moveTo(right_pos, rect.top())
+                        self.right_path.lineTo(right_pos, y)
+                
+                if rect.bottom() > y_down:
+                    if rect.bottom() > y_down + cell_y:
+                        sec_rig_path.moveTo(x_right + cell_x / 2, y_down)
+                        sec_rig_path.lineTo(x_right + cell_x / 2, y_down + cell_y)
+                        self.right_path.moveTo(right_pos, y_down + cell_y)
+                        self.right_path.lineTo(right_pos, rect.bottom())
+                    else:
+                        sec_rig_path.moveTo(x_right + cell_x / 2, y_down)
+                        sec_rig_path.lineTo(x_right + cell_x / 2, rect.bottom())
+                
+                x_path.addPath(sec_rig_path)
+                
             else:
                 right_path = QPainterPath()
-                right_width = rect.right() - right_x
-                right_path.moveTo(right_x + right_width / 2, y)
-                right_path.lineTo(right_x + right_width / 2, y + cell_y)
+                right_width = rect.right() - x_right
+                right_pos = rect.right() - right_width / 2
+                right_path.moveTo(right_pos, y)
+                right_path.lineTo(right_pos, y + cell_y)
+                
+                self.right_path = y_multiply(right_path, total_y, cell_y * 2)
+                
+                if y > rect.top():
+                    if y > rect.top() + cell_y:
+                        self.right_path.moveTo(right_pos, rect.top())
+                        self.right_path.lineTo(right_pos, y - cell_y)
+                        
+                if rect.bottom() > y_down:
+                    if rect.bottom() > y_down + cell_y:
+                        self.right_path.moveTo(right_pos, y_down)
+                        self.right_path.lineTo(right_pos, y_down + cell_y)
+                    else:
+                        self.right_path.moveTo(right_pos, y_down)
+                        self.right_path.lineTo(right_pos, rect.bottom())
             
             self.right_path_width = right_width
-            self.right_path = y_multiply(right_path, total_y, cell_y * 2)
         else:
             self.right_path = None
-            
-        
-
-        # self.left_path = left_path
-        
 
         path.setFillRule(Qt.WindingFill)
         
         self.setPath(x_path)
         self.setPen(QPen(
-            QBrush(QColor(28, 28, 28)), cell_x, Qt.SolidLine, Qt.FlatCap))
+            QBrush(QColor(30, 30, 30)), cell_x, Qt.SolidLine, Qt.FlatCap))
         finish_time = time.time()
-        print('ça prend : ', (finish_time - start_time) * 1000, 'ms')
+        # print('ça prend : ', (finish_time - start_time) * 1000, 'ms')
         
     def paint(self, painter: QPainter, option, widget):
         # return super().paint(painter, option, widget)
@@ -280,6 +353,10 @@ class GridWidget(QGraphicsPathItem):
             painter.setPen(pen)
             painter.drawPath(self.right_path)
         
+        pen = QPen(QColor(168, 120, 0), 1.0)
+        painter.setPen(pen)
+        # painter.drawRect(self._scene.sceneRect())
+        # painter.drawEllipse(self._pointt, 3.0, 3.0)
         # painter.setPen(QPen(QBrush(QColor(128, 64, 0)), 41.0, Qt.SolidLine, Qt.FlatCap))
         # painter.drawPath(self.orig_path)
         # for rect in self._rects:
