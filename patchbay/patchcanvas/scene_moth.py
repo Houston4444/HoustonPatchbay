@@ -323,6 +323,9 @@ class PatchSceneMoth(QGraphicsScene):
         self._view.setHorizontalScrollBarPolicy(Qt.ScrollBarAsNeeded)
         self._view.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
 
+    def list_boxes_at(self, rect: QRectF):
+        return [item for item in self.items(rect) if isinstance(item, BoxWidget)]
+
     def move_boxes_animation(self):
         # Animation is nice but not the priority.
         # Do not ensure all steps are played

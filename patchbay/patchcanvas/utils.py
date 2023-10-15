@@ -21,7 +21,7 @@
 # Imports (Global)
 
 import logging
-from typing import Union
+from typing import TYPE_CHECKING, Union
 
 from PyQt5.QtCore import QPointF, QFile, QRectF
 from PyQt5.QtGui import QIcon, QPalette
@@ -39,6 +39,8 @@ from .init_values import (
     PortMode,
     CallbackAct)
 
+if TYPE_CHECKING:
+    from .box_widget import BoxWidget
 # ------------------------------------------------------------------------------------------------------------
 
 _logger = logging.getLogger(__name__)
@@ -485,6 +487,28 @@ def nearest_on_grid(xy: tuple[int, int]) -> tuple[int, int]:
     
     return (ret_x, ret_y)
 
+def nearest_on_grid_check_others(
+        xy: tuple[int, int], orig_box: 'BoxWidget') -> tuple[int, int]:
+    check_rect = orig_box.boundingRect().translated(QPointF(*xy))
+    search_rect = check_rect.adjusted(-4.0, -4.0, 4.0, 4.0)
+
+    boxes = [b for b in canvas.scene.list_boxes_at(search_rect)
+             if b is not orig_box]
+    
+    for box in boxes:
+        rect = box.sceneBoundingRect()
+        x, y = xy
+
+        if previous_top_on_grid(y) == previous_top_on_grid(rect.bottom()):
+            new_x, new_y = nearest_on_grid(xy)
+            return (new_x, previous_top_on_grid(y) + options.cell_y)
+        
+        if next_bottom_on_grid(check_rect.bottom()) == next_bottom_on_grid(rect.top()):
+            new_x, new_y = nearest_on_grid(xy)
+            return (new_x, next_top_on_grid(y) - options.cell_y)
+            
+    return nearest_on_grid(xy)
+
 def previous_left_on_grid(x: int) -> int:
     cell_x = options.cell_x
     margin = options.cell_margin
@@ -523,6 +547,16 @@ def next_top_on_grid(y: int) -> int:
     if ret < y:
         ret += cell_y
     
+    return ret
+
+def next_bottom_on_grid(y: int) -> int:
+    cell_y = options.cell_y
+    margin = options.cell_margin
+    
+    ret = int(cell_y * (1 + y // cell_y) - margin)
+    # if ret < y:
+    #     ret += cell_y
+        
     return ret
 
 def next_width_on_grid(width: Union[float, int]) -> int:

@@ -138,22 +138,13 @@ class PatchScene(PatchSceneMoth):
                             fixed_rect.left() - rect.width() - 24)
                     else: 
                         x = previous_left_on_grid(
-                                fixed_rect.left() - rect.width() - spacing)
-                    # x = fixed_rect.left() - spacing - rect.width()
-                    # if x < 0:
-                    #     x -= 1.0
-                    x = float(int(x))
+                            fixed_rect.left() - rect.width() - spacing)
                 else:
                     if (fixed_port_mode & PortMode.OUTPUT
                             or moving_port_mode & PortMode.INPUT):
-                        # spacing = box_spacing_hor
                         x = next_left_on_grid(fixed_rect.right() + 24)
                     else:
                         x = next_left_on_grid(fixed_rect.right() + spacing)
-                    # x = fixed_rect.right() + spacing
-                    # if x < 0:
-                    #     x -= 1.0
-                    x = float(int(x + 0.99))
 
                 top_diff = abs(fixed_rect.top() - rect.top())
                 bottom_diff = abs(fixed_rect.bottom() - rect.bottom())
@@ -167,18 +158,8 @@ class PatchScene(PatchSceneMoth):
                 if direction == Direction.UP:
                     y = previous_top_on_grid(
                         fixed_rect.top() - rect.height() - spacing)
-                    # y = fixed_rect.top() - box_spacing - rect.height()
-                    # if y < 0:
-                    #     y -= 1.0
-                    y = float(int(y))
                 else:
-                    # y = next_top_on_grid(
-                    #     fixed_rect.bottom() + box_spacing)
                     y = next_top_on_grid(fixed_rect.bottom() + spacing)
-                    # y = fixed_rect.bottom() + box_spacing
-                    # if y < 0:
-                    #     y -= 1.0
-                    y = float(int(y + 0.99))
                 
                 left_diff = abs(fixed_rect.left() - rect.left())
                 right_diff = abs(fixed_rect.right() - rect.right())
@@ -188,7 +169,7 @@ class PatchScene(PatchSceneMoth):
                 elif right_diff <= magnet:
                     x = fixed_rect.right() - rect.width()
 
-            return QRectF(x, y, rect.width(), rect.height())
+            return QRectF(float(x), float(y), rect.width(), rect.height())
 
         def rect_has_to_move_from(
                 repulser_rect: QRectF, rect: QRectF,

@@ -45,7 +45,7 @@ from .init_values import (
     BoxType,
     Direction)
 
-from .utils import canvas_callback, nearest_on_grid
+from .utils import canvas_callback, nearest_on_grid, nearest_on_grid_check_others
 from .box_widget_shadow import BoxWidgetShadow
 from .icon_widget import IconSvgWidget, IconPixmapWidget
 from .port_widget import PortWidget
@@ -679,7 +679,7 @@ class BoxWidgetMoth(QGraphicsItem):
         
         QGraphicsItem.mouseReleaseEvent(self, event)
     
-    def fix_pos(self):
+    def fix_pos(self, check_others=False):
         # self.setX(round(self.x()))
         # self.setY(round(self.y()))
         x, y = int(self.x()), int(self.y())
@@ -687,7 +687,12 @@ class BoxWidgetMoth(QGraphicsItem):
             x -= canvas.theme.hardware_rack_width
             y -= canvas.theme.hardware_rack_width
 
-        new_x, new_y = nearest_on_grid((x, y))
+        if check_others:
+            print('simmba')
+            new_x, new_y = nearest_on_grid_check_others((x, y), self)
+        else:
+            new_x, new_y = nearest_on_grid((x, y))
+
         if self._is_hardware:
             new_x += canvas.theme.hardware_rack_width
             new_y += canvas.theme.hardware_rack_width
@@ -726,7 +731,7 @@ class BoxWidgetMoth(QGraphicsItem):
 
     def fix_pos_after_move(self):
         for box in canvas.scene.get_selected_boxes():
-            box.fix_pos()
+            box.fix_pos(check_others=True)
             box.send_move_callback()
 
     def set_in_cache(self, yesno: bool):

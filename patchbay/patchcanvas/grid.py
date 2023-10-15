@@ -2,7 +2,7 @@ import math
 import time
 from typing import TYPE_CHECKING
 from PyQt5.QtWidgets import QGraphicsPathItem
-from PyQt5.QtGui import QPolygonF, QPen, QColor, QBrush, QPainter, QPainterPath
+from PyQt5.QtGui import QPolygonF, QPen, QColor, QBrush, QPainter, QPainterPath, QLinearGradient
 from PyQt5.QtCore import QPointF, Qt, QRectF, QRect
 
 from .init_values import PortMode, PortType, canvas, CanvasItemType, options
@@ -69,6 +69,8 @@ class GridWidget(QGraphicsPathItem):
         
         self._pointt = QPointF(0.0, 0.0)
         
+        self.global_path = QPainterPath()
+        
         self.update_path()
 
     def grid_path(self):
@@ -115,8 +117,15 @@ class GridWidget(QGraphicsPathItem):
         path = QPainterPath(QPointF(0.0, 0.0))
         true_cell_x = float(options.cell_x)
         true_cell_y = float(options.cell_y)
-        cell_x = true_cell_x * 10
-        cell_y = true_cell_y * 18
+        
+        cell_x_min = 1
+        cell_y_min = 1
+        
+        cell_x = options.cell_x * math.ceil(cell_x_min / options.cell_x)
+        cell_y = options.cell_y * math.ceil(cell_y_min / options.cell_y)
+        
+        # cell_x = true_cell_x * 8
+        # cell_y = true_cell_y * 18
         
         rect = self._scene.sceneRect()
         
@@ -134,6 +143,10 @@ class GridWidget(QGraphicsPathItem):
         
         # make the normal pattern
         orig_path = QPainterPath()
+        # orig_path.moveTo(x, y)
+        # orig_path.lineTo(x +cell_x, y + cell_y)
+        # orig_path.moveTo(x + cell_x, y + 2 * cell_y)
+        # orig_path.lineTo(x + 2 * cell_x, y + cell_y)
         orig_path.moveTo(x + cell_x / 2, y)
         orig_path.lineTo(x + cell_x / 2, y + cell_y)
         orig_path.moveTo(x + cell_x * 1.5, y + cell_y)
@@ -147,7 +160,7 @@ class GridWidget(QGraphicsPathItem):
         y_down = y + total_y * 2 * cell_y
         x_right = x + total_x * 2 * cell_x
 
-        self._pointt = QPointF(x_right, y_down)
+        self._pointt = QPointF(0.0, 0.0)
         
         # construct top 
         if rect.top() < y:
@@ -312,11 +325,48 @@ class GridWidget(QGraphicsPathItem):
         path.setFillRule(Qt.WindingFill)
         
         self.setPath(x_path)
+        
+        color_main = QColor(128, 128, 128, 20)
+        color_alter = QColor(30, 30 , 30)
+        
+        tot_max = max(total_x, total_y)
+        graditot = 4 * (max(total_x, total_y) + 2)
+        
+        # gradient = QLinearGradient(
+        #     QPointF(x - 2 * cell_y, y - 2 * cell_x),
+        #     QPointF(x + tot_max * cell_y * 2, y + tot_max * cell_x * 2))
+        
+        
+        # mini = math.floor(min(rect.left() / cell_x, rect.top() / cell_y))
+        # maxi = math.ceil(max(rect.right() / cell_x, rect.bottom() / cell_y))
+        # gradient = QLinearGradient(
+        #     QPointF(-10.0 * cell_y, -10.0 * cell_x),
+        #     QPointF(10.0 * cell_y, 10.0 * cell_x))
+
+        # for i in range(41):
+        #     color = color_alter if i % 2 else color_main
+        #     gradient.setColorAt(i / 40, color)
+        
+        # # print('ofkezok', x, y, x_right, y_down, x + tot)
+        
+        # ratio = min(cell_x, cell_y) / max(cell_x, cell_y)
+        
+        
+        # for i in range(graditot + 1):
+        #     color = color_alter if i % 2 else color_main
+        #     gradient.setColorAt(i / graditot, color)
+        #     print(i / graditot, 'color', 'alter' if i %2 else 'main')
+        # gradient.setColorAt(0.0, color_main)
+        # gradient.setColorAt(0.5, color_alter)
+        # gradient.setColorAt(1.0, color_main)
+        
+        
+        
         self.setPen(QPen(
-            QBrush(QColor(30, 30, 30)), cell_x, Qt.SolidLine, Qt.FlatCap))
+            color_main, cell_x, Qt.SolidLine, Qt.FlatCap))
         finish_time = time.time()
         # print('ça prend : ', (finish_time - start_time) * 1000, 'ms')
-        
+    
     def paint(self, painter: QPainter, option, widget):
         # return super().paint(painter, option, widget)
         if canvas.loading_items:
@@ -328,18 +378,17 @@ class GridWidget(QGraphicsPathItem):
         QGraphicsPathItem.paint(self, painter, option, widget)
 
         cosm_pen = QPen(self.pen())
-        # cosm_pen.setCosmetic(True)
-        # cosm_pen.setWidthF(1.00001)
 
-        painter.setPen(cosm_pen)
-        # self.setPen(QPen(Qt.NoPen))
-        # self.setBrush(QBrush(QColor(256, 128, 128)))
+        # painter.setPen(cosm_pen)
+        # painter.drawPath(self.path())
+        # painter.setPen(QPen(QColor(48, 87, 49), 1.0))
+        # painter.setPen(QPen(Qt.NoPen))
         
-        # for rect in self._rects:
-        #     painter.drawRect(rect)
-        # painter.fillPath(self.path(), QColor(256, 0, 0))
-        # painter.setViewport(self._scene.sceneRect().toRect())
+        
+        # painter.setPen(QPen(color_main, self.pen().widthF()))
         painter.drawPath(self.path())
+        # painter.setBrush(QBrush(QColor(48, 57, 98)))
+        # painter.drawPath(self.global_path)
         
         if self.left_path is not None:
             pen = QPen(self.pen())
@@ -355,12 +404,8 @@ class GridWidget(QGraphicsPathItem):
         
         pen = QPen(QColor(168, 120, 0), 1.0)
         painter.setPen(pen)
+        # painter.setBrush(QColor(60, 60, 128, 20))
         # painter.drawRect(self._scene.sceneRect())
-        # painter.drawEllipse(self._pointt, 3.0, 3.0)
-        # painter.setPen(QPen(QBrush(QColor(128, 64, 0)), 41.0, Qt.SolidLine, Qt.FlatCap))
-        # painter.drawPath(self.orig_path)
-        # for rect in self._rects:
-        #     painter.fillRect(rect, QColor(256, 0, 0))
-        # self.path().setFillRule()
+        painter.drawEllipse(self._pointt, 3.0, 3.0)
 
         painter.restore()
