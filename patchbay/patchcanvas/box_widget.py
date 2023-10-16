@@ -548,7 +548,7 @@ class BoxWidget(BoxWidgetMoth):
         return (next_width_on_grid(hwr * 2 + width)
                 * next_height_on_grid(hwr * 2 + height))
 
-    def _choose_title_layout(
+    def _choose_box_layout(
         self, height_for_ports: int, height_for_ports_one: int,
         ports_in_width: int, ports_out_width: int) -> dict:
         '''choose in how many lines the title should be splitted
@@ -577,7 +577,7 @@ class BoxWidget(BoxWidgetMoth):
         all_title_templates = box_theme.get_title_templates(
             self._group_name, self._can_handle_gui, self.has_top_icon())
         lines_choice_max = len(all_title_templates) - 1
-        
+
         if not all_title_templates:
             # this box title is not in cache, we need to estimate all its sizes
             # depending number of splitted lines.
@@ -640,23 +640,23 @@ class BoxWidget(BoxWidgetMoth):
                 all_title_templates[:lines_choice_max])
 
         # Now compare multiple possible areas for the box,
-        # depending on BoxLayoutMode and number of lines for box title.
+        # depending on BoxLayoutMode and number of lines for the box title.
 
         sizes_tuples = list[tuple[int, int, bool, TitleOn]]()
         layout_mode = self._layout_mode
-        hws = canvas.theme.hardware_rack_width * 2 if self._is_hardware else 0
         
         if self._current_port_mode in (PortMode.INPUT, PortMode.OUTPUT):
             # splitted box
             
             if layout_mode in (BoxLayoutMode.AUTO, BoxLayoutMode.LARGE):
-                ports_y_start_min = box_theme.port_spacing() + box_theme.port_type_spacing()
+                ports_y_start_min = (box_theme.port_spacing()
+                                     + box_theme.port_type_spacing())
                 
                 # calculate area with title on side
                 for i in range(1, lines_choice_max + 1):
                     sizes_tuples.append(
                         (self._get_area(
-                            ports_width + all_title_templates[i]['header_width'],
+                            ports_width + 12 + all_title_templates[i]['header_width'],
                             max(all_title_templates[i]['header_height'],
                                 height_for_ports + ports_y_start_min)),
                          i, False, TitleOn.SIDE))
@@ -664,20 +664,24 @@ class BoxWidget(BoxWidgetMoth):
                 if self.has_top_icon():
                     # calculate area with title on side (title under the icon)
                     for i in range(1, lines_choice_max + 1):
+                        header_width = max(
+                            38, all_title_templates[i]['title_width'] + 12)
+                        if self._can_handle_gui:
+                            header_width += 4
+                        
+                        box_width = ports_width + header_width + 12
+                        header_height = all_title_templates[i]['header_height']
+                        header_height += 20 if i == 1 else 30
+                        box_height = max(
+                            height_for_ports + ports_y_start_min, header_height)
+                        
                         sizes_tuples.append(
-                            (self._get_area(
-                                ports_width
-                                + all_title_templates[i]['title_width'] + 16,
-                                max(all_title_templates[i]['header_height'] + 28,
-                                    height_for_ports + ports_y_start_min)),
+                            (self._get_area(box_width, box_height),
                              i, False, TitleOn.SIDE_UNDER_ICON))
                         
             if layout_mode in (BoxLayoutMode.AUTO, BoxLayoutMode.HIGH):
                 # calculate area with title on top
                 for i in range(1, lines_choice_max + 1):
-                    if 'mixer' in self._group_name and self._port_mode is PortMode.INPUT:
-                        print('TitleOn Top', i)
-                    
                     sizes_tuples.append(
                         (self._get_area(
                             max(all_title_templates[i]['header_width'],
@@ -741,9 +745,7 @@ class BoxWidget(BoxWidgetMoth):
         self._title_under_icon = bool(title_on_side is TitleOn.SIDE_UNDER_ICON)
 
         if title_on_side:
-            box_width = ports_width + 12 + header_width
             ports_y_start = box_theme.port_spacing() + box_theme.port_type_spacing()
-            box_height = max(height_for_ports + ports_y_start, header_height)
             
             if self._title_under_icon:
                 header_width = max(38, max_title_size + 12)
@@ -752,8 +754,12 @@ class BoxWidget(BoxWidgetMoth):
 
                 box_width = ports_width + header_width + 12
                 header_height += 20 if len(self._title_lines) == 1 else 30
+                box_height = max(height_for_ports + ports_y_start, header_height)                
+            else:
+                box_width = ports_width + 12 + header_width
                 box_height = max(height_for_ports + ports_y_start, header_height)
 
+            # TODO remove this and put ports in the middle of height
             ports_y_start = max(ports_y_start, header_height - height_for_ports)
 
         elif one_column:
@@ -1107,10 +1113,9 @@ class BoxWidget(BoxWidgetMoth):
        
         self._width_in = max_in_width
         self._width_out = max_out_width
-        hws = canvas.theme.hardware_rack_width if self._is_hardware else 0
 
         if not (self._wrapping or self._unwrapping):
-            titles_dict = self._choose_title_layout(
+            titles_dict = self._choose_box_layout(
                 height_for_ports, height_for_ports_one,
                 max_in_width, max_out_width)
             self._header_width = titles_dict['header_width']
@@ -1143,7 +1148,7 @@ class BoxWidget(BoxWidgetMoth):
             
             one_column = bool(
                 self._current_port_mode is PortMode.BOTH
-                and self._current_layout_mode == BoxLayoutMode.HIGH)
+                and self._current_layout_mode is BoxLayoutMode.HIGH)
         
         # adapt box sizes to the grid
         if self._is_hardware:
@@ -1219,8 +1224,6 @@ class BoxWidget(BoxWidgetMoth):
         # round self._height to the upper value
         # self._height = float(int(self._height + 0.99))
         self._height = ceil(self._height)
-        
-        
 
         ports_y_segments_dict = self._set_ports_y_positions(
             align_port_types, self._ports_y_start, one_column)
@@ -1301,7 +1304,7 @@ class BoxWidget(BoxWidgetMoth):
         self._width_in = max_in_width
         self._width_out = max_out_width
 
-        titles_dict = self._choose_title_layout(
+        titles_dict = self._choose_box_layout(
             height_for_ports, height_for_ports_one,
             max_in_width, max_out_width)
 

@@ -521,14 +521,14 @@ def split_group(group_id: int, on_place=False):
             if box.get_current_port_mode() is PortMode.OUTPUT:
                 canvas.scene.add_box_to_animation(
                     box,
-                    ex_rect.right() + (full_width - ex_rect.width()) / 2
-                        - box.boundingRect().width(),
-                    ex_rect.y())
+                    int(ex_rect.right() + (full_width - ex_rect.width()) / 2
+                        - box.boundingRect().width()),
+                    int(ex_rect.y()))
             else:
                 canvas.scene.add_box_to_animation(
                     box,
-                    ex_rect.left() - (full_width - ex_rect.width()) / 2,
-                    ex_rect.y())
+                    int(ex_rect.left() - (full_width - ex_rect.width()) / 2),
+                    int(ex_rect.y()))
 
     QTimer.singleShot(0, canvas.scene.update)
 
