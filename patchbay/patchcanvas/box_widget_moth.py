@@ -680,15 +680,12 @@ class BoxWidgetMoth(QGraphicsItem):
         QGraphicsItem.mouseReleaseEvent(self, event)
     
     def fix_pos(self, check_others=False):
-        # self.setX(round(self.x()))
-        # self.setY(round(self.y()))
         x, y = int(self.x()), int(self.y())
         if self._is_hardware:
             x -= canvas.theme.hardware_rack_width
             y -= canvas.theme.hardware_rack_width
 
         if check_others:
-            print('simmba')
             new_x, new_y = nearest_on_grid_check_others((x, y), self)
         else:
             new_x, new_y = nearest_on_grid((x, y))
@@ -990,7 +987,7 @@ class BoxWidgetMoth(QGraphicsItem):
                         side = 9
                         offset = 4
                         ypos = self._height - offset
-                        
+
                         triangle = QPolygonF()
                         if port_mode is PortMode.INPUT:
                             xpos = offset
@@ -1005,7 +1002,7 @@ class BoxWidgetMoth(QGraphicsItem):
                     else:
                         side = 6
                         xpos = 6
-                        ypos = self._header_height
+                        ypos = self._height - side * 2 - 2
 
                         if port_mode is PortMode.OUTPUT:
                             xpos = self._width - (xpos + 2 * side)
