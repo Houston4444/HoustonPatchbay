@@ -51,6 +51,7 @@ from .utils import nearest_on_grid
 from .box_widget import BoxWidget
 from .port_widget import PortWidget
 from .line_widget import LineWidget
+from .grouped_lines_widget import GroupedLinesWidget
 from .hidden_conn_widget import HiddenConnWidget
 from .theme_manager import ThemeManager
 from .scene import PatchScene
@@ -1121,6 +1122,16 @@ def connect_ports(connection_id: int, group_out_id: int, port_out_id: int,
     in_port_wg.parentItem().add_line_to_box(connection.widget)
     out_port_wg.add_line_to_port(connection.widget)
     in_port_wg.add_line_to_port(connection.widget)
+
+    grouped_conn_widget = canvas.grouped_conns.get(
+        (group_out_id, group_in_id, out_port.port_type))
+    if grouped_conn_widget is None:
+        grouped_conn_widget = GroupedLinesWidget(
+            group_out_id, group_in_id, out_port.port_type)
+        canvas.grouped_conns[(group_out_id, group_in_id, out_port.port_type)] = grouped_conn_widget
+        canvas.scene.addItem(grouped_conn_widget)
+
+    grouped_conn_widget.update_lines_pos()
 
     canvas.qobject.connection_added.emit(connection_id)
     

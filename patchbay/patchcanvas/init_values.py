@@ -36,6 +36,7 @@ if TYPE_CHECKING:
     from .line_widget import LineWidget
     from .patchcanvas import CanvasObject
     from .hidden_conn_widget import HiddenConnWidget
+    from .grouped_lines_widget import GroupedLinesWidget
 
 
 # Maximum Id for a plugin, treated as invalid/zero if above this value
@@ -243,8 +244,8 @@ class CanvasOptionsObject:
     semi_hide_opacity = 0.20
     default_zoom = 100
     box_grouped_auto_layout_ratio = 1.0
-    cell_x = 40
-    cell_y = 16
+    cell_x = 20
+    cell_y = 10
     cell_margin = 2
 
 
@@ -413,6 +414,7 @@ class Canvas:
         self.port_list = list[PortObject]()
         self.portgrp_list = list[PortgrpObject]()
         self.connection_list = list[ConnectionObject]()
+        self.grouped_conns = {}
 
         self._groups_dict = dict[int, GroupObject]()
         self._all_boxes = []
@@ -430,6 +432,7 @@ class Canvas:
         self.last_z_value = 0
         self.initial_pos = QPointF(0, 0)
         self.size_rect = QRectF()
+        self.antialiasing = True
 
         self.is_line_mov = False
         self.loading_items = False
@@ -447,6 +450,7 @@ class Canvas:
             self.features = CanvasFeaturesObject()
             
             self._all_boxes = list[BoxWidget]()
+            self.grouped_conns = dict[(int, int), GroupedLinesWidget]()
 
     def callback(self, action: CallbackAct, value1: int,
                  value2: int, value_str: str):

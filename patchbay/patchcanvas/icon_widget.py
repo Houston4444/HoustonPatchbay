@@ -21,7 +21,7 @@ import logging
 import os
 
 from PyQt5.QtCore import QRectF, QFile
-from PyQt5.QtGui import QPainter, QIcon
+from PyQt5.QtGui import QPainter, QIcon, QPixmap
 from PyQt5.QtSvg import QGraphicsSvgItem, QSvgRenderer
 from PyQt5.QtWidgets import QGraphicsPixmapItem
 
@@ -30,6 +30,7 @@ from .init_values import canvas, CanvasItemType, BoxType, PortMode
 
 _logger = logging.getLogger(__name__)
 _app_icons_cache = {}
+_icons_pixmaps_cache = dict[QIcon, dict[int, QPixmap]]()
 
 
 def get_app_icon(icon_name: str) -> QIcon:
@@ -72,6 +73,8 @@ class IconPixmapWidget(QGraphicsPixmapItem):
         self.x_offset = 4
         self.y_offset = 4
 
+        self._pixmaps_cache = dict[int, QPixmap]()
+
         self.set_icon(box_type, icon_name)
 
     def set_icon(self, box_type: BoxType, name: str, port_mode=PortMode.NULL):
@@ -79,17 +82,36 @@ class IconPixmapWidget(QGraphicsPixmapItem):
 
         if not self.icon.isNull():
             scale = canvas.scene.get_zoom_scale()
-            pixmap = self.icon.pixmap(int(0.5 + 24 * scale),
-                                      int(0.5 + 24 * scale))
+            pix_size = int(0.5 + 24 * scale)
+            
+            self_icon_pix_cache = _icons_pixmaps_cache.get(self.icon)
+            if self_icon_pix_cache is None:
+                self_icon_pix_cache = dict[int, QPixmap]()
+                _icons_pixmaps_cache[self.icon] = self_icon_pix_cache
+                
+            pixmap = self_icon_pix_cache.get(pix_size)
+            if pixmap is None:
+                pixmap = self.icon.pixmap(pix_size, pix_size)
+                self_icon_pix_cache[pix_size] = pixmap
+
             self.setPixmap(pixmap)
+
             self.setScale(1.0 / scale)
             self.setPos(4.0, 4.0)
+        else:
+            _icons_pixmaps_cache[self.icon] = {}
 
     def update_zoom(self, scale: float):
         if self.icon is None or scale <= 0.0:
             return
 
-        pixmap = self.icon.pixmap(int(0.5 + 24 * scale), int(0.5 + 24 * scale))
+        pix_size = int(0.5 + 24 *scale)
+        pixmap = _icons_pixmaps_cache[self.icon].get(pix_size)
+        
+        if pixmap is None:
+            pixmap = self.icon.pixmap(pix_size, pix_size)
+            _icons_pixmaps_cache[self.icon][pix_size] = pixmap
+
         self.setPixmap(pixmap)
         self.setScale(1.0 / scale)
 

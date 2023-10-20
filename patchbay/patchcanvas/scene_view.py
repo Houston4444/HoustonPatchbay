@@ -1,6 +1,5 @@
-
 from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QMouseEvent
+from PyQt5.QtGui import QMouseEvent, QPainter
 from PyQt5.QtWidgets import QApplication, QGraphicsView
 
 # taken from carla (falktx)
@@ -8,6 +7,7 @@ class PatchGraphicsView(QGraphicsView):
     def __init__(self, parent):
         super().__init__(parent)
         self.setTransformationAnchor(QGraphicsView.AnchorUnderMouse)
+        self.setRenderHint(QPainter.Antialiasing, True)
 
         self._panning = False
 

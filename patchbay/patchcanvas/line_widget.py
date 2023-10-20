@@ -100,6 +100,8 @@ class LineWidget(QGraphicsPathItem):
 
         mid_x = min(mid_x, max(200.0, x_diff / 2))
 
+        return
+
         path = QPainterPath(item1_con_pos)
         path.cubicTo(item1_x + mid_x, item1_y,
                      item2_x - mid_x, item2_y,
@@ -201,23 +203,28 @@ class LineWidget(QGraphicsPathItem):
             else:
                 color_main = tha.color_main
         
-            self.setPen(QPen(QBrush(color_main), tha.base_width, Qt.SolidLine, Qt.FlatCap))
+            pen = QPen(QBrush(color_main), tha.base_width, Qt.SolidLine, Qt.FlatCap)
+            pen.setCosmetic(True)
+            self.setPen(pen)
         
+    # def paint(self, painter, option, widget):
+    #     if canvas.loading_items:
+    #         return
+    #     # return
+    #     painter.save()
+    #     painter.setRenderHint(QPainter.Antialiasing, True)
+
+    #     QGraphicsPathItem.paint(self, painter, option, widget)
+
+    #     cosm_pen = QPen(self.pen())
+    #     cosm_pen.setCosmetic(True)
+    #     cosm_pen.setWidthF(1.00001)
+
+    #     painter.setPen(cosm_pen)
+    #     painter.setBrush(Qt.NoBrush)
+    #     painter.drawPath(self.path())
+
+    #     painter.restore()
+
     def paint(self, painter, option, widget):
-        if canvas.loading_items:
-            return
-        
-        painter.save()
-        painter.setRenderHint(QPainter.Antialiasing, True)
-
-        QGraphicsPathItem.paint(self, painter, option, widget)
-
-        cosm_pen = QPen(self.pen())
-        cosm_pen.setCosmetic(True)
-        cosm_pen.setWidthF(1.00001)
-
-        painter.setPen(cosm_pen)
-        painter.setBrush(Qt.NoBrush)
-        painter.drawPath(self.path())
-
-        painter.restore()
+        return

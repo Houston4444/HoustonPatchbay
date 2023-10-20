@@ -21,6 +21,7 @@ import inspect
 import logging
 from math import ceil
 from struct import pack
+import time
 from sip import voidptr
 import sys
 from enum import Enum
@@ -34,6 +35,7 @@ from .init_values import (
     CanvasItemType,
     GroupObject,
     PortObject,
+    PortType,
     PortgrpObject,
     InlineDisplay,
     canvas,
@@ -209,6 +211,11 @@ class BoxWidgetMoth(QGraphicsItem):
         # self.update_positions()
 
         canvas.scene.addItem(self)
+        
+        self._measure_timer = QTimer()
+        self._measure_timer.setSingleShot(True)
+        self._measure_timer.timeout.connect(self._measure_timer_finished)
+        self._last_measure_time = 0.0
         # QTimer.singleShot(0, self.fix_pos)
 
     def get_group_id(self):
@@ -450,12 +457,20 @@ class BoxWidgetMoth(QGraphicsItem):
 
     def repaint_lines(self, forced=False, fast_move=False):
         if forced or self.pos() != self._last_pos:
-            for line in self._connection_lines:                
-                line.update_line_pos(fast_move=fast_move)
+            # for line in self._connection_lines:                
+            #     line.update_line_pos(fast_move=fast_move)
+
             for port in self._port_list:
                 if port.hidden_conn_widget is not None:
                     port.hidden_conn_widget.update_line_pos()
-
+            
+            for port_type in PortType:
+                for key, value in canvas.grouped_conns.items():
+                    group_out_id, group_in_id, gpc_port_type = key
+                    if gpc_port_type is port_type:
+                        if self._group_id in (group_out_id, group_in_id):
+                            value.update_lines_pos()
+            
         self._last_pos = self.pos()
 
     def reset_lines_z_value(self, under: bool):
@@ -641,13 +656,14 @@ class BoxWidgetMoth(QGraphicsItem):
                 canvas.scene.set_cursor(QCursor(Qt.SizeAllCursor))
                 self._cursor_moving = True
                 canvas.scene.fix_temporary_scroll_bars()
-
             QGraphicsItem.mouseMoveEvent(self, event)
 
             for item in canvas.scene.get_selected_boxes():
                 item.repaint_lines(fast_move=True)
 
             canvas.scene.resize_the_scene()
+            self._last_measure_time = time.time()
+            QTimer.singleShot(0, self._measure_timer_finished)
             return
 
         QGraphicsItem.mouseMoveEvent(self, event)
@@ -678,6 +694,12 @@ class BoxWidgetMoth(QGraphicsItem):
         self._cursor_moving = False
         
         QGraphicsItem.mouseReleaseEvent(self, event)
+    
+    def _measure_timer_finished(self):
+        now = time.time()
+
+        canvas.antialiasing = bool(now - self._last_measure_time < 0.060)
+        canvas.scene._view.setRenderHint(QPainter.Antialiasing, canvas.antialiasing)
     
     def fix_pos(self, check_others=False):
         x, y = int(self.x()), int(self.y())

@@ -118,8 +118,8 @@ class GridWidget(QGraphicsPathItem):
         true_cell_x = float(options.cell_x)
         true_cell_y = float(options.cell_y)
         
-        cell_x_min = 1
-        cell_y_min = 1
+        cell_x_min = 100
+        cell_y_min = 100
         
         cell_x = options.cell_x * math.ceil(cell_x_min / options.cell_x)
         cell_y = options.cell_y * math.ceil(cell_y_min / options.cell_y)

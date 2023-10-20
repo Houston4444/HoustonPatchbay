@@ -21,6 +21,7 @@
 # Imports (Globals)
 import logging
 from math import floor
+from shutil import move
 import time
 from typing import Iterator
 
@@ -113,7 +114,8 @@ class PatchSceneMoth(QGraphicsScene):
         self.wrapping_boxes = list[WrappingBox]()
         self._MOVE_DURATION = 0.300 # 300ms
         self._MOVE_TIMER_INTERVAL = 20 # 20 ms step animation (50 Hz)
-        self._move_timer_start_at = 0
+        self._move_timer_start_at = 0.0
+        self._move_timer_last_time = 0.0
         self._move_box_timer = QTimer()
         self._move_box_timer.setInterval(self._MOVE_TIMER_INTERVAL)
         self._move_box_timer.timeout.connect(self.move_boxes_animation)
@@ -130,9 +132,10 @@ class PatchSceneMoth(QGraphicsScene):
 
         self.flying_connectable = None
 
-        self._grid = GridWidget(self, style='chess')
-        self._grid.update_path()
-        self.sceneRectChanged.connect(self._grid.update_path)
+        self._grid = None
+        # self._grid = GridWidget(self, style='chess')
+        # self._grid.update_path()
+        # self.sceneRectChanged.connect(self._grid.update_path)
 
         self.addItem(self._grid)
 
@@ -330,8 +333,14 @@ class PatchSceneMoth(QGraphicsScene):
         # Animation is nice but not the priority.
         # Do not ensure all steps are played
         # but just move the box where it has to go now
-        time_since_start = time.time() - self._move_timer_start_at
+        move_time = time.time()
+        time_since_start = move_time - self._move_timer_start_at
         ratio = min(1.0, time_since_start / self._MOVE_DURATION)
+        
+        if (move_time - self._move_timer_last_time
+                > 0.002 * self._MOVE_TIMER_INTERVAL):
+            canvas.antialiasing = False
+        self._move_timer_last_time = move_time
 
         for moving_box in self.move_boxes:
             if moving_box.widget is not None:
@@ -358,6 +367,7 @@ class PatchSceneMoth(QGraphicsScene):
         if time_since_start >= self._MOVE_DURATION:
             # Animation is finished
             self._move_box_timer.stop()
+            canvas.antialiasing = True
             
             # box update positions is forbidden while widget is in self.move_boxes
             # So we copy the list before to clear it
@@ -402,6 +412,7 @@ class PatchSceneMoth(QGraphicsScene):
         if not self._move_box_timer.isActive():
             moving_box.start_time = 0.0
             self._move_timer_start_at = time.time()
+            self._move_timer_last_time = self._move_timer_start_at
             self._move_box_timer.start()
 
     def add_box_to_animation_wrapping(self, box_widget: BoxWidget, wrap: bool):
@@ -550,7 +561,7 @@ class PatchSceneMoth(QGraphicsScene):
         for box in canvas.list_boxes():
             if box.top_icon:
                 box.top_icon.update_zoom(ratio)
-        
+
         self.scale_changed.emit(transform.m11())
 
     def zoom_fit(self):
