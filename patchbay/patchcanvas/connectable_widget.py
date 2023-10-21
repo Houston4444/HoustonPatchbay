@@ -8,6 +8,7 @@ from PyQt5.QtWidgets import QGraphicsItem
 from .init_values import (CallbackAct, ConnectableObject, ConnectionObject, PortMode, PortSubType,
                           PortType, canvas, options)
 from .line_move_widget import LineMoveWidget
+from .grouped_lines_widget import GroupedLinesWidget, GroupOutInsDict
 
 if TYPE_CHECKING:
     from .box_widget import BoxWidget
@@ -130,10 +131,22 @@ class ConnectableWidget(QGraphicsItem):
         self._line_mov_list = self._line_mov_list[:self_ports_len]
         
     def reset_dot_lines(self):
+        gp_outs_ins = dict[int, set[int]]()
+
         for connection in self._dotcon_list:
-            if connection.widget.ready_to_disc:
-                connection.widget.ready_to_disc = False
-                connection.widget.update_line_gradient()
+            if connection.ready_to_disc:
+                connection.ready_to_disc = False
+
+                ins_set = gp_outs_ins.get(connection.group_out_id)
+                if ins_set is None:
+                    ins_set = set()
+                    gp_outs_ins[connection.group_out_id] = ins_set
+                ins_set.add(connection.group_in_id)
+
+        for group_out_id, group_in_ids in gp_outs_ins.items():
+            for group_in_id in group_in_ids:
+                GroupedLinesWidget.connections_changed(
+                    group_out_id, group_in_id)
 
         for line_mov in self._line_mov_list:
             line_mov.ready_to_disc = False
@@ -264,10 +277,15 @@ class ConnectableWidget(QGraphicsItem):
                         line_mov.ready_to_disc = not line_mov.ready_to_disc
                         line_mov.update_line_pos(event.scenePos())
 
+                    gp_out_ins = GroupOutInsDict()
                     for connection in self._dotcon_list:
                         if connection in canvas.list_connections(self._po):
-                            connection.widget.ready_to_disc = True
-                            connection.widget.update_line_gradient()
+                            connection.ready_to_disc = True
+                            gp_out_ins.add_group_ids(
+                                connection.group_out_id, connection.group_in_id)
+                    
+                    gp_out_ins.send_changes()
+
                 else:
                     box_under = canvas.scene.get_box_at(event.scenePos())
                     if box_under is not None and box_under is not self.parentItem():
@@ -353,10 +371,15 @@ class ConnectableWidget(QGraphicsItem):
                 self.reset_line_mov_positions()
 
                 if item.get_port_mode() is self._port_mode:
+                    gp_out_ins = GroupOutInsDict()
+                    
                     for connection in canvas.list_connections(self._po):
-                        connection.widget.ready_to_disc = True
-                        connection.widget.update_line_gradient()
+                        connection.ready_to_disc = True
                         self._dotcon_list.append(connection)
+                        gp_out_ins.add_group_ids(
+                            connection.group_out_id, connection.group_in_id)
+
+                    gp_out_ins.send_changes()
 
                     for line_mov in self._line_mov_list:
                         line_mov.ready_to_disc = True
@@ -389,6 +412,8 @@ class ConnectableWidget(QGraphicsItem):
 
                     self._dotcon_list.clear()
                     symetric_con_list = []
+                    gp_out_ins = GroupOutInsDict()
+                    
                     for portself_id in self._port_ids:
                         for porthover_id in self._hover_item.get_port_ids():
                             for connection in canvas.list_connections(group_id=self._group_id):
@@ -404,16 +429,25 @@ class ConnectableWidget(QGraphicsItem):
                                         symetric_con_list.append(connection)
                                     else:
                                         self._dotcon_list.append(connection)
-                                        connection.widget.ready_to_disc = True
-                                        connection.widget.update_line_gradient()
+                                        connection.ready_to_disc = True
+                                        gp_out_ins.add_group_ids(
+                                            connection.group_out_id, connection.group_in_id)
+
+                    gp_out_ins.send_changes()
 
                     biggest_list = (self._port_ids if len(self._port_ids) >= hover_len
                                     else self._hover_item.get_port_ids())
 
                     if len(symetric_con_list) == len(biggest_list):
+                        gp_out_ins = GroupOutInsDict()
+                        
                         for connection in self._dotcon_list:
-                            connection.widget.ready_to_disc = True
-                            connection.widget.update_line_gradient()
+                            connection.ready_to_disc = True
+                            gp_out_ins.add_group_ids(
+                                connection.group_out_id, connection.group_in_id)
+                            
+                        gp_out_ins.send_changes()
+
                         for line_mov in self._line_mov_list:
                             line_mov.ready_to_disc = True
         else:

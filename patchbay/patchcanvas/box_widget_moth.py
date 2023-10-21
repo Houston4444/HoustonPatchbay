@@ -17,7 +17,6 @@
 #
 # For a full copy of the GNU General Public License see the doc/GPL.txt file.
 
-import inspect
 import logging
 from math import ceil
 from struct import pack
@@ -53,6 +52,7 @@ from .icon_widget import IconSvgWidget, IconPixmapWidget
 from .port_widget import PortWidget
 from .portgroup_widget import PortgroupWidget
 from .line_widget import LineWidget
+from .grouped_lines_widget import GroupedLinesWidget
 from .theme import BoxStyleAttributer
 
 _logger = logging.getLogger(__name__)
@@ -457,31 +457,24 @@ class BoxWidgetMoth(QGraphicsItem):
 
     def repaint_lines(self, forced=False, fast_move=False):
         if forced or self.pos() != self._last_pos:
-            # for line in self._connection_lines:                
-            #     line.update_line_pos(fast_move=fast_move)
-
             for port in self._port_list:
                 if port.hidden_conn_widget is not None:
                     port.hidden_conn_widget.update_line_pos()
-            
-            for port_type in PortType:
-                for key, value in canvas.grouped_conns.items():
-                    group_out_id, group_in_id, gpc_port_type = key
-                    if gpc_port_type is port_type:
-                        if self._group_id in (group_out_id, group_in_id):
-                            value.update_lines_pos()
-            
+
+            for gp_lines in GroupedLinesWidget.widgets_for_box(
+                    self._group_id, self._current_port_mode):
+                gp_lines.update_lines_pos(fast_move=fast_move)
+
         self._last_pos = self.pos()
 
     def reset_lines_z_value(self, under: bool):
         if self._current_port_mode is not PortMode.BOTH:
             return
         
-        for connection in canvas.list_connections(
-                group_in_id=self._group_id, group_out_id=self._group_id):
-            if connection.widget is not None:
-                connection.widget.setZValue(
-                    self.zValue() - 1 if under else self.zValue() + 1)
+        for lines in GroupedLinesWidget.widgets_for_box(
+                self._group_id, PortMode.BOTH):
+            lines.setZValue(self.zValue() - 1 if under
+                            else self.zValue() + 1)
 
     def semi_hide(self, yesno: bool):
         self._is_semi_hidden = yesno

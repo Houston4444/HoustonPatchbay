@@ -193,18 +193,6 @@ class Group:
 
         return (box_type, icon_name)
 
-    def semi_hide(self, yesno: bool):
-        if not self.in_canvas:
-            return 
-        
-        patchcanvas.semi_hide_group(self.group_id, yesno)
-
-    def set_in_front(self):
-        if not self.in_canvas:
-            return
-        
-        patchcanvas.set_group_in_front(self.group_id)
-
     def get_number_of_boxes(self) -> int:
         if not self.in_canvas:
             return 0

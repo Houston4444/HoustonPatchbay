@@ -27,6 +27,7 @@ from PyQt5.QtCore import (pyqtSlot, QObject, QPointF, QRectF,
 
 # local imports
 from .init_values import (
+    ConnectionThemeState,
     PortSubType,
     PortType,
     canvas,
@@ -92,6 +93,15 @@ class CanvasObject(QObject):
         QObject.__init__(self, parent)
         self.groups_to_join = list[tuple[GroupObject, PortMode]]()
         self.move_boxes_finished.connect(self.join_after_move)
+        self.connect_update_timer = QTimer()
+        self.connect_update_timer.setInterval(0)
+        self.connect_update_timer.setSingleShot(True)
+        self.connect_update_timer.timeout.connect(
+            self._connect_update_timer_finished)
+
+    @pyqtSlot()
+    def _connect_update_timer_finished(self):
+        GroupedLinesWidget.change_all_prepared_conns()
 
     @pyqtSlot()
     def join_after_move(self):
@@ -649,9 +659,10 @@ def redraw_all_groups(force_no_prevent_overlap=False):
             without_connections=True,
             prevent_overlap=False)
     
-    for connection in canvas.list_connections():
-        if connection.widget is not None:
-            connection.widget.update_line_pos()
+    for group_out in canvas.group_list:
+        for group_in in canvas.group_list:
+            GroupedLinesWidget.connections_changed(
+                group_out.group_id, group_in.group_id)
     
     if canvas.scene is None:
         options.elastic = elastic
@@ -1113,26 +1124,24 @@ def connect_ports(connection_id: int, group_out_id: int, port_out_id: int,
     connection.port_in_id = port_in_id
     connection.group_out_id = group_out_id
     connection.port_out_id = port_out_id
-    connection.widget = LineWidget(connection_id, out_port_wg, in_port_wg)
+    connection.port_type = out_port.port_type
+    connection.ready_to_disc = False
+    connection.in_selected = False
+    connection.out_selected = False
+    connection.widget = None
+    # connection.widget = LineWidget(connection_id, out_port_wg, in_port_wg)
 
-    canvas.scene.addItem(connection.widget)
+    # canvas.scene.addItem(connection.widget)
 
     canvas.add_connection(connection)
-    out_port_wg.parentItem().add_line_to_box(connection.widget)
-    in_port_wg.parentItem().add_line_to_box(connection.widget)
-    out_port_wg.add_line_to_port(connection.widget)
-    in_port_wg.add_line_to_port(connection.widget)
+    # out_port_wg.parentItem().add_line_to_box(connection.widget)
+    # in_port_wg.parentItem().add_line_to_box(connection.widget)
+    out_port_wg.add_connection_to_port(connection)
+    in_port_wg.add_connection_to_port(connection)
 
-    grouped_conn_widget = canvas.grouped_conns.get(
-        (group_out_id, group_in_id, out_port.port_type))
-    if grouped_conn_widget is None:
-        grouped_conn_widget = GroupedLinesWidget(
-            group_out_id, group_in_id, out_port.port_type)
-        canvas.grouped_conns[(group_out_id, group_in_id, out_port.port_type)] = grouped_conn_widget
-        canvas.scene.addItem(grouped_conn_widget)
-
-    grouped_conn_widget.update_lines_pos()
-
+    # GroupedLinesWidget.connections_changed(group_out_id, group_in_id)
+    GroupedLinesWidget.prepare_conn_changes(group_out_id, group_in_id)
+    canvas.qobject.connect_update_timer.start()
     canvas.qobject.connection_added.emit(connection_id)
     
     if canvas.loading_items:
@@ -1149,16 +1158,21 @@ def disconnect_ports(connection_id: int):
         return
     
     tmp_conn = connection.copy_no_widget()
-    line = connection.widget
+    # line = connection.widget
+    group_out_id = connection.group_out_id
+    group_in_id = connection.group_in_id
     canvas.remove_connection(connection)
+    
+    GroupedLinesWidget.prepare_conn_changes(group_out_id, group_in_id)
+    canvas.qobject.connect_update_timer.start()
     canvas.qobject.connection_removed.emit(connection_id)
 
     out_port = canvas.get_port(tmp_conn.group_out_id, tmp_conn.port_out_id)
     in_port = canvas.get_port(tmp_conn.group_in_id, tmp_conn.port_in_id)
     
     if out_port is None or in_port is None:
-        canvas.scene.removeItem(line)
-        del line
+        # canvas.scene.removeItem(line)
+        # del line
     
         _logger.info(f"{_logging_str} - connection cleaned after its ports")
         return
@@ -1169,13 +1183,13 @@ def disconnect_ports(connection_id: int):
         _logger.critical(f"{_logging_str} - port has no widget")
         return
 
-    item1.parentItem().remove_line_from_box(connection)
-    item2.parentItem().remove_line_from_box(connection)
-    item1.remove_line_from_port(connection)
-    item2.remove_line_from_port(connection)
+    # item1.parentItem().remove_line_from_box(connection)
+    # item2.parentItem().remove_line_from_box(connection)
+    item1.remove_connection_from_port(connection)
+    item2.remove_connection_from_port(connection)
 
-    canvas.scene.removeItem(line)
-    del line
+    # canvas.scene.removeItem(line)
+    # del line
 
     if canvas.loading_items:
         return
@@ -1299,39 +1313,22 @@ def set_default_zoom(default_zoom: int):
     options.default_zoom = default_zoom
 
 @patchbay_api
-def semi_hide_group(group_id: int, yesno: bool):
-    group = canvas.get_group(group_id)
-    if group is None:
-        return
+def semi_hide_groups(group_ids: set[int]):
+    # ZValues are set this way : 
+    #   0: semi hidden boxes
+    #   1: semi hidden connections
+    #   2: highlighted connections
+    #   3: highlighted boxes
 
-    for widget in group.widgets:
-        if widget is not None:
-            widget.semi_hide(yesno)
-
-@patchbay_api
-def semi_hide_connection(connection_id: int, yesno: bool):
-    connection = canvas.get_connection(connection_id)
-    if connection and connection.widget is not None:
-        connection.widget.semi_hide(yesno)
-
-@patchbay_api
-def set_group_in_front(group_id: int):
-    canvas.last_z_value += 1
-    group = canvas.get_group(group_id)
-    if group is None:
-        return
+    for group in canvas.group_list:
+        semi_hidden = group.group_id in group_ids
+        for widget in group.widgets:
+            if widget is not None:
+                widget.semi_hide(semi_hidden)
+                widget.setZValue(0.0 if semi_hidden else 3.0)
     
-    for widget in group.widgets:
-        if widget is not None:
-            widget.setZValue(canvas.last_z_value)
-
-@patchbay_api
-def set_connection_in_front(connection_id: int):
-    canvas.last_z_value += 1
-    
-    connection = canvas.get_connection(connection_id)
-    if connection and connection.widget is not None:
-        connection.widget.setZValue(canvas.last_z_value)
+    GroupedLinesWidget.groups_semi_hidden(group_ids)
+    canvas.last_z_value = 3
 
 @patchbay_api
 def select_port(group_id: int, port_id: int):
@@ -1402,9 +1399,7 @@ def set_semi_hide_opacity(opacity: float):
     for box in canvas.list_boxes():
         box.update_opacity()
                 
-    for conn in canvas.list_connections():
-        if conn.widget is not None:
-            conn.widget.update_line_gradient()
+    GroupedLinesWidget.update_opacity()
 
 @patchbay_api
 def set_optional_gui_state(group_id: int, visible: bool):

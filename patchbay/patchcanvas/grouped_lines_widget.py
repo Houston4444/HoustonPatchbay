@@ -19,7 +19,7 @@
 
 from enum import Enum
 import time
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, Optional, Iterator
 
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import (QColor, QLinearGradient, QPainter,
@@ -27,16 +27,38 @@ from PyQt5.QtGui import (QColor, QLinearGradient, QPainter,
 from PyQt5.QtWidgets import QGraphicsPathItem
 
 from .init_values import (
-    GroupObject,
+    ConnectionThemeState,
     canvas,
     options,
     CanvasItemType,
-    CallbackAct,
-    PortType)
+    PortType,
+    PortMode)
 
+
+_groups_to_check = set[tuple[int, int]]()
+_all_lines_widgets = {}
 if TYPE_CHECKING:
-    from .port_widget import PortWidget
-    from .box_widget import BoxWidget
+    _all_lines_widgets = dict[
+        tuple[int, int],
+        dict[PortType, dict[ConnectionThemeState,
+                            'GroupedLinesWidget']]]()
+
+
+class GroupOutInsDict(dict):
+    def __init__(self):
+        dict.__init__(self)
+    
+    def add_group_ids(self, group_out_id: int, group_in_id: int):
+        gp_set: Optional[set] = self.get(group_out_id)
+        if gp_set is None:
+            self[group_out_id] = gp_set = set()
+        gp_set.add(group_in_id)
+        
+    def send_changes(self):
+        for group_out_id, group_in_ids in self.items():
+            for group_in_id in group_in_ids:
+                GroupedLinesWidget.connections_changed(
+                    group_out_id, group_in_id)
 
 
 class _ThemeAttributes:
@@ -48,7 +70,8 @@ class _ThemeAttributes:
 
 class GroupedLinesWidget(QGraphicsPathItem):
     def __init__(self, group_out_id: int, group_in_id: int,
-                 port_type: PortType):
+                 port_type: PortType,
+                 theme_state: ConnectionThemeState):
         ''' Class for connection line widget '''
         QGraphicsPathItem.__init__(self)
 
@@ -59,6 +82,7 @@ class GroupedLinesWidget(QGraphicsPathItem):
         self._semi_hidden = False        
         
         self._th_attribs: _ThemeAttributes = None
+        self._theme_state = theme_state
         self.update_theme()
         self.update_line_gradient()
 
@@ -66,24 +90,123 @@ class GroupedLinesWidget(QGraphicsPathItem):
         self.setGraphicsEffect(None)
         self.update_lines_pos()
 
+    @staticmethod
+    def prepare_conn_changes(group_out_id: int, group_in_id: int):
+        _groups_to_check.add((group_out_id, group_in_id))
+        
+    @staticmethod
+    def change_all_prepared_conns():
+        for gp_outin in _groups_to_check:
+            GroupedLinesWidget.connections_changed(*gp_outin)
+        _groups_to_check.clear()
+
+    @staticmethod
+    def connections_changed(group_out_id: int, group_in_id: int):
+        gp_dict = _all_lines_widgets.get((group_out_id, group_in_id))
+        if gp_dict is None:
+            gp_dict = {}
+            _all_lines_widgets[(group_out_id, group_in_id)] = gp_dict
+        
+        to_update = dict[PortType, set[ConnectionThemeState]]()
+        
+        for conn in canvas.list_connections(
+                group_out_id=group_out_id, group_in_id=group_in_id):
+            theme_state = conn.theme_state()
+
+            to_update_type = to_update.get(conn.port_type)
+            if to_update_type is None:
+                to_update_type = set()
+                to_update[conn.port_type] = to_update_type
+            to_update_type.add(theme_state)
+            
+            pt_dict = gp_dict.get(conn.port_type)
+            if pt_dict is None:
+                pt_dict = {}
+                gp_dict[conn.port_type] = pt_dict
+                
+            widget = pt_dict.get(theme_state)
+            if widget is None:
+                pt_dict[theme_state] = GroupedLinesWidget(
+                    group_out_id, group_in_id, conn.port_type,
+                    theme_state)
+                canvas.scene.addItem(pt_dict[theme_state])
+
+        for port_type in gp_dict.keys():
+            pt_dict = gp_dict.get(port_type)
+            if pt_dict is None:
+                continue
+
+            if port_type not in to_update.keys():
+                if pt_dict is not None:
+                    for widget in pt_dict.values():
+                        canvas.scene.removeItem(widget)
+                    pt_dict.clear()
+                continue
+            
+            attrs_to_del = set()
+            
+            for theme_state, widget in pt_dict.items():
+                if theme_state not in to_update[port_type]:
+                    canvas.scene.removeItem(widget)
+                    attrs_to_del.add(theme_state)
+                else:
+                    widget.update_theme()
+                    widget.update_lines_pos()
+                    
+            for attr_to_del in attrs_to_del:
+                pt_dict.__delitem__(attr_to_del)
+
+    @staticmethod
+    def widgets_for_box(
+            group_id: int, port_mode: PortMode) -> Iterator['GroupedLinesWidget']:
+        if port_mode is PortMode.OUTPUT:
+            gp_keys = [g for g in _all_lines_widgets if g[0] == group_id]
+        elif port_mode is PortMode.INPUT:
+            gp_keys = [g for g in _all_lines_widgets if g[1] == group_id]
+        elif port_mode is PortMode.BOTH:
+            gp_keys = [g for g in _all_lines_widgets if group_id in g]
+        
+        for gp_key in gp_keys:
+            for pt_dict in _all_lines_widgets[gp_key].values():
+                for widget in pt_dict.values():
+                    yield widget
+
+    @staticmethod
+    def groups_semi_hidden(group_ids: set[int]):
+        for gp_dict, pt_dict in _all_lines_widgets.items():
+            gp_out_id, gp_in_id = gp_dict
+            semi_hidden = (gp_out_id in group_ids and gp_in_id in group_ids)
+            
+            for tstate_dict in pt_dict.values():
+                for widget in tstate_dict.values():
+                    widget.semi_hide(semi_hidden)
+                    widget.setZValue(1.0 if semi_hidden else 2.0)
+
+    @staticmethod
+    def update_opacity():
+        for pt_dict in _all_lines_widgets.values():
+            for tstate_dict in pt_dict.values():
+                for widget in tstate_dict.values():
+                    if widget._semi_hidden:
+                        widget.update_line_gradient()
+
     def semi_hide(self, yesno: bool):
         self._semi_hidden = yesno
         self.update_line_gradient()
 
-    def update_lines_pos(self):
+    def update_lines_pos(self, fast_move=False):
         paths = dict[tuple[float, float], QPainterPath]()
 
         for conn in canvas.list_connections(
                 group_out_id=self._group_out_id,
                 group_in_id=self._group_in_id):
-            port_out = canvas.get_port(self._group_out_id, conn.port_out_id)
-            # group_out = canvas.get_group(self._group_out_id)
-            # if group_out.group_name == 'SamplesFX3Reverb (In)':
-            #     print('Pofo', port_out.port_name, port_in.port_name)
-            
-            if port_out.port_type is not self._port_type:
+            if conn.port_type is not self._port_type:
                 continue
             
+            if conn.theme_state() is not self._theme_state:
+                continue
+            
+            port_out = canvas.get_port(self._group_out_id, conn.port_out_id)
             port_in = canvas.get_port(self._group_in_id, conn.port_in_id)
             
             port_out_con_pos = port_out.widget.connect_pos()
@@ -96,7 +219,7 @@ class GroupedLinesWidget(QGraphicsPathItem):
 
             if (item1_y, item2_y) in paths.keys():
                 # same coords, do not draw 2 times the same path.
-                # (both boxes are wrapped very probably).
+                # (both boxes are very probably wrapped).
                 continue
             
             existing_path = False
@@ -135,14 +258,20 @@ class GroupedLinesWidget(QGraphicsPathItem):
 
         self.setPath(main_path)
         
-        self.update_line_gradient()
+        if not fast_move:
+            # line gradient is not updated at mouse move event or when box 
+            # is moved by animation. It makes win few time and so avoid some
+            # graphic jerks.
+            self.update_line_gradient()
 
     def type(self) -> CanvasItemType:
         return CanvasItemType.BEZIER_LINE
 
     def update_theme(self):
         theme = canvas.theme.line
-        if self._port_type is PortType.AUDIO_JACK:
+        if self._theme_state is ConnectionThemeState.DISCONNECTING:
+            theme = theme.disconnecting
+        elif self._port_type is PortType.AUDIO_JACK:
             theme = theme.audio
         elif self._port_type is PortType.MIDI_JACK:
             theme = theme.midi
@@ -150,6 +279,9 @@ class GroupedLinesWidget(QGraphicsPathItem):
             theme = theme.alsa
         elif self._port_type is PortType.VIDEO:
             theme = theme.video
+
+        if self._theme_state is ConnectionThemeState.SELECTED:
+            theme = theme.selected
 
         tha = _ThemeAttributes()
         tha.base_pen = theme.fill_pen()
@@ -220,7 +352,7 @@ class GroupedLinesWidget(QGraphicsPathItem):
     #         painter.setRenderHint(QPainter.Antialiasing, True)
 
     #     # print('okelmz', painter.boundingRect())
-
+    #     print('dldlddlapp')
     #     QGraphicsPathItem.paint(self, painter, option, widget)
 
     #     cosm_pen = QPen(self.pen())

@@ -21,6 +21,7 @@
 # Imports (Global)
 import logging
 from math import floor
+import time
 from typing import TYPE_CHECKING
 
 from PyQt5.QtCore import Qt, QPointF, QRectF
@@ -29,10 +30,14 @@ from PyQt5.QtGui import (
     QLinearGradient, QColor)
 from PyQt5.QtWidgets import QGraphicsItem, QApplication
 
+from .grouped_lines_widget import GroupedLinesWidget
+
 
 # Imports (Custom)
 from .init_values import (
     CanvasItemType,
+    ConnectionObject,
+    ConnectionThemeState,
     PortObject,
     PortSubType,
     canvas,
@@ -89,6 +94,7 @@ class PortWidget(ConnectableWidget):
         self._loop_select_done = False
 
         self._lines_widgets = list[LineWidget]()
+        self._connections = list[ConnectionObject]()
         self._connect_pos = QPointF(0.0, 0.0)
         self._update_connect_pos()
 
@@ -204,6 +210,13 @@ class PortWidget(ConnectableWidget):
         if line in self._lines_widgets:
             self._lines_widgets.remove(line)
 
+    def add_connection_to_port(self, conn: ConnectionObject):
+        self._connections.append(conn)
+        
+    def remove_connection_from_port(self, conn: ConnectionObject):
+        if conn in self._connections:
+            self._connections.remove(conn)
+
     def setVisible(self, visible: bool):
         super().setVisible(visible)
         self._update_connect_pos()
@@ -222,12 +235,34 @@ class PortWidget(ConnectableWidget):
                 elif not self._portgrp_widget.changing_select_state:
                     self._portgrp_widget.ensure_selection_with_ports()
             
-            if self._lines_widgets:
-                for line in self._lines_widgets:
-                    line.update_line_gradient()
-                    if self.isSelected():
-                        line.setZValue(canvas.last_z_value)
-                canvas.last_z_value += 1
+            if self._connections:
+                other_group_ids = set[int]()
+                selected = self.isSelected()
+
+                if self._port_mode is PortMode.OUTPUT:
+                    for conn in self._connections:
+                        conn.out_selected = selected
+                        other_group_ids.add(conn.group_in_id)
+
+                    for in_group_id in other_group_ids:
+                        GroupedLinesWidget.connections_changed(
+                            self._group_id, in_group_id)
+                       
+                elif self._port_mode is PortMode.INPUT:
+                    for conn in self._connections:
+                        conn.in_selected = selected
+                        other_group_ids.add(conn.group_out_id)
+                
+                    for out_group_id in other_group_ids:
+                        GroupedLinesWidget.connections_changed(
+                            out_group_id, self._group_id)        
+            
+            # if self._lines_widgets:
+            #     for line in self._lines_widgets:
+            #         line.update_line_gradient()
+            #         if self.isSelected():
+            #             line.setZValue(canvas.last_z_value)
+            #     canvas.last_z_value += 1
 
             self.changing_select_state = False
 

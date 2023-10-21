@@ -20,3 +20,10 @@ Remplacer toutes les connexions widget par des groupes
 
     gérer la Z value (enregistrer Z value dans la connexion ?)
 
+
+Passage à GroupedConns:
+    # PortWidget add_line_to_port: pour itemChange (selected + in_front)
+    # set_opacity
+    set_connection_in_front:
+        pour filter_groups: Attention à RaySession
+        Gérer dans le patchcanvas directement

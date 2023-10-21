@@ -18,7 +18,7 @@
 # For a full copy of the GNU General Public License see the doc/GPL.txt file.
 
 from typing import TYPE_CHECKING, Iterator, Optional, Union
-from enum import IntEnum, IntFlag, auto
+from enum import Enum, IntEnum, IntFlag, auto
 
 from PyQt5.QtCore import QPointF, QRectF, QSettings, QPoint
 from PyQt5.QtWidgets import QGraphicsItem
@@ -214,6 +214,12 @@ class Direction(IntEnum):
     DOWN = 4
 
 
+class ConnectionThemeState(Enum):
+    NORMAL = 0
+    SELECTED = 1
+    DISCONNECTING = 2
+
+
 class CanvasItemType(IntEnum):
     # this enum is still here if really needed
     # but never really used.
@@ -356,6 +362,10 @@ class ConnectionObject:
     group_out_id: int
     port_out_id: int
     widget: object
+    port_type: PortType
+    ready_to_disc: bool
+    in_selected: bool
+    out_selected: bool
     if TYPE_CHECKING:
         widget: LineWidget
 
@@ -390,6 +400,12 @@ class ConnectionObject:
         else:
             return False
 
+    def theme_state(self) -> ConnectionThemeState:
+        if self.ready_to_disc:
+            return ConnectionThemeState.DISCONNECTING
+        if self.in_selected or self.out_selected:
+            return ConnectionThemeState.SELECTED
+        return ConnectionThemeState.NORMAL
 
 class ClipboardElement:
     port_type: PortType
@@ -450,7 +466,6 @@ class Canvas:
             self.features = CanvasFeaturesObject()
             
             self._all_boxes = list[BoxWidget]()
-            self.grouped_conns = dict[(int, int), GroupedLinesWidget]()
 
     def callback(self, action: CallbackAct, value1: int,
                  value2: int, value_str: str):
@@ -708,6 +723,7 @@ class Canvas:
             for conn in gp_out.values():
                 if not port_in_ids or conn.port_in_id in port_in_ids:
                     yield conn
+
 
 # -----------------------------
 
