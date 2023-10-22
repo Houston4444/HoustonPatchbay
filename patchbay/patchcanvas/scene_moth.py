@@ -805,13 +805,14 @@ class PatchSceneMoth(QGraphicsScene):
         
         if self._mouse_down_init:
             self._mouse_down_init = False
-            topmost = self.itemAt(event.scenePos(), self._view.transform())
-            self._mouse_rubberband = bool(
-                not isinstance(topmost, (BoxWidget, ConnectableWidget,
-                                         IconPixmapWidget, IconSvgWidget,
-                                         GroupedLinesWidget))
-                and int(event.buttons()))
-
+            self._mouse_rubberband = False
+            for item in self.items(event.scenePos()):
+                if isinstance(item, (BoxWidget, ConnectableWidget)):
+                    break
+            else:
+                if int(event.buttons()):
+                    self._mouse_rubberband = True
+            
         if self._mouse_rubberband:
             event.accept()
             pos = event.scenePos()
