@@ -29,7 +29,6 @@ from PyQt5.QtGui import QCursor, QPixmap, QPolygonF, QBrush, QPainter
 from PyQt5.QtWidgets import (QGraphicsRectItem, QGraphicsScene, QApplication,
                              QGraphicsView, QGraphicsItem)
 
-
 # Imports (locals)
 from .init_values import (
     AliasingReason,
@@ -46,6 +45,7 @@ from .connectable_widget import ConnectableWidget
 from .line_widget import LineWidget
 from .icon_widget import IconPixmapWidget, IconSvgWidget
 from .grid import GridWidget
+from .grouped_lines_widget import GroupedLinesWidget
 
 _logger = logging.getLogger(__name__)
 
@@ -806,9 +806,10 @@ class PatchSceneMoth(QGraphicsScene):
         if self._mouse_down_init:
             self._mouse_down_init = False
             topmost = self.itemAt(event.scenePos(), self._view.transform())
-            self._mouse_rubberband = (
+            self._mouse_rubberband = bool(
                 not isinstance(topmost, (BoxWidget, ConnectableWidget,
-                                         IconPixmapWidget, IconSvgWidget))
+                                         IconPixmapWidget, IconSvgWidget,
+                                         GroupedLinesWidget))
                 and int(event.buttons()))
 
         if self._mouse_rubberband:

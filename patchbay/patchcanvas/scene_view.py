@@ -4,6 +4,7 @@ from PyQt5.QtWidgets import QApplication, QGraphicsView, QScrollBar
 
 from .init_values import AliasingReason, canvas
 
+
 class CustomScrollBar(QScrollBar):
     def __init__(self, orientation, parent):
         QScrollBar.__init__(self, orientation, parent)
