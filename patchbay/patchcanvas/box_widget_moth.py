@@ -31,6 +31,7 @@ from PyQt5.QtGui import (QCursor, QFontMetrics, QImage, QFont,
 from PyQt5.QtWidgets import QGraphicsItem, QApplication
 
 from .init_values import (
+    AliasingReason,
     CanvasItemType,
     GroupObject,
     PortObject,
@@ -212,10 +213,6 @@ class BoxWidgetMoth(QGraphicsItem):
 
         canvas.scene.addItem(self)
         
-        self._measure_timer = QTimer()
-        self._measure_timer.setSingleShot(True)
-        self._measure_timer.timeout.connect(self._measure_timer_finished)
-        self._last_measure_time = 0.0
         # QTimer.singleShot(0, self.fix_pos)
 
     def get_group_id(self):
@@ -655,8 +652,7 @@ class BoxWidgetMoth(QGraphicsItem):
                 item.repaint_lines(fast_move=True)
 
             canvas.scene.resize_the_scene()
-            self._last_measure_time = time.time()
-            QTimer.singleShot(0, self._measure_timer_finished)
+            canvas.qobject.start_aliasing_check(AliasingReason.USER_MOVE)
             return
 
         QGraphicsItem.mouseMoveEvent(self, event)
@@ -675,6 +671,7 @@ class BoxWidgetMoth(QGraphicsItem):
                     repulsers.append(widget)
 
             canvas.scene.deplace_boxes_from_repulsers(repulsers)
+            canvas.set_aliasing_reason(AliasingReason.USER_MOVE, False)
 
             QTimer.singleShot(0, canvas.scene.update)
 
@@ -687,12 +684,6 @@ class BoxWidgetMoth(QGraphicsItem):
         self._cursor_moving = False
         
         QGraphicsItem.mouseReleaseEvent(self, event)
-    
-    def _measure_timer_finished(self):
-        now = time.time()
-
-        canvas.antialiasing = bool(now - self._last_measure_time < 0.060)
-        canvas.scene._view.setRenderHint(QPainter.Antialiasing, canvas.antialiasing)
     
     def fix_pos(self, check_others=False):
         x, y = int(self.x()), int(self.y())

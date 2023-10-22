@@ -18,7 +18,7 @@
 # For a full copy of the GNU General Public License see the doc/GPL.txt file.
 
 from typing import TYPE_CHECKING, Iterator, Optional, Union
-from enum import Enum, IntEnum, IntFlag, auto
+from enum import Enum, Flag, IntEnum, IntFlag, auto
 
 from PyQt5.QtCore import QPointF, QRectF, QSettings, QPoint
 from PyQt5.QtWidgets import QGraphicsItem
@@ -220,6 +220,14 @@ class ConnectionThemeState(Enum):
     DISCONNECTING = 2
 
 
+class AliasingReason(Flag):
+    NONE = 0x00
+    USER_MOVE = auto()
+    ANIMATION = auto()
+    VIEW_MOVE = auto()
+    SCROLL_BAR_MOVE = auto()
+
+
 class CanvasItemType(IntEnum):
     # this enum is still here if really needed
     # but never really used.
@@ -361,18 +369,14 @@ class ConnectionObject:
     port_in_id: int
     group_out_id: int
     port_out_id: int
-    widget: object
     port_type: PortType
     ready_to_disc: bool
     in_selected: bool
     out_selected: bool
-    if TYPE_CHECKING:
-        widget: LineWidget
 
     def copy_no_widget(self) -> 'ConnectionObject':
         conn_copy = ConnectionObject()
         conn_copy.__dict__ = self.__dict__.copy()
-        conn_copy.widget = None
         return conn_copy
 
     def matches(self, group_id_1: int, port_ids_list_1: list[int],
@@ -449,6 +453,7 @@ class Canvas:
         self.initial_pos = QPointF(0, 0)
         self.size_rect = QRectF()
         self.antialiasing = True
+        self.aliasing_reason = AliasingReason.NONE
 
         self.is_line_mov = False
         self.loading_items = False
@@ -724,6 +729,20 @@ class Canvas:
                 if not port_in_ids or conn.port_in_id in port_in_ids:
                     yield conn
 
+    def set_aliasing_reason(
+            self, aliasing_reason: AliasingReason, yesno: bool):
+        is_aliasing = bool(self.aliasing_reason)
+        
+        if yesno:
+            self.aliasing_reason |= aliasing_reason
+        else:
+            self.aliasing_reason &= ~aliasing_reason
+        
+        if bool(self.aliasing_reason) is is_aliasing:
+            return
+        
+        if self.scene is not None:
+            self.scene.set_anti_aliasing(not bool(self.aliasing_reason))
 
 # -----------------------------
 

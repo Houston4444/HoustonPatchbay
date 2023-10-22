@@ -1,10 +1,12 @@
+import time
 from typing import TYPE_CHECKING
 from PyQt5.QtCore import Qt, pyqtSignal, pyqtSlot, QPoint, QSize
 from PyQt5.QtGui import QWheelEvent, QKeyEvent, QMouseEvent
 from PyQt5.QtWidgets import (QApplication, QProgressBar, QSlider, QToolTip,
                              QLineEdit, QLabel, QMenu, QAction, QCheckBox)
 
-from .base_elements import TransportViewMode
+
+from .base_elements import TransportViewMode, AliasingReason
 
 if TYPE_CHECKING:
     from .patchbay_manager import PatchbayManager
@@ -46,7 +48,7 @@ class ZoomSlider(QSlider):
     def __init__(self, parent):
         QSlider.__init__(self, parent)
         
-        self.patchbay_manager = None
+        self._mng = None
         self.setMinimumSize(QSize(40, 0))
         self.setMaximumSize(QSize(90, 16777215))
         self.setMouseTracking(True)
@@ -89,14 +91,14 @@ class ZoomSlider(QSlider):
 
     @pyqtSlot(int)
     def _value_changed(self, value: int):
-        if self.patchbay_manager is None:
+        if self._mng is None:
             return
         
-        self.patchbay_manager.set_zoom(self.zoom_percent())
+        self._mng.set_zoom(self.zoom_percent())
 
     def set_patchbay_manager(self, patchbay_manager: 'PatchbayManager'):
-        self.patchbay_manager = patchbay_manager
-        self.patchbay_manager.sg.scene_scale_changed.connect(
+        self._mng = patchbay_manager
+        self._mng.sg.scene_scale_changed.connect(
             self._scale_changed)
 
     def zoom_percent(self) -> int:
@@ -117,18 +119,18 @@ class ZoomSlider(QSlider):
         self.set_percent(ratio * 100)
 
     def mouseDoubleClickEvent(self, event):
-        if self.patchbay_manager is None:
+        if self._mng is None:
             super().mouseDoubleClickEvent(event)
             return
 
-        self.patchbay_manager.zoom_fit()
+        self._mng.zoom_fit()
 
     def contextMenuEvent(self, event):
-        if self.patchbay_manager is None:
+        if self._mng is None:
             super().contextMenuEvent(event)
             return
 
-        self.patchbay_manager.zoom_reset()
+        self._mng.zoom_reset()
 
     def wheelEvent(self, event: QWheelEvent):
         direction = 1 if event.angleDelta().y() > 0 else -1
@@ -139,9 +141,18 @@ class ZoomSlider(QSlider):
             self.set_percent(self.zoom_percent() + direction * 5)
         self._show_tool_tip()
 
-    def mouseMoveEvent(self, event):
+    def mouseMoveEvent(self, event: QMouseEvent):
         QSlider.mouseMoveEvent(self, event)
         self._show_tool_tip()
+        
+        if self._mng is not None and event.buttons():
+            self._mng.start_aliasing_check(AliasingReason.SCROLL_BAR_MOVE)
+            
+    def mouseReleaseEvent(self, event):
+        super().mouseReleaseEvent(event)
+        
+        if self._mng is not None:
+            self._mng.set_aliasing_reason(AliasingReason.SCROLL_BAR_MOVE, False)
 
 
 class TimeTransportLabel(QLabel):

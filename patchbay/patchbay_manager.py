@@ -14,7 +14,7 @@ from .patchcanvas import patchcanvas, PortType, PortSubType, PortMode
 from .patchcanvas.utils import get_new_group_positions
 from .patchcanvas.scene_view import PatchGraphicsView
 from .patchcanvas.init_values import (
-    CallbackAct, CanvasFeaturesObject, CanvasOptionsObject)
+    AliasingReason, CallbackAct, CanvasFeaturesObject, CanvasOptionsObject)
 
 from .patchbay_signals import SignalsObject
 from .tools_widgets import PatchbayToolsWidget
@@ -1049,6 +1049,12 @@ class PatchbayManager:
 
     def set_semi_hide_opacity(self, opacity: float):
         patchcanvas.set_semi_hide_opacity(opacity)
+        
+    def set_aliasing_reason(self, aliasing_reason: AliasingReason, yesno: bool):
+        patchcanvas.set_aliasing_reason(aliasing_reason, yesno)
+        
+    def start_aliasing_check(self, aliasing_reason: AliasingReason):
+        patchcanvas.start_aliasing_check(aliasing_reason)
 
     @in_main_thread()
     def buffer_size_changed(self, buffer_size: int):

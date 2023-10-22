@@ -5,7 +5,7 @@ from PyQt5.QtCore import Qt, QRectF, QPointF
 from PyQt5.QtGui import QCursor
 from PyQt5.QtWidgets import QGraphicsItem
 
-from .init_values import (CallbackAct, ConnectableObject, ConnectionObject, PortMode, PortSubType,
+from .init_values import (AliasingReason, CallbackAct, ConnectableObject, ConnectionObject, PortMode, PortSubType,
                           PortType, canvas, options)
 from .line_move_widget import LineMoveWidget
 from .grouped_lines_widget import GroupedLinesWidget, GroupOutInsDict
@@ -294,7 +294,6 @@ class ConnectableWidget(QGraphicsItem):
         QGraphicsItem.mousePressEvent(self, event)
 
     def mouseMoveEvent(self, event):
-        starti = time.time()  
         if (not event.buttons() & Qt.LeftButton 
                 and canvas.scene.flying_connectable is not self):
             QGraphicsItem.mouseMoveEvent(self, event)
@@ -461,6 +460,8 @@ class ConnectableWidget(QGraphicsItem):
             line_mov.update_line_pos(event.scenePos())
 
         QGraphicsItem.mouseMoveEvent(self, event)
+        
+        canvas.qobject.start_aliasing_check(AliasingReason.USER_MOVE)
                 
     def mouseReleaseEvent(self, event):
         if event.button() == Qt.LeftButton:
@@ -487,6 +488,8 @@ class ConnectableWidget(QGraphicsItem):
             self._mouse_down = False
             self._cursor_moving = False
             canvas.is_line_mov = False
+        
+        canvas.set_aliasing_reason(AliasingReason.USER_MOVE, False)
         
         self.mouse_releasing = True
         QGraphicsItem.mouseReleaseEvent(self, event)

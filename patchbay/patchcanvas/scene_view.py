@@ -1,13 +1,33 @@
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QMouseEvent, QPainter
-from PyQt5.QtWidgets import QApplication, QGraphicsView
+from PyQt5.QtWidgets import QApplication, QGraphicsView, QScrollBar
 
-# taken from carla (falktx)
+from .init_values import AliasingReason, canvas
+
+class CustomScrollBar(QScrollBar):
+    def __init__(self, orientation, parent):
+        QScrollBar.__init__(self, orientation, parent)
+
+    def mouseMoveEvent(self, event) -> None:
+        super().mouseMoveEvent(event)
+        canvas.qobject.start_aliasing_check(AliasingReason.SCROLL_BAR_MOVE)
+        
+    def mouseReleaseEvent(self, event) -> None:
+        super().mouseReleaseEvent(event)
+        canvas.set_aliasing_reason(AliasingReason.SCROLL_BAR_MOVE, False)
+
+
+# taken partially from carla (falktx)
 class PatchGraphicsView(QGraphicsView):
     def __init__(self, parent):
         super().__init__(parent)
         self.setTransformationAnchor(QGraphicsView.AnchorUnderMouse)
         self.setRenderHint(QPainter.Antialiasing, True)
+        
+        self._h_scroll_bar = CustomScrollBar(Qt.Horizontal, self)
+        self.setHorizontalScrollBar(self._h_scroll_bar)
+        self._v_scroll_bar = CustomScrollBar(Qt.Vertical, self)
+        self.setVerticalScrollBar(self._v_scroll_bar)
 
         self._panning = False
 

@@ -20,6 +20,7 @@
 # global imports
 import logging
 from pathlib import Path
+import time
 from typing import Callable
 from PyQt5.QtCore import (pyqtSlot, QObject, QPointF, QRectF,
                           QSettings, QTimer, pyqtSignal)
@@ -27,7 +28,7 @@ from PyQt5.QtCore import (pyqtSlot, QObject, QPointF, QRectF,
 
 # local imports
 from .init_values import (
-    ConnectionThemeState,
+    AliasingReason,
     PortSubType,
     PortType,
     canvas,
@@ -98,10 +99,36 @@ class CanvasObject(QObject):
         self.connect_update_timer.setSingleShot(True)
         self.connect_update_timer.timeout.connect(
             self._connect_update_timer_finished)
+        
+        self._aliasing_reason = AliasingReason.NONE
+        self._aliasing_timer_started_at = 0.0
+        self._aliasing_move_timer = QTimer()
+        self._aliasing_move_timer.setInterval(0)
+        self._aliasing_move_timer.setSingleShot(True)
+        self._aliasing_move_timer.timeout.connect(
+            self._aliasing_move_timer_finished)
+        
+        self._aliasing_view_timer = QTimer()
+        self._aliasing_view_timer.setInterval(500)
+        self._aliasing_view_timer.setSingleShot(True)
+        self._aliasing_view_timer.timeout.connect(
+            self._aliasing_view_timer_finished)
 
     @pyqtSlot()
     def _connect_update_timer_finished(self):
         GroupedLinesWidget.change_all_prepared_conns()
+
+    @pyqtSlot()
+    def _aliasing_move_timer_finished(self):
+        if time.time() - self._aliasing_timer_started_at > 0.100:
+            canvas.set_aliasing_reason(self._aliasing_reason, True)
+        
+        if self._aliasing_reason is AliasingReason.VIEW_MOVE:
+            self._aliasing_view_timer.start()
+
+    @pyqtSlot()
+    def _aliasing_view_timer_finished(self):
+        canvas.set_aliasing_reason(AliasingReason.VIEW_MOVE, False)
 
     @pyqtSlot()
     def join_after_move(self):
@@ -109,16 +136,11 @@ class CanvasObject(QObject):
             join_group(group.group_id, origin_box_mode)
 
         self.groups_to_join.clear()
-
-
-def _get_stored_canvas_position(key, fallback_pos):
-    try:
-        return canvas.settings.value(
-            "CanvasPositions/" + key, fallback_pos, type=QPointF)
-    except:
-        return fallback_pos
-
-
+        
+    def start_aliasing_check(self, aliasing_reason: AliasingReason):
+        self._aliasing_reason = aliasing_reason
+        self._aliasing_timer_started_at = time.time()
+        self._aliasing_move_timer.start()
 
 
 @patchbay_api
@@ -1128,18 +1150,10 @@ def connect_ports(connection_id: int, group_out_id: int, port_out_id: int,
     connection.ready_to_disc = False
     connection.in_selected = False
     connection.out_selected = False
-    connection.widget = None
-    # connection.widget = LineWidget(connection_id, out_port_wg, in_port_wg)
-
-    # canvas.scene.addItem(connection.widget)
-
     canvas.add_connection(connection)
-    # out_port_wg.parentItem().add_line_to_box(connection.widget)
-    # in_port_wg.parentItem().add_line_to_box(connection.widget)
     out_port_wg.add_connection_to_port(connection)
     in_port_wg.add_connection_to_port(connection)
 
-    # GroupedLinesWidget.connections_changed(group_out_id, group_in_id)
     GroupedLinesWidget.prepare_conn_changes(group_out_id, group_in_id)
     canvas.qobject.connect_update_timer.start()
     canvas.qobject.connection_added.emit(connection_id)
@@ -1197,6 +1211,14 @@ def disconnect_ports(connection_id: int):
     QTimer.singleShot(0, canvas.scene.update)
 
 # ----------------------------------------------------------------------------
+
+@patchbay_api
+def start_aliasing_check(aliasing_reason: AliasingReason):
+    canvas.qobject.start_aliasing_check(aliasing_reason)
+
+@patchbay_api
+def set_aliasing_reason(aliasing_reason: AliasingReason, yesno: bool):
+    canvas.set_aliasing_reason(aliasing_reason, yesno)
 
 @patchbay_api
 def get_theme() -> str:

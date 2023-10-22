@@ -4,7 +4,8 @@ from typing import TYPE_CHECKING, Any
 
 from .patchcanvas import (
     patchcanvas, PortMode, PortType, BoxType,
-    BoxLayoutMode, PortSubType, BoxPos, BoxFlag)
+    BoxLayoutMode, PortSubType, BoxPos, BoxFlag,
+    AliasingReason)
 
 
 # Port Flags as defined by JACK

@@ -21,19 +21,18 @@
 # Imports (Globals)
 import logging
 from math import floor
-from shutil import move
 import time
-from typing import Iterator
 
 from PyQt5.QtCore import (QT_VERSION, pyqtSignal, pyqtSlot,
                           Qt, QPoint, QPointF, QRectF, QTimer, QMarginsF)
-from PyQt5.QtGui import QCursor, QPixmap, QPolygonF, QBrush, QColor, QPen
+from PyQt5.QtGui import QCursor, QPixmap, QPolygonF, QBrush, QPainter
 from PyQt5.QtWidgets import (QGraphicsRectItem, QGraphicsScene, QApplication,
                              QGraphicsView, QGraphicsItem)
 
 
 # Imports (locals)
 from .init_values import (
+    AliasingReason,
     CanvasItemType,
     PortMode,
     Direction,
@@ -155,6 +154,10 @@ class PatchSceneMoth(QGraphicsScene):
         QGraphicsScene.clear(self)
         self._rubberband = RubberbandRect(self)
         self.update_theme()
+
+    def set_anti_aliasing(self, yesno: bool):
+        if self._view is not None:
+            self._view.setRenderHint(QPainter.Antialiasing, yesno)
 
     def screen_position(self, point: QPointF) -> QPoint:
         return self._view.mapToGlobal(self._view.mapFromScene(point))
@@ -339,7 +342,7 @@ class PatchSceneMoth(QGraphicsScene):
         
         if (move_time - self._move_timer_last_time
                 > 0.002 * self._MOVE_TIMER_INTERVAL):
-            canvas.antialiasing = False
+            canvas.set_aliasing_reason(AliasingReason.ANIMATION, True)
         self._move_timer_last_time = move_time
 
         for moving_box in self.move_boxes:
@@ -367,7 +370,7 @@ class PatchSceneMoth(QGraphicsScene):
         if time_since_start >= self._MOVE_DURATION:
             # Animation is finished
             self._move_box_timer.stop()
-            canvas.antialiasing = True
+            canvas.set_aliasing_reason(AliasingReason.ANIMATION, False)
             
             # box update positions is forbidden while widget is in self.move_boxes
             # So we copy the list before to clear it
@@ -414,6 +417,11 @@ class PatchSceneMoth(QGraphicsScene):
             self._move_timer_start_at = time.time()
             self._move_timer_last_time = self._move_timer_start_at
             self._move_box_timer.start()
+            
+        if canvas.aliasing_reason:
+            # if antialiasing is already prevented
+            # we need to keep it prevented at animation start
+            canvas.set_aliasing_reason(AliasingReason.ANIMATION, True)
 
     def add_box_to_animation_wrapping(self, box_widget: BoxWidget, wrap: bool):
         for wrapping_box in self.wrapping_boxes:
@@ -428,6 +436,7 @@ class PatchSceneMoth(QGraphicsScene):
         
         if not self._move_box_timer.isActive():
             self._move_timer_start_at = time.time()
+            self._move_timer_last_time = self._move_timer_start_at
             self._move_box_timer.start()
 
     def center_view_on(self, widget):
@@ -446,11 +455,6 @@ class PatchSceneMoth(QGraphicsScene):
     
     def get_selected_boxes(self) -> list[BoxWidget]:
         return [i for i in self.selectedItems() if isinstance(i, BoxWidget)]
-
-    def list_selected_boxes(self) -> Iterator[BoxWidget]:
-        for item in self.selectedItems():
-            if isinstance(item, BoxWidget):
-                yield item
 
     def removeItem(self, item: QGraphicsItem):
         for child_item in item.childItems():
@@ -900,6 +904,8 @@ class PatchSceneMoth(QGraphicsScene):
         if not self._view:
             event.ignore()
             return
+
+        canvas.qobject.start_aliasing_check(AliasingReason.VIEW_MOVE)
 
         if QApplication.keyboardModifiers() & Qt.ControlModifier:
             self.zoom_wheel(event.delta())
