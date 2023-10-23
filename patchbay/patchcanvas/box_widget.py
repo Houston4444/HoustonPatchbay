@@ -716,11 +716,11 @@ class BoxWidget(BoxWidgetMoth):
                             all_title_templates[i]['header_height']
                             + height_for_ports),
                          i, False, TitleOn.TOP))
-        
+
         # sort areas and choose the first one (the littlest area)
         sizes_tuples.sort()
         area_size, lines_choice, one_column, title_on_side = sizes_tuples[0]
-        
+
         self._title_lines = self._split_title(lines_choice)
         
         header_height = all_title_templates[lines_choice]['header_height']

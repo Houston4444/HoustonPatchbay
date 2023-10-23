@@ -8,18 +8,6 @@ voir : canvas initial_pos
 vérifier ouverture des gpos à l'ancienne
 Certaines boîtes changent de dispo après wrap
 
-antialiasing empêcher par:
-    deplacement de boîte
-    navigation sur les bords
-    animation de boites
-
-Remplacer toutes les connexions widget par des groupes
-    normal
-    selected
-    ready_to_disc
-
-    gérer la Z value (enregistrer Z value dans la connexion ?)
-
 
 Passage à GroupedConns:
     # PortWidget add_line_to_port: pour itemChange (selected + in_front)
@@ -31,3 +19,5 @@ Grille dans options dialog:
     cell_width
     cell_height
     display grid
+
+Réparer aire la plus petite ou pas (4 modes)

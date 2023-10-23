@@ -551,8 +551,14 @@ class BoxWidgetMoth(QGraphicsItem):
     
     def itemChange(self, change, value):
         if change == QGraphicsItem.ItemSelectedHasChanged:
-            self.reset_lines_z_value(bool(value))
-            if bool(value):
+            is_selected = bool(value)
+            if is_selected:
+                canvas.last_z_value += 1
+                self.setZValue(canvas.last_z_value)
+            
+            self.reset_lines_z_value(is_selected)
+
+            if is_selected:
                 canvas_callback(
                     CallbackAct.GROUP_SELECTED, self._group_id,
                     self._port_mode)
@@ -810,9 +816,7 @@ class BoxWidgetMoth(QGraphicsItem):
             painter.drawPath(self._painter_path)
         
         # draw the main rectangle
-        pen = theme.fill_pen()
-        pen.setWidthF(pen.widthF() + 0.00001)
-        
+        pen = theme.fill_pen()        
         painter.setPen(pen)
         pen_width = pen.widthF()
         line_hinting = pen_width / 2.0

@@ -120,7 +120,7 @@ class CanvasObject(QObject):
 
     @pyqtSlot()
     def _aliasing_move_timer_finished(self):
-        if time.time() - self._aliasing_timer_started_at > 0.100:
+        if time.time() - self._aliasing_timer_started_at > 0.060:
             canvas.set_aliasing_reason(self._aliasing_reason, True)
         
         if self._aliasing_reason is AliasingReason.VIEW_MOVE:

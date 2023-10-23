@@ -764,7 +764,6 @@ class PatchSceneMoth(QGraphicsScene):
         QGraphicsScene.mouseDoubleClickEvent(self, event)
 
     def mousePressEvent(self, event):
-        print('scene press', event.pos())
         if self.flying_connectable:
             if event.button() == Qt.LeftButton:
                 self.flying_connectable.mouseReleaseEvent(event)
