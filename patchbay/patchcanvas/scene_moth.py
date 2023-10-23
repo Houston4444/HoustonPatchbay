@@ -777,8 +777,10 @@ class PatchSceneMoth(QGraphicsScene):
                 return
 
         ctrl_pressed = bool(QApplication.keyboardModifiers() & Qt.ControlModifier)
+        alt_or_meta_pressed = bool(
+            QApplication.keyboardModifiers() & (Qt.AltModifier | Qt.MetaModifier))
         self._mouse_down_init = bool(
-            (event.button() == Qt.LeftButton and not ctrl_pressed)
+            (event.button() == Qt.LeftButton and not alt_or_meta_pressed)
             or (event.button() == Qt.RightButton and ctrl_pressed))
         
         self._press_point = event.scenePos()
