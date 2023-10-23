@@ -26,4 +26,8 @@ Passage à GroupedConns:
     # set_opacity
     set_connection_in_front:
         pour filter_groups: Attention à RaySession
-        Gérer dans le patchcanvas directement
+
+Grille dans options dialog:
+    cell_width
+    cell_height
+    display grid

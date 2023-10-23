@@ -100,6 +100,7 @@ class PatchSceneMoth(QGraphicsScene):
         self._rubberband = RubberbandRect(self)
         self._rubberband_selection = False
         self._rubberband_orig_point = QPointF(0, 0)
+        self._press_point = QPointF(0, 0)
 
         self._view = view
         if not self._view:
@@ -303,6 +304,7 @@ class PatchSceneMoth(QGraphicsScene):
                 apply = True
         
         if apply:
+            canvas.qobject.start_aliasing_check(AliasingReason.NAV_ON_BORDERS)
             self._view.ensureVisible(ensure_rect, 0, 0)
 
     def _start_navigation_on_borders(self):
@@ -762,6 +764,7 @@ class PatchSceneMoth(QGraphicsScene):
         QGraphicsScene.mouseDoubleClickEvent(self, event)
 
     def mousePressEvent(self, event):
+        print('scene press', event.pos())
         if self.flying_connectable:
             if event.button() == Qt.LeftButton:
                 self.flying_connectable.mouseReleaseEvent(event)
@@ -778,6 +781,7 @@ class PatchSceneMoth(QGraphicsScene):
             (event.button() == Qt.LeftButton and not ctrl_pressed)
             or (event.button() == Qt.RightButton and ctrl_pressed))
         
+        self._press_point = event.scenePos()
         self._mouse_rubberband = False
 
         if event.button() == Qt.MidButton:
@@ -806,7 +810,7 @@ class PatchSceneMoth(QGraphicsScene):
         if self._mouse_down_init:
             self._mouse_down_init = False
             self._mouse_rubberband = False
-            for item in self.items(event.scenePos()):
+            for item in self.items(self._press_point):
                 if isinstance(item, (BoxWidget, ConnectableWidget)):
                     break
             else:
@@ -821,7 +825,7 @@ class PatchSceneMoth(QGraphicsScene):
             if not self._rubberband_selection:
                 self._rubberband.show()
                 self._rubberband_selection = True
-                self._rubberband_orig_point = pos
+                self._rubberband_orig_point = self._press_point
             rubb_orig_point = self._rubberband_orig_point
 
             x = min(pos_x, rubb_orig_point.x())
@@ -846,6 +850,7 @@ class PatchSceneMoth(QGraphicsScene):
     def mouseReleaseEvent(self, event):
         if self.flying_connectable:
             QGraphicsScene.mouseReleaseEvent(self, event)
+            canvas.set_aliasing_reason(AliasingReason.NAV_ON_BORDERS, False)
             return
         
         if self._scale_area and not self._rubberband_selection:
@@ -889,6 +894,7 @@ class PatchSceneMoth(QGraphicsScene):
 
         if event.button() == Qt.LeftButton:
             self._borders_nav_timer.stop()
+            canvas.set_aliasing_reason(AliasingReason.NAV_ON_BORDERS, False)
 
         if event.button() == Qt.MidButton:
             event.accept()

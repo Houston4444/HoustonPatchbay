@@ -226,6 +226,7 @@ class AliasingReason(Flag):
     ANIMATION = auto()
     VIEW_MOVE = auto()
     SCROLL_BAR_MOVE = auto()
+    NAV_ON_BORDERS = auto()
 
 
 class CanvasItemType(IntEnum):

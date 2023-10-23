@@ -23,6 +23,8 @@ class PatchGraphicsView(QGraphicsView):
     def __init__(self, parent):
         super().__init__(parent)
         self.setTransformationAnchor(QGraphicsView.AnchorUnderMouse)
+        self.setOptimizationFlag(QGraphicsView.DontAdjustForAntialiasing, True)
+        self.setOptimizationFlag(QGraphicsView.DontSavePainterState, True)
         self.setRenderHint(QPainter.Antialiasing, True)
         
         self._h_scroll_bar = CustomScrollBar(Qt.Horizontal, self)
