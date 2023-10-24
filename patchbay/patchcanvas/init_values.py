@@ -259,8 +259,8 @@ class CanvasOptionsObject:
     semi_hide_opacity = 0.20
     default_zoom = 100
     box_grouped_auto_layout_ratio = 1.0
-    cell_x = 20
-    cell_y = 10
+    cell_x = 40
+    cell_y = 1
     cell_margin = 2
 
 
@@ -411,6 +411,7 @@ class ConnectionObject:
         if self.in_selected or self.out_selected:
             return ConnectionThemeState.SELECTED
         return ConnectionThemeState.NORMAL
+
 
 class ClipboardElement:
     port_type: PortType
