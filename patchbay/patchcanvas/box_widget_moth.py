@@ -66,6 +66,16 @@ class UnwrapButton(Enum):
     RIGHT = 3
 
 
+class WrappingState(Enum):
+    NORMAL = 0
+    WRAPPING = 1
+    WRAPPED = 2
+    UNWRAPPING = 3
+    
+    def next_state(self) -> 'WrappingState':
+        return WrappingState((self.value + 1) % 4)
+
+
 class TitleLine:
     text = ''
     size = 0.0
@@ -140,9 +150,11 @@ class BoxWidgetMoth(QGraphicsItem):
         self._header_line_left = None
         self._header_line_right = None
         
-        self._wrapped = group.box_poses[port_mode].is_wrapped()
-        self._wrapping = False
-        self._unwrapping = False
+        if group.box_poses[port_mode].is_wrapped():
+            self._wrapping_state = WrappingState.WRAPPED
+        else:
+            self._wrapping_state = WrappingState.NORMAL
+
         self._wrapping_ratio = 1.0
         self._unwrap_triangle_pos = UnwrapButton.NONE
 
@@ -208,12 +220,8 @@ class BoxWidgetMoth(QGraphicsItem):
         self._current_layout_mode = BoxLayoutMode.LARGE
         self._title_under_icon = False
         self._painter_path = QPainterPath()
-                
-        # self.update_positions()
 
         canvas.scene.addItem(self)
-        
-        # QTimer.singleShot(0, self.fix_pos)
 
     def get_group_id(self):
         return self._group_id
@@ -304,7 +312,7 @@ class BoxWidgetMoth(QGraphicsItem):
         self.setVisible(True)
 
         new_widget = PortWidget(port, self)
-        if self._wrapped:
+        if self._wrapping_state is not WrappingState.NORMAL:
             new_widget.setVisible(False)
 
         return new_widget
@@ -312,7 +320,7 @@ class BoxWidgetMoth(QGraphicsItem):
     def add_portgroup_from_group(self, portgroup: PortgrpObject):
         new_widget = PortgroupWidget(portgroup, self)
 
-        if self._wrapped:
+        if self._wrapping_state is not WrappingState.NORMAL:
             new_widget.setVisible(False)
 
         return new_widget
@@ -355,19 +363,21 @@ class BoxWidgetMoth(QGraphicsItem):
         
     def animate_wrapping(self, ratio: float):
         # we expose wrapping ratio only for prettier animation
-        # say self._wrapping_ratio = ratio would also works fine
-        if self._wrapping:
+        # say self._wrapping_ratio = ratio would also works fine        
+        if self._wrapping_state is WrappingState.WRAPPING:
             self._wrapping_ratio = ratio ** 0.25
-        else:
+        elif self._wrapping_state is WrappingState.UNWRAPPING:
             self._wrapping_ratio = ratio ** 4
+        else:
+            return
 
         if ratio == 1.00:
             # counter is terminated
-            if self._unwrapping:
+            if self._wrapping_state is WrappingState.UNWRAPPING:
                 self.hide_ports_for_wrap(False)
-            
-            self._wrapping = False
-            self._unwrapping = False
+                self._wrapping_state = WrappingState.NORMAL
+            else:
+                self._wrapping_state = WrappingState.WRAPPED
         
         if (self._has_side_title()
                 and self._current_port_mode is PortMode.INPUT
@@ -397,22 +407,32 @@ class BoxWidgetMoth(QGraphicsItem):
                 port.widget.setVisible(not hide)
 
     def is_wrapped(self) -> bool:
-        return self._wrapped
+        return bool(self._wrapping_state is not WrappingState.NORMAL)
 
-    def set_wrapped(self, yesno: bool, animate=True, prevent_overlap=True):        
-        if yesno == self._wrapped:
+    def set_wrapped(self, yesno: bool, animate=True, prevent_overlap=True):
+        if yesno == bool(self._wrapping_state
+                         in (WrappingState.WRAPPED, WrappingState.WRAPPING)):
             return
 
-        self._wrapped = yesno
+        # self._wrapped = yesno
 
         if yesno:
             self.hide_ports_for_wrap(True)
 
         if not animate:
+            if yesno:
+                self._wrapping_state = WrappingState.WRAPPED
+            else:
+                self._wrapping_state = WrappingState.NORMAL
             return
 
-        self._wrapping = yesno
-        self._unwrapping = not yesno
+        if yesno:
+            self._wrapping_state = WrappingState.WRAPPING
+        else:
+            self._wrapping_state = WrappingState.UNWRAPPING
+
+        # self._wrapping = yesno
+        # self._unwrapping = not yesno
         canvas.scene.add_box_to_animation_wrapping(self, yesno)
         
         self._x_before_wrap = self.x()
@@ -502,7 +522,7 @@ class BoxWidgetMoth(QGraphicsItem):
     def wrap_unwrap_at_point(self, scene_pos: QPointF) -> bool:
         ''' orders a wrap or unwrap on the box if scene_pos is on the
             triangle wrapper '''
-        if self._wrapped:
+        if self._wrapping_state is WrappingState.WRAPPED:
             # unwrap the box if scene_pos is in one of the triangles zones
             triangle_rect_out = QRectF(0.0, self._height - 24.0, 24.0, 24.0)
             triangle_rect_in = QRectF(
@@ -911,8 +931,9 @@ class BoxWidgetMoth(QGraphicsItem):
             BAND_MON_WIDTH = 9
             TRIANGLE_MON_SIZE_TOP = 7
             triangle_mon_size_bottom = 0
-            if (self._wrapping or self._unwrapping
-                    or (not self._wrapped
+            if (self._wrapping_state in (WrappingState.WRAPPING,
+                                         WrappingState.UNWRAPPING)
+                    or (self._wrapping_state is WrappingState.NORMAL
                         and self._unwrap_triangle_pos is not UnwrapButton.NONE)):
                 triangle_mon_size_bottom = 13
 
@@ -990,7 +1011,8 @@ class BoxWidgetMoth(QGraphicsItem):
         painter.setPen(wtheme.fill_pen())
         painter.setBrush(wtheme.background_color())
 
-        if self._wrapped:
+        if self._wrapping_state in (WrappingState.WRAPPED,
+                                    WrappingState.UNWRAPPING):
             for port_mode in PortMode.INPUT, PortMode.OUTPUT:
                 if self._current_port_mode & port_mode:
                     if self._has_side_title():

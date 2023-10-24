@@ -1,4 +1,5 @@
 
+from dataclasses import dataclass
 from enum import IntEnum
 from math import ceil
 from typing import Iterator
@@ -21,7 +22,7 @@ from .init_values import (
 from .utils import (get_portgroup_name_from_ports_names,
                     next_width_on_grid,
                     next_height_on_grid)
-from .box_widget_moth import BoxWidgetMoth, UnwrapButton, TitleLine
+from .box_widget_moth import BoxWidgetMoth, UnwrapButton, TitleLine, WrappingState
 
 
 def list_port_types_and_subs() -> Iterator[tuple[PortType, PortSubType]]:
@@ -46,6 +47,27 @@ class TitleOn(IntEnum):
     TOP = 0
     SIDE = 1
     SIDE_UNDER_ICON = 2
+
+
+@dataclass()
+class PortsMinSizes:
+    last_in_pos: float
+    last_out_pos: float
+    last_inout_pos: float
+    max_in_width: float
+    max_out_width: float
+    last_port_mode: PortMode
+
+
+@dataclass()
+class BestLayoutProps:
+    max_title_size: float
+    box_width: float
+    box_height: float
+    header_width: float
+    header_height: float
+    ports_y_start: float
+    one_column: bool
 
 
 class BoxWidget(BoxWidgetMoth):
@@ -99,10 +121,10 @@ class BoxWidget(BoxWidgetMoth):
         
         return True
     
-    def _get_geometry_dict(
-            self, align_port_types: bool) -> dict:
-        max_in_width = max_out_width = 0
-        last_in_pos = last_out_pos = 0
+    def _get_ports_min_sizes(
+            self, align_port_types: bool) -> PortsMinSizes:
+        max_in_width = max_out_width = 0.0
+        last_in_pos = last_out_pos = 0.0
         final_last_in_pos = final_last_out_pos = last_in_pos
         
         box_theme = self.get_theme()
@@ -110,8 +132,8 @@ class BoxWidget(BoxWidgetMoth):
         port_in_offset = box_theme.port_in_offset()
         port_out_offset = box_theme.port_out_offset()
         port_type_spacing = box_theme.port_type_spacing()
-        last_in_type_alter = (PortType.NULL, PortSubType.REGULAR)
-        last_out_type_alter = (PortType.NULL, PortSubType.REGULAR)
+        last_in_type_and_sub = (PortType.NULL, PortSubType.REGULAR)
+        last_out_type_and_sub = (PortType.NULL, PortSubType.REGULAR)
         last_port_mode = PortMode.NULL
         
         for port_type, port_subtype in list_port_types_and_subs():                
@@ -163,10 +185,10 @@ class BoxWidget(BoxWidgetMoth):
                 
                 if port.port_mode is PortMode.INPUT:
                     max_in_width = max(max_in_width, size)
-                    if type_and_sub != last_in_type_alter:
-                        if last_in_type_alter != (PortType.NULL, PortSubType.REGULAR):
+                    if type_and_sub != last_in_type_and_sub:
+                        if last_in_type_and_sub != (PortType.NULL, PortSubType.REGULAR):
                             last_in_pos += port_type_spacing
-                        last_in_type_alter = type_and_sub
+                        last_in_type_and_sub = type_and_sub
 
                     last_in_pos += canvas.theme.port_height
                     if last_of_portgrp:
@@ -175,10 +197,10 @@ class BoxWidget(BoxWidgetMoth):
                 elif port.port_mode is PortMode.OUTPUT:
                     max_out_width = max(max_out_width, size)
                     
-                    if type_and_sub != last_out_type_alter:
-                        if last_out_type_alter != (PortType.NULL, PortSubType.REGULAR):
+                    if type_and_sub != last_out_type_and_sub:
+                        if last_out_type_and_sub != (PortType.NULL, PortSubType.REGULAR):
                             last_out_pos += port_type_spacing
-                        last_out_type_alter = type_and_sub
+                        last_out_type_and_sub = type_and_sub
                     
                     last_out_pos += canvas.theme.port_height
                     if last_of_portgrp:
@@ -190,15 +212,15 @@ class BoxWidget(BoxWidgetMoth):
             if align_port_types:
                 # align port types horizontally
                 if last_in_pos > last_out_pos:
-                    last_out_type_alter = last_in_type_alter
+                    last_out_type_and_sub = last_in_type_and_sub
                 else:
-                    last_in_type_alter = last_out_type_alter
+                    last_in_type_and_sub = last_out_type_and_sub
                 last_in_pos = last_out_pos = max(last_in_pos, last_out_pos)
         
         # calculates height in case of one column only
-        last_inout_pos = 0
+        last_inout_pos = 0.0
         last_type_and_sub = (PortType.NULL, PortSubType.REGULAR)
-        
+
         if self._current_port_mode is PortMode.BOTH:
             for port_type, port_subtype in list_port_types_and_subs():
                 for port in self._port_list:
@@ -219,30 +241,33 @@ class BoxWidget(BoxWidgetMoth):
                     
                     last_port_mode = port.port_mode
         
-        return {'last_in_pos': final_last_in_pos,
-                'last_out_pos': final_last_out_pos,
-                'last_inout_pos': last_inout_pos,
-                'max_in_width': max_in_width,
-                'max_out_width': max_out_width,
-                'last_port_mode': last_port_mode}
+        return PortsMinSizes(
+            final_last_in_pos,
+            final_last_out_pos,
+            last_inout_pos,
+            max_in_width,
+            max_out_width,
+            last_port_mode
+        )
 
     def _set_ports_y_positions(
             self, align_port_types: bool, start_pos: int, one_column: bool
                 ) -> dict[str, list[list[int]]]:
+        ''' ports Y positioning, return height segments info
+            used if port-in-offset or port-out-offset are not zero in box theme'''
+
         def set_widget_pos(widget: QGraphicsItem, pos: float):
-            if self._wrapping:
+            if self._wrapping_state is WrappingState.WRAPPING:
                 widget.setY(pos - ((pos - wrapped_port_pos)
                                    * self._wrapping_ratio))
-            elif self._unwrapping:
+            elif self._wrapping_state is WrappingState.UNWRAPPING:
                 widget.setY(wrapped_port_pos + ((pos - wrapped_port_pos)
                                                 * self._wrapping_ratio))
-            elif self._wrapped:
+            elif self._wrapping_state is WrappingState.WRAPPED:
                 widget.setY(wrapped_port_pos)
             else:
                 widget.setY(pos)
             
-        ''' ports Y positioning, and get height segments info
-            used if port-in-offset or port-out-offset are not zero in box theme'''
         last_in_pos = last_out_pos = start_pos
         wrapped_port_pos = start_pos
         
@@ -550,7 +575,7 @@ class BoxWidget(BoxWidgetMoth):
 
     def _choose_box_layout(
         self, height_for_ports: int, height_for_ports_one: int,
-        ports_in_width: int, ports_out_width: int) -> dict:
+        ports_in_width: int, ports_out_width: int) -> BestLayoutProps:
         '''choose in how many lines the title should be splitted
         and if the box layout should be large or high.
         returns a dict with all required variables and values'''
@@ -594,7 +619,7 @@ class BoxWidget(BoxWidgetMoth):
                 header_height = 4 + 24 + 4
 
             for i in range(1, 8):
-                max_title_size = 0
+                max_title_width = 0
                 max_header_width = 50
                 if self._plugin_inline is not InlineDisplay.DISABLED:
                     max_header_width = 200
@@ -604,7 +629,7 @@ class BoxWidget(BoxWidgetMoth):
                 for j in range(len(title_lines)):
                     title_line = title_lines[j]
                     title_line.y = title_line_y_start + j * int(font_size * 1.4)
-                    max_title_size = int(max(max_title_size, title_line.size))
+                    max_title_width = int(max(max_title_width, title_line.size))
                     header_width = title_line.size + 12
 
                     if self.has_top_icon() and title_line.y <= 28 + font_size:
@@ -624,7 +649,7 @@ class BoxWidget(BoxWidgetMoth):
                     header_height += 2 * GUI_MARGIN
 
                 new_title_template = title_template.copy()
-                new_title_template['title_width'] = max_title_size
+                new_title_template['title_width'] = max_title_width
                 new_title_template['header_width'] = max_header_width
                 new_title_template['header_height'] = header_height
                 all_title_templates[i] = new_title_template
@@ -725,7 +750,7 @@ class BoxWidget(BoxWidgetMoth):
         
         header_height = all_title_templates[lines_choice]['header_height']
         header_width = all_title_templates[lines_choice]['header_width']
-        max_title_size = all_title_templates[lines_choice]['title_width']
+        max_title_width = all_title_templates[lines_choice]['title_width']
         
         if self._current_port_mode is PortMode.BOTH:
             if one_column:
@@ -748,7 +773,7 @@ class BoxWidget(BoxWidgetMoth):
             ports_y_start = box_theme.port_spacing() + box_theme.port_type_spacing()
             
             if self._title_under_icon:
-                header_width = max(38, max_title_size + 12)
+                header_width = max(38, max_title_width + 12)
                 if self._can_handle_gui:
                     header_width += 4
 
@@ -769,9 +794,19 @@ class BoxWidget(BoxWidgetMoth):
             box_width = max(width_for_ports, header_width)
             box_height = header_height + height_for_ports
         
-        return {'max_title_size': max_title_size,
-                'box_height': box_height,
+        return BestLayoutProps(
+            max_title_width,
+            box_width,
+            box_height,
+            header_width,
+            header_height,
+            ports_y_start,
+            one_column
+        )
+        
+        return {'max_title_size': max_title_width,
                 'box_width': box_width,
+                'box_height': box_height,
                 'header_width': header_width,
                 'header_height': header_height,
                 'ports_y_start': ports_y_start,
@@ -956,7 +991,7 @@ class BoxWidget(BoxWidgetMoth):
         else:
             painter_path.addRoundedRect(rect, border_radius, border_radius)
         
-        if not (self._wrapping or self._unwrapping or self._wrapped):
+        if self._wrapping_state is WrappingState.NORMAL:
             # substract rects in the box shape in case of port_offset (even negativ)
             # logic would want to add rects if port_offset is negativ
             # But that also means that we should change the boudingRect,
@@ -1058,9 +1093,6 @@ class BoxWidget(BoxWidgetMoth):
                     border_radius + epsd, border_radius - line_hinting + epsd))
                 painter_path = painter_path.united(top_right_path)
 
-        # if self._is_hardware:
-        #     hws = canvas.theme.hardware_rack_width
-        #     painter_path.translate(hws, hws)
         self._painter_path = painter_path
         
     def update_positions(self, even_animated=False, without_connections=False,
@@ -1089,7 +1121,7 @@ class BoxWidget(BoxWidgetMoth):
         for portgrp in canvas.list_portgroups(group_id=self._group_id):
             if self._current_port_mode & portgrp.port_mode:
                 self._portgrp_list.append(portgrp)
-                
+
         if options.auto_hide_groups and not self._port_list:
             self.setVisible(False)
             return
@@ -1098,14 +1130,14 @@ class BoxWidget(BoxWidgetMoth):
     
         align_port_types = self._should_align_port_types()
 
-        geo_dict = self._get_geometry_dict(align_port_types)
-        last_in_pos = geo_dict['last_in_pos']
-        last_out_pos = geo_dict['last_out_pos']
-        last_inout_pos = geo_dict['last_inout_pos']
-        max_in_width = geo_dict['max_in_width']
-        max_out_width = geo_dict['max_out_width']
-        last_port_mode = geo_dict['last_port_mode']
-        
+        ports_geo = self._get_ports_min_sizes(align_port_types)
+        last_in_pos = ports_geo.last_in_pos
+        last_out_pos = ports_geo.last_out_pos
+        last_inout_pos = ports_geo.last_inout_pos
+        max_in_width = ports_geo.max_in_width
+        max_out_width = ports_geo.max_out_width
+        last_port_mode = ports_geo.last_port_mode
+
         box_theme = self.get_theme()
         down_height = box_theme.fill_pen().widthF()
         height_for_ports = max(last_in_pos, last_out_pos) + down_height
@@ -1114,16 +1146,16 @@ class BoxWidget(BoxWidgetMoth):
         self._width_in = max_in_width
         self._width_out = max_out_width
 
-        if not (self._wrapping or self._unwrapping):
-            titles_dict = self._choose_box_layout(
+        if self._wrapping_state in (WrappingState.NORMAL, WrappingState.WRAPPED):
+            best_props = self._choose_box_layout(
                 height_for_ports, height_for_ports_one,
                 max_in_width, max_out_width)
-            self._header_width = titles_dict['header_width']
-            self._header_height = titles_dict['header_height']
-            one_column = titles_dict['one_column']
-            box_width = titles_dict['box_width'] # without hardware rack
-            box_height = titles_dict['box_height'] # without hardware rack
-            self._ports_y_start = titles_dict['ports_y_start']
+            self._header_width = best_props.header_width
+            self._header_height = best_props.header_height
+            one_column = best_props.one_column
+            box_width = best_props.box_width
+            box_height = best_props.box_height
+            self._ports_y_start = best_props.ports_y_start
 
             self._width = box_width
             
@@ -1170,7 +1202,7 @@ class BoxWidget(BoxWidgetMoth):
         last_in_pos += self._ports_y_start
         last_out_pos += self._ports_y_start
 
-        if self._wrapping:
+        if self._wrapping_state is WrappingState.WRAPPING:
             self._height = (normal_height
                             - (normal_height - wrapped_height)
                               * self._wrapping_ratio)
@@ -1178,7 +1210,7 @@ class BoxWidget(BoxWidgetMoth):
                            - (normal_width - wrapped_width)
                              * self._wrapping_ratio)
 
-        elif self._unwrapping:
+        elif self._wrapping_state is WrappingState.UNWRAPPING:
             self._height = (wrapped_height
                             + (normal_height - wrapped_height)
                               * self._wrapping_ratio)
@@ -1186,7 +1218,7 @@ class BoxWidget(BoxWidgetMoth):
                            + (normal_width - wrapped_width)
                              * self._wrapping_ratio)
 
-        elif self._wrapped:
+        elif self._wrapping_state is WrappingState.WRAPPED:
             self._height = wrapped_height
             self._width = wrapped_width
         else:
@@ -1221,10 +1253,6 @@ class BoxWidget(BoxWidgetMoth):
         self._wrapped_height = wrapped_height
         self._unwrapped_height = normal_height
 
-        # round self._height to the upper value
-        # self._height = float(int(self._height + 0.99))
-        self._height = ceil(self._height)
-
         ports_y_segments_dict = self._set_ports_y_positions(
             align_port_types, self._ports_y_start, one_column)
 
@@ -1250,7 +1278,9 @@ class BoxWidget(BoxWidgetMoth):
             self.repaint_lines(forced=True)
 
         if prevent_overlap:
-            if not (self._wrapping or self._unwrapping) and self.isVisible():
+            if (self._wrapping_state in (WrappingState.NORMAL,
+                                         WrappingState.WRAPPED)
+                    and self.isVisible()):
                 canvas.scene.deplace_boxes_from_repulsers([self])
 
         self.update_positions_pending = False
@@ -1287,14 +1317,13 @@ class BoxWidget(BoxWidgetMoth):
                 self._portgrp_list.append(portgrp)
 
         align_port_types = self._should_align_port_types()
-
-        geo_dict = self._get_geometry_dict(align_port_types)
-        last_in_pos = geo_dict['last_in_pos']
-        last_out_pos = geo_dict['last_out_pos']
-        last_inout_pos = geo_dict['last_inout_pos']
-        max_in_width = geo_dict['max_in_width']
-        max_out_width = geo_dict['max_out_width']
-        # last_port_mode = geo_dict['last_port_mode']
+        
+        ports_geo = self._get_ports_min_sizes(align_port_types)
+        last_in_pos = ports_geo.last_in_pos
+        last_out_pos = ports_geo.last_out_pos
+        last_inout_pos = ports_geo.last_inout_pos
+        max_in_width = ports_geo.max_in_width
+        max_out_width = ports_geo.max_out_width
         
         box_theme = self.get_theme()
         down_height = box_theme.fill_pen().widthF()
@@ -1304,11 +1333,8 @@ class BoxWidget(BoxWidgetMoth):
         self._width_in = max_in_width
         self._width_out = max_out_width
 
-        titles_dict = self._choose_box_layout(
+        best_props = self._choose_box_layout(
             height_for_ports, height_for_ports_one,
             max_in_width, max_out_width)
-
-        box_width = titles_dict['box_width']
-        box_height = titles_dict['box_height']
         
-        return QRectF(0.0, 0.0, float(box_width), float(box_height))
+        return QRectF(0.0, 0.0, best_props.box_width, best_props.box_height)

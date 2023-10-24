@@ -21,3 +21,5 @@ Grille dans options dialog:
     display grid
 
 Réparer aire la plus petite ou pas (4 modes)
+
+Virer connection_lines de BoxWidget et PortWidget
