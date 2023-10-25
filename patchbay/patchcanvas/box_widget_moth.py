@@ -884,8 +884,6 @@ class BoxWidgetMoth(QGraphicsItem):
                         3.0 + pen_width, 3.0 + pen_width,
                         self._header_width - 6.0, self._header_height - 6.0)
             
-            # header_rect.adjust(pen_width, pen_width, - pen_width, - pen_width)
-            
             gui_theme = canvas.theme.gui_button
             if self._gui_visible:
                 gui_theme = gui_theme.gui_visible
@@ -1083,15 +1081,6 @@ class BoxWidgetMoth(QGraphicsItem):
             triangle += QPointF(xpos + side, ypos -side + 2)
             painter.drawPolygon(triangle)
 
-        # painter.setPen(QColor(128, 60, 60))
-        # painter.drawLine(QPointF(0.0, float(self._header_height + pen_width)),
-        #                  QPointF(float(self._width), float(self._header_height + pen_width)))
-        # painter.drawLine(QPointF(float(self._header_width), 0.0),
-        #                  QPointF(float(self._header_width), float(self._height)))
-        # painter.drawLine(QPointF(0.0, float(self._title_lines[0].y - theme.font().pixelSize() * 0.5)),
-        #                  QPointF(float(self._width), float(self._title_lines[0].y - theme.font().pixelSize() * 0.5)))
-        # painter.drawLine(QPointF(0.0, float(self._title_lines[0].y)),
-        #                  QPointF(float(self._width), float(self._title_lines[0].y)))
 
         painter.restore()
 

@@ -554,8 +554,6 @@ def next_bottom_on_grid(y: int) -> int:
     margin = options.cell_margin
     
     ret = int(cell_y * (1 + y // cell_y) - margin)
-    # if ret < y:
-    #     ret += cell_y
         
     return ret
 
@@ -563,7 +561,7 @@ def next_width_on_grid(width: Union[float, int]) -> int:
     cell_x = options.cell_x
     margin = options.cell_margin
     ret = cell_x * (1 + (width // cell_x)) - 2 * margin
-    if ret < width:
+    while ret < width:
         ret += cell_x
     
     return int(ret)
@@ -572,7 +570,7 @@ def next_height_on_grid(height: Union[float, int]) -> int:
     cell_y = options.cell_y
     margin = options.cell_margin
     ret = cell_y * (1 + (height // cell_y)) - 2 * margin
-    if ret < height:
+    while ret < height:
         ret += cell_y
     
     return int(ret)

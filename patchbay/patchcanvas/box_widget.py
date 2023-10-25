@@ -136,7 +136,7 @@ class BoxWidget(BoxWidgetMoth):
         port_in_offset = box_theme.port_in_offset()
         port_out_offset = box_theme.port_out_offset()
         port_type_spacing = box_theme.port_type_spacing()
-        last_in_pos = last_out_pos = port_spacing
+        last_in_pos = last_out_pos = 0.0
         final_last_in_pos = final_last_out_pos = last_in_pos
         last_in_type_and_sub = (PortType.NULL, PortSubType.REGULAR)
         last_out_type_and_sub = (PortType.NULL, PortSubType.REGULAR)
@@ -657,20 +657,20 @@ class BoxWidget(BoxWidgetMoth):
 
         self._title_under_icon = bool(title_on_side is TitleOn.SIDE_UNDER_ICON)
 
-        if title_on_side:
-            ports_y_start = box_theme.port_spacing() + pen_width
-            
+        if title_on_side:            
             if self._title_under_icon:
-                header_width = max(38, max_title_width + 10 + 2 * pen_width)
+                header_width = max(38, max_title_width + 10)
                 if self._can_handle_gui:
                     header_width += 4
 
-                box_width = ports_width + header_width + 12 + 2 * pen_width
+                box_width = ports_width + header_width + 15 + pen_width
                 header_height += 20 if len(self._title_lines) == 1 else 30
-                box_height = max(height_for_ports + ports_y_start, header_height) + 2 * pen_width
             else:
-                box_width = ports_width + header_width + 12 + 2 * pen_width
-                box_height = max(height_for_ports + ports_y_start, header_height) + 2 * pen_width
+                box_width = ports_width + header_width + 15 + pen_width
+                
+            box_height = (2 * pen_width
+                          + max(height_for_ports + box_theme.port_spacing(),
+                                header_height))
 
         elif one_column:
             box_width = max(width_for_ports_one, header_width + 2 * pen_width)
