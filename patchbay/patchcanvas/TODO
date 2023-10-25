@@ -23,3 +23,8 @@ Grille dans options dialog:
 Réparer aire la plus petite ou pas (4 modes)
 
 Virer connection_lines de BoxWidget et PortWidget
+
+Bugs en cours:
+    grid 1x1 bring neighboors
+    hardware rack (self._ports_y_start ?)
+    
