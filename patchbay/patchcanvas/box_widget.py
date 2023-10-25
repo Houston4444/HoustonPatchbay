@@ -130,14 +130,14 @@ class BoxWidget(BoxWidgetMoth):
     def _get_ports_min_sizes(
             self, align_port_types: bool) -> PortsMinSizes:
         max_in_width = max_out_width = 0.0
-        last_in_pos = last_out_pos = 0.0
-        final_last_in_pos = final_last_out_pos = last_in_pos
         
         box_theme = self.get_theme()
         port_spacing = box_theme.port_spacing()
         port_in_offset = box_theme.port_in_offset()
         port_out_offset = box_theme.port_out_offset()
         port_type_spacing = box_theme.port_type_spacing()
+        last_in_pos = last_out_pos = port_spacing
+        final_last_in_pos = final_last_out_pos = last_in_pos
         last_in_type_and_sub = (PortType.NULL, PortSubType.REGULAR)
         last_out_type_and_sub = (PortType.NULL, PortSubType.REGULAR)
         n_in_type_and_subs = 0
@@ -228,7 +228,7 @@ class BoxWidget(BoxWidgetMoth):
                 last_in_pos = last_out_pos = max(last_in_pos, last_out_pos)
         
         # calculates height in case of one column only
-        last_inout_pos = 0.0
+        last_inout_pos = port_spacing
         last_type_and_sub = (PortType.NULL, PortSubType.REGULAR)
 
         if self._current_port_mode is PortMode.BOTH:
@@ -262,6 +262,434 @@ class BoxWidget(BoxWidgetMoth):
             last_port_mode
         )
 
+    @staticmethod
+    def split_in_two(string: str, n_lines: int) -> list[str]:
+        def polished_list(input_list: list) -> list:
+            output_list = list[str]()
+
+            for string in input_list:
+                if not string:
+                    continue
+                if len(string) == 1:
+                    if output_list:
+                        output_list[-1] += string
+                    else:
+                        output_list.append(string)
+                else:
+                    if output_list and len(output_list[-1]) <= 1:
+                        output_list[-1] += string
+                    else:
+                        output_list.append(string)
+            
+            return [s.strip() for s in output_list]
+                
+        if n_lines <= 1:
+            return [string]
+            
+        sep_indexes = list[int]()
+        last_was_digit = False
+        last_was_upper = False
+
+        for i in range(len(string)):
+            c = string[i]
+            if c in (' ', '-', '_', '.'):
+                sep_indexes.append(i)
+            else:
+                if c.upper() == c:
+                    if c.isdigit():
+                        if not last_was_digit:
+                            sep_indexes.append(i)
+                    else:
+                        if last_was_digit or not last_was_upper:
+                            sep_indexes.append(i)
+
+                    last_was_upper = True
+                else:
+                    if last_was_digit:
+                        sep_indexes.append(i)
+                    last_was_upper = False
+
+                last_was_digit = c.isdigit()
+            
+        if not sep_indexes:
+            return [string]
+        
+        if len(sep_indexes) + 1 <= n_lines:
+            return_list = list[str]()
+            last_index = 0
+
+            for sep_index in sep_indexes:
+                return_list.append(string[last_index:sep_index])
+                last_index = sep_index
+
+            return_list.append(string[last_index:])
+
+            return polished_list(return_list)
+        
+        best_indexes = [0]
+        string_rest = string
+
+        for i in range(n_lines, 1, -1):
+            
+            target = best_indexes[-1] + int(len(string_rest)/i)
+            best_index = None
+            best_dif = len(string)
+
+            for s in sep_indexes:
+                if s <= best_indexes[-1]:
+                    continue
+
+                dif = abs(target - s)
+                if dif < best_dif:
+                    best_index = s
+                    best_dif = dif
+                else:
+                    break
+
+            if best_index is None:
+                continue
+
+            string_rest = string[best_index:]
+            best_indexes.append(best_index)
+
+        best_indexes = best_indexes[1:]
+        last_index = 0
+        return_list = list[str]()
+
+        for i in best_indexes:
+            return_list.append(string[last_index:i])
+            last_index = i
+
+        return_list.append(string[last_index:])
+        return polished_list(return_list)
+    
+    def _split_title(self, n_lines: int) -> tuple[TitleLine]:
+        title, slash, subtitle = self._group_name.partition('/')
+
+        if (not subtitle
+                and self._box_type == BoxType.CLIENT
+                and ' (' in self._group_name
+                and self._group_name.endswith(')')):
+            title, parenthese, subtitle = self._group_name.partition(' (')
+            subtitle = subtitle[:-1]
+        
+        theme = self.get_theme()
+
+        if self._box_type == BoxType.CLIENT and subtitle:
+            # if there is a subtitle, title is not bold when subtitle is.
+            # so title is 'little'
+            client_line = TitleLine(title, theme, little=True)
+            subclient_line = TitleLine(subtitle, theme)
+            title_lines = []
+            
+            if n_lines <= 2:
+                title_lines.append(client_line)
+                title_lines.append(subclient_line)
+            
+            else:
+                if client_line.size > subclient_line.size:
+                    client_strs = self.split_in_two(title, 2)
+                    for client_str in client_strs:
+                        title_lines.append(TitleLine(client_str, theme, little=True))
+                    
+                    for subclient_str in self.split_in_two(subtitle, n_lines - 2):
+                        title_lines.append(TitleLine(subclient_str, theme))
+                else:
+                    two_lines_title = False
+                    
+                    if n_lines >= 4:
+                        # Check if we need to split the client title
+                        # it could be "Carla-Multi-Client.Carla".
+                        subtitles = self.split_in_two(subtitle, n_lines - 2)
+
+                        for subtt in subtitles:
+                            subtt_line = TitleLine(subtt, theme)
+                            if subtt_line.size > client_line.size:
+                                break
+                        else:
+                            client_strs = self.split_in_two(title, 2)
+                            for client_str in client_strs:
+                                title_lines.append(
+                                    TitleLine(client_str, theme, little=True))
+                            two_lines_title = True
+                    
+                    if not two_lines_title:
+                        title_lines.append(client_line)
+                    
+                    subt_len = n_lines - 1
+                    if two_lines_title:
+                        subt_len -= 1
+                        titles = self.split_in_two(subtitle, subt_len)
+                        for title in titles:
+                            title_lines.append(TitleLine(title, theme))
+                    else:
+                        titles = self.split_in_two('uuuu' + subtitle, subt_len)
+                        
+                        # supress the uuuu
+                        for i in range(len(titles)):
+                            title = titles[i]
+                            if i == 0:
+                                title = title[4:]
+                                if not title:
+                                    continue
+                            title_lines.append(TitleLine(title, theme))
+        else:
+            if n_lines >= 2:
+                titles = []
+                if (self._group_name.startswith(
+                     ('Carla.', 'Carla-Multi-Client.', 'Carla-Single-Client.'))
+                        and '/' in self._group_name):
+                    first_line, slash, last_line = self._group_name.partition('/')
+                    titles = [first_line + '/'] + self.split_in_two(last_line, n_lines - 1)
+                else:
+                    titles = self.split_in_two(self._group_name, n_lines)
+
+                title_lines = [TitleLine(tt, theme) for tt in titles]
+            else:
+                title_lines = [TitleLine(self._group_name, theme)]
+
+        return tuple(title_lines)
+
+    def _get_area(self, width: float, height: float) -> int:
+        hwr = canvas.theme.hardware_rack_width if self._is_hardware else 0
+        pen_width = self.get_theme().fill_pen().widthF()
+        
+        return (next_width_on_grid(hwr * 2 + width)
+                * next_height_on_grid(
+                    hwr * 2 + height + 2 * pen_width))
+
+    def _choose_box_layout(
+        self, height_for_ports: int, height_for_ports_one: int,
+        ports_in_width: int, ports_out_width: int) -> BestLayoutProps:
+        '''choose in how many lines the title should be splitted
+        and if the box layout should be large or high.
+        returns a dict with all required variables and values'''
+        
+        # width_for_ports_one is the width needed for ports
+        # if inputs and outputs layouted in one column.
+        ## INPUT_PORT_1
+        ## INPUT_PORT_2
+        ##    OUTPUT_PORT_1
+        ## ...
+        width_for_ports = 30 + ports_in_width + ports_out_width
+        width_for_ports_one = 30 + max(ports_in_width, ports_out_width)
+
+        ports_width = ports_in_width
+        if self._current_port_mode is PortMode.OUTPUT:
+            ports_width = ports_out_width
+
+        box_theme = self.get_theme()
+        font_size = box_theme.font().pixelSize()
+        pen_width = box_theme.fill_pen().widthF()
+
+        # Check Text Name size
+        
+        # first look in cache if title sizes are stocked
+        all_title_templates = box_theme.get_title_templates(
+            self._group_name, self._can_handle_gui, self.has_top_icon())
+        all_title_templates = list[dict[str, int]]()
+        lines_choice_max = len(all_title_templates) - 1
+
+        if not all_title_templates:
+            # this box title is not in cache, we need to estimate all its sizes
+            # depending number of splitted lines.
+            title_template = {
+                "title_width": 0, "header_width": 0, "header_height": 0}
+            all_title_templates = [title_template.copy() for i in range(8)]
+
+            last_lines_count = 0
+            GUI_MARGIN = 2
+            title_line_y_start = 1 + font_size
+            
+            header_height = 2 + font_size + 2
+            if self.has_top_icon():
+                header_height = 3 + 24 + 3
+
+            for i in range(1, 8):
+                max_title_width = 0
+                max_header_width = 50
+                if self._plugin_inline is not InlineDisplay.DISABLED:
+                    max_header_width = 200
+                
+                title_lines = self._split_title(i)
+
+                for j in range(len(title_lines)):
+                    title_line = title_lines[j]
+                    title_line.y = title_line_y_start + j * int(font_size * 1.4)
+                    max_title_width = int(max(max_title_width, title_line.size))
+                    header_width = title_line.size + 10
+
+                    if self.has_top_icon() and title_line.y <= 28 + font_size:
+                        # text line is at right of the icon
+                        header_width += 28
+
+                    max_header_width = max(max_header_width, header_width)
+                
+                header_height = max(
+                    header_height,
+                    title_line_y_start
+                        + int(font_size * 1.4) * (len(title_lines) - 1)
+                        + 5)
+                
+                if self._can_handle_gui:
+                    max_header_width += 2 * GUI_MARGIN
+                    header_height += 2 * GUI_MARGIN
+
+                new_title_template = title_template.copy()
+                new_title_template['title_width'] = max_title_width
+                new_title_template['header_width'] = max_header_width
+                new_title_template['header_height'] = header_height
+                all_title_templates[i] = new_title_template
+
+                if i > 2 and len(title_lines) <= last_lines_count:
+                    break
+
+                last_lines_count = len(title_lines)
+
+            lines_choice_max = i
+            box_theme.save_title_templates(
+                self._group_name, self._can_handle_gui, self.has_top_icon(),
+                all_title_templates[:lines_choice_max])
+
+        # Now compare multiple possible areas for the box,
+        # depending on BoxLayoutMode and number of lines for the box title.
+
+        sizes_tuples = list[tuple[int, int, bool, TitleOn]]()
+        layout_mode = self._layout_mode
+        
+        if self._current_port_mode in (PortMode.INPUT, PortMode.OUTPUT):
+            # splitted box
+            
+            if layout_mode in (BoxLayoutMode.AUTO, BoxLayoutMode.LARGE):
+                ports_y_start_min = (box_theme.port_spacing()
+                                     + box_theme.port_type_spacing())
+                ports_y_start_min = 0.0
+                
+                # calculate area with title on side
+                for i in range(1, lines_choice_max + 1):
+                    sizes_tuples.append(
+                        (self._get_area(
+                            ports_width + 12 + all_title_templates[i]['header_width'],
+                            max(all_title_templates[i]['header_height'],
+                                height_for_ports + ports_y_start_min)),
+                         i, False, TitleOn.SIDE))
+
+                if self.has_top_icon():
+                    # calculate area with title on side (title under the icon)
+                    for i in range(1, lines_choice_max + 1):
+                        header_width = max(
+                            38, all_title_templates[i]['title_width'] + 12)
+                        if self._can_handle_gui:
+                            header_width += 4
+                        
+                        box_width = ports_width + header_width + 12
+                        header_height = all_title_templates[i]['header_height']
+                        header_height += 20 if i == 1 else 30
+                        box_height = max(
+                            height_for_ports + ports_y_start_min, header_height)
+                        
+                        sizes_tuples.append(
+                            (self._get_area(box_width, box_height),
+                             i, False, TitleOn.SIDE_UNDER_ICON))
+                        
+            if layout_mode in (BoxLayoutMode.AUTO, BoxLayoutMode.HIGH):
+                # calculate area with title on top
+                for i in range(1, lines_choice_max + 1):
+                    sizes_tuples.append(
+                        (self._get_area(
+                            max(all_title_templates[i]['header_width'],
+                                width_for_ports),
+                            all_title_templates[i]['header_height']
+                            + height_for_ports),
+                         i, False, TitleOn.TOP))
+                    
+        else:
+            # --- grouped box ---
+            
+            # calculate area with input and outputs ports descending
+            if (layout_mode in (BoxLayoutMode.AUTO, BoxLayoutMode.HIGH)
+                    and options.box_grouped_auto_layout_ratio < 2.0):
+                for i in range(1, lines_choice_max + 1):
+                    sizes_tuples.append(
+                        (self._get_area(
+                            max(all_title_templates[i]['header_width'],
+                                width_for_ports_one),
+                            all_title_templates[i]['header_height']
+                            + height_for_ports_one),
+                         i, True, TitleOn.TOP))
+
+            # calculate area with input ports at left of output ports
+            if (layout_mode in (BoxLayoutMode.AUTO, BoxLayoutMode.LARGE)
+                    and options.box_grouped_auto_layout_ratio > 0.0):
+                for i in range(1, lines_choice_max + 1):
+                    sizes_tuples.append(
+                        (self._get_area(
+                            max(all_title_templates[i]['header_width'],
+                                width_for_ports),
+                            all_title_templates[i]['header_height']
+                            + height_for_ports),
+                         i, False, TitleOn.TOP))
+
+        # sort areas and choose the first one (the littlest area)
+        sizes_tuples.sort()
+        area_size, lines_choice, one_column, title_on_side = sizes_tuples[0]
+
+        self._title_lines = self._split_title(lines_choice)
+        
+        header_height = all_title_templates[lines_choice]['header_height']
+        header_width = all_title_templates[lines_choice]['header_width']
+        max_title_width = all_title_templates[lines_choice]['title_width']
+        
+        if self._current_port_mode is PortMode.BOTH:
+            if one_column:
+                true_layout_mode = BoxLayoutMode.HIGH
+            else:
+                true_layout_mode = BoxLayoutMode.LARGE
+        else:
+            if title_on_side:
+                true_layout_mode = BoxLayoutMode.LARGE
+            else:
+                true_layout_mode = BoxLayoutMode.HIGH
+        
+        box_width = 0
+        box_height = 0
+        ports_y_start = header_height + pen_width
+
+        self._title_under_icon = bool(title_on_side is TitleOn.SIDE_UNDER_ICON)
+
+        if title_on_side:
+            ports_y_start = box_theme.port_spacing() + pen_width
+            
+            if self._title_under_icon:
+                header_width = max(38, max_title_width + 10 + 2 * pen_width)
+                if self._can_handle_gui:
+                    header_width += 4
+
+                box_width = ports_width + header_width + 12 + 2 * pen_width
+                header_height += 20 if len(self._title_lines) == 1 else 30
+                box_height = max(height_for_ports + ports_y_start, header_height) + 2 * pen_width
+            else:
+                box_width = ports_width + header_width + 12 + 2 * pen_width
+                box_height = max(height_for_ports + ports_y_start, header_height) + 2 * pen_width
+
+        elif one_column:
+            box_width = max(width_for_ports_one, header_width + 2 * pen_width)
+            box_height = header_height + height_for_ports_one + pen_width * 2
+        else:
+            box_width = max(width_for_ports, header_width + 2 * pen_width)
+            box_height = header_height + height_for_ports + pen_width * 2
+        
+        return BestLayoutProps(
+            true_layout_mode,
+            max_title_width,
+            box_width,
+            box_height,
+            header_width,
+            header_height,
+            ports_y_start,
+            one_column
+        )
+
     def _set_ports_y_positions(
             self, align_port_types: bool, start_pos: int,
             one_column: bool) -> dict[str, list[list[int]]]:
@@ -283,13 +711,15 @@ class BoxWidget(BoxWidgetMoth):
         box_theme = self.get_theme()
         port_spacing = box_theme.port_spacing()
         port_type_spacing = box_theme.port_type_spacing()
+        pen_width = box_theme.fill_pen().widthF()
         last_in_type_and_sub = (PortType.NULL, PortSubType.REGULAR)
         last_out_type_and_sub = (PortType.NULL, PortSubType.REGULAR)
         last_type_and_sub = (PortType.NULL, PortSubType.REGULAR)
         
-        # start_pos = port_spacing + box_theme.fill_pen().widthF()
-        # if not self._has_side_title():
-        #     start_pos += self._header_height
+        if self._has_side_title():
+            start_pos = box_theme.fill_pen().widthF() + port_spacing
+        else:
+            start_pos = self._header_height + pen_width
         
         # last_in_pos = last_out_pos = start_pos + self._y_normal_rab / 2
         # wrapped_port_pos = start_pos +  self._y_wrapped_rab / 2
@@ -396,431 +826,7 @@ class BoxWidget(BoxWidgetMoth):
         
         return {'input_segments': input_segments,
                 'output_segments': output_segments}
-    
-    @staticmethod
-    def split_in_two(string: str, n_lines: int) -> list[str]:
-        def polished_list(input_list: list) -> list:
-            output_list = list[str]()
 
-            for string in input_list:
-                if not string:
-                    continue
-                if len(string) == 1:
-                    if output_list:
-                        output_list[-1] += string
-                    else:
-                        output_list.append(string)
-                else:
-                    if output_list and len(output_list[-1]) <= 1:
-                        output_list[-1] += string
-                    else:
-                        output_list.append(string)
-            
-            return [s.strip() for s in output_list]
-                
-        if n_lines <= 1:
-            return [string]
-            
-        sep_indexes = list[int]()
-        last_was_digit = False
-        last_was_upper = False
-
-        for i in range(len(string)):
-            c = string[i]
-            if c in (' ', '-', '_', '.'):
-                sep_indexes.append(i)
-            else:
-                if c.upper() == c:
-                    if c.isdigit():
-                        if not last_was_digit:
-                            sep_indexes.append(i)
-                    else:
-                        if last_was_digit or not last_was_upper:
-                            sep_indexes.append(i)
-
-                    last_was_upper = True
-                else:
-                    if last_was_digit:
-                        sep_indexes.append(i)
-                    last_was_upper = False
-
-                last_was_digit = c.isdigit()
-            
-        if not sep_indexes:
-            return [string]
-        
-        if len(sep_indexes) + 1 <= n_lines:
-            return_list = list[str]()
-            last_index = 0
-
-            for sep_index in sep_indexes:
-                return_list.append(string[last_index:sep_index])
-                last_index = sep_index
-
-            return_list.append(string[last_index:])
-
-            return polished_list(return_list)
-        
-        best_indexes = [0]
-        string_rest = string
-
-        for i in range(n_lines, 1, -1):
-            
-            target = best_indexes[-1] + int(len(string_rest)/i)
-            best_index = None
-            best_dif = len(string)
-
-            for s in sep_indexes:
-                if s <= best_indexes[-1]:
-                    continue
-
-                dif = abs(target - s)
-                if dif < best_dif:
-                    best_index = s
-                    best_dif = dif
-                else:
-                    break
-
-            if best_index is None:
-                continue
-
-            string_rest = string[best_index:]
-            best_indexes.append(best_index)
-
-        best_indexes = best_indexes[1:]
-        last_index = 0
-        return_list = list[str]()
-
-        for i in best_indexes:
-            return_list.append(string[last_index:i])
-            last_index = i
-
-        return_list.append(string[last_index:])
-        return polished_list(return_list)
-    
-    
-    def _split_title(self, n_lines: int) -> tuple[TitleLine]:
-        title, slash, subtitle = self._group_name.partition('/')
-
-        if (not subtitle
-                and self._box_type == BoxType.CLIENT
-                and ' (' in self._group_name
-                and self._group_name.endswith(')')):
-            title, parenthese, subtitle = self._group_name.partition(' (')
-            subtitle = subtitle[:-1]
-        
-        theme = self.get_theme()
-
-        if self._box_type == BoxType.CLIENT and subtitle:
-            # if there is a subtitle, title is not bold when subtitle is.
-            # so title is 'little'
-            client_line = TitleLine(title, theme, little=True)
-            subclient_line = TitleLine(subtitle, theme)
-            title_lines = []
-            
-            if n_lines <= 2:
-                title_lines.append(client_line)
-                title_lines.append(subclient_line)
-            
-            else:
-                if client_line.size > subclient_line.size:
-                    client_strs = self.split_in_two(title, 2)
-                    for client_str in client_strs:
-                        title_lines.append(TitleLine(client_str, theme, little=True))
-                    
-                    for subclient_str in self.split_in_two(subtitle, n_lines - 2):
-                        title_lines.append(TitleLine(subclient_str, theme))
-                else:
-                    two_lines_title = False
-                    
-                    if n_lines >= 4:
-                        # Check if we need to split the client title
-                        # it could be "Carla-Multi-Client.Carla".
-                        subtitles = self.split_in_two(subtitle, n_lines - 2)
-
-                        for subtt in subtitles:
-                            subtt_line = TitleLine(subtt, theme)
-                            if subtt_line.size > client_line.size:
-                                break
-                        else:
-                            client_strs = self.split_in_two(title, 2)
-                            for client_str in client_strs:
-                                title_lines.append(
-                                    TitleLine(client_str, theme, little=True))
-                            two_lines_title = True
-                    
-                    if not two_lines_title:
-                        title_lines.append(client_line)
-                    
-                    subt_len = n_lines - 1
-                    if two_lines_title:
-                        subt_len -= 1
-                        titles = self.split_in_two(subtitle, subt_len)
-                        for title in titles:
-                            title_lines.append(TitleLine(title, theme))
-                    else:
-                        titles = self.split_in_two('uuuu' + subtitle, subt_len)
-                        
-                        # supress the uuuu
-                        for i in range(len(titles)):
-                            title = titles[i]
-                            if i == 0:
-                                title = title[4:]
-                                if not title:
-                                    continue
-                            title_lines.append(TitleLine(title, theme))
-        else:
-            if n_lines >= 2:
-                titles = []
-                if (self._group_name.startswith(
-                     ('Carla.', 'Carla-Multi-Client.', 'Carla-Single-Client.'))
-                        and '/' in self._group_name):
-                    first_line, slash, last_line = self._group_name.partition('/')
-                    titles = [first_line + '/'] + self.split_in_two(last_line, n_lines - 1)
-                else:
-                    titles = self.split_in_two(self._group_name, n_lines)
-
-                title_lines = [TitleLine(tt, theme) for tt in titles]
-            else:
-                title_lines = [TitleLine(self._group_name, theme)]
-
-        return tuple(title_lines)
-
-    def _get_area(self, width: int, height: int) -> int:
-        hwr = canvas.theme.hardware_rack_width if self._is_hardware else 0
-        
-        return (next_width_on_grid(hwr * 2 + width)
-                * next_height_on_grid(hwr * 2 + height))
-
-    def _choose_box_layout(
-        self, height_for_ports: int, height_for_ports_one: int,
-        ports_in_width: int, ports_out_width: int) -> BestLayoutProps:
-        '''choose in how many lines the title should be splitted
-        and if the box layout should be large or high.
-        returns a dict with all required variables and values'''
-        
-        # width_for_ports_one is the width needed for ports
-        # if inputs and outputs layouted in one column.
-        ## INPUT_PORT_1
-        ## INPUT_PORT_2
-        ##    OUTPUT_PORT_1
-        ## ...
-        width_for_ports = 30 + ports_in_width + ports_out_width
-        width_for_ports_one = 30 + max(ports_in_width, ports_out_width)
-
-        ports_width = ports_in_width
-        if self._current_port_mode is PortMode.OUTPUT:
-            ports_width = ports_out_width
-
-        box_theme = self.get_theme()
-        font_size = box_theme.font().pixelSize()
-
-        # Check Text Name size
-        
-        # first look in cache if title sizes are stocked
-        all_title_templates = box_theme.get_title_templates(
-            self._group_name, self._can_handle_gui, self.has_top_icon())
-        lines_choice_max = len(all_title_templates) - 1
-
-        if not all_title_templates:
-            # this box title is not in cache, we need to estimate all its sizes
-            # depending number of splitted lines.
-            title_template = {
-                "title_width": 0, "header_width": 0, "header_height": 0}
-            all_title_templates = [title_template.copy() for i in range(8)]
-
-            last_lines_count = 0
-            GUI_MARGIN = 2
-            title_line_y_start = 2 + font_size
-            
-            header_height = 2 + font_size + 2
-            if self.has_top_icon():
-                header_height = 4 + 24 + 4
-
-            for i in range(1, 8):
-                max_title_width = 0
-                max_header_width = 50
-                if self._plugin_inline is not InlineDisplay.DISABLED:
-                    max_header_width = 200
-                
-                title_lines = self._split_title(i)
-
-                for j in range(len(title_lines)):
-                    title_line = title_lines[j]
-                    title_line.y = title_line_y_start + j * int(font_size * 1.4)
-                    max_title_width = int(max(max_title_width, title_line.size))
-                    header_width = title_line.size + 12
-
-                    if self.has_top_icon() and title_line.y <= 28 + font_size:
-                        # text line is at right of the icon
-                        header_width += 28
-
-                    max_header_width = max(max_header_width, header_width)
-                
-                header_height = max(
-                    header_height,
-                    title_line_y_start
-                        + int(font_size * 1.4) * (len(title_lines) - 1)
-                        + 2 + 5)
-                
-                if self._can_handle_gui:
-                    max_header_width += 2 * GUI_MARGIN
-                    header_height += 2 * GUI_MARGIN
-
-                new_title_template = title_template.copy()
-                new_title_template['title_width'] = max_title_width
-                new_title_template['header_width'] = max_header_width
-                new_title_template['header_height'] = header_height
-                all_title_templates[i] = new_title_template
-
-                if i > 2 and len(title_lines) <= last_lines_count:
-                    break
-
-                last_lines_count = len(title_lines)
-
-            lines_choice_max = i
-            box_theme.save_title_templates(
-                self._group_name, self._can_handle_gui, self.has_top_icon(),
-                all_title_templates[:lines_choice_max])
-
-        # Now compare multiple possible areas for the box,
-        # depending on BoxLayoutMode and number of lines for the box title.
-
-        sizes_tuples = list[tuple[int, int, bool, TitleOn]]()
-        layout_mode = self._layout_mode
-        
-        if self._current_port_mode in (PortMode.INPUT, PortMode.OUTPUT):
-            # splitted box
-            
-            if layout_mode in (BoxLayoutMode.AUTO, BoxLayoutMode.LARGE):
-                ports_y_start_min = (box_theme.port_spacing()
-                                     + box_theme.port_type_spacing())
-                
-                # calculate area with title on side
-                for i in range(1, lines_choice_max + 1):
-                    sizes_tuples.append(
-                        (self._get_area(
-                            ports_width + 12 + all_title_templates[i]['header_width'],
-                            max(all_title_templates[i]['header_height'],
-                                height_for_ports + ports_y_start_min)),
-                         i, False, TitleOn.SIDE))
-
-                if self.has_top_icon():
-                    # calculate area with title on side (title under the icon)
-                    for i in range(1, lines_choice_max + 1):
-                        header_width = max(
-                            38, all_title_templates[i]['title_width'] + 12)
-                        if self._can_handle_gui:
-                            header_width += 4
-                        
-                        box_width = ports_width + header_width + 12
-                        header_height = all_title_templates[i]['header_height']
-                        header_height += 20 if i == 1 else 30
-                        box_height = max(
-                            height_for_ports + ports_y_start_min, header_height)
-                        
-                        sizes_tuples.append(
-                            (self._get_area(box_width, box_height),
-                             i, False, TitleOn.SIDE_UNDER_ICON))
-                        
-            if layout_mode in (BoxLayoutMode.AUTO, BoxLayoutMode.HIGH):
-                # calculate area with title on top
-                for i in range(1, lines_choice_max + 1):
-                    sizes_tuples.append(
-                        (self._get_area(
-                            max(all_title_templates[i]['header_width'],
-                                width_for_ports),
-                            all_title_templates[i]['header_height']
-                            + height_for_ports),
-                         i, False, TitleOn.TOP))
-                    
-        else:
-            # --- grouped box ---
-            
-            # calculate area with input and outputs ports descending
-            if (layout_mode in (BoxLayoutMode.AUTO, BoxLayoutMode.HIGH)
-                    and options.box_grouped_auto_layout_ratio < 2.0):
-                for i in range(1, lines_choice_max + 1):
-                    sizes_tuples.append(
-                        (self._get_area(
-                            max(all_title_templates[i]['header_width'],
-                                width_for_ports_one),
-                            all_title_templates[i]['header_height']
-                            + height_for_ports_one),
-                         i, True, TitleOn.TOP))
-
-            # calculate area with input ports at left of output ports
-            if (layout_mode in (BoxLayoutMode.AUTO, BoxLayoutMode.LARGE)
-                    and options.box_grouped_auto_layout_ratio > 0.0):
-                for i in range(1, lines_choice_max + 1):
-                    sizes_tuples.append(
-                        (self._get_area(
-                            max(all_title_templates[i]['header_width'],
-                                width_for_ports),
-                            all_title_templates[i]['header_height']
-                            + height_for_ports),
-                         i, False, TitleOn.TOP))
-
-        # sort areas and choose the first one (the littlest area)
-        sizes_tuples.sort()
-        area_size, lines_choice, one_column, title_on_side = sizes_tuples[0]
-
-        self._title_lines = self._split_title(lines_choice)
-        
-        header_height = all_title_templates[lines_choice]['header_height']
-        header_width = all_title_templates[lines_choice]['header_width']
-        max_title_width = all_title_templates[lines_choice]['title_width']
-        
-        if self._current_port_mode is PortMode.BOTH:
-            if one_column:
-                true_layout_mode = BoxLayoutMode.HIGH
-            else:
-                true_layout_mode = BoxLayoutMode.LARGE
-        else:
-            if title_on_side:
-                true_layout_mode = BoxLayoutMode.LARGE
-            else:
-                true_layout_mode = BoxLayoutMode.HIGH
-        
-        box_width = 0
-        box_height = 0
-        ports_y_start = header_height
-
-        self._title_under_icon = bool(title_on_side is TitleOn.SIDE_UNDER_ICON)
-
-        if title_on_side:
-            ports_y_start = box_theme.port_spacing() + box_theme.fill_pen().widthF()
-            
-            if self._title_under_icon:
-                header_width = max(38, max_title_width + 12)
-                if self._can_handle_gui:
-                    header_width += 4
-
-                box_width = ports_width + header_width + 12
-                header_height += 20 if len(self._title_lines) == 1 else 30
-                box_height = max(height_for_ports + ports_y_start, header_height)                
-            else:
-                box_width = ports_width + 12 + header_width
-                box_height = max(height_for_ports + ports_y_start, header_height)
-
-        elif one_column:
-            box_width = max(width_for_ports_one, header_width)
-            box_height = header_height + height_for_ports_one
-        else:
-            box_width = max(width_for_ports, header_width)
-            box_height = header_height + height_for_ports
-        
-        return BestLayoutProps(
-            true_layout_mode,
-            max_title_width,
-            box_width,
-            box_height,
-            header_width,
-            header_height,
-            ports_y_start,
-            one_column
-        )
-    
     def _set_ports_x_positions(self, max_in_width: int, max_out_width: int):
         box_theme = self.get_theme()
         port_in_offset = box_theme.port_in_offset()
@@ -885,15 +891,17 @@ class BoxWidget(BoxWidgetMoth):
         box_theme = self.get_theme()
         font_size = box_theme.font().pixelSize()
         font_spacing = int(font_size * 1.4)
+        pen_width = box_theme.fill_pen().widthF()
+
         # when client is client capable of gui state
         # header has margins
         gui_margin = 2 if self._can_handle_gui else 0
         
         # set title lines Y position
-        title_y_start = font_size + 2 + gui_margin
+        title_y_start = font_size + 1 + gui_margin + pen_width
 
         if self._title_under_icon:
-            title_y_start = 4 + gui_margin + 24 + font_spacing
+            title_y_start = 3 + gui_margin + 24 + font_spacing + pen_width
         
         for i in range(len(self._title_lines)):
             title_line = self._title_lines[i]
@@ -901,7 +909,7 @@ class BoxWidget(BoxWidgetMoth):
         
         if not self._title_under_icon and len(self._title_lines) == 1:
             self._title_lines[0].y = int(
-                (self._header_height - font_size) / 2 + font_size -2)
+                pen_width + font_size * 0.5 + (self._header_height - font_size * 0.5) / 2)
         
         if self._has_side_title():
             y_correction = 0
@@ -912,28 +920,29 @@ class BoxWidget(BoxWidgetMoth):
                     and not self._title_under_icon
                     and not self._can_handle_gui
                     and self._title_lines[-1].y + int(font_size * 1.4) > self._height):
-                y_correction = int((self._height - self._title_lines[-1].y - 2) / 2 - 2)
+                y_correction = (self._height - self._title_lines[-1].y - 2) / 2 - 2
             
             # set title lines pos
             for title_line in self._title_lines:
                 if self._current_port_mode is PortMode.INPUT:
-                    title_line.x = 4 + self._width - self._header_width + 2
+                    title_line.x = self._width - self._header_width + 5 - pen_width
                     if self._can_handle_gui:
                         title_line.x += 2
                     
                     if self.has_top_icon():
-                        self.top_icon.set_pos(self._width - 28 - gui_margin,
-                                              4 + gui_margin)
+                        self.top_icon.set_pos(self._width - 24 - 3 - pen_width - gui_margin,
+                                              3 + pen_width + gui_margin)
     
                 elif self._current_port_mode is PortMode.OUTPUT:
-                    title_line.x = (self._header_width
+                    title_line.x = (pen_width + self._header_width
                                     - title_line.size - 6)
                     
                     if self._can_handle_gui:
                         title_line.x -= 2
                     
                     if self.has_top_icon():
-                        self.top_icon.set_pos(4 + gui_margin, 4 + gui_margin)
+                        self.top_icon.set_pos(3 + pen_width + gui_margin,
+                                              3 + pen_width + gui_margin)
                 
                 title_line.y += y_correction
             return
@@ -963,17 +972,17 @@ class BoxWidget(BoxWidgetMoth):
         # set icon position
         if self.has_top_icon():
             self.top_icon.set_pos(int((self._width - max_title_icon_size)/2),
-                                  4 + gui_margin)
-        
+                                  int(3 + pen_width + gui_margin))
+
         # calculate header lines positions
-        side_size = int((self._width - max(max_title_icon_size, max_title_size)) / 2)
+        side_size = (self._width - max(max_title_icon_size, max_title_size)) * 0.5
         
         if side_size > 10:
-            y = int(self._header_height / 2)
+            y = self._header_height / 2 + pen_width
             
-            self._header_line_left = (5, y, side_size - 5, y)
-            self._header_line_right = (int(self._width) - side_size + 5, y,
-                                       int(self._width) - 5, y)
+            self._header_line_left = (5.0, y, side_size - 5.0, y)
+            self._header_line_right = (self._width - side_size + 5.0, y,
+                                       self._width - 5.0, y)
     
     def build_painter_path(self, pos_dict):
         input_segments = pos_dict['input_segments']
@@ -1206,9 +1215,9 @@ class BoxWidget(BoxWidgetMoth):
         last_port_mode = ports_min_sizes.last_port_mode
 
         box_theme = self.get_theme()
-        down_height = box_theme.fill_pen().widthF()
-        height_for_ports = max(last_in_pos, last_out_pos) + down_height
-        height_for_ports_one = last_inout_pos + down_height
+        pen_width = box_theme.fill_pen().widthF()
+        height_for_ports = max(last_in_pos, last_out_pos)
+        height_for_ports_one = last_inout_pos
        
         self._width_in = max_in_width
         self._width_out = max_out_width
@@ -1220,6 +1229,7 @@ class BoxWidget(BoxWidgetMoth):
             self._current_layout_mode = best_props.true_layout_mode
             self._header_width = best_props.header_width
             self._header_height = best_props.header_height
+            print(self, self._header_height)
             self._ports_y_start = best_props.ports_y_start
 
             one_column = best_props.one_column
@@ -1231,7 +1241,7 @@ class BoxWidget(BoxWidgetMoth):
 
             # wrapped sizes
             if self._has_side_title():
-                wrapped_height = self._header_height
+                wrapped_height = self._header_height + pen_width * 2
                 if self._current_port_mode is PortMode.INPUT:
                     wrapped_width = box_width - self._width_in
                 elif self._current_port_mode is PortMode.OUTPUT:
@@ -1239,8 +1249,6 @@ class BoxWidget(BoxWidgetMoth):
             else:
                 wrapped_height = self._ports_y_start + canvas.theme.port_height
                 wrapped_width = box_width
-            
-            sv_normal_height, sv_wrapped_height = normal_height, wrapped_height
             
             # adapt box sizes to the grid
             if self._is_hardware:
@@ -1263,12 +1271,12 @@ class BoxWidget(BoxWidgetMoth):
             # for nicer ports y positioning.
             if self._has_side_title():
                 self._y_normal_rab = (normal_height - height_for_ports
-                                      - canvas.theme.port_spacing())
+                                      - pen_width)
                 self._y_wrapped_rab = (wrapped_height - height_for_ports
-                                       - canvas.theme.port_spacing())
+                                       - pen_width)
             else:
-                self._y_normal_rab = normal_height - sv_normal_height
-                self._y_wrapped_rab = wrapped_height - sv_wrapped_height
+                self._y_normal_rab = normal_height - height_for_ports - self._header_height - pen_width
+                self._y_wrapped_rab = wrapped_height - canvas.theme.port_height - self._header_height
 
         else:
             normal_height = self._unwrapped_height

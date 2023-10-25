@@ -871,18 +871,20 @@ class BoxWidgetMoth(QGraphicsItem):
 
         # Draw toggle GUI client button
         if self._can_handle_gui:
-            header_rect = QRectF(3, 3, self._width - 6, self._header_height - 6)
+            header_rect = QRectF(
+                3.0 + pen_width, 3.0 + pen_width,
+                self._width - 6.0 - 2 * pen_width, self._header_height - 6.0)
             if self._has_side_title():
                 if self._current_port_mode is PortMode.INPUT:
                     header_rect = QRectF(
-                        self._width - self._header_width + 3, 3,
-                        self._header_width - 6, self._header_height -6)
+                        self._width - self._header_width - pen_width + 3.0, 3.0 + pen_width,
+                        self._header_width - 6.0, self._header_height -6.0)
                 elif self._current_port_mode is PortMode.OUTPUT:
                     header_rect = QRectF(
-                        3, 3, self._header_width - 6, self._header_height - 6)
+                        3.0 + pen_width, 3.0 + pen_width,
+                        self._header_width - 6.0, self._header_height - 6.0)
             
-            header_rect.adjust(line_hinting * 2, line_hinting * 2,
-                               -2 * line_hinting, -2 * line_hinting)
+            # header_rect.adjust(pen_width, pen_width, - pen_width, - pen_width)
             
             gui_theme = canvas.theme.gui_button
             if self._gui_visible:
@@ -966,8 +968,10 @@ class BoxWidgetMoth(QGraphicsItem):
         if (self._header_line_left is not None
                 and self._header_line_right is not None):
             painter.setPen(hltheme.fill_pen())
-            painter.drawLine(*self._header_line_left)
-            painter.drawLine(*self._header_line_right)
+            painter.drawLine(QPointF(*self._header_line_left[0:2]),
+                             QPointF(*self._header_line_left[2:]))
+            painter.drawLine(QPointF(*self._header_line_right[0:2]),
+                             QPointF(*self._header_line_right[2:]))
 
         normal_color = theme.text_color()
         opac_color = QColor(normal_color)
@@ -1078,6 +1082,16 @@ class BoxWidgetMoth(QGraphicsItem):
             triangle += QPointF(xpos + 2 * side, ypos + 2)
             triangle += QPointF(xpos + side, ypos -side + 2)
             painter.drawPolygon(triangle)
+
+        # painter.setPen(QColor(128, 60, 60))
+        # painter.drawLine(QPointF(0.0, float(self._header_height + pen_width)),
+        #                  QPointF(float(self._width), float(self._header_height + pen_width)))
+        # painter.drawLine(QPointF(float(self._header_width), 0.0),
+        #                  QPointF(float(self._header_width), float(self._height)))
+        # painter.drawLine(QPointF(0.0, float(self._title_lines[0].y - theme.font().pixelSize() * 0.5)),
+        #                  QPointF(float(self._width), float(self._title_lines[0].y - theme.font().pixelSize() * 0.5)))
+        # painter.drawLine(QPointF(0.0, float(self._title_lines[0].y)),
+        #                  QPointF(float(self._width), float(self._title_lines[0].y)))
 
         painter.restore()
 
