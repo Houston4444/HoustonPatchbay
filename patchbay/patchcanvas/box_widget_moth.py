@@ -20,11 +20,10 @@
 import logging
 from math import ceil
 from struct import pack
-import time
 from sip import voidptr
 import sys
 from enum import Enum
-from PyQt5.QtCore import Qt, QPointF, QPoint, QRectF, QTimer
+from PyQt5.QtCore import Qt, QPointF, QRectF, QTimer
 from PyQt5.QtGui import (QCursor, QFontMetrics, QImage, QFont,
                          QLinearGradient, QPainter, QPen, QPolygonF,
                          QColor, QPainterPath, QBrush)
@@ -35,7 +34,6 @@ from .init_values import (
     CanvasItemType,
     GroupObject,
     PortObject,
-    PortType,
     PortgrpObject,
     InlineDisplay,
     canvas,
@@ -55,6 +53,7 @@ from .portgroup_widget import PortgroupWidget
 from .line_widget import LineWidget
 from .grouped_lines_widget import GroupedLinesWidget
 from .theme import BoxStyleAttributer
+from .box_layout import BoxLayout
 
 _logger = logging.getLogger(__name__)
 
@@ -95,12 +94,6 @@ class TitleLine:
 
     def get_font(self) -> QFont:
         return self.theme.font()
-
-
-class DisconnectElement:
-    group_id: int
-    connection_in_ids: list[int]
-    connection_out_ids: list[int]
 
 
 class BoxWidgetMoth(QGraphicsItem):
@@ -220,6 +213,7 @@ class BoxWidgetMoth(QGraphicsItem):
         self._current_layout_mode = BoxLayoutMode.LARGE
         self._title_under_icon = False
         self._painter_path = QPainterPath()
+        self._layout: BoxLayout = None
 
         canvas.scene.addItem(self)
 
@@ -241,6 +235,11 @@ class BoxWidgetMoth(QGraphicsItem):
     
     def set_layout_mode(self, layout_mode: BoxLayoutMode):
         self._layout_mode = layout_mode
+    
+    def get_current_layout_mode(self) -> BoxLayoutMode:
+        if self._layout is None:
+            return BoxLayoutMode.AUTO
+        return self._layout.layout_mode
     
     def redraw_inline_display(self):
         if self._plugin_inline is InlineDisplay.CACHED:
@@ -1081,6 +1080,13 @@ class BoxWidgetMoth(QGraphicsItem):
             triangle += QPointF(xpos + side, ypos -side + 2)
             painter.drawPolygon(triangle)
 
+        # pennn = QPen(QColor(255,150, 150))
+        # pennn.setWidth(2)
+        # painter.setPen(QPen(QColor(155,0, 0)))
+        # y_in_ouy = self._layout.pen_width + self._layout.header_height + self._layout.pms.last_inout_pos
+        # if 'Dragonfly' in self._group_name:
+        #     print('oregg',y_in_ouy, self._height, self._layout.header_height, self._layout.pms.last_inout_pos, self._layout.pms.last_in_pos, self._layout.pms.last_out_pos, self._layout.height_for_ports_one, self._layout.pms)
+        # painter.drawLine(QPointF(0.0, y_in_ouy), QPointF(self._width + 0.0, y_in_ouy))
 
         painter.restore()
 

@@ -132,10 +132,10 @@ class PatchSceneMoth(QGraphicsScene):
 
         self.flying_connectable = None
 
-        self._grid = None
-        # self._grid = GridWidget(self, style='chess')
-        # self._grid.update_path()
-        # self.sceneRectChanged.connect(self._grid.update_path)
+        # self._grid = None
+        self._grid = GridWidget(self, style='chess')
+        self._grid.update_path()
+        self.sceneRectChanged.connect(self._grid.update_path)
 
         self.addItem(self._grid)
 
