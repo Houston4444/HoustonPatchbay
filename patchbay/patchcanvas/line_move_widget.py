@@ -127,7 +127,7 @@ class LineMoveWidget(QGraphicsPathItem):
         final_y = scene_pos.y() - self._item_y + new_y
 
         if self._port_mode is PortMode.OUTPUT:
-            old_x = self._item_width + 12
+            old_x = self._item_width
             mid_x = abs(final_x - old_x) / 2
             new_x1 = old_x + mid_x
             new_x2 = final_x - mid_x
@@ -138,7 +138,7 @@ class LineMoveWidget(QGraphicsPathItem):
                 new_x2 -= abs(diffxy)
 
         elif self._port_mode is PortMode.INPUT:
-            old_x = 0
+            old_x = 0.0
             mid_x = abs(final_x - old_x) / 2
             new_x1 = old_x - mid_x
             new_x2 = final_x + mid_x

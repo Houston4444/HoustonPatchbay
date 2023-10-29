@@ -83,9 +83,6 @@ class PortgroupWidget(ConnectableWidget):
         for port_widget in self._ports_widgets:
             port_widget.set_portgroup_widget(self)
 
-    def get_port_width(self) -> float:
-        return self._portgrp_width
-
     def get_connection_distance(self) -> float:
         return self._portgrp_width
 
