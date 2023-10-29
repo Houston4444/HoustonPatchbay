@@ -254,20 +254,20 @@ class PortgroupWidget(ConnectableWidget):
             text_pos = QPointF(self._ports_width + 3, text_y_pos)
 
             poly_locx[0] = self._ports_width - line_hinting
-            poly_locx[1] = self._portgrp_width - line_hinting
-            poly_locx[2] = self._portgrp_width + middle_width - 2 * line_hinting
-            poly_locx[3] = self._portgrp_width - line_hinting
+            poly_locx[1] = self._portgrp_width - middle_width - line_hinting
+            poly_locx[2] = self._portgrp_width - 2 * line_hinting
+            poly_locx[3] = self._portgrp_width - middle_width - line_hinting
             poly_locx[4] = self._ports_width - line_hinting
 
         elif self._port_mode is PortMode.OUTPUT:
             text_pos = QPointF(3.0 + middle_width, text_y_pos)
 
-            poly_locx[0] = (self._portgrp_width + middle_width
+            poly_locx[0] = (self._portgrp_width
                             - self._ports_width + line_hinting)
             poly_locx[1] = middle_width + line_hinting
             poly_locx[2] = line_hinting * 2
             poly_locx[3] = middle_width + line_hinting
-            poly_locx[4] = (self._portgrp_width + middle_width
+            poly_locx[4] = (self._portgrp_width
                             - self._ports_width + line_hinting)
 
         else:

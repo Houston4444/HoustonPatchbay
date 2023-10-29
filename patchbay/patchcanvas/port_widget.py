@@ -179,15 +179,10 @@ class PortWidget(ConnectableWidget):
     def _update_connect_pos(self):
         phi = 0.75 if self._pg_len > 2 else 0.62
         
-        if self._port_mode is PortMode.OUTPUT:
-            if self._portgrp_id:
-                x_delta = self._port_width
-            else:
-                x_delta = self._port_width + canvas.theme.port_height / 2.0
-        else:
-            x_delta = 0.0
-        
         height = canvas.theme.port_height
+        
+        x_delta = (self._port_width if self._port_mode is PortMode.OUTPUT
+                   else 0.0)
         y_delta = canvas.theme.port_height / 2
         
         if self._pg_len >= 2:
@@ -312,12 +307,7 @@ class PortWidget(ConnectableWidget):
             is_only_connect, start_point.x(), start_point.y())
 
     def boundingRect(self):        
-        if self._portgrp_id:
-            return QRectF(0.0, 0.0, self._port_width, self._port_height)
-
-        return QRectF(0.0, 0.0,
-                      self._port_width + self._port_height / 2.0,
-                      self._port_height)
+        return QRectF(0.0, 0.0, self._port_width, self._port_height)
 
     def paint(self, painter, option, widget):
         if canvas.loading_items:
@@ -366,14 +356,14 @@ class PortWidget(ConnectableWidget):
             text_pos = QPointF(3.0, text_y_pos)
 
             x_box_border = line_hinting
-            x_arrowbase = self._port_width - line_hinting
-            x_arrowmid = self._port_width + middle_width / 2 - line_hinting
-            x_arrowhead = self._port_width + middle_width - line_hinting * 2
+            x_arrowbase = self._port_width - middle_width - line_hinting
+            x_arrowmid = self._port_width - middle_width / 2 - line_hinting
+            x_arrowhead = self._port_width - line_hinting * 2
 
         elif self._port_mode is PortMode.OUTPUT:
             text_pos = QPointF(middle_width + 3.0, text_y_pos)
 
-            x_box_border = self._port_width + middle_width - line_hinting
+            x_box_border = self._port_width - line_hinting
             x_arrowbase = middle_width + line_hinting
             x_arrowmid = middle_width / 2 + line_hinting
             x_arrowhead = line_hinting * 2

@@ -164,7 +164,8 @@ class BoxWidget(BoxWidgetMoth):
                 if port.port_mode is PortMode.INPUT:
                     max_in_width = max(max_in_width, size)
                     if type_and_sub != last_in_type_and_sub:
-                        if last_in_type_and_sub != (PortType.NULL, PortSubType.REGULAR):
+                        if (last_in_type_and_sub 
+                                != (PortType.NULL, PortSubType.REGULAR)):
                             last_in_pos += port_type_spacing
                         last_in_type_and_sub = type_and_sub
                         n_in_type_and_subs += 1
@@ -177,7 +178,8 @@ class BoxWidget(BoxWidgetMoth):
                     max_out_width = max(max_out_width, size)
                     
                     if type_and_sub != last_out_type_and_sub:
-                        if last_out_type_and_sub != (PortType.NULL, PortSubType.REGULAR):
+                        if (last_out_type_and_sub != 
+                                (PortType.NULL, PortSubType.REGULAR)):
                             last_out_pos += port_type_spacing
                         last_out_type_and_sub = type_and_sub
                         n_out_type_and_subs += 1
@@ -227,8 +229,8 @@ class BoxWidget(BoxWidgetMoth):
             final_last_in_pos,
             final_last_out_pos,
             last_inout_pos,
-            max_in_width,
-            max_out_width,
+            max_in_width + canvas.theme.port_height / 2.0,
+            max_out_width + canvas.theme.port_height / 2.0,
             n_in_type_and_subs,
             n_out_type_and_subs,
             n_inout_types_and_sub,
@@ -781,7 +783,7 @@ class BoxWidget(BoxWidgetMoth):
         
         # Horizontal ports re-positioning
         in_x = port_in_offset
-        out_x = self._width - max_out_width - middle_width
+        out_x = self._width - max_out_width
 
         # Horizontal ports not in portgroup re-positioning
         for port in self._port_list:
