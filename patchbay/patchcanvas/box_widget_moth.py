@@ -1071,7 +1071,10 @@ class BoxWidgetMoth(QGraphicsItem):
         
         elif self._unwrap_triangle_pos is UnwrapButton.CENTER:
             side = 7
-            xpos = (self._width_in + self._width - self._width_out) / 2 - side
+            # xpos = (self._width_in + self._width - self._width_out) / 2 - side
+            xpos = (self._width 
+                    + self._layout.pms.ins_width
+                    - self._layout.pms.outs_width) / 2 - side
             
             ypos = self._height - 3 + 0.5
             triangle = QPolygonF()
@@ -1089,11 +1092,11 @@ class BoxWidgetMoth(QGraphicsItem):
         # painter.drawLine(QPointF(self._layout.pms.ins_width + phg, 0.0),
         #                  QPointF(self._layout.pms.ins_width + phg, float(self._height)))
         
-        painter.drawLine(QPointF(self._width - self._layout.pms.outs_width, 0.0),
-                         QPointF(self._width - self._layout.pms.outs_width, float(self._height)))
-        phg = canvas.theme.port_height / 2
-        painter.drawLine(QPointF(self._width - self._layout.pms.outs_width + phg, 0.0),
-                         QPointF(self._width - self._layout.pms.outs_width + phg, float(self._height)))
+        # painter.drawLine(QPointF(self._width - self._layout.pms.outs_width, 0.0),
+        #                  QPointF(self._width - self._layout.pms.outs_width, float(self._height)))
+        # phg = canvas.theme.port_height / 2
+        # painter.drawLine(QPointF(self._width - self._layout.pms.outs_width + phg, 0.0),
+        #                  QPointF(self._width - self._layout.pms.outs_width + phg, float(self._height)))
         
         # y_in_ouy = self._layout.pen_width + self._layout.header_height + self._layout.pms.last_inout_pos
         # if 'Dragonfly' in self._group_name:

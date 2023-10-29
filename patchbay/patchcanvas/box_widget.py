@@ -768,6 +768,9 @@ class BoxWidget(BoxWidgetMoth):
         if out_segment[0] != out_segment[1]:
             output_segments.append(out_segment)
         
+        self._layout.set_ports_bottoms(
+            last_in_pos - port_spacing, last_out_pos - port_spacing)
+        
         return {'input_segments': input_segments,
                 'output_segments': output_segments}
 
@@ -933,7 +936,8 @@ class BoxWidget(BoxWidgetMoth):
             self._header_line_right = (self._width - side_size + 5.0, y,
                                        self._width - 5.0, y)
     
-    def build_painter_path(self, pos_dict):
+    def build_painter_path(
+            self, pos_dict: dict[str, list[tuple[float, float]]]):
         input_segments = pos_dict['input_segments']
         output_segments = pos_dict['output_segments']
         
@@ -1062,25 +1066,26 @@ class BoxWidget(BoxWidgetMoth):
 
         self._painter_path = painter_path
 
-    def _get_unwrap_triangle_pos(
-            self, ports_min_sizes: PortsMinSizes) -> UnwrapButton:
+    def _get_unwrap_triangle_pos(self) -> UnwrapButton:
         if self._has_side_title():
             if self._height - self._header_height >= 15.0:
                 if self._current_port_mode is PortMode.OUTPUT:
                     return UnwrapButton.LEFT
                 else:
                     return UnwrapButton.RIGHT
-        
+
+        last_in_pos = self._layout.ports_bottom_in
+        last_out_pos = self._layout.ports_bottom_out
+
         if self._height - self._header_height >= 64.0:
             if (self._current_port_mode is PortMode.BOTH
                     and self._current_layout_mode is BoxLayoutMode.HIGH):
-                if ports_min_sizes.last_port_mode is PortMode.INPUT:
+                if last_in_pos > last_out_pos:
                     return UnwrapButton.RIGHT
                 else:
                     return UnwrapButton.LEFT
 
-            y_side_space = (ports_min_sizes.last_in_pos
-                            - ports_min_sizes.last_out_pos)
+            y_side_space = last_in_pos - last_out_pos
 
             if y_side_space < -10.0:
                 return UnwrapButton.LEFT
@@ -1145,8 +1150,7 @@ class BoxWidget(BoxWidgetMoth):
                 self._width = self._unwrapped_width
                 self._height = self._unwrapped_height
                 
-                self._unwrap_triangle_pos = self._get_unwrap_triangle_pos(
-                    ports_min_sizes)
+                
             else:
                 self._width = self._wrapped_width
                 self._height = self._wrapped_height
@@ -1171,6 +1175,9 @@ class BoxWidget(BoxWidgetMoth):
 
         self._set_ports_x_positions(ports_min_sizes)
         self._set_title_positions()
+        
+        if self._wrapping_state is WrappingState.NORMAL:
+            self._unwrap_triangle_pos = self._get_unwrap_triangle_pos()
 
         if (self._width != self._ex_width
                 or self._height != self._ex_height

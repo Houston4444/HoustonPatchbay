@@ -47,8 +47,7 @@ class BoxLayout:
     
     @classmethod
     def width_for_ports(cls):
-        return (cls.pms.ins_width + cls.pms.outs_width
-                + canvas.theme.port_height + 8.0)
+        return (cls.pms.ins_width + cls.pms.outs_width + 6.0)
     
     def __init__(self, n_lines: int,
                  layout_mode: BoxLayoutMode,
@@ -72,8 +71,7 @@ class BoxLayout:
             if layout_mode is BoxLayoutMode.LARGE:
                 if title_on is TitleOn.SIDE:
                     self.needed_width = (
-                        ports_width + 15
-                        + self.header_width + self.pen_width)
+                        ports_width + self.header_width + self.pen_width)
                     self.needed_height = (
                         max(self.header_height,
                             height_for_ports + self.port_spacing)
@@ -89,7 +87,7 @@ class BoxLayout:
                         self.header_height += 4
                         
                     self.needed_width = (ports_width + self.header_width
-                                         + 15 + self.pen_width)
+                                         + self.pen_width)
 
                     self.needed_height = (
                         max(height_for_ports + self.port_spacing,
@@ -201,3 +199,7 @@ class BoxLayout:
                 self.height
                 - (2 * self.pen_width + self.header_height
                    + self.pms.last_inout_pos))
+            
+    def set_ports_bottoms(self, bottom_in: float, bottom_out: float):
+        self.ports_bottom_in = bottom_in
+        self.ports_bottom_out = bottom_out
