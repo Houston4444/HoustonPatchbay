@@ -179,7 +179,13 @@ class PortWidget(ConnectableWidget):
     def _update_connect_pos(self):
         phi = 0.75 if self._pg_len > 2 else 0.62
         
-        x_delta = self._port_width if self._port_mode is PortMode.OUTPUT else 0.0
+        if self._port_mode is PortMode.OUTPUT:
+            if self._portgrp_id:
+                x_delta = self._port_width
+            else:
+                x_delta = self._port_width + canvas.theme.port_height / 2.0
+        else:
+            x_delta = 0.0
         
         height = canvas.theme.port_height
         y_delta = canvas.theme.port_height / 2
