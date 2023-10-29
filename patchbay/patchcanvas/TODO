@@ -27,4 +27,6 @@ Virer connection_lines de BoxWidget et PortWidget
 Bugs en cours:
     grid 1x1 bring neighboors
     hardware rack (self._ports_y_start ?)
+    emballeur milieu fonctionne pas
+    Guitar Voice Ardour pas de mise en stéréo possible 
     

@@ -23,8 +23,8 @@ class PortsMinSizes:
     last_in_pos: float
     last_out_pos: float
     last_inout_pos: float
-    max_in_width: float
-    max_out_width: float
+    ins_width: float
+    outs_width: float
     n_in_type_and_subs: int
     n_out_type_and_subs: int
     n_inout_type_and_subs: int
@@ -37,15 +37,9 @@ class BoxLayout:
             cls, box: 'BoxWidget',
             ports_min_sizes: PortsMinSizes):
         cls.pms = ports_min_sizes
-        cls.box = box
         theme = box.get_theme()
         cls.pen_width = theme.fill_pen().widthF()
         cls.port_spacing = theme.port_spacing()
-        cls.height_for_ports = max(ports_min_sizes.last_in_pos,
-                                   ports_min_sizes.last_out_pos)
-        cls.height_for_ports_one = ports_min_sizes.last_inout_pos
-        cls.ports_in_width = ports_min_sizes.max_in_width
-        cls.ports_out_width = ports_min_sizes.max_out_width
         cls.hwr = canvas.theme.hardware_rack_width if box._is_hardware else 0
         cls.port_mode = box._current_port_mode
         cls.can_handle_gui = box._can_handle_gui
@@ -53,7 +47,8 @@ class BoxLayout:
     
     @classmethod
     def width_for_ports(cls):
-        return 30.0 + cls.ports_in_width + cls.ports_out_width
+        return (cls.pms.ins_width + cls.pms.outs_width
+                + canvas.theme.port_height + 8.0)
     
     def __init__(self, n_lines: int,
                  layout_mode: BoxLayoutMode,
@@ -65,12 +60,14 @@ class BoxLayout:
         self.one_column = False
         self.header_width = title_template['header_width']
         self.header_height = title_template['header_height']
+        
+        height_for_ports = max(self.pms.last_in_pos, self.pms.last_out_pos)
 
         if self.port_mode in (PortMode.INPUT, PortMode.OUTPUT):
             if self.port_mode is PortMode.INPUT:
-                ports_width = self.ports_in_width
+                ports_width = self.pms.ins_width
             else:
-                ports_width = self.ports_out_width
+                ports_width = self.pms.outs_width
 
             if layout_mode is BoxLayoutMode.LARGE:
                 if title_on is TitleOn.SIDE:
@@ -79,7 +76,7 @@ class BoxLayout:
                         + self.header_width + self.pen_width)
                     self.needed_height = (
                         max(self.header_height,
-                            self.height_for_ports + self.port_spacing)
+                            height_for_ports + self.port_spacing)
                     + 2 * self.pen_width)
 
                 elif title_on is TitleOn.SIDE_UNDER_ICON:
@@ -95,7 +92,7 @@ class BoxLayout:
                                          + 15 + self.pen_width)
 
                     self.needed_height = (
-                        max(self.height_for_ports + self.port_spacing,
+                        max(height_for_ports + self.port_spacing,
                             self.header_height)
                         + 2 * self.pen_width)
                 else:
@@ -107,23 +104,23 @@ class BoxLayout:
                     max(self.header_width + 2 * self.pen_width,
                         self.width_for_ports()))
                 self.needed_height = (
-                    self.header_height + self.height_for_ports
+                    self.header_height + height_for_ports
                     + 2 * self.pen_width)
         else:
             if layout_mode is BoxLayoutMode.HIGH:
                 self.one_column = True
                 self.needed_width = (
                     max(self.header_width + 2 * self.pen_width,
-                        30.0 + max(self.ports_in_width, self.ports_out_width)))
+                        30.0 + max(self.pms.ins_width, self.pms.outs_width)))
                 self.needed_height = (
-                    self.header_height + self.height_for_ports_one
+                    self.header_height + self.pms.last_inout_pos
                     + 2 * self.pen_width)
             else:
                 self.needed_width = (
                     max(self.header_width + 2 * self.pen_width,
                         self.width_for_ports()))
                 self.needed_height = (
-                    self.header_height + self.height_for_ports
+                    self.header_height + height_for_ports
                     + 2 * self.pen_width)
 
         self.full_width = next_width_on_grid(self.hwr * 2 + self.needed_width)
@@ -145,7 +142,7 @@ class BoxLayout:
         
         return self.title_on < other.title_on
 
-    def set_wrapped_sizes(self):
+    def set_choosed(self):
         self.pms = PortsMinSizes(**self.pms.__dict__)
         
         if (self.port_mode in (PortMode.INPUT, PortMode.OUTPUT)
@@ -159,8 +156,15 @@ class BoxLayout:
             self.wrapped_height = full_height - 2 * self.hwr
         else:
             self.wrapped_width = self.width
-            needed_height = (self.header_height + canvas.theme.port_height * 0.86
-                             + 2 * self.pen_width)
+
+            if (self.title_on is TitleOn.TOP
+                    and (self.width - self.header_width) / 2 >= 14):
+                needed_height = (2 * self.pen_width + self.header_height)
+            else:
+                needed_height = (self.pen_width
+                                 + self.header_height
+                                 + max(12, self.pen_width))
+            
             full_height = next_height_on_grid(self.hwr * 2 + needed_height)
             self.wrapped_height = full_height - 2 * self.hwr
         

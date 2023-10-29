@@ -1080,9 +1080,21 @@ class BoxWidgetMoth(QGraphicsItem):
             triangle += QPointF(xpos + side, ypos -side + 2)
             painter.drawPolygon(triangle)
 
-        # pennn = QPen(QColor(255,150, 150))
-        # pennn.setWidth(2)
-        # painter.setPen(QPen(QColor(155,0, 0)))
+        pennn = QPen(QColor(150,80, 80))
+        pennn.setWidth(1)
+        painter.setPen(pennn)
+        # painter.drawLine(QPointF(self._layout.pms.ins_width, 0.0),
+        #                  QPointF(self._layout.pms.ins_width, float(self._height)))
+        # phg = canvas.theme.port_height / 2
+        # painter.drawLine(QPointF(self._layout.pms.ins_width + phg, 0.0),
+        #                  QPointF(self._layout.pms.ins_width + phg, float(self._height)))
+        
+        # painter.drawLine(QPointF(self._width - self._layout.pms.outs_width, 0.0),
+        #                  QPointF(self._width - self._layout.pms.outs_width, float(self._height)))
+        # phg = canvas.theme.port_height / 2
+        # painter.drawLine(QPointF(self._width - self._layout.pms.outs_width - phg, 0.0),
+        #                  QPointF(self._width - self._layout.pms.outs_width - phg, float(self._height)))
+        
         # y_in_ouy = self._layout.pen_width + self._layout.header_height + self._layout.pms.last_inout_pos
         # if 'Dragonfly' in self._group_name:
         #     print('oregg',y_in_ouy, self._height, self._layout.header_height, self._layout.pms.last_inout_pos, self._layout.pms.last_in_pos, self._layout.pms.last_out_pos, self._layout.height_for_ports_one, self._layout.pms)

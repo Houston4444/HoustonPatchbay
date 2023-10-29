@@ -373,11 +373,9 @@ class GridWidget(QGraphicsPathItem):
             return
         
         painter.save()
-        painter.setRenderHint(QPainter.Antialiasing, True)
+        painter.setRenderHint(QPainter.Antialiasing, False)
         
         QGraphicsPathItem.paint(self, painter, option, widget)
-
-        cosm_pen = QPen(self.pen())
 
         # painter.setPen(cosm_pen)
         # painter.drawPath(self.path())

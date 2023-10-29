@@ -179,9 +179,7 @@ class PortWidget(ConnectableWidget):
     def _update_connect_pos(self):
         phi = 0.75 if self._pg_len > 2 else 0.62
         
-        x_delta = 0
-        if self._port_mode is PortMode.OUTPUT:
-            x_delta = self._port_width + 12
+        x_delta = self._port_width if self._port_mode is PortMode.OUTPUT else 0.0
         
         height = canvas.theme.port_height
         y_delta = canvas.theme.port_height / 2
@@ -307,15 +305,13 @@ class PortWidget(ConnectableWidget):
             CallbackAct.PORT_MENU_CALL, self._group_id, self._port_id,
             is_only_connect, start_point.x(), start_point.y())
 
-    def boundingRect(self):
+    def boundingRect(self):        
         if self._portgrp_id:
-            if self._port_mode is PortMode.INPUT:
-                return QRectF(0, 0, self._port_width, self._port_height)
-            else:
-                return QRectF(12, 0,
-                              self._port_width, self._port_height)
-        else:
-            return QRectF(0, 0, self._port_width + 12, self._port_height)
+            return QRectF(0.0, 0.0, self._port_width, self._port_height)
+
+        return QRectF(0.0, 0.0,
+                      self._port_width + self._port_height / 2.0,
+                      self._port_height)
 
     def paint(self, painter, option, widget):
         if canvas.loading_items:
@@ -357,68 +353,24 @@ class PortWidget(ConnectableWidget):
         text_y_pos = ((p_height - 0.667 * self._port_font.pixelSize()) / 2
                       + self._port_font.pixelSize() * 0.667)
 
-        poly_locx = [0, 0, 0, 0, 0, 0]
-        poly_corner_xhinting = ((float(canvas.theme.port_height)/2)
-                                % floor(float(canvas.theme.port_height)/2))
-
-        if poly_corner_xhinting == 0.0:
-            poly_corner_xhinting = 0.5 * (1 - 7 / (float(canvas.theme.port_height)/2))
-
+        middle_width = p_height * 0.5
         is_cv_port = bool(self._port_subtype is PortSubType.CV)
 
         if self._port_mode is PortMode.INPUT:
-            text_pos = QPointF(3, text_y_pos)
+            text_pos = QPointF(3.0, text_y_pos)
 
-            if is_cv_port:
-                poly_locx[0] = line_hinting
-                poly_locx[1] = self._port_width + 7 - line_hinting
-                poly_locx[2] = self._port_width + 7 - line_hinting
-                poly_locx[3] = self._port_width + 7 - line_hinting
-                poly_locx[4] = line_hinting
-                poly_locx[5] = self._port_width
-
-            elif self._port_type is PortType.MIDI_ALSA:
-                poly_locx[0] = line_hinting
-                poly_locx[1] = self._port_width + 5 - line_hinting
-                poly_locx[2] = self._port_width + 8.5 - poly_corner_xhinting
-                poly_locx[3] = self._port_width + 5 - line_hinting
-                poly_locx[4] = line_hinting
-                poly_locx[5] = self._port_width
-                
-            else:
-                poly_locx[0] = line_hinting
-                poly_locx[1] = self._port_width + 5 - line_hinting
-                poly_locx[2] = self._port_width + 12 - poly_corner_xhinting
-                poly_locx[3] = self._port_width + 5 - line_hinting
-                poly_locx[4] = line_hinting
-                poly_locx[5] = self._port_width
+            x_box_border = line_hinting
+            x_arrowbase = self._port_width - line_hinting
+            x_arrowmid = self._port_width + middle_width / 2 - line_hinting
+            x_arrowhead = self._port_width + middle_width - line_hinting * 2
 
         elif self._port_mode is PortMode.OUTPUT:
-            text_pos = QPointF(9, text_y_pos)
+            text_pos = QPointF(middle_width + 3.0, text_y_pos)
 
-            if is_cv_port:
-                poly_locx[0] = self._port_width + 12 - line_hinting
-                poly_locx[1] = 5 + line_hinting
-                poly_locx[2] = 5 + line_hinting
-                poly_locx[3] = 5 + line_hinting
-                poly_locx[4] = self._port_width + 12 - line_hinting
-                poly_locx[5] = 12 - line_hinting
-                
-            elif self._port_type is PortType.MIDI_ALSA:
-                poly_locx[0] = self._port_width + 12 - line_hinting
-                poly_locx[1] = 7 + line_hinting
-                poly_locx[2] = 3.5 + poly_corner_xhinting
-                poly_locx[3] = 7 + line_hinting
-                poly_locx[4] = self._port_width + 12 - line_hinting
-                poly_locx[5] = 12 - line_hinting
-                
-            else:
-                poly_locx[0] = self._port_width + 12 - line_hinting
-                poly_locx[1] = 7 + line_hinting
-                poly_locx[2] = 0 + poly_corner_xhinting
-                poly_locx[3] = 7 + line_hinting
-                poly_locx[4] = self._port_width + 12 - line_hinting
-                poly_locx[5] = 12 - line_hinting
+            x_box_border = self._port_width + middle_width - line_hinting
+            x_arrowbase = middle_width + line_hinting
+            x_arrowmid = middle_width / 2 + line_hinting
+            x_arrowhead = line_hinting * 2
 
         else:
             self._logger.critical(
@@ -432,32 +384,39 @@ class PortWidget(ConnectableWidget):
             last_of_portgrp = bool(self._pg_pos + 1 == self._pg_len)
 
             if first_of_portgrp:
-                polygon += QPointF(poly_locx[0] , line_hinting)
-                polygon += QPointF(poly_locx[5] , line_hinting)
+                polygon += QPointF(line_hinting, line_hinting)
+                polygon += QPointF(self._port_width - line_hinting, line_hinting)
             else:
-                polygon += QPointF(poly_locx[0] , 0)
-                polygon += QPointF(poly_locx[5] , 0)
+                polygon += QPointF(line_hinting, 0.0)
+                polygon += QPointF(self._port_width - line_hinting, 0.0)
 
             if last_of_portgrp:
-                polygon += QPointF(poly_locx[5], canvas.theme.port_height - line_hinting)
-                polygon += QPointF(poly_locx[0], canvas.theme.port_height - line_hinting)
+                polygon += QPointF(self._port_width - line_hinting,
+                                   p_height - line_hinting)
+                polygon += QPointF(line_hinting, p_height - line_hinting)
             else:
-                polygon += QPointF(poly_locx[5], canvas.theme.port_height)
-                polygon += QPointF(poly_locx[0], canvas.theme.port_height)
+                polygon += QPointF(self._port_width - line_hinting, p_height)
+                polygon += QPointF(line_hinting, p_height)
+
+        elif is_cv_port:
+            polygon += QPointF(x_box_border, line_hinting)
+            polygon += QPointF(x_arrowbase, line_hinting)
+            polygon += QPointF(x_arrowbase, p_height - line_hinting)
+            polygon += QPointF(x_box_border, p_height - line_hinting)
 
         elif self._port_type is PortType.MIDI_ALSA:
-            polygon += QPointF(poly_locx[0], line_hinting)
-            polygon += QPointF(poly_locx[2], line_hinting)
-            polygon += QPointF(poly_locx[2], canvas.theme.port_height - line_hinting)
-            polygon += QPointF(poly_locx[0], canvas.theme.port_height - line_hinting)
+            polygon += QPointF(x_box_border, line_hinting)
+            polygon += QPointF(x_arrowmid, line_hinting)
+            polygon += QPointF(x_arrowmid, p_height - line_hinting)
+            polygon += QPointF(x_box_border, p_height - line_hinting)
             
-        else:
-            polygon += QPointF(poly_locx[0], line_hinting)
-            polygon += QPointF(poly_locx[1], line_hinting)
-            polygon += QPointF(poly_locx[2], float(canvas.theme.port_height)/2)
-            polygon += QPointF(poly_locx[3], canvas.theme.port_height - line_hinting)
-            polygon += QPointF(poly_locx[4], canvas.theme.port_height - line_hinting)
-            polygon += QPointF(poly_locx[0], line_hinting)
+        else:            
+            polygon += QPointF(x_box_border, line_hinting)
+            polygon += QPointF(x_arrowbase, line_hinting)
+            polygon += QPointF(x_arrowhead, p_height / 2.0)
+            polygon += QPointF(x_arrowbase, p_height - line_hinting)
+            polygon += QPointF(x_box_border, p_height - line_hinting)
+            polygon += QPointF(x_box_border, line_hinting)
 
         if poly_image is not None:
             painter.setPen(Qt.NoPen)
@@ -480,18 +439,18 @@ class PortWidget(ConnectableWidget):
 
         if not self._portgrp_id:
             if self._port_subtype is PortSubType.CV:
-                poly_pen.setWidthF(2.000001)
+                poly_pen.setWidthF(2.0)
                 painter.setPen(poly_pen)
 
                 y_line = canvas.theme.port_height / 2.0
                 if self._port_mode is PortMode.OUTPUT:
                     painter.drawLine(
-                        QPointF(0.0, y_line),
-                        QPointF(float(poly_locx[1]) - line_hinting, y_line))
+                        QPointF(x_arrowhead + 1.0, y_line),
+                        QPointF(x_arrowbase - 1.0, y_line))
                 elif self._port_mode is PortMode.INPUT:
                     painter.drawLine(
-                        QPointF(float(self._port_width + 7), y_line),
-                        QPointF(float(self._port_width + 12), y_line))
+                        QPointF(x_arrowhead - 1.0, y_line),
+                        QPointF(x_arrowbase + 1.0, y_line))
 
             elif (self._port_subtype is PortSubType.A2J
                     or self._port_type is PortType.MIDI_ALSA):
@@ -517,22 +476,18 @@ class PortWidget(ConnectableWidget):
                     scene_col.blueF() * rb + box_bg_col.blueF() * ra)
                 
                 painter.setBrush(circle_bg_col)
-
-                ellipse_x = poly_locx[1]
                 
                 if self._port_type is PortType.MIDI_ALSA:
-                    if self._port_mode is PortMode.OUTPUT:
-                        ellipse_x -= 4
-                    else:
-                        ellipse_x += 4
+                    ellipse_x = x_arrowmid
                 else:
+                    ellipse_x = x_arrowbase
                     if self._port_mode is PortMode.OUTPUT:
-                        ellipse_x -= 2
+                        ellipse_x -= 2.0
                     elif self._port_mode is PortMode.INPUT:
-                        ellipse_x += 2
+                        ellipse_x += 2.0
 
                 painter.drawEllipse(
-                    QPointF(ellipse_x, canvas.theme.port_height / 2.0), 2.0, 2.0)
+                    QPointF(ellipse_x, p_height / 2.0), 2.0, 2.0)
 
         painter.setPen(text_pen)
         painter.setFont(self._port_font)
@@ -544,20 +499,20 @@ class PortWidget(ConnectableWidget):
             print_name_size = self.get_text_width()
 
             if self._port_mode is PortMode.OUTPUT:
-                text_pos = QPointF(self._port_width + 9 - print_name_size,
+                text_pos = QPointF(self._port_width - 3 - print_name_size,
                                    text_y_pos)
 
-            if print_name_size > (self._port_width - 4):
-                if poly_color_alter is not None:
-                    painter.setPen(QPen(port_gradient, 3))
-                else:
-                    painter.setPen(QPen(poly_color, 3))
-                painter.drawLine(
-                    QPointF(float(poly_locx[5]), 3.0),
-                    QPointF(float(poly_locx[5]),
-                            float(canvas.theme.port_height - 3)))
-                painter.setPen(text_pen)
-                painter.setFont(self._port_font)
+            # if print_name_size > (self._port_width - 4):
+            #     if poly_color_alter is not None:
+            #         painter.setPen(QPen(port_gradient, 3.0))
+            #     else:
+            #         painter.setPen(QPen(poly_color, 3.0))
+            #     painter.drawLine(
+            #         QPointF(float(poly_locx[5]), 3.0),
+            #         QPointF(float(poly_locx[5]),
+            #                 float(canvas.theme.port_height - 3.0)))
+            #     painter.setPen(text_pen)
+            #     painter.setFont(self._port_font)
 
         painter.drawText(text_pos, self._print_name)
         

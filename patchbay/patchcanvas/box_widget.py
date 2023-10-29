@@ -150,14 +150,14 @@ class BoxWidget(BoxWidgetMoth):
                     
                     # the port_grouped_width is also used to define
                     # the portgroup minimum width
-                    size = (max(portgrp.widget.get_text_width(),
+                    size = (max(portgrp.widget.get_text_width() + 3.0,
                                 canvas.theme.port_grouped_width)
-                            + max(port.widget.get_text_width() + 6,
-                                    canvas.theme.port_grouped_width)
+                            + max(port.widget.get_text_width() + 6.0,
+                                  canvas.theme.port_grouped_width)
                             + port_offset)
                 else:
                     port.widget.set_print_name(port.port_name, max_pwidth)
-                    size = max(port.widget.get_text_width() + port_offset, 20)
+                    size = max(port.widget.get_text_width() + 6.0 + port_offset, 20.0)
                 
                 type_and_sub = (port.port_type, port.port_subtype)
                 
@@ -550,7 +550,7 @@ class BoxWidget(BoxWidgetMoth):
         # sort areas and choose the first one (the littlest area)
         box_layouts.sort()
         box_layout = box_layouts[0]
-        box_layout.set_wrapped_sizes()
+        box_layout.set_choosed()
         return box_layouts[0]
 
     def _set_ports_y_positions(
@@ -586,7 +586,12 @@ class BoxWidget(BoxWidgetMoth):
         else:
             start_pos = pen_width + self._header_height
 
-        wrapped_port_pos = start_pos
+        if self._layout.title_on is TitleOn.TOP:
+            wrapped_port_pos = (self._layout.wrapped_height
+                                - canvas.theme.port_height - pen_width)
+        else:
+            wrapped_port_pos = pen_width + port_spacing
+
         last_in_pos = last_out_pos = start_pos
         
         # manage exceedent height in the box
@@ -769,12 +774,14 @@ class BoxWidget(BoxWidgetMoth):
         port_in_offset = box_theme.port_in_offset()
         port_out_offset = box_theme.port_out_offset()
         
-        max_in_width = ports_min_sizes.max_in_width
-        max_out_width = ports_min_sizes.max_out_width
+        max_in_width = ports_min_sizes.ins_width
+        max_out_width = ports_min_sizes.outs_width
+        
+        middle_width = canvas.theme.port_height / 2
         
         # Horizontal ports re-positioning
         in_x = port_in_offset
-        out_x = self._width - max_out_width - 12
+        out_x = self._width - max_out_width - middle_width
 
         # Horizontal ports not in portgroup re-positioning
         for port in self._port_list:
@@ -793,7 +800,7 @@ class BoxWidget(BoxWidgetMoth):
             if portgrp.widget is not None:
                 if portgrp.port_mode is PortMode.INPUT:
                     portgrp.widget.set_portgrp_width(max_in_width - port_in_offset)
-                    portgrp.widget.setX(port_in_offset +1)
+                    portgrp.widget.setX(in_x)
                 elif portgrp.port_mode is PortMode.OUTPUT:
                     portgrp.widget.set_portgrp_width(max_out_width - port_out_offset)
                     portgrp.widget.setX(out_x)
@@ -810,7 +817,7 @@ class BoxWidget(BoxWidgetMoth):
                     max_port_in_pg_width = max(max_port_in_pg_width,
                                                port_print_width + 4)
 
-            out_in_portgrp_x = (self._width - port_out_offset - 12
+            out_in_portgrp_x = (self._width - port_out_offset
                                 - max_port_in_pg_width)
 
             portgrp.widget.set_ports_width(max_port_in_pg_width)

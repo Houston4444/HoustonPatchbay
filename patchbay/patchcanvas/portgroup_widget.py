@@ -200,15 +200,17 @@ class PortgroupWidget(ConnectableWidget):
             is_only_connect, start_point.x(), start_point.y())
 
     def boundingRect(self) -> QRectF:
+        middle_width = canvas.theme.port_height / 2.0
+
         if self._port_mode is PortMode.INPUT:
             return QRectF(
-                canvas.theme.port_grouped_width, 0,
-                self._portgrp_width + 12 - canvas.theme.port_grouped_width,
+                canvas.theme.port_grouped_width, 0.0,
+                self._portgrp_width + middle_width - canvas.theme.port_grouped_width,
                 canvas.theme.port_height * len(self._port_ids))
         else:
             return QRectF(
-                0, 0,
-                self._portgrp_width + 12 - canvas.theme.port_grouped_width,
+                0.0, 0.0,
+                self._portgrp_width + middle_width - canvas.theme.port_grouped_width,
                 canvas.theme.port_height * len(self._port_ids))
 
     def paint(self, painter: QPainter, option, widget):
@@ -236,11 +238,12 @@ class PortgroupWidget(ConnectableWidget):
 
         line_hinting = poly_pen.widthF() / 2.0
 
+        middle_width = canvas.theme.port_height / 2.0
+
         poly_locx = [0, 0, 0, 0, 0]
-        poly_corner_xhinting = ((canvas.theme.port_height / 2)
-                                % floor(canvas.theme.port_height / 2))
+        poly_corner_xhinting = middle_width % floor(middle_width)
         if poly_corner_xhinting == 0:
-            poly_corner_xhinting = 0.5 * (1 - 7 / (canvas.theme.port_height / 2))
+            poly_corner_xhinting = 0.5 * (1 - 7 / middle_width)
 
         text_main_height = self._portgrp_font.pixelSize() * 0.667
         text_y_pos = ((canvas.theme.port_height * len(self._port_ids)
@@ -251,20 +254,21 @@ class PortgroupWidget(ConnectableWidget):
             text_pos = QPointF(self._ports_width + 3, text_y_pos)
 
             poly_locx[0] = self._ports_width - line_hinting
-            poly_locx[1] = self._portgrp_width + 3 + line_hinting
-            poly_locx[2] = self._portgrp_width + 10 + line_hinting
-            poly_locx[3] = self._portgrp_width + 3 + line_hinting
+            poly_locx[1] = self._portgrp_width - line_hinting
+            poly_locx[2] = self._portgrp_width + middle_width - 2 * line_hinting
+            poly_locx[3] = self._portgrp_width - line_hinting
             poly_locx[4] = self._ports_width - line_hinting
 
         elif self._port_mode is PortMode.OUTPUT:
-            text_pos = QPointF(9, text_y_pos)
+            text_pos = QPointF(3.0 + middle_width, text_y_pos)
 
-            poly_locx[0] = self._portgrp_width + 12 \
-                            - self._ports_width - line_hinting
-            poly_locx[1] = 7 + line_hinting
-            poly_locx[2] = 0 + line_hinting
-            poly_locx[3] = 7 + line_hinting
-            poly_locx[4] = self._portgrp_width + 12 - self._ports_width - line_hinting
+            poly_locx[0] = (self._portgrp_width + middle_width
+                            - self._ports_width + line_hinting)
+            poly_locx[1] = middle_width + line_hinting
+            poly_locx[2] = line_hinting * 2
+            poly_locx[3] = middle_width + line_hinting
+            poly_locx[4] = (self._portgrp_width + middle_width
+                            - self._ports_width + line_hinting)
 
         else:
             self._logger.critical(f"CanvasPortGroup.paint() - "
