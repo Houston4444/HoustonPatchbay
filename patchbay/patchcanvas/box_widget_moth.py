@@ -149,7 +149,7 @@ class BoxWidgetMoth(QGraphicsItem):
             self._wrapping_state = WrappingState.NORMAL
 
         self._wrapping_ratio = 1.0
-        self._unwrap_triangle_pos = UnwrapButton.NONE
+        self._wrap_triangle_pos = UnwrapButton.NONE
 
         self._port_list = list[PortObject]()
         self._portgrp_list = list[PortgrpObject]()
@@ -519,8 +519,8 @@ class BoxWidgetMoth(QGraphicsItem):
             and self._current_layout_mode == BoxLayoutMode.LARGE)
 
     def wrap_unwrap_at_point(self, scene_pos: QPointF) -> bool:
-        ''' orders a wrap or unwrap on the box if scene_pos is on the
-            triangle wrapper '''
+        '''order a wrap or unwrap on the box if scene_pos is on the
+            triangle wrapper'''
         if self._wrapping_state is WrappingState.WRAPPED:
             # unwrap the box if scene_pos is in one of the triangles zones
             triangle_rect_out = QRectF(0.0, self._height - 24.0, 24.0, 24.0)
@@ -545,14 +545,19 @@ class BoxWidgetMoth(QGraphicsItem):
                     self._port_mode, False)
                 return True
             
-        elif self._unwrap_triangle_pos is not UnwrapButton.NONE:
+        elif self._wrap_triangle_pos is not UnwrapButton.NONE:
             # wrap the box if scene_pos is on the triangle zone
             trirect = QRectF(0, self._height - 16, 16, 16)
             
-            if self._unwrap_triangle_pos is UnwrapButton.CENTER:
-                trirect = QRectF(self._width_in + 8, self._height - 16, 16, 16)
-            elif self._unwrap_triangle_pos is UnwrapButton.RIGHT:
-                trirect = QRectF(self._width - 16, self._height -16, 16, 16)
+            if self._wrap_triangle_pos is UnwrapButton.CENTER:
+                center_width = (self._width + self._layout.pms.ins_width
+                                - self._layout.pms.outs_width) / 2.0
+                
+                trirect = QRectF(center_width - 8.0, self._height - 16.0,
+                                 16.0, 16.0)
+            elif self._wrap_triangle_pos is UnwrapButton.RIGHT:
+                trirect = QRectF(self._width - 16.0, self._height -16.0,
+                                 16.0, 16.0)
                 
             trirect.translate(self.scenePos())
             if trirect.contains(scene_pos):
@@ -933,7 +938,7 @@ class BoxWidgetMoth(QGraphicsItem):
             if (self._wrapping_state in (WrappingState.WRAPPING,
                                          WrappingState.UNWRAPPING)
                     or (self._wrapping_state is WrappingState.NORMAL
-                        and self._unwrap_triangle_pos is not UnwrapButton.NONE)):
+                        and self._wrap_triangle_pos is not UnwrapButton.NONE)):
                 triangle_mon_size_bottom = 13
 
             bmw = BAND_MON_WIDTH
@@ -1011,6 +1016,7 @@ class BoxWidgetMoth(QGraphicsItem):
         # draw (un)wrapper triangles
         painter.setPen(wtheme.fill_pen())
         painter.setBrush(wtheme.background_color())
+        tr_pen_width = pen.widthF()
 
         if self._wrapping_state in (WrappingState.WRAPPED,
                                     WrappingState.UNWRAPPING):
@@ -1018,39 +1024,40 @@ class BoxWidgetMoth(QGraphicsItem):
                 if self._current_port_mode & port_mode:
                     if self._has_side_title():
                         side = 9
-                        offset = 4
-                        ypos = self._height - offset
+                        # offset = 4
+                        # ypos = self._height - offset
+                        ypos = self._height - pen_width - 2.0
 
                         triangle = QPolygonF()
                         if port_mode is PortMode.INPUT:
-                            xpos = offset
+                            xpos = pen_width + 2.0
                             triangle += QPointF(xpos, ypos)
                             triangle += QPointF(xpos, ypos - side)
                             triangle += QPointF(xpos + side, ypos)
                         else:
-                            xpos = self._width - offset
+                            xpos = self._width - pen_width - 2.0
                             triangle += QPointF(xpos, ypos)
                             triangle += QPointF(xpos, ypos - side)
                             triangle += QPointF(xpos - side, ypos)
                     else:
                         side = 6
-                        xpos = 6
-                        ypos = self._height - side * 2 - 2
+                        xpos = pen_width + 2.0
+                        ypos = self._height - pen_width - side - 2.0
 
                         if port_mode is PortMode.OUTPUT:
-                            xpos = self._width - (xpos + 2 * side)
+                            xpos = self._width - pen_width - 2.0 - 2 * side
 
                         triangle = QPolygonF()
-                        triangle += QPointF(xpos, ypos + 2)
-                        triangle += QPointF(xpos + 2 * side, ypos + 2)
-                        triangle += QPointF(xpos + side, ypos + side + 2)
+                        triangle += QPointF(xpos, ypos)
+                        triangle += QPointF(xpos + 2 * side, ypos)
+                        triangle += QPointF(xpos + side, ypos + side)
                     
                     painter.drawPolygon(triangle)
 
-        elif self._unwrap_triangle_pos is UnwrapButton.LEFT:
+        elif self._wrap_triangle_pos is UnwrapButton.LEFT:
             side = 6
-            xpos = 4
-            ypos = self._height - 4
+            xpos = 2.0 + pen_width
+            ypos = self._height - pen_width - 2.0
             triangle = QPolygonF()
             triangle += QPointF(xpos, ypos)
             triangle += QPointF(xpos + 2 * side, ypos)
@@ -1058,29 +1065,28 @@ class BoxWidgetMoth(QGraphicsItem):
 
             painter.drawPolygon(triangle)
         
-        elif self._unwrap_triangle_pos is UnwrapButton.RIGHT:
+        elif self._wrap_triangle_pos is UnwrapButton.RIGHT:
             side = 6
-            xpos = self._width - 2 * side - 4
+            xpos = self._width - pen_width - 2 * side - 2.0
             
-            ypos = self._height - 4
+            ypos = self._height - pen_width - 2.0
             triangle = QPolygonF()
             triangle += QPointF(xpos, ypos)
             triangle += QPointF(xpos + 2 * side, ypos)
-            triangle += QPointF(xpos + side, ypos -side)
+            triangle += QPointF(xpos + side, ypos - side)
             painter.drawPolygon(triangle)
         
-        elif self._unwrap_triangle_pos is UnwrapButton.CENTER:
+        elif self._wrap_triangle_pos is UnwrapButton.CENTER:
             side = 7
-            # xpos = (self._width_in + self._width - self._width_out) / 2 - side
             xpos = (self._width 
                     + self._layout.pms.ins_width
                     - self._layout.pms.outs_width) / 2 - side
             
-            ypos = self._height - 3 + 0.5
+            ypos = self._height - tr_pen_width / 2.0
             triangle = QPolygonF()
-            triangle += QPointF(xpos, ypos + 2)
-            triangle += QPointF(xpos + 2 * side, ypos + 2)
-            triangle += QPointF(xpos + side, ypos -side + 2)
+            triangle += QPointF(xpos, ypos)
+            triangle += QPointF(xpos + 2 * side, ypos)
+            triangle += QPointF(xpos + side, ypos -side)
             painter.drawPolygon(triangle)
 
         pennn = QPen(QColor(150,80, 80))

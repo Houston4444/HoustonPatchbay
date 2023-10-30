@@ -768,8 +768,8 @@ class BoxWidget(BoxWidgetMoth):
         if out_segment[0] != out_segment[1]:
             output_segments.append(out_segment)
         
-        self._layout.set_ports_bottoms(
-            last_in_pos - port_spacing, last_out_pos - port_spacing)
+        self._layout.set_ports_y_segments(
+            input_segments, output_segments)
         
         return {'input_segments': input_segments,
                 'output_segments': output_segments}
@@ -781,8 +781,6 @@ class BoxWidget(BoxWidgetMoth):
         
         max_in_width = ports_min_sizes.ins_width
         max_out_width = ports_min_sizes.outs_width
-        
-        middle_width = canvas.theme.port_height / 2
         
         # Horizontal ports re-positioning
         in_x = port_in_offset
@@ -1066,7 +1064,7 @@ class BoxWidget(BoxWidgetMoth):
 
         self._painter_path = painter_path
 
-    def _get_unwrap_triangle_pos(self) -> UnwrapButton:
+    def _get_wrap_triangle_pos(self) -> UnwrapButton:
         if self._has_side_title():
             if self._height - self._header_height >= 15.0:
                 if self._current_port_mode is PortMode.OUTPUT:
@@ -1084,6 +1082,12 @@ class BoxWidget(BoxWidgetMoth):
                     return UnwrapButton.RIGHT
                 else:
                     return UnwrapButton.LEFT
+
+            elif self._current_port_mode is PortMode.INPUT:
+                return UnwrapButton.RIGHT
+            
+            elif self._current_port_mode is PortMode.OUTPUT:
+                return UnwrapButton.LEFT
 
             y_side_space = last_in_pos - last_out_pos
 
@@ -1177,7 +1181,7 @@ class BoxWidget(BoxWidgetMoth):
         self._set_title_positions()
         
         if self._wrapping_state is WrappingState.NORMAL:
-            self._unwrap_triangle_pos = self._get_unwrap_triangle_pos()
+            self._wrap_triangle_pos = self._get_wrap_triangle_pos()
 
         if (self._width != self._ex_width
                 or self._height != self._ex_height
