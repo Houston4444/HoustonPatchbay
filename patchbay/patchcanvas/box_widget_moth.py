@@ -1111,7 +1111,7 @@ class BoxWidgetMoth(QGraphicsItem):
 
         painter.restore()
 
-    def _paint_hardware_rack(self, painter: QPainter, lineHinting: float):
+    def _paint_hardware_rack(self, painter: QPainter, line_hinting: float):
         if not self._is_hardware:
             return
         
@@ -1124,6 +1124,11 @@ class BoxWidgetMoth(QGraphicsItem):
         background1 = theme.background_color()
         background2 = theme.background2_color()
         
+        ports_top_in = self._layout.ports_top_in
+        ports_top_out = self._layout.ports_top_out
+        ports_bottom_in = self._layout.ports_bottom_in
+        ports_bottom_out = self._layout.ports_bottom_out
+        
         if background2 is not None:
             hw_gradient = QLinearGradient(-d, -d, self._width +d, self._height +d)
             hw_gradient.setColorAt(0, background1)
@@ -1133,16 +1138,16 @@ class BoxWidgetMoth(QGraphicsItem):
             painter.setBrush(hw_gradient)
         else:
             painter.setBrush(background1)
-            
+        
         painter.setPen(theme.fill_pen())
         if self._current_port_mode is not PortMode.BOTH:
             hardware_poly = QPolygonF()
 
             if self._current_port_mode is PortMode.INPUT:
-                hardware_poly += QPointF(- lineHinting, - lineHinting)
-                hardware_poly += QPointF(- lineHinting, self._ports_y_start)
-                hardware_poly += QPointF(-d /2.0, self._ports_y_start)
-                hardware_poly += QPointF(-d, self._ports_y_start - d / 2.0)
+                hardware_poly += QPointF(- line_hinting, - line_hinting)
+                hardware_poly += QPointF(- line_hinting, ports_top_in)
+                hardware_poly += QPointF(-d /2.0, ports_top_in)
+                hardware_poly += QPointF(-d, ports_top_in - d / 2.0)
                 hardware_poly += QPointF(-d, -d / 2.0)
                 hardware_poly += QPointF(-d / 2.0, -d)
                 hardware_poly += QPointF(self._width + d/2.0, -d)
@@ -1151,18 +1156,18 @@ class BoxWidgetMoth(QGraphicsItem):
                 hardware_poly += QPointF(self._width + d/2.0, self._height + d)
                 hardware_poly += QPointF(-d/2.0, self._height +d)
                 hardware_poly += QPointF(-d, self._height +d/2.0)
-                hardware_poly += QPointF(-d, self._height -3 + d/2.0)
-                hardware_poly += QPointF(-d/2.0, self._height -3)
-                hardware_poly += QPointF(- lineHinting, self._height -3)
-                hardware_poly += QPointF(- lineHinting, self._height + lineHinting)
-                hardware_poly += QPointF(self._width + lineHinting,
-                                            self._height + lineHinting)
-                hardware_poly += QPointF(self._width + lineHinting, - lineHinting)
+                hardware_poly += QPointF(-d, ports_bottom_in + d/2.0)
+                hardware_poly += QPointF(-d/2.0, ports_bottom_in)
+                hardware_poly += QPointF(- line_hinting, ports_bottom_in)
+                hardware_poly += QPointF(- line_hinting, self._height + line_hinting)
+                hardware_poly += QPointF(self._width + line_hinting,
+                                            self._height + line_hinting)
+                hardware_poly += QPointF(self._width + line_hinting, - line_hinting)
             else:
-                hardware_poly += QPointF(self._width + lineHinting, - lineHinting)
-                hardware_poly += QPointF(self._width + lineHinting, self._ports_y_start)
-                hardware_poly += QPointF(self._width + d/2.0, self._ports_y_start)
-                hardware_poly += QPointF(self._width + d, self._ports_y_start - d/2.0)
+                hardware_poly += QPointF(self._width + line_hinting, - line_hinting)
+                hardware_poly += QPointF(self._width + line_hinting, ports_top_out)
+                hardware_poly += QPointF(self._width + d/2.0, ports_top_out)
+                hardware_poly += QPointF(self._width + d, ports_top_out - d/2.0)
                 hardware_poly += QPointF(self._width +d, -d / 2.0)
                 hardware_poly += QPointF(self._width + d/2.0, -d)
                 hardware_poly += QPointF(-d / 2.0, -d)
@@ -1171,44 +1176,44 @@ class BoxWidgetMoth(QGraphicsItem):
                 hardware_poly += QPointF(-d/2.0, self._height + d)
                 hardware_poly += QPointF(self._width + d/2.0, self._height + d)
                 hardware_poly += QPointF(self._width + d, self._height + d/2.0)
-                hardware_poly += QPointF(self._width +d, self._height -3 + d/2.0)
-                hardware_poly += QPointF(self._width + d/2, self._height -3)
-                hardware_poly += QPointF(self._width + lineHinting, self._height -3)
-                hardware_poly += QPointF(self._width + lineHinting,
-                                            self._height + lineHinting)
-                hardware_poly += QPointF(-lineHinting, self._height + lineHinting)
-                hardware_poly += QPointF(-lineHinting, -lineHinting)
+                hardware_poly += QPointF(self._width + d, ports_bottom_out + d/2.0)
+                hardware_poly += QPointF(self._width + d/2, ports_bottom_out)
+                hardware_poly += QPointF(self._width + line_hinting, ports_bottom_out)
+                hardware_poly += QPointF(self._width + line_hinting,
+                                            self._height + line_hinting)
+                hardware_poly += QPointF(-line_hinting, self._height + line_hinting)
+                hardware_poly += QPointF(-line_hinting, -line_hinting)
 
             painter.drawPolygon(hardware_poly)
         else:
             hw_poly_top = QPolygonF()
-            hw_poly_top += QPointF(-lineHinting, -lineHinting)
-            hw_poly_top += QPointF(-lineHinting, self._ports_y_start)
-            hw_poly_top += QPointF(-d /2.0, self._ports_y_start)
-            hw_poly_top += QPointF(-d, self._ports_y_start - d / 2.0)
+            hw_poly_top += QPointF(-line_hinting, -line_hinting)
+            hw_poly_top += QPointF(-line_hinting, ports_top_in)
+            hw_poly_top += QPointF(-d /2.0, ports_top_in)
+            hw_poly_top += QPointF(-d,ports_top_in - d / 2.0)
             hw_poly_top += QPointF(-d, -d / 2.0)
             hw_poly_top += QPointF(-d / 2.0, -d)
             hw_poly_top += QPointF(self._width + d/2.0, -d)
             hw_poly_top += QPointF(self._width + d, -d / 2.0)
-            hw_poly_top += QPointF(self._width + d, self._ports_y_start - d/2)
-            hw_poly_top += QPointF(self._width + d/2, self._ports_y_start)
-            hw_poly_top += QPointF(self._width + lineHinting, self._ports_y_start)
-            hw_poly_top += QPointF(self._width + lineHinting, -lineHinting)
+            hw_poly_top += QPointF(self._width + d, ports_top_out - d/2)
+            hw_poly_top += QPointF(self._width + d/2, ports_top_out)
+            hw_poly_top += QPointF(self._width + line_hinting, ports_top_out)
+            hw_poly_top += QPointF(self._width + line_hinting, -line_hinting)
             painter.drawPolygon(hw_poly_top)
 
             hw_poly_bt = QPolygonF()
-            hw_poly_bt += QPointF(-lineHinting, self._height + lineHinting)
-            hw_poly_bt += QPointF(-lineHinting, self._height -3)
-            hw_poly_bt += QPointF(-d/2, self._height -3)
-            hw_poly_bt += QPointF(-d, self._height -3 + d/2)
+            hw_poly_bt += QPointF(-line_hinting, self._height + line_hinting)
+            hw_poly_bt += QPointF(-line_hinting, ports_bottom_in)
+            hw_poly_bt += QPointF(-d/2, ports_bottom_in)
+            hw_poly_bt += QPointF(-d, ports_bottom_in + d/2)
             hw_poly_bt += QPointF(-d, self._height + d/2)
             hw_poly_bt += QPointF(-d/2, self._height + d)
             hw_poly_bt += QPointF(self._width + d/2, self._height + d)
             hw_poly_bt += QPointF(self._width + d, self._height + d/2)
-            hw_poly_bt += QPointF(self._width + d, self._height -3 + d/2)
-            hw_poly_bt += QPointF(self._width + d/2, self._height -3)
-            hw_poly_bt += QPointF(self._width + lineHinting, self._height -3)
-            hw_poly_bt += QPointF(self._width + lineHinting, self._height + lineHinting)
+            hw_poly_bt += QPointF(self._width + d, ports_bottom_out + d/2)
+            hw_poly_bt += QPointF(self._width + d/2, ports_bottom_out)
+            hw_poly_bt += QPointF(self._width + line_hinting, ports_bottom_out)
+            hw_poly_bt += QPointF(self._width + line_hinting, self._height + line_hinting)
             painter.drawPolygon(hw_poly_bt)
 
     def _paint_inline_display(self, painter: QPainter):
