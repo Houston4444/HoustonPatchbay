@@ -1095,7 +1095,8 @@ class BoxWidgetMoth(QGraphicsItem):
         if not self._is_hardware:
             return
         
-        d = canvas.theme.hardware_rack_width
+        d = float(canvas.theme.hardware_rack_width)
+        sd = d * 0.5
         
         theme = canvas.theme.hardware_rack
         if self.isSelected():
@@ -1105,7 +1106,8 @@ class BoxWidgetMoth(QGraphicsItem):
         background2 = theme.background2_color()
         
         if background2 is not None:
-            hw_gradient = QLinearGradient(-d, -d, self._width +d, self._height +d)
+            hw_gradient = QLinearGradient(
+                -d, -d, self._width + d, self._height + d)
             hw_gradient.setColorAt(0, background1)
             hw_gradient.setColorAt(0.5, background2)
             hw_gradient.setColorAt(1, background1)
@@ -1116,7 +1118,7 @@ class BoxWidgetMoth(QGraphicsItem):
         
         pen = theme.fill_pen()
         painter.setPen(pen)
-        line_hinting = pen.widthF() / 2.0
+        lh = pen.widthF() / 2.0
         
         ports_top_in = self._layout.ports_top_in
         ports_top_out = self._layout.ports_top_out
@@ -1126,46 +1128,46 @@ class BoxWidgetMoth(QGraphicsItem):
         if self._current_port_mode is not PortMode.BOTH:
             if self._current_port_mode is PortMode.INPUT:
                 points = [
-                    (- line_hinting, - line_hinting),
-                    (- line_hinting, ports_top_in),
-                    (-d / 2.0, ports_top_in),
-                    (-d, ports_top_in - d / 2.0),
-                    (-d, -d / 2.0),
-                    (-d / 2.0, -d),
-                    (self._width + d/2.0, -d),
-                    (self._width + d, -d / 2.0),
-                    (self._width + d, self._height + d/2.0),
-                    (self._width + d/2.0, self._height + d),
-                    (-d/2.0, self._height +d),
-                    (-d, self._height +d/2.0),
-                    (-d, ports_bottom_in + d/2.0),
-                    (-d/2.0, ports_bottom_in),
-                    (- line_hinting, ports_bottom_in),
-                    (- line_hinting, self._height + line_hinting),
-                    (self._width + line_hinting, self._height + line_hinting),
-                    (self._width + line_hinting, - line_hinting)
+                    (- lh, - lh),
+                    (- lh, ports_top_in - lh),
+                    (- sd, ports_top_in - lh),
+                    (- d + lh, ports_top_in - sd),
+                    (- d + lh, - sd),
+                    (- sd, - d + lh),
+                    (self._width + sd, - d + lh),
+                    (self._width + d - lh, -sd),
+                    (self._width + d - lh, self._height - lh + sd),
+                    (self._width + sd, self._height + d - lh),
+                    (- sd, self._height + d - lh),
+                    (-d + lh, self._height + sd),
+                    (-d + lh, ports_bottom_in + sd),
+                    (- sd, ports_bottom_in + lh),
+                    (- lh, ports_bottom_in + lh),
+                    (- lh, self._height + lh),
+                    (self._width + lh, self._height + lh),
+                    (self._width + lh, - lh)
                 ]
                 
             else:
                 points = [
-                    (self._width + line_hinting, - line_hinting),
-                    (self._width + line_hinting, ports_top_out),
-                    (self._width + d/2.0, ports_top_out),
-                    (self._width + d, ports_top_out - d/2.0),
-                    (self._width +d, -d / 2.0),
-                    (self._width + d/2.0, -d),
-                    (-d / 2.0, -d),
-                    (-d, -d/2.0),
-                    (-d, self._height + d/2.0),
-                    (-d/2.0, self._height + d),
-                    (self._width + d/2.0, self._height + d),
-                    (self._width + d, self._height + d/2.0),
-                    (self._width + d, ports_bottom_out + d/2.0),
-                    (self._width + d/2, ports_bottom_out),
-                    (self._width + line_hinting, ports_bottom_out),
-                    (self._width + line_hinting, self._height + line_hinting),
-                    (-line_hinting, self._height + line_hinting),
-                    (-line_hinting, -line_hinting)
+                    (self._width + lh, - lh),
+                    (self._width + lh, ports_top_out - lh),
+                    (self._width + sd, ports_top_out - lh),
+                    (self._width + d - lh, ports_top_out - sd),
+                    (self._width + d - lh, - sd),
+                    (self._width + sd, -d + lh),
+                    (- sd, -d + lh),
+                    (-d + lh, - sd),
+                    (-d + lh, self._height + sd),
+                    (- sd, self._height + d - lh),
+                    (self._width + sd, self._height + d - lh),
+                    (self._width + d - lh, self._height + sd),
+                    (self._width + d - lh, ports_bottom_out + sd),
+                    (self._width + sd, ports_bottom_out + lh),
+                    (self._width + lh, ports_bottom_out + lh),
+                    (self._width + lh, self._height + lh),
+                    (-lh, self._height + lh),
+                    (-lh, -lh)
                 ]
             
             hardware_poly = QPolygonF()   
@@ -1175,33 +1177,33 @@ class BoxWidgetMoth(QGraphicsItem):
             painter.drawPolygon(hardware_poly)
         else:
             top_points = [
-                (-line_hinting, -line_hinting),
-                (-line_hinting, ports_top_in),
-                (-d /2.0, ports_top_in),
-                (-d,ports_top_in - d / 2.0),
-                (-d, -d / 2.0),
-                (-d / 2.0, -d),
-                (self._width + d/2.0, -d),
-                (self._width + d, -d / 2.0),
-                (self._width + d, ports_top_out - d/2),
-                (self._width + d/2, ports_top_out),
-                (self._width + line_hinting, ports_top_out),
-                (self._width + line_hinting, -line_hinting)
+                (- lh, - lh),
+                (- lh, ports_top_in - lh),
+                (- sd, ports_top_in - lh),
+                (- d + lh, ports_top_in - sd),
+                (- d + lh, - sd),
+                (- sd, -d + lh),
+                (self._width + sd, -d + lh),
+                (self._width + d - lh, - sd),
+                (self._width + d - lh, ports_top_out - sd),
+                (self._width + d/2, ports_top_out - lh),
+                (self._width + lh, ports_top_out - lh),
+                (self._width + lh, -lh)
             ]
 
             bottom_points = [
-                (-line_hinting, self._height + line_hinting),
-                (-line_hinting, ports_bottom_in),
-                (-d/2, ports_bottom_in),
-                (-d, ports_bottom_in + d/2),
-                (-d, self._height + d/2),
-                (-d/2, self._height + d),
-                (self._width + d/2, self._height + d),
-                (self._width + d, self._height + d/2),
-                (self._width + d, ports_bottom_out + d/2),
-                (self._width + d/2, ports_bottom_out),
-                (self._width + line_hinting, ports_bottom_out),
-                (self._width + line_hinting, self._height + line_hinting)
+                (- lh, self._height + lh),
+                (- lh, ports_bottom_in + lh),
+                (- sd, ports_bottom_in + lh),
+                (- d + lh, ports_bottom_in + sd),
+                (-d + lh, self._height + sd),
+                (- sd, self._height + d - lh),
+                (self._width + sd, self._height + d - lh),
+                (self._width + d - lh, self._height + sd),
+                (self._width + d - lh, ports_bottom_out + sd),
+                (self._width + sd, ports_bottom_out + lh),
+                (self._width + lh, ports_bottom_out + lh),
+                (self._width + lh, self._height + lh)
             ]
             
             hw_poly_top = QPolygonF()
