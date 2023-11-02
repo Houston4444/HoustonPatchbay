@@ -984,12 +984,16 @@ class BoxWidget(BoxWidgetMoth):
                                        self._width - 5.0, y)
     
     def build_painter_path(
-            self, pos_dict: dict[str, list[tuple[float, float]]]):
+            self, pos_dict: dict[str, list[tuple[float, float]]],
+            selected=False):
         input_segments = pos_dict['input_segments']
         output_segments = pos_dict['output_segments']
         
         painter_path = QPainterPath()
         theme = self.get_theme()
+        if selected:
+            theme = theme.selected
+        
         border_radius = theme.border_radius()
         port_in_offset = abs(theme.port_in_offset())
         port_out_offset = abs(theme.port_out_offset())
@@ -1111,7 +1115,10 @@ class BoxWidget(BoxWidgetMoth):
                     border_radius + epsd, border_radius - line_hinting + epsd))
                 painter_path = painter_path.united(top_right_path)
 
-        self._painter_path = painter_path
+        if selected:
+            self._painter_path_sel = painter_path
+        else:
+            self._painter_path = painter_path
 
     def _get_wrap_triangle_pos(self) -> UnwrapButton:
         if self._has_side_title():
@@ -1236,6 +1243,7 @@ class BoxWidget(BoxWidgetMoth):
                 or self._height != self._ex_height
                 or ports_y_segments_dict != self._ex_ports_y_segments_dict):
             self.build_painter_path(ports_y_segments_dict)
+            self.build_painter_path(ports_y_segments_dict, selected=True)
 
         if (self._width != self._ex_width
                 or self._height != self._ex_height

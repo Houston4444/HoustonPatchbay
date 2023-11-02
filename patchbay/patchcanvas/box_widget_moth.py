@@ -213,6 +213,7 @@ class BoxWidgetMoth(QGraphicsItem):
         self._current_layout_mode = BoxLayoutMode.LARGE
         self._title_under_icon = False
         self._painter_path = QPainterPath()
+        self._painter_path_sel = QPainterPath()
         self._layout: BoxLayout = None
 
         canvas.scene.addItem(self)
@@ -838,13 +839,12 @@ class BoxWidgetMoth(QGraphicsItem):
             painter.setBrush(QBrush(bg_image))
             painter.setPen(Qt.NoPen)
             painter.drawPath(self._painter_path)
-        
+
         # draw the main rectangle
         pen = theme.fill_pen()        
         painter.setPen(pen)
         pen_width = pen.widthF()
-        line_hinting = pen_width / 2.0
-        
+
         color_main = theme.background_color()
         color_alter = theme.background2_color()
 
@@ -865,7 +865,10 @@ class BoxWidgetMoth(QGraphicsItem):
         else:
             painter.setBrush(color_main)
         
-        painter.drawPath(self._painter_path)
+        if self.isSelected():
+            painter.drawPath(self._painter_path_sel)
+        else:
+            painter.drawPath(self._painter_path)
         
         # draw hardware box decoration (flyrack like)
         self._paint_hardware_rack(painter)
