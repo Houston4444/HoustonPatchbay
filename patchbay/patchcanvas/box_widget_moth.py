@@ -868,7 +868,7 @@ class BoxWidgetMoth(QGraphicsItem):
         painter.drawPath(self._painter_path)
         
         # draw hardware box decoration (flyrack like)
-        self._paint_hardware_rack(painter, line_hinting)
+        self._paint_hardware_rack(painter)
 
         # Draw plugin inline display if supported
         self._paint_inline_display(painter)
@@ -1089,29 +1089,9 @@ class BoxWidgetMoth(QGraphicsItem):
             triangle += QPointF(xpos + side, ypos -side)
             painter.drawPolygon(triangle)
 
-        pennn = QPen(QColor(150,80, 80))
-        pennn.setWidth(1)
-        painter.setPen(pennn)
-        # painter.drawLine(QPointF(self._layout.pms.ins_width, 0.0),
-        #                  QPointF(self._layout.pms.ins_width, float(self._height)))
-        # phg = canvas.theme.port_height / 2
-        # painter.drawLine(QPointF(self._layout.pms.ins_width + phg, 0.0),
-        #                  QPointF(self._layout.pms.ins_width + phg, float(self._height)))
-        
-        # painter.drawLine(QPointF(self._width - self._layout.pms.outs_width, 0.0),
-        #                  QPointF(self._width - self._layout.pms.outs_width, float(self._height)))
-        # phg = canvas.theme.port_height / 2
-        # painter.drawLine(QPointF(self._width - self._layout.pms.outs_width + phg, 0.0),
-        #                  QPointF(self._width - self._layout.pms.outs_width + phg, float(self._height)))
-        
-        # y_in_ouy = self._layout.pen_width + self._layout.header_height + self._layout.pms.last_inout_pos
-        # if 'Dragonfly' in self._group_name:
-        #     print('oregg',y_in_ouy, self._height, self._layout.header_height, self._layout.pms.last_inout_pos, self._layout.pms.last_in_pos, self._layout.pms.last_out_pos, self._layout.height_for_ports_one, self._layout.pms)
-        # painter.drawLine(QPointF(0.0, y_in_ouy), QPointF(self._width + 0.0, y_in_ouy))
-
         painter.restore()
 
-    def _paint_hardware_rack(self, painter: QPainter, line_hinting: float):
+    def _paint_hardware_rack(self, painter: QPainter):
         if not self._is_hardware:
             return
         
@@ -1124,11 +1104,6 @@ class BoxWidgetMoth(QGraphicsItem):
         background1 = theme.background_color()
         background2 = theme.background2_color()
         
-        ports_top_in = self._layout.ports_top_in
-        ports_top_out = self._layout.ports_top_out
-        ports_bottom_in = self._layout.ports_bottom_in
-        ports_bottom_out = self._layout.ports_bottom_out
-        
         if background2 is not None:
             hw_gradient = QLinearGradient(-d, -d, self._width +d, self._height +d)
             hw_gradient.setColorAt(0, background1)
@@ -1139,7 +1114,15 @@ class BoxWidgetMoth(QGraphicsItem):
         else:
             painter.setBrush(background1)
         
-        painter.setPen(theme.fill_pen())
+        pen = theme.fill_pen()
+        painter.setPen(pen)
+        line_hinting = pen.widthF() / 2.0
+        
+        ports_top_in = self._layout.ports_top_in
+        ports_top_out = self._layout.ports_top_out
+        ports_bottom_in = self._layout.ports_bottom_in
+        ports_bottom_out = self._layout.ports_bottom_out
+        
         if self._current_port_mode is not PortMode.BOTH:
             if self._current_port_mode is PortMode.INPUT:
                 points = [

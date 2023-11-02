@@ -40,6 +40,15 @@ def list_port_types_and_subs() -> Iterator[tuple[PortType, PortSubType]]:
             yield (port_type, port_subtype)
 
 
+def from_float_to(from_f: float, to_f: float, ratio: float) -> float:
+    if ratio >= 1.0:
+        return to_f
+    if ratio <= 0.0:
+        return from_f
+    
+    return from_f + (to_f - from_f) * ratio 
+
+
 class BoxWidget(BoxWidgetMoth):
     def __init__(self, group: GroupObject, port_mode: PortMode):
         BoxWidgetMoth.__init__(self, group, port_mode)
@@ -768,8 +777,48 @@ class BoxWidget(BoxWidgetMoth):
         if out_segment[0] != out_segment[1]:
             output_segments.append(out_segment)
         
-        self._layout.set_ports_y_segments(
-            input_segments, output_segments)
+        ports_top_in = 0.0
+        ports_bottom_in = 0.0
+        ports_top_out = 0.0
+        ports_bottom_out = 0.0
+        
+        if input_segments:
+            ports_top_in = input_segments[0][0]
+            ports_bottom_in = input_segments[-1][1]
+        
+        if output_segments:
+            ports_top_out = output_segments[0][0]
+            ports_bottom_out = output_segments[-1][1]
+        
+        wp_ports_bottom = wrapped_port_pos + canvas.theme.port_height
+        
+        if self._wrapping_state is WrappingState.WRAPPED:
+            ports_top_in = ports_top_out = wrapped_port_pos
+            ports_bottom_in = ports_bottom_out = wp_ports_bottom
+
+        elif self._wrapping_state is WrappingState.WRAPPING:
+            ports_top_in = from_float_to(
+                ports_top_in, wrapped_port_pos, self._wrapping_ratio)
+            ports_top_out = from_float_to(
+                ports_top_out, wrapped_port_pos, self._wrapping_ratio)
+            ports_bottom_in = from_float_to(
+                ports_bottom_in, wp_ports_bottom, self._wrapping_ratio)
+            ports_bottom_out = from_float_to(
+                ports_bottom_out, wp_ports_bottom, self._wrapping_ratio)
+            
+        elif self._wrapping_state is WrappingState.UNWRAPPING:
+            ports_top_in = from_float_to(
+                wrapped_port_pos, ports_top_in, self._wrapping_ratio)
+            ports_top_out = from_float_to(
+                wrapped_port_pos, ports_top_out, self._wrapping_ratio)
+            ports_bottom_in = from_float_to(
+                wp_ports_bottom, ports_bottom_in, self._wrapping_ratio)
+            ports_bottom_out = from_float_to(
+                wp_ports_bottom, ports_bottom_out, self._wrapping_ratio)
+
+        self._layout.set_ports_top_bottom(
+            ports_top_in, ports_bottom_in,
+            ports_top_out, ports_bottom_out)
         
         return {'input_segments': input_segments,
                 'output_segments': output_segments}

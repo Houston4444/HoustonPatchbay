@@ -200,23 +200,12 @@ class BoxLayout:
                 - (2 * self.pen_width + self.header_height
                    + self.pms.last_inout_pos))
             
-    def set_ports_y_segments(
-            self, in_segments: list[tuple[float, float]],
-            out_segments: list[tuple[float, float]]):
-        self.in_segments = in_segments
-        self.out_segments = out_segments
-        
-        self.ports_top_in = 0.0
-        self.ports_bottom_in = 0.0
-
-        if self.in_segments:
-            self.ports_top_in = self.in_segments[0][0]
-            self.ports_bottom_in = self.in_segments[-1][1]
-
-        self.ports_top_out = 0.0
-        self.ports_bottom_out = 0.0
-        if self.out_segments:
-            self.ports_top_out = self.out_segments[0][0]
-            self.ports_bottom_out = self.out_segments[-1][1]
+    def set_ports_top_bottom(
+            self, ports_top_in: float, ports_bottom_in: float,
+            ports_top_out: float, ports_bottom_out: float):
+        self.ports_top_in = ports_top_in
+        self.ports_bottom_in = ports_bottom_in
+        self.ports_top_out = ports_top_out
+        self.ports_bottom_out = ports_bottom_out
             
                     
