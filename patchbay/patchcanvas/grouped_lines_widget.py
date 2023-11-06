@@ -165,6 +165,8 @@ class GroupedLinesWidget(QGraphicsPathItem):
             gp_keys = [g for g in _all_lines_widgets if g[1] == group_id]
         elif port_mode is PortMode.BOTH:
             gp_keys = [g for g in _all_lines_widgets if group_id in g]
+        else:
+            gp_keys = []
         
         for gp_key in gp_keys:
             for pt_dict in _all_lines_widgets[gp_key].values():

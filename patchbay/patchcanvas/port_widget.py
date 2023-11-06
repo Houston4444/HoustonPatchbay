@@ -20,14 +20,13 @@
 
 # Imports (Global)
 import logging
-from math import floor
-import time
+import math
 from typing import TYPE_CHECKING
 
 from PyQt5.QtCore import Qt, QPointF, QRectF
 from PyQt5.QtGui import (
     QBrush, QFontMetrics, QPainter, QPen, QPolygonF,
-    QLinearGradient, QColor)
+    QLinearGradient, QColor, QPainterPath)
 from PyQt5.QtWidgets import QGraphicsItem, QApplication
 
 from .grouped_lines_widget import GroupedLinesWidget
@@ -314,8 +313,9 @@ class PortWidget(ConnectableWidget):
             return
         
         painter.save()
-        painter.setRenderHint(QPainter.Antialiasing, True)
     
+        MIDI_KEYBOARD = True
+        
         theme = canvas.theme.port
 
         if self._port_type is PortType.AUDIO_JACK:
@@ -337,7 +337,6 @@ class PortWidget(ConnectableWidget):
         poly_color = theme.background_color()
         poly_color_alter = theme.background2_color()
         poly_pen = theme.fill_pen()
-        #poly_pen.setJoinStyle(Qt.RoundJoin)
         text_pen = QPen(theme.text_color())
 
         # To prevent quality worsening
@@ -351,6 +350,8 @@ class PortWidget(ConnectableWidget):
 
         middle_width = p_height * 0.5
         is_cv_port = bool(self._port_subtype is PortSubType.CV)
+        y_top = line_hinting
+        y_bottom = p_height - line_hinting
 
         if self._port_mode is PortMode.INPUT:
             text_pos = QPointF(3.0, text_y_pos)
@@ -374,50 +375,85 @@ class PortWidget(ConnectableWidget):
             return
 
         polygon = QPolygonF()
+        use_painter_path = False
 
         if self._portgrp_id:
             first_of_portgrp = bool(self._pg_pos == 0)
             last_of_portgrp = bool(self._pg_pos + 1 == self._pg_len)
 
             if first_of_portgrp:
-                polygon += QPointF(line_hinting, line_hinting)
-                polygon += QPointF(self._port_width - line_hinting, line_hinting)
+                points = [(line_hinting, y_top),
+                          (self._port_width - line_hinting, y_top)]
             else:
-                polygon += QPointF(line_hinting, 0.0)
-                polygon += QPointF(self._port_width - line_hinting, 0.0)
+                points = [(line_hinting, 0.0),
+                          (self._port_width - line_hinting, 0.0)]
 
             if last_of_portgrp:
-                polygon += QPointF(self._port_width - line_hinting,
-                                   p_height - line_hinting)
-                polygon += QPointF(line_hinting, p_height - line_hinting)
+                points += [(self._port_width - line_hinting, y_bottom),
+                           (line_hinting, y_bottom)]
             else:
-                polygon += QPointF(self._port_width - line_hinting, p_height)
-                polygon += QPointF(line_hinting, p_height)
+                points += [(self._port_width - line_hinting, p_height),
+                           (line_hinting, p_height)]
+
+        elif self._port_type is PortType.MIDI_JACK:
+            # we create a rounded path
+            use_painter_path = True
+            
+            midi_path = QPainterPath()
+            midi_path.moveTo(QPointF(x_box_border, y_top))
+            midi_path.lineTo(QPointF(x_arrowbase, y_top))
+            midi_path.arcTo(
+                QRectF(QPointF(x_arrowbase * 2 - x_arrowmid, y_top),
+                    QPointF(x_arrowmid, y_bottom)),
+                90.0, -180.0)
+            midi_path.lineTo(QPointF(x_box_border, y_bottom))
+            midi_path.lineTo(QPointF(x_box_border, y_top))
+            painter.drawPath(midi_path)
 
         elif is_cv_port:
-            polygon += QPointF(x_box_border, line_hinting)
-            polygon += QPointF(x_arrowbase, line_hinting)
-            polygon += QPointF(x_arrowbase, p_height - line_hinting)
-            polygon += QPointF(x_box_border, p_height - line_hinting)
+            points = [(x_box_border, y_top),
+                      (x_arrowbase, y_top),
+                      (x_arrowbase, y_bottom),
+                      (x_box_border, y_bottom)]
 
         elif self._port_type is PortType.MIDI_ALSA:
-            polygon += QPointF(x_box_border, line_hinting)
-            polygon += QPointF(x_arrowmid, line_hinting)
-            polygon += QPointF(x_arrowmid, p_height - line_hinting)
-            polygon += QPointF(x_box_border, p_height - line_hinting)
+            points = [(x_box_border, y_top),
+                      (x_arrowmid, y_top),
+                      (x_arrowmid, y_bottom),
+                      (x_box_border, y_bottom)]
+
+        elif self._port_type is PortType.VIDEO:
+            x_cam_base = x_box_border + x_arrowhead - x_arrowbase
             
-        else:            
-            polygon += QPointF(x_box_border, line_hinting)
-            polygon += QPointF(x_arrowbase, line_hinting)
-            polygon += QPointF(x_arrowhead, p_height / 2.0)
-            polygon += QPointF(x_arrowbase, p_height - line_hinting)
-            polygon += QPointF(x_box_border, p_height - line_hinting)
-            polygon += QPointF(x_box_border, line_hinting)
+            points = [(x_box_border, y_top),
+                      (x_cam_base, y_top + y_bottom * 0.3),
+                      (x_cam_base, y_top),
+                      (x_arrowhead, y_top),
+                      (x_arrowhead, y_bottom),
+                      (x_cam_base, y_bottom),
+                      (x_cam_base, y_bottom * 0.7),
+                      (x_box_border, y_bottom),
+                      (x_box_border, y_top)]
+
+        else:
+            points = [(x_box_border, y_top),
+                      (x_arrowbase, y_top),
+                      (x_arrowhead, p_height * 0.5),
+                      (x_arrowbase, y_bottom),
+                      (x_box_border, y_bottom),
+                      (x_box_border, y_top)]
+
+        if not use_painter_path:
+            for xy in points:
+                polygon += QPointF(*xy)
 
         if poly_image is not None:
             painter.setPen(Qt.NoPen)
             painter.setBrush(QBrush(poly_image))
-            painter.drawPolygon(polygon)
+            if use_painter_path:
+                painter.drawPath(midi_path)
+            else:
+                painter.drawPolygon(polygon)
 
         if poly_color_alter is not None:
             port_gradient = QLinearGradient(0, 0, 0, self._port_height)
@@ -431,7 +467,11 @@ class PortWidget(ConnectableWidget):
             painter.setBrush(poly_color)
         
         painter.setPen(poly_pen)
-        painter.drawPolygon(polygon)
+        
+        if use_painter_path:
+            painter.drawPath(midi_path)
+        else:
+            painter.drawPolygon(polygon)
 
         if not self._portgrp_id:
             if self._port_subtype is PortSubType.CV:
@@ -450,11 +490,27 @@ class PortWidget(ConnectableWidget):
 
             elif (self._port_subtype is PortSubType.A2J
                     or self._port_type is PortType.MIDI_ALSA):
-                # draw the little circle for a2j (or MidiBridge) port
-                poly_pen.setWidthF(1.000001)
-                
+                # draw the little circle for a2j (or MidiBridge) port.                
                 # we emulate a hole in the port, so we need the background
                 # of the box.
+                # if self._port_type is PortType.MIDI_JACK:
+                #     big_circle_path = QPainterPath()
+                #     big_circle_path.addEllipse(
+                #         QRectF(QPointF(x_arrowmid - 3.0, p_height / 2 - 3.0),
+                #                QPointF(x_arrowmid + 3.0, p_height / 2 + 3.0))
+                #     )
+                #     # big_circle_path.addEllipse(
+                #     #     QPointF(x_arrowmid, p_height / 2.0),
+                #     #     3.0 + line_hinting, 3.0 + line_hinting)
+                #     lit_circle_path = QPainterPath()
+                #     lit_circle_path.addEllipse(
+                #         QPointF(x_arrowmid, p_height / 2.0),
+                #         3.0 - line_hinting, 3.0 - line_hinting)
+                #     midi_path |= big_circle_path
+                #     midi_path -= lit_circle_path
+
+                #     painter.drawPath(midi_path)
+                # else:
                 parent = self.parentItem()
                 box_theme = parent.get_theme()
                 if parent.isSelected():
@@ -472,18 +528,12 @@ class PortWidget(ConnectableWidget):
                     scene_col.blueF() * rb + box_bg_col.blueF() * ra)
                 
                 painter.setBrush(circle_bg_col)
+                painter.setPen(poly_pen)
                 
-                if self._port_type is PortType.MIDI_ALSA:
-                    ellipse_x = x_arrowmid
-                else:
-                    ellipse_x = x_arrowbase
-                    if self._port_mode is PortMode.OUTPUT:
-                        ellipse_x -= 2.0
-                    elif self._port_mode is PortMode.INPUT:
-                        ellipse_x += 2.0
+                ellipse_x = x_arrowmid
 
                 painter.drawEllipse(
-                    QPointF(ellipse_x, p_height / 2.0), 2.0, 2.0)
+                    QPointF(ellipse_x, p_height / 2.0), 2.5, 2.5)
 
         painter.setPen(text_pen)
         painter.setFont(self._port_font)
@@ -498,17 +548,11 @@ class PortWidget(ConnectableWidget):
                 text_pos = QPointF(self._port_width - 3 - print_name_size,
                                    text_y_pos)
 
-            # if print_name_size > (self._port_width - 4):
-            #     if poly_color_alter is not None:
-            #         painter.setPen(QPen(port_gradient, 3.0))
-            #     else:
-            #         painter.setPen(QPen(poly_color, 3.0))
-            #     painter.drawLine(
-            #         QPointF(float(poly_locx[5]), 3.0),
-            #         QPointF(float(poly_locx[5]),
-            #                 float(canvas.theme.port_height - 3.0)))
-            #     painter.setPen(text_pen)
-            #     painter.setFont(self._port_font)
+        elif self._port_type is PortType.VIDEO:
+            if self._port_mode is PortMode.OUTPUT:
+                text_pos.setX(text_pos.x() - middle_width)
+            else:
+                text_pos.setX(text_pos.x() + middle_width)
 
         painter.drawText(text_pos, self._print_name)
         
