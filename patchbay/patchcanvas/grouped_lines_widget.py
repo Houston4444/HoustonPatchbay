@@ -17,12 +17,10 @@
 #
 # For a full copy of the GNU General Public License see the doc/GPL.txt file.
 
-from enum import Enum
-import time
 from typing import TYPE_CHECKING, Optional, Iterator
 
 from PyQt5.QtCore import Qt
-from PyQt5.QtGui import (QColor, QLinearGradient, QPainter,
+from PyQt5.QtGui import (QColor, QLinearGradient,
                          QPainterPath, QPen, QBrush)
 from PyQt5.QtWidgets import QGraphicsPathItem
 
@@ -291,7 +289,7 @@ class GroupedLinesWidget(QGraphicsPathItem):
         tha.color_alter = theme.background2_color()
         if tha.color_alter is None:
             tha.color_alter = tha.color_main
-        tha.base_width = tha.base_pen.widthF() + 0.000001
+        tha.base_width = tha.base_pen.widthF()
         self._th_attribs = tha
 
     def update_line_gradient(self):
@@ -342,27 +340,5 @@ class GroupedLinesWidget(QGraphicsPathItem):
             else:
                 color_main = tha.color_main
         
-            self.setPen(QPen(QBrush(color_main), tha.base_width, Qt.SolidLine, Qt.FlatCap))
-        
-    # def paint(self, painter, option, widget):
-    #     if canvas.loading_items:
-    #         return
-
-    #     painter.save()
-    #     if True:
-    #     # if canvas.antialiasing:
-    #         painter.setRenderHint(QPainter.Antialiasing, True)
-
-    #     # print('okelmz', painter.boundingRect())
-    #     print('dldlddlapp')
-    #     QGraphicsPathItem.paint(self, painter, option, widget)
-
-    #     cosm_pen = QPen(self.pen())
-    #     cosm_pen.setCosmetic(True)
-    #     cosm_pen.setWidthF(1.00001)
-
-    #     painter.setPen(cosm_pen)
-    #     painter.setBrush(Qt.NoBrush)
-    #     painter.drawPath(self.path())
-
-    #     painter.restore()
+            self.setPen(QPen(QBrush(color_main),
+                             tha.base_width, Qt.SolidLine, Qt.FlatCap))

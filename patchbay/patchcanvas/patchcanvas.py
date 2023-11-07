@@ -680,7 +680,7 @@ def redraw_all_groups(force_no_prevent_overlap=False):
         box.update_positions(
             without_connections=True,
             prevent_overlap=False)
-    
+
     for group_out in canvas.group_list:
         for group_in in canvas.group_list:
             GroupedLinesWidget.connections_changed(

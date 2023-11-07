@@ -1266,7 +1266,7 @@ class BoxWidget(BoxWidgetMoth):
 
         self.update_positions_pending = False
         self.update()
-        
+
         # I do not understand why without this,
         # when a renamed port does not change the box geometry,
         # port and portgroups widgets aren't updated,
