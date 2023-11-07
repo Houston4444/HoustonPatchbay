@@ -118,6 +118,8 @@ class StyleAttributer:
         self._port_offset = None
         self._port_in_offset = None
         self._port_out_offset = None
+        self._port_in_offset_mode = None
+        self._port_out_offset_mode = None
         self._port_spacing = None
         self._port_type_spacing = None
         self._box_footer = None
@@ -248,6 +250,18 @@ class StyleAttributer:
         elif attribute == 'port-out-offset':
             if isinstance(value, (int, float)):
                 self._port_out_offset = rail_float(value, -20, 20)
+            else:
+                err = True
+        
+        elif attribute == 'port-in-offset-mode':
+            if isinstance(value, str):
+                self._port_in_offset_mode = value
+            else:
+                err = True
+
+        elif attribute == 'port-out-offset-mode':
+            if isinstance(value, str):
+                self._port_out_offset_mode = value
             else:
                 err = True
         
@@ -403,6 +417,12 @@ class StyleAttributer:
     
     def port_out_offset(self) -> float:
         return self.get_value_of('_port_out_offset')
+    
+    def port_in_offset_mode(self) -> str:
+        return self.get_value_of('_port_in_offset_mode')
+    
+    def port_out_offset_mode(self) -> str:
+        return self.get_value_of('_port_out_offset_mode')
     
     def port_spacing(self) -> float:
         return self.get_value_of('_port_spacing')
@@ -564,6 +584,8 @@ class Theme(StyleAttributer):
         self._port_offset = 0
         self._port_in_offset = 0
         self._port_out_offset = 0
+        self._port_in_offset_mode = 'bore'
+        self._port_out_offset_mode = 'bore'
         self._box_footer = 0
 
         self.scene_background_color = QColor('black')

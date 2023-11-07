@@ -666,7 +666,7 @@ def repulse_all_boxes():
         canvas.scene.full_repulse()
 
 @patchbay_api
-def redraw_all_groups(force_no_prevent_overlap=False):    
+def redraw_all_groups(force_no_prevent_overlap=False, theme_change=False):    
     # We are redrawing all groups.
     # For optimization reason we prevent here to resize the scene
     # at each group draw, we'll do it once all is done,
@@ -679,7 +679,8 @@ def redraw_all_groups(force_no_prevent_overlap=False):
     for box in canvas.list_boxes():
         box.update_positions(
             without_connections=True,
-            prevent_overlap=False)
+            prevent_overlap=False,
+            theme_change=theme_change)
 
     for group_out in canvas.group_list:
         for group_in in canvas.group_list:

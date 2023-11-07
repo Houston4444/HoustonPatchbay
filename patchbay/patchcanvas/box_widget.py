@@ -983,7 +983,7 @@ class BoxWidget(BoxWidgetMoth):
             self._header_line_right = (self._width - side_size + 5.0, y,
                                        self._width - 5.0, y)
     
-    def build_painter_path(
+    def _build_painter_path(
             self, pos_dict: dict[str, list[tuple[float, float]]],
             selected=False):
         input_segments = pos_dict['input_segments']
@@ -997,6 +997,9 @@ class BoxWidget(BoxWidgetMoth):
         border_radius = theme.border_radius()
         port_in_offset = abs(theme.port_in_offset())
         port_out_offset = abs(theme.port_out_offset())
+        print('boroee', theme.port_in_offset_mode(), theme.port_out_offset_mode())
+        bore_in = bool(theme.port_in_offset_mode() == 'bore')
+        bore_out = bool(theme.port_out_offset_mode() == 'bore')
         pen = theme.fill_pen()
         line_hinting = pen.widthF() / 2.0
         
@@ -1012,6 +1015,11 @@ class BoxWidget(BoxWidgetMoth):
             painter_path.addRect(rect)
         else:
             painter_path.addRoundedRect(rect, border_radius, border_radius)
+        
+        if not bore_in:
+            port_in_offset = 0.0
+        if not bore_out:
+            port_out_offset = 0.0
         
         if self._wrapping_state is WrappingState.NORMAL:
             # substract rects in the box shape in case of port_offset (even negativ)
@@ -1156,7 +1164,7 @@ class BoxWidget(BoxWidgetMoth):
         return UnwrapButton.NONE
 
     def update_positions(self, even_animated=False, without_connections=False,
-                         prevent_overlap=True):
+                         prevent_overlap=True, theme_change=False):
         if canvas.loading_items:
             return
 
@@ -1239,11 +1247,12 @@ class BoxWidget(BoxWidgetMoth):
         if self._wrapping_state is WrappingState.NORMAL:
             self._wrap_triangle_pos = self._get_wrap_triangle_pos()
 
-        if (self._width != self._ex_width
+        if (theme_change
+                or self._width != self._ex_width
                 or self._height != self._ex_height
                 or ports_y_segments_dict != self._ex_ports_y_segments_dict):
-            self.build_painter_path(ports_y_segments_dict)
-            self.build_painter_path(ports_y_segments_dict, selected=True)
+            self._build_painter_path(ports_y_segments_dict)
+            self._build_painter_path(ports_y_segments_dict, selected=True)
 
         if (self._width != self._ex_width
                 or self._height != self._ex_height

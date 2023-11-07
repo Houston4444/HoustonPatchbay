@@ -202,4 +202,4 @@ class Callbacker:
         if self.mng.options_dialog is not None:
             self.mng.options_dialog.set_theme(theme_ref)
 
-        patchcanvas.redraw_all_groups()
+        patchcanvas.redraw_all_groups(theme_change=True)
