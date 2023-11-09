@@ -997,7 +997,6 @@ class BoxWidget(BoxWidgetMoth):
         border_radius = theme.border_radius()
         port_in_offset = abs(theme.port_in_offset())
         port_out_offset = abs(theme.port_out_offset())
-        print('boroee', theme.port_in_offset_mode(), theme.port_out_offset_mode())
         bore_in = bool(theme.port_in_offset_mode() == 'bore')
         bore_out = bool(theme.port_out_offset_mode() == 'bore')
         pen = theme.fill_pen()
