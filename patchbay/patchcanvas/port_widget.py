@@ -312,8 +312,7 @@ class PortWidget(ConnectableWidget):
             return
         
         painter.save()
-    
-        MIDI_KEYBOARD = True
+        painter.setRenderHint(QPainter.Antialiasing, True)
         
         theme = canvas.theme.port
 

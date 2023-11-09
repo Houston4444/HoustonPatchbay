@@ -20,18 +20,19 @@
 
 # Imports (Global)
 import logging
-from math import floor
 from typing import TYPE_CHECKING
 
 from PyQt5.QtCore import QPointF, QRectF, Qt
 from PyQt5.QtGui import (QFontMetrics, QPainter, QBrush,
-                         QPolygonF, QLinearGradient, QPen)
+                         QPolygonF, QLinearGradient, QPen,
+                         QColor)
 from PyQt5.QtWidgets import QApplication, QGraphicsItem
 
 # Imports (Custom)
 from .connectable_widget import ConnectableWidget
 from .init_values import (
     CanvasItemType,
+    PortSubType,
     PortgrpObject,
     canvas,
     CallbackAct,
@@ -234,54 +235,84 @@ class PortgroupWidget(ConnectableWidget):
         text_pen = QPen(theme.text_color())
 
         line_hinting = poly_pen.widthF() / 2.0
-
-        middle_width = canvas.theme.port_height / 2.0
-
-        poly_locx = [0, 0, 0, 0, 0]
-        poly_corner_xhinting = middle_width % floor(middle_width)
-        if poly_corner_xhinting == 0:
-            poly_corner_xhinting = 0.5 * (1 - 7 / middle_width)
+        p_height = canvas.theme.port_height
+        middle_width = p_height * 0.5
 
         text_main_height = self._portgrp_font.pixelSize() * 0.667
-        text_y_pos = ((canvas.theme.port_height * len(self._port_ids)
+        text_y_pos = ((p_height * len(self._port_ids)
                        - text_main_height) / 2
                       + text_main_height)
 
         if self._port_mode is PortMode.INPUT:
             text_pos = QPointF(self._ports_width + 3, text_y_pos)
-
-            poly_locx[0] = self._ports_width - line_hinting
-            poly_locx[1] = self._portgrp_width - middle_width - line_hinting
-            poly_locx[2] = self._portgrp_width - 2 * line_hinting
-            poly_locx[3] = self._portgrp_width - middle_width - line_hinting
-            poly_locx[4] = self._ports_width - line_hinting
+            
+            x_ports_border = self._ports_width - line_hinting
+            x_arrowbase = self._portgrp_width - middle_width - line_hinting
+            x_arrowmid = self._portgrp_width - middle_width / 2 - line_hinting
+            x_arrowhead = self._portgrp_width - 2 * line_hinting
 
         elif self._port_mode is PortMode.OUTPUT:
             text_pos = QPointF(3.0 + middle_width, text_y_pos)
-
-            poly_locx[0] = (self._portgrp_width
-                            - self._ports_width + line_hinting)
-            poly_locx[1] = middle_width + line_hinting
-            poly_locx[2] = line_hinting * 2
-            poly_locx[3] = middle_width + line_hinting
-            poly_locx[4] = (self._portgrp_width
-                            - self._ports_width + line_hinting)
+            
+            x_ports_border = (self._portgrp_width - self._ports_width
+                              + line_hinting)
+            x_arrowbase = middle_width + line_hinting
+            x_arrowmid = middle_width / 2.0 + line_hinting
+            x_arrowhead = line_hinting * 2
 
         else:
             self._logger.critical(f"CanvasPortGroup.paint() - "
                                   "invalid port mode {str(self._port_mode)}")
             return
 
-        polygon  = QPolygonF()
-        polygon += QPointF(poly_locx[0], line_hinting)
-        polygon += QPointF(poly_locx[1], line_hinting)
-        polygon += QPointF(poly_locx[2], float(canvas.theme.port_height / 2) )
-        polygon += QPointF(poly_locx[2],
-                           float(canvas.theme.port_height * (len(self._port_ids) - 1/2)))
-        polygon += QPointF(poly_locx[3],
-                           canvas.theme.port_height * len(self._port_ids) - line_hinting)
-        polygon += QPointF(poly_locx[4],
-                           canvas.theme.port_height * len(self._port_ids) - line_hinting)
+        y_top = line_hinting
+        y_bottom = p_height * len(self._port_ids) - line_hinting
+
+        if self._port_type is PortType.MIDI_JACK:            
+            points = [(x_ports_border, y_top),
+                      (x_arrowbase, y_top),
+                      (x_arrowbase + (x_arrowmid - x_arrowbase) * 0.62,
+                       p_height * 0.15),
+                      (x_arrowmid, p_height * 0.40),
+                      (x_arrowmid, p_height * (len(self._port_ids) - 0.40)),
+                      (x_arrowbase + (x_arrowmid - x_arrowbase) * 0.62,
+                       p_height * (len(self._port_ids) - 0.15)),
+                      (x_arrowbase, y_bottom),
+                      (x_ports_border, y_bottom),
+                      (x_ports_border, y_top)]
+
+        elif self._port_subtype is PortSubType.CV:
+            points = [(x_ports_border, y_top),
+                      (x_arrowbase, y_top),
+                      (x_arrowbase, y_bottom),
+                      (x_ports_border, y_bottom),
+                      (x_ports_border, y_top)]
+
+        elif self._port_type is PortType.MIDI_ALSA:
+            points = [(x_ports_border, y_top),
+                      (x_arrowmid, y_top),
+                      (x_arrowmid, y_bottom),
+                      (x_ports_border, y_bottom),
+                      (x_ports_border, y_top)]
+
+        elif self._port_type is PortType.VIDEO:
+            points = [(x_ports_border, y_top),
+                      (x_arrowhead, y_top),
+                      (x_arrowhead, y_bottom),
+                      (x_ports_border, y_bottom),
+                      (x_ports_border, y_top)]
+        else:
+            points = [(x_ports_border, y_top),
+                      (x_arrowbase, y_top),
+                      (x_arrowhead, p_height * 0.5),
+                      (x_arrowhead, p_height * (len(self._port_ids) - 0.5)),
+                      (x_arrowbase, y_bottom),
+                      (x_ports_border, y_bottom),
+                      (x_ports_border, y_top)]
+        
+        polygon = QPolygonF()
+        for xy in points:
+            polygon += QPointF(*xy)
 
         if poly_image is not None:
             painter.setPen(Qt.NoPen)
@@ -300,6 +331,49 @@ class PortgroupWidget(ConnectableWidget):
             
         painter.setPen(poly_pen)
         painter.drawPolygon(polygon)
+
+        if self._port_subtype is PortSubType.CV:
+            poly_pen.setWidthF(p_height * 0.167)
+            llh = poly_pen.widthF() * 0.5
+            painter.setPen(poly_pen)
+
+            y_line_pos = len(self._port_ids) * p_height * 0.5
+            if self._port_mode is PortMode.OUTPUT:
+                # for port_n in range(len(self._port_ids)):
+                    painter.drawLine(
+                        QPointF(x_arrowhead + llh, y_line_pos),
+                        QPointF(x_arrowbase - llh, y_line_pos))
+            else:
+                for port_n in range(len(self._port_ids)):
+                    painter.drawLine(
+                        QPointF(x_arrowhead - llh, y_line_pos),
+                        QPointF(x_arrowbase + llh, y_line_pos))
+
+        if (self._port_type is PortType.MIDI_ALSA
+                or self._port_subtype is PortSubType.A2J):
+            parent = self.parentItem()
+            box_theme = parent.get_theme()
+            if parent.isSelected():
+                box_theme = box_theme.selected
+
+            scene_col = canvas.theme.scene_background_color
+            box_bg_col = box_theme.background_color()
+            ra = box_bg_col.alphaF()
+            rb = 1.0 - ra
+            
+            circle_bg_col = QColor()
+            circle_bg_col.setRgbF(
+                scene_col.redF() * rb + box_bg_col.redF() * ra,
+                scene_col.greenF() * rb + box_bg_col.greenF() * ra,
+                scene_col.blueF() * rb + box_bg_col.blueF() * ra)
+            
+            painter.setBrush(circle_bg_col)
+            painter.setPen(poly_pen)
+            
+            radius = abs(x_arrowhead - x_arrowmid) * 0.667            
+            painter.drawEllipse(
+                QPointF(x_arrowmid, p_height * len(self._port_ids) * 0.5),
+                radius, radius)
 
         painter.setPen(text_pen)
         painter.setFont(self._portgrp_font)
