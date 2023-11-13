@@ -1188,6 +1188,10 @@ class BoxWidget(BoxWidgetMoth):
         for portgrp in canvas.list_portgroups(group_id=self._group_id):
             if self._current_port_mode & portgrp.port_mode:
                 self._portgrp_list.append(portgrp)
+        
+        if theme_change:
+            for portgrp in self._portgrp_list:
+                portgrp.widget.update_theme()
 
         if options.auto_hide_groups and not self._port_list:
             self.setVisible(False)

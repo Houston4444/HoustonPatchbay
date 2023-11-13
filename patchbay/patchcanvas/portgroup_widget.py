@@ -103,6 +103,23 @@ class PortgroupWidget(ConnectableWidget):
     def set_ports_width(self, ports_width: int):
         self._ports_width = ports_width
 
+    def update_theme(self):
+        theme = canvas.theme.portgroup
+        if self._port_type is PortType.AUDIO_JACK:
+            if self._port_subtype is PortSubType.CV:
+                theme = theme.cv
+            else:
+                theme = theme.audio
+        elif self._port_type is PortType.MIDI_JACK:
+            theme = theme.midi
+        elif self._port_type is PortType.MIDI_ALSA:
+            theme = theme.alsa
+        elif self._port_type is PortType.VIDEO:
+            theme = theme.video
+        
+        self._theme = theme
+        self._portgrp_font = theme.font()
+
     def set_print_name(self, print_name:str, width_limited: int):
         self._print_name = print_name
         self._normal_print_name = print_name
@@ -225,19 +242,20 @@ class PortgroupWidget(ConnectableWidget):
         painter.save()
         painter.setRenderHint(QPainter.Antialiasing, True)
 
-        theme = canvas.theme.portgroup
+        theme = self._theme
+        # theme = canvas.theme.portgroup
         
-        if self._port_type is PortType.AUDIO_JACK:
-            if self._port_subtype is PortSubType.CV:
-                theme = theme.cv
-            else:
-                theme = theme.audio
-        elif self._port_type is PortType.MIDI_JACK:
-            theme = theme.midi
-        elif self._port_type is PortType.MIDI_ALSA:
-            theme = theme.alsa
-        elif self._port_type is PortType.VIDEO:
-            theme = theme.video
+        # if self._port_type is PortType.AUDIO_JACK:
+        #     if self._port_subtype is PortSubType.CV:
+        #         theme = theme.cv
+        #     else:
+        #         theme = theme.audio
+        # elif self._port_type is PortType.MIDI_JACK:
+        #     theme = theme.midi
+        # elif self._port_type is PortType.MIDI_ALSA:
+        #     theme = theme.alsa
+        # elif self._port_type is PortType.VIDEO:
+        #     theme = theme.video
 
         if self.isSelected():
             theme = theme.selected
