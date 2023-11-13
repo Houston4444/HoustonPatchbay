@@ -343,8 +343,6 @@ class PortWidget(ConnectableWidget):
 
         line_hinting = poly_pen.widthF() / 2
         p_height = canvas.theme.port_height
-        if '26' in self._port_name:
-            print(self._port_name, self._port_mode, p_height)
         
         text_y_pos = ((p_height - 0.667 * self._port_font.pixelSize()) / 2
                       + self._port_font.pixelSize() * 0.667)

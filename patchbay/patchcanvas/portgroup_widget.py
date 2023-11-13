@@ -62,10 +62,17 @@ class PortgroupWidget(ConnectableWidget):
         self._portgrp_height = canvas.theme.port_height
         
         theme = canvas.theme.portgroup
-        if self._port_type == PortType.AUDIO_JACK:
-            theme = theme.audio
-        elif self._port_type == PortType.MIDI_JACK:
-            theme == theme.midi
+        if self._port_type is PortType.AUDIO_JACK:
+            if self._port_subtype is PortSubType.CV:
+                theme = theme.cv
+            else:
+                theme = theme.audio
+        elif self._port_type is PortType.MIDI_JACK:
+            theme = theme.midi
+        elif self._port_type is PortType.MIDI_ALSA:
+            theme = theme.alsa
+        elif self._port_type is PortType.VIDEO:
+            theme = theme.video
         
         self._theme = theme
         self._portgrp_font = theme.font()
@@ -220,11 +227,18 @@ class PortgroupWidget(ConnectableWidget):
 
         theme = canvas.theme.portgroup
         
-        if self._port_type == PortType.AUDIO_JACK:
-            theme = theme.audio
-        elif self._port_type == PortType.MIDI_JACK:
+        if self._port_type is PortType.AUDIO_JACK:
+            if self._port_subtype is PortSubType.CV:
+                theme = theme.cv
+            else:
+                theme = theme.audio
+        elif self._port_type is PortType.MIDI_JACK:
             theme = theme.midi
-            
+        elif self._port_type is PortType.MIDI_ALSA:
+            theme = theme.alsa
+        elif self._port_type is PortType.VIDEO:
+            theme = theme.video
+
         if self.isSelected():
             theme = theme.selected
 
@@ -333,21 +347,20 @@ class PortgroupWidget(ConnectableWidget):
         painter.drawPolygon(polygon)
 
         if self._port_subtype is PortSubType.CV:
-            poly_pen.setWidthF(p_height * 0.167)
-            llh = poly_pen.widthF() * 0.5
-            painter.setPen(poly_pen)
+            cv_line_pen = QPen(poly_pen)
+            cv_line_pen.setWidthF(p_height * 0.167)
+            llh = cv_line_pen.widthF() * 0.5
+            painter.setPen(cv_line_pen)
 
             y_line_pos = len(self._port_ids) * p_height * 0.5
             if self._port_mode is PortMode.OUTPUT:
-                # for port_n in range(len(self._port_ids)):
-                    painter.drawLine(
-                        QPointF(x_arrowhead + llh, y_line_pos),
-                        QPointF(x_arrowbase - llh, y_line_pos))
+                painter.drawLine(
+                    QPointF(x_arrowhead + llh, y_line_pos),
+                    QPointF(x_arrowbase - llh, y_line_pos))
             else:
-                for port_n in range(len(self._port_ids)):
-                    painter.drawLine(
-                        QPointF(x_arrowhead - llh, y_line_pos),
-                        QPointF(x_arrowbase + llh, y_line_pos))
+                painter.drawLine(
+                    QPointF(x_arrowhead - llh, y_line_pos),
+                    QPointF(x_arrowbase + llh, y_line_pos))
 
         if (self._port_type is PortType.MIDI_ALSA
                 or self._port_subtype is PortSubType.A2J):
