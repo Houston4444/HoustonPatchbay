@@ -722,6 +722,32 @@ def redraw_group(group_id: int, ensure_visible=False):
                 break
 
 @patchbay_api
+def change_grid_width(grid_width: int):
+    if grid_width <= 0:
+        _logger.error(
+            f'Can not change the grid width to a value <= 0 : {grid_width}')
+        return
+    
+    options.cell_x = grid_width
+    for box in canvas.list_boxes():
+        box.fix_pos()
+        
+    redraw_all_groups()
+
+@patchbay_api
+def change_grid_height(grid_height: int):
+    if grid_height <= 0:
+        _logger.error(
+            f'Can not change the grid height to a value <= 0 : {grid_height}')
+        return
+    
+    options.cell_y = grid_height
+    for box in canvas.list_boxes():
+        box.fix_pos()
+        
+    redraw_all_groups()
+
+@patchbay_api
 def animate_before_join(group_id: int,
                         origin_box_mode: PortMode=PortMode.NULL):
     group = canvas.get_group(group_id)

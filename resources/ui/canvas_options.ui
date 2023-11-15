@@ -299,7 +299,75 @@
             </layout>
            </item>
            <item>
-            <spacer name="verticalSpacer_2">
+            <widget class="QFrame" name="gridFrame">
+             <property name="toolTip">
+              <string>Set grid width and height.
+Boxes positions and sizes are adapted to the grid.</string>
+             </property>
+             <layout class="QHBoxLayout" name="horizontalLayout_5">
+              <item>
+               <widget class="QLabel" name="label_7">
+                <property name="text">
+                 <string>Grid :</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QSpinBox" name="spinBoxGridWidth">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="suffix">
+                 <string> pts</string>
+                </property>
+                <property name="minimum">
+                 <number>1</number>
+                </property>
+                <property name="value">
+                 <number>16</number>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QLabel" name="label_8">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="text">
+                 <string>x</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QSpinBox" name="spinBoxGridHeight">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="suffix">
+                 <string> pts</string>
+                </property>
+                <property name="minimum">
+                 <number>1</number>
+                </property>
+                <property name="value">
+                 <number>12</number>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </widget>
+           </item>
+           <item>
+            <spacer name="verticalSpacer_5">
              <property name="orientation">
               <enum>Qt::Vertical</enum>
              </property>

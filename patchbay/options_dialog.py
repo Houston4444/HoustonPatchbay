@@ -107,6 +107,10 @@ class CanvasOptionsDialog(QDialog):
             self._change_default_zoom)
         self.ui.comboBoxBoxesAutoLayout.currentIndexChanged.connect(
             self._grouped_box_auto_layout_changed)
+        self.ui.spinBoxGridWidth.valueChanged.connect(
+            self._grid_width_changed)
+        self.ui.spinBoxGridHeight.valueChanged.connect(
+            self._grid_height_changed)
 
     def _change_default_zoom(self, value: int):
         patchcanvas.set_default_zoom(value)
@@ -227,6 +231,12 @@ class CanvasOptionsDialog(QDialog):
     def _grouped_box_auto_layout_changed(self, index: int):
         patchcanvas.set_grouped_box_layout_ratio(
             self.ui.comboBoxBoxesAutoLayout.currentData())
+
+    def _grid_width_changed(self, value: int):
+        patchcanvas.change_grid_width(value)
+        
+    def _grid_height_changed(self, value: int):
+        patchcanvas.change_grid_height(value)
 
     def showEvent(self, event):
         self.set_theme_list(patchcanvas.list_themes())
