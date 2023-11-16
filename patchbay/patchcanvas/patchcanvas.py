@@ -728,7 +728,11 @@ def change_grid_width(grid_width: int):
             f'Can not change the grid width to a value <= 0 : {grid_width}')
         return
     
-    options.cell_x = grid_width
+    options.cell_width = grid_width
+    
+    if canvas.scene is not None and canvas.scene.grid_widget is not None:
+        canvas.scene.grid_widget.update_path()
+    
     for box in canvas.list_boxes():
         box.fix_pos()
         
@@ -741,7 +745,11 @@ def change_grid_height(grid_height: int):
             f'Can not change the grid height to a value <= 0 : {grid_height}')
         return
     
-    options.cell_y = grid_height
+    options.cell_height = grid_height
+    
+    if canvas.scene is not None and canvas.scene.grid_widget is not None:
+        canvas.scene.grid_widget.update_path()
+    
     for box in canvas.list_boxes():
         box.fix_pos()
         

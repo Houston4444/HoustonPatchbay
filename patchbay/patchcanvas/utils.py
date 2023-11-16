@@ -473,8 +473,8 @@ def is_dark_theme(widget: QWidget) -> bool:
     
 def nearest_on_grid(xy: tuple[int, int]) -> tuple[int, int]:
     x, y = xy
-    cell_x = options.cell_x
-    cell_y = options.cell_y
+    cell_x = options.cell_width
+    cell_y = options.cell_height
     margin = options.cell_margin
 
     ret_x = cell_x * (x // cell_x) + margin
@@ -501,16 +501,16 @@ def nearest_on_grid_check_others(
 
         if previous_top_on_grid(y) == previous_top_on_grid(rect.bottom()):
             new_x, new_y = nearest_on_grid(xy)
-            return (new_x, previous_top_on_grid(y) + options.cell_y)
+            return (new_x, previous_top_on_grid(y) + options.cell_height)
         
         if next_bottom_on_grid(check_rect.bottom()) == next_bottom_on_grid(rect.top()):
             new_x, new_y = nearest_on_grid(xy)
-            return (new_x, next_top_on_grid(y) - options.cell_y)
+            return (new_x, next_top_on_grid(y) - options.cell_height)
             
     return nearest_on_grid(xy)
 
 def previous_left_on_grid(x: int) -> int:
-    cell_x = options.cell_x
+    cell_x = options.cell_width
     margin = options.cell_margin
     
     ret = int(cell_x * (x // cell_x) + margin)
@@ -520,7 +520,7 @@ def previous_left_on_grid(x: int) -> int:
     return ret
 
 def next_left_on_grid(x: int) -> int:
-    cell_x = options.cell_x
+    cell_x = options.cell_width
     margin = options.cell_margin
     
     ret = int(cell_x * (x // cell_x) + margin)
@@ -530,7 +530,7 @@ def next_left_on_grid(x: int) -> int:
     return ret
 
 def previous_top_on_grid(y: int) -> int:
-    cell_y = options.cell_y
+    cell_y = options.cell_height
     margin = options.cell_margin
     
     ret = int(cell_y * (y // cell_y) + margin)
@@ -540,7 +540,7 @@ def previous_top_on_grid(y: int) -> int:
     return ret
 
 def next_top_on_grid(y: int) -> int:
-    cell_y = options.cell_y
+    cell_y = options.cell_height
     margin = options.cell_margin
     
     ret = int(cell_y * (y // cell_y) + margin)
@@ -550,7 +550,7 @@ def next_top_on_grid(y: int) -> int:
     return ret
 
 def next_bottom_on_grid(y: int) -> int:
-    cell_y = options.cell_y
+    cell_y = options.cell_height
     margin = options.cell_margin
     
     ret = int(cell_y * (1 + y // cell_y) - margin)
@@ -558,7 +558,7 @@ def next_bottom_on_grid(y: int) -> int:
     return ret
 
 def next_width_on_grid(width: Union[float, int]) -> int:
-    cell_x = options.cell_x
+    cell_x = options.cell_width
     margin = options.cell_margin
     ret = cell_x * (1 + (width // cell_x)) - 2 * margin
     while ret < width:
@@ -567,7 +567,7 @@ def next_width_on_grid(width: Union[float, int]) -> int:
     return int(ret)
 
 def next_height_on_grid(height: Union[float, int]) -> int:
-    cell_y = options.cell_y
+    cell_y = options.cell_height
     margin = options.cell_margin
     ret = cell_y * (1 + (height // cell_y)) - 2 * margin
     while ret < height:

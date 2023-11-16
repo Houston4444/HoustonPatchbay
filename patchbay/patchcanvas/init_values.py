@@ -259,8 +259,8 @@ class CanvasOptionsObject:
     semi_hide_opacity = 0.20
     default_zoom = 100
     box_grouped_auto_layout_ratio = 1.0
-    cell_x = 40
-    cell_y = 40
+    cell_width = 16
+    cell_height = 12
     cell_margin = 2
 
 

@@ -75,8 +75,8 @@ class GridWidget(QGraphicsPathItem):
 
     def grid_path(self):
         path = QPainterPath(QPointF(0.0, 0.0))
-        cell_x = options.cell_x
-        cell_y = options.cell_y
+        cell_x = options.cell_width
+        cell_y = options.cell_height
         
         rect = self._scene.sceneRect()
 
@@ -115,14 +115,14 @@ class GridWidget(QGraphicsPathItem):
         start_time = time.time()
 
         path = QPainterPath(QPointF(0.0, 0.0))
-        true_cell_x = float(options.cell_x)
-        true_cell_y = float(options.cell_y)
+        true_cell_x = float(options.cell_width)
+        true_cell_y = float(options.cell_height)
         
         cell_x_min = 4
         cell_y_min = 4
         
-        cell_x = options.cell_x * math.ceil(cell_x_min / options.cell_x)
-        cell_y = options.cell_y * math.ceil(cell_y_min / options.cell_y)
+        cell_x = options.cell_width * math.ceil(cell_x_min / options.cell_width)
+        cell_y = options.cell_height * math.ceil(cell_y_min / options.cell_height)
         
         # cell_x = true_cell_x * 8
         # cell_y = true_cell_y * 18
