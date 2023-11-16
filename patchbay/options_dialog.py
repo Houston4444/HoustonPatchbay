@@ -49,6 +49,8 @@ class CanvasOptionsDialog(QDialog):
                 settings.value('Canvas/alsa_midi_enabled', False, type=bool))
             self.ui.checkBoxShadows.setChecked(
                 settings.value('Canvas/box_shadows', False, type=bool))
+            self.ui.checkBoxSceneGrid.setChecked(
+                settings.value('Canvas/scene_grid', False, type=bool))
             self.ui.checkBoxAutoSelectItems.setChecked(
                 settings.value('Canvas/auto_select_items', False, type=bool))
             self.ui.checkBoxElastic.setChecked(
@@ -65,7 +67,6 @@ class CanvasOptionsDialog(QDialog):
                 settings.value('Canvas/grid_width', 16, type=int))
             self.ui.spinBoxGridHeight.setValue(
                 settings.value('Canvas/grid_height', 12, type=int))
-            
             layout_ratio = settings.value(
                 'Canvas/grouped_box_auto_layout_ratio', 1.0, type=float)
             
@@ -97,6 +98,8 @@ class CanvasOptionsDialog(QDialog):
             manager.sg.alsa_midi_enabled_changed)
         self.ui.checkBoxShadows.stateChanged.connect(
             manager.sg.group_shadows_changed)
+        self.ui.checkBoxSceneGrid.stateChanged.connect(
+            self._grid_visibility_changed)
         self.ui.checkBoxAutoSelectItems.stateChanged.connect(
             manager.sg.auto_select_items_changed)
         self.ui.checkBoxElastic.stateChanged.connect(
@@ -242,6 +245,9 @@ class CanvasOptionsDialog(QDialog):
     def _grid_height_changed(self, value: int):
         patchcanvas.change_grid_height(value)
 
+    def _grid_visibility_changed(self, value: int):
+        patchcanvas.change_scene_grid_visibility(bool(value))
+
     def showEvent(self, event):
         self.set_theme_list(patchcanvas.list_themes())
         self.set_theme(patchcanvas.get_theme())
@@ -257,6 +263,8 @@ class CanvasOptionsDialog(QDialog):
                                     self.ui.checkBoxAlsa.isChecked())
             self._settings.setValue('Canvas/box_shadows',
                                     self.ui.checkBoxShadows.isChecked())
+            self._settings.setValue('Canvas/scene_grid',
+                                    self.ui.checkBoxSceneGrid.isChecked())
             self._settings.setValue('Canvas/auto_select_items',
                                     self.ui.checkBoxAutoSelectItems.isChecked())
             self._settings.setValue('Canvas/elastic',

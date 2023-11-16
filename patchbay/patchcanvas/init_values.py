@@ -251,6 +251,7 @@ class CanvasOptionsObject:
     auto_hide_groups = True
     auto_select_items = False
     show_shadows = False
+    display_grid = False
     inline_displays = 0
     elastic = True
     borders_navigation = True

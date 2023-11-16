@@ -44,7 +44,7 @@ from .box_widget import BoxWidget
 from .connectable_widget import ConnectableWidget
 from .line_widget import LineWidget
 from .icon_widget import IconPixmapWidget, IconSvgWidget
-from .grid import GridWidget
+from .grid_widget import GridWidget
 from .grouped_lines_widget import GroupedLinesWidget
 
 _logger = logging.getLogger(__name__)
@@ -133,12 +133,15 @@ class PatchSceneMoth(QGraphicsScene):
         self.flying_connectable = None
 
         # self._grid = None
-        self.grid_widget = GridWidget(self, style='chess')
-        self.grid_widget.update_path()
-        self.sceneRectChanged.connect(self.grid_widget.update_path)
+        if options.display_grid:
+            self.grid_widget = GridWidget(self, style='chess')
+            self.grid_widget.update_path()
 
-        self.addItem(self.grid_widget)
+            self.addItem(self.grid_widget)
+        else:
+            self.grid_widget = None
 
+        self.sceneRectChanged.connect(self._update_grid_widget)
         self.selectionChanged.connect(self._slot_selection_changed)
 
     def deplace_boxes_from_repulsers(self, repulser_boxes: list[BoxWidget],
@@ -736,6 +739,23 @@ class PatchSceneMoth(QGraphicsScene):
             for box in canvas.list_boxes():
                 if box.top_icon:
                     box.top_icon.update_zoom(scale * factor)
+
+    def _update_grid_widget(self):
+        if self.grid_widget is not None:
+            self.grid_widget.update_path()
+
+    def set_grid_widget_visibility(self):
+        if options.display_grid and self.grid_widget is None:
+            self.grid_widget = GridWidget(self, style='chess')
+            self.grid_widget.update_path()
+
+            self.addItem(self.grid_widget)
+
+        elif not options.display_grid and self.grid_widget is not None:
+            self.removeItem(self.grid_widget)
+            self.grid_widget = None
+            
+        self.update()
 
     def mouseDoubleClickEvent(self, event):
         if event.button() == Qt.LeftButton and not canvas.menu_shown:

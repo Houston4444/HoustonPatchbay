@@ -210,6 +210,8 @@ class PatchbayManager:
                     'Canvas/theme', default_theme_name, type=str)
                 options.show_shadows = self._settings.value(
                     'Canvas/box_shadows', False, type=bool)
+                options.display_grid = self._settings.value(
+                    'Canvas/scene_grid', False, type=bool)
                 options.auto_select_items = self._settings.value(
                     'Canvas/auto_select_items', False, type=bool)
                 options.inline_displays = False

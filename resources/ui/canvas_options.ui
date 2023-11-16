@@ -220,6 +220,13 @@
             </widget>
            </item>
            <item>
+            <widget class="QCheckBox" name="checkBoxSceneGrid">
+             <property name="text">
+              <string>Display scene grid</string>
+             </property>
+            </widget>
+           </item>
+           <item>
             <spacer name="verticalSpacer_3">
              <property name="orientation">
               <enum>Qt::Vertical</enum>

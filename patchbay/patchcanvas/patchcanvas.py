@@ -58,7 +58,7 @@ from .hidden_conn_widget import HiddenConnWidget
 from .theme_manager import ThemeManager
 from .scene import PatchScene
 from .scene_view import PatchGraphicsView
-from .grid import GridWidget
+from .grid_widget import GridWidget
 from .icon_widget import IconPixmapWidget, IconSvgWidget
 from .scene_moth import RubberbandRect
 
@@ -754,6 +754,11 @@ def change_grid_height(grid_height: int):
         box.fix_pos()
         
     redraw_all_groups()
+
+@patchbay_api
+def change_scene_grid_visibility(show: bool):
+    options.display_grid = show
+    canvas.scene.set_grid_widget_visibility()
 
 @patchbay_api
 def animate_before_join(group_id: int,
