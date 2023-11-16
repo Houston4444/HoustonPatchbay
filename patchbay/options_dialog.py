@@ -61,6 +61,10 @@ class CanvasOptionsDialog(QDialog):
                 settings.value('Canvas/max_port_width', 170, type=int))
             self.ui.spinBoxDefaultZoom.setValue(
                 settings.value('Canvas/default_zoom', 100, type=int))
+            self.ui.spinBoxGridWidth.setValue(
+                settings.value('Canvas/grid_width', 16, type=int))
+            self.ui.spinBoxGridHeight.setValue(
+                settings.value('Canvas/grid_height', 12, type=int))
             
             layout_ratio = settings.value(
                 'Canvas/grouped_box_auto_layout_ratio', 1.0, type=float)
@@ -269,4 +273,8 @@ class CanvasOptionsDialog(QDialog):
                                     self.ui.comboBoxTheme.currentData())
             self._settings.setValue('Canvas/grouped_box_auto_layout_ratio',
                                     self.ui.comboBoxBoxesAutoLayout.currentData())
+            self._settings.setValue('Canvas/grid_width',
+                                    self.ui.spinBoxGridWidth.value())
+            self._settings.setValue('Canvas/grid_height',
+                                    self.ui.spinBoxGridHeight.value())
         QDialog.closeEvent(self, event)

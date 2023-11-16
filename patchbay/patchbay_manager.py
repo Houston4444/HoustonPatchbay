@@ -225,6 +225,10 @@ class PatchbayManager:
                     'Canvas/default_zoom', 100, type=int)
                 options.box_grouped_auto_layout_ratio = self._settings.value(
                     'Canvas/grouped_box_auto_layout_ratio', 1.0, type=float)
+                options.cell_x = self._settings.value(
+                    'Canvas/grid_width', 16, type=int)
+                options.cell_y = self._settings.value(
+                    'Canvas/grid_height', 12, type=int)
         
         if features is None:
             features = CanvasFeaturesObject()
