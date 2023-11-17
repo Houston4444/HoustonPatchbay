@@ -8,13 +8,13 @@ from typing import TYPE_CHECKING, Any, Callable, Optional, Union
 
 from PyQt5.QtGui import QCursor, QGuiApplication
 from PyQt5.QtWidgets import QMainWindow, QMessageBox, QWidget
-from PyQt5.QtCore import QTimer, QSettings, QThread, QTranslator, QLocale
+from PyQt5.QtCore import QTimer, QSettings, QThread
 
 from .patchcanvas import patchcanvas, PortType, PortSubType, PortMode
 from .patchcanvas.utils import get_new_group_positions
 from .patchcanvas.scene_view import PatchGraphicsView
 from .patchcanvas.init_values import (
-    AliasingReason, CallbackAct, CanvasFeaturesObject, CanvasOptionsObject)
+    AliasingReason, CallbackAct, CanvasFeaturesObject, CanvasOptionsObject, GridStyle)
 
 from .patchbay_signals import SignalsObject
 from .tools_widgets import PatchbayToolsWidget
@@ -210,8 +210,14 @@ class PatchbayManager:
                     'Canvas/theme', default_theme_name, type=str)
                 options.show_shadows = self._settings.value(
                     'Canvas/box_shadows', False, type=bool)
-                options.display_grid = self._settings.value(
-                    'Canvas/scene_grid', False, type=bool)
+                try:
+                    grid_style_name = self._settings.value(
+                        'Canvas/grid_style', 'NONE', type=str)
+                    grid_style = GridStyle[grid_style_name]
+                except:
+                    grid_style = GridStyle.NONE
+                options.grid_style = grid_style    
+                
                 options.auto_select_items = self._settings.value(
                     'Canvas/auto_select_items', False, type=bool)
                 options.inline_displays = False
@@ -237,7 +243,8 @@ class PatchbayManager:
 
         patchcanvas.set_options(options)
         patchcanvas.set_features(features)
-        patchcanvas.init(view, self.__canvas_callback__, theme_paths, default_theme_name)
+        patchcanvas.init(
+            view, self.__canvas_callback__, theme_paths, default_theme_name)
         patchcanvas.canvas.scene.scale_changed.connect(self._scene_scale_changed)
         
         # just to have the zoom slider updated with the default zoom

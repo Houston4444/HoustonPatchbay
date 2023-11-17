@@ -2,15 +2,14 @@ import math
 import time
 from typing import TYPE_CHECKING
 from PyQt5.QtWidgets import QGraphicsPathItem
-from PyQt5.QtGui import QPolygonF, QPen, QColor, QBrush, QPainter, QPainterPath, QLinearGradient
-from PyQt5.QtCore import QPointF, Qt, QRectF, QRect
+from PyQt5.QtGui import QPen, QColor, QBrush, QPainter, QPainterPath
+from PyQt5.QtCore import QPointF, Qt, QRectF
 
-from .init_values import PortMode, PortType, canvas, CanvasItemType, options
+from .init_values import canvas, options, GridStyle
 
 if TYPE_CHECKING:
     from .scene import PatchScene
 
-_USE_CYTHON = False
 
 def x_multiply(path: QPainterPath, n_times: int, width: int) -> QPainterPath:
     paths = [path]
@@ -54,11 +53,12 @@ def y_multiply(path: QPainterPath, n_times: int, height: int) -> QPainterPath:
             y_done += 2 ** i
     return y_path
 
+
 class GridWidget(QGraphicsPathItem):
-    def __init__(self, scene: 'PatchScene', style=''):
+    def __init__(self, scene: 'PatchScene', style=GridStyle.GRID):
         QGraphicsPathItem.__init__(self)
         self._scene = scene
-        self._style = style
+        self.style = style
         self._rects = list[QRectF]()
         self.orig_path = QPainterPath()
         self.setPath(QPainterPath(QPointF()))
@@ -74,7 +74,9 @@ class GridWidget(QGraphicsPathItem):
         self.update_path()
 
     def grid_path(self):
-        path = QPainterPath(QPointF(0.0, 0.0))
+        path = QPainterPath()
+        x_path = QPainterPath()
+        y_path = QPainterPath()
         cell_x = options.cell_width
         cell_y = options.cell_height
         
@@ -85,35 +87,32 @@ class GridWidget(QGraphicsPathItem):
         if x < rect.left():
             x += cell_x
 
+        x_path.moveTo(QPointF(x, rect.top()))
+        x_path.lineTo(QPointF(x, rect.bottom()))
+        path.addPath(x_multiply(x_path, math.floor(rect.right() - x), cell_x))
+        
         y = rect.top()
         y -= y % cell_y
         if y < rect.top():
             y += cell_y
 
-        while x <= rect.right():
-            path.moveTo(QPointF(x, rect.top()))
-            path.lineTo(QPointF(x, rect.bottom()))
-            x += cell_x        
-
-        while y <= rect.bottom():
-            path.moveTo(QPointF(rect.left(), y))
-            path.lineTo(QPointF(rect.right(), y))
-            y += cell_y
+        y_path.moveTo(QPointF(rect.left(), y))
+        y_path.lineTo(QPointF(rect.right(), y))
+        
+        path.addPath(y_multiply(y_path, math.floor(rect.bottom() - y), cell_y))
 
         self.setPath(path)
         self.setPen(QPen(
-            QBrush(QColor(128, 128, 128, 32)), 0.5, Qt.SolidLine, Qt.FlatCap))
+            QBrush(QColor(128, 128, 128, 20)), 0.5, Qt.SolidLine, Qt.FlatCap))
         self.setBrush(QBrush(Qt.NoBrush))
 
-    def update_path(self, rect=None):
-        if self._style == 'chess':
+    def update_path(self):
+        if self.style is GridStyle.CHESSBOARD:
             self.chess_board()
         else:
             self.grid_path()
     
     def chess_board(self):
-        start_time = time.time()
-
         path = QPainterPath(QPointF(0.0, 0.0))
         true_cell_x = float(options.cell_width)
         true_cell_y = float(options.cell_height)

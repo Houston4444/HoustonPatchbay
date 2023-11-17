@@ -22,6 +22,7 @@
 import logging
 from math import floor
 import time
+from typing import Optional
 
 from PyQt5.QtCore import (QT_VERSION, pyqtSignal, pyqtSlot,
                           Qt, QPoint, QPointF, QRectF, QTimer, QMarginsF)
@@ -33,6 +34,7 @@ from PyQt5.QtWidgets import (QGraphicsRectItem, QGraphicsScene, QApplication,
 from .init_values import (
     AliasingReason,
     CanvasItemType,
+    GridStyle,
     PortMode,
     Direction,
     canvas,
@@ -132,16 +134,9 @@ class PatchSceneMoth(QGraphicsScene):
 
         self.flying_connectable = None
 
-        # self._grid = None
-        if options.display_grid:
-            self.grid_widget = GridWidget(self, style='chess')
-            self.grid_widget.update_path()
+        self._grid_widget: Optional[GridWidget] = None
 
-            self.addItem(self.grid_widget)
-        else:
-            self.grid_widget = None
-
-        self.sceneRectChanged.connect(self._update_grid_widget)
+        self.sceneRectChanged.connect(self.update_grid_widget)
         self.selectionChanged.connect(self._slot_selection_changed)
 
     def deplace_boxes_from_repulsers(self, repulser_boxes: list[BoxWidget],
@@ -740,21 +735,21 @@ class PatchSceneMoth(QGraphicsScene):
                 if box.top_icon:
                     box.top_icon.update_zoom(scale * factor)
 
-    def _update_grid_widget(self):
-        if self.grid_widget is not None:
-            self.grid_widget.update_path()
+    def update_grid_widget(self):
+        if self._grid_widget is not None:
+            self._grid_widget.update_path()
 
-    def set_grid_widget_visibility(self):
-        if options.display_grid and self.grid_widget is None:
-            self.grid_widget = GridWidget(self, style='chess')
-            self.grid_widget.update_path()
+    def update_grid_style(self):
+        if self._grid_widget is not None:
+            self.removeItem(self._grid_widget)
+        
+        if options.grid_style is GridStyle.NONE:
+            self._grid_widget = None
+        else:
+            self._grid_widget = GridWidget(self, style=options.grid_style)
+            self._grid_widget.update_path()
+            self.addItem(self._grid_widget)     
 
-            self.addItem(self.grid_widget)
-
-        elif not options.display_grid and self.grid_widget is not None:
-            self.removeItem(self.grid_widget)
-            self.grid_widget = None
-            
         self.update()
 
     def mouseDoubleClickEvent(self, event):

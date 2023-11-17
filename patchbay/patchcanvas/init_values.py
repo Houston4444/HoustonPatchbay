@@ -19,6 +19,7 @@
 
 from typing import TYPE_CHECKING, Iterator, Optional, Union
 from enum import Enum, Flag, IntEnum, IntFlag, auto
+import logging
 
 from PyQt5.QtCore import QPointF, QRectF, QSettings, QPoint
 from PyQt5.QtWidgets import QGraphicsItem
@@ -38,6 +39,7 @@ if TYPE_CHECKING:
     from .hidden_conn_widget import HiddenConnWidget
     from .grouped_lines_widget import GroupedLinesWidget
 
+_logger = logging.getLogger(__name__)
 
 # Maximum Id for a plugin, treated as invalid/zero if above this value
 MAX_PLUGIN_ID_ALLOWED = 0x7FF
@@ -220,6 +222,19 @@ class ConnectionThemeState(Enum):
     DISCONNECTING = 2
 
 
+class GridStyle(Enum):
+    NONE = 0
+    TECHNICAL_GRID = 1
+    GRID = 2
+    CHESSBOARD = 3
+    
+    @classmethod
+    def _missing_(cls, value) -> 'GridStyle':
+        _logger.warning(
+            f'Attempt to access to an invalid GridWidgetStyle: {value}')
+        return GridStyle.NONE
+
+
 class AliasingReason(Flag):
     NONE = 0x00
     USER_MOVE = auto()
@@ -251,7 +266,7 @@ class CanvasOptionsObject:
     auto_hide_groups = True
     auto_select_items = False
     show_shadows = False
-    display_grid = False
+    grid_style = GridStyle.NONE
     inline_displays = 0
     elastic = True
     borders_navigation = True

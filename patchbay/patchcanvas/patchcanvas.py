@@ -29,6 +29,7 @@ from PyQt5.QtCore import (pyqtSlot, QObject, QPointF, QRectF,
 # local imports
 from .init_values import (
     AliasingReason,
+    GridStyle,
     PortSubType,
     PortType,
     canvas,
@@ -185,7 +186,9 @@ def init(view: PatchGraphicsView, callback: Callable,
 
         canvas.theme.load_cache()
 
-    canvas.scene.zoom_reset()
+    canvas.scene.zoom_reset()    
+    canvas.scene.update_grid_style()
+    
     canvas.initiated = True
 
 @patchbay_api
@@ -730,8 +733,8 @@ def change_grid_width(grid_width: int):
     
     options.cell_width = grid_width
     
-    if canvas.scene is not None and canvas.scene.grid_widget is not None:
-        canvas.scene.grid_widget.update_path()
+    if canvas.scene is not None:
+        canvas.scene.update_grid_widget()
     
     for box in canvas.list_boxes():
         box.fix_pos()
@@ -747,8 +750,8 @@ def change_grid_height(grid_height: int):
     
     options.cell_height = grid_height
     
-    if canvas.scene is not None and canvas.scene.grid_widget is not None:
-        canvas.scene.grid_widget.update_path()
+    if canvas.scene is not None:
+        canvas.scene.update_grid_widget()
     
     for box in canvas.list_boxes():
         box.fix_pos()
@@ -756,9 +759,9 @@ def change_grid_height(grid_height: int):
     redraw_all_groups()
 
 @patchbay_api
-def change_scene_grid_visibility(show: bool):
-    options.display_grid = show
-    canvas.scene.set_grid_widget_visibility()
+def change_grid_widget_style(style: GridStyle):
+    options.grid_style = style
+    canvas.scene.update_grid_style()
 
 @patchbay_api
 def animate_before_join(group_id: int,
