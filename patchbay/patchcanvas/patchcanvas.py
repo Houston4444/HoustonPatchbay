@@ -187,7 +187,7 @@ def init(view: PatchGraphicsView, callback: Callable,
         canvas.theme.load_cache()
 
     canvas.scene.zoom_reset()    
-    canvas.scene.update_grid_style()
+    # canvas.scene.update_grid_style()
     
     canvas.initiated = True
 

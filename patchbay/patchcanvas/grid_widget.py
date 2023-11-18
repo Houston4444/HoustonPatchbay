@@ -1,3 +1,4 @@
+import inspect
 import math
 import time
 from typing import TYPE_CHECKING
@@ -70,15 +71,26 @@ class GridWidget(QGraphicsPathItem):
         self._pointt = QPointF(0.0, 0.0)
         
         self.global_path = QPainterPath()
-        
+        self._bounding_rect = QRectF()
         self.update_path()
 
     def grid_path(self):
+        theme = canvas.theme.grid
+        
+        if self.style is GridStyle.TECHNICAL_GRID:
+            theme = theme.technical_grid
+        elif self.style is GridStyle.GRID:
+            theme = theme.grid
+        
         path = QPainterPath()
         x_path = QPainterPath()
         y_path = QPainterPath()
         cell_x = options.cell_width
         cell_y = options.cell_height
+        
+        if self.style is GridStyle.GRID:
+            cell_x = cell_x * math.ceil(theme.grid_min_width() / cell_x)
+            cell_y = cell_y * math.ceil(theme.grid_min_height() / cell_y)
         
         rect = self._scene.sceneRect()
 
@@ -89,8 +101,13 @@ class GridWidget(QGraphicsPathItem):
 
         x_path.moveTo(QPointF(x, rect.top()))
         x_path.lineTo(QPointF(x, rect.bottom()))
-        path.addPath(x_multiply(x_path, math.floor(rect.right() - x), cell_x))
         
+        # for frame in inspect.stack():
+        #     print(frame.filename, frame.code_context, frame.lineno)
+        print('beff x_moutlipi')
+        path.addPath(
+            x_multiply(x_path, 1 + math.floor((rect.right() - x) / cell_x), cell_x))
+        print('afte x_moutlipi')
         y = rect.top()
         y -= y % cell_y
         if y < rect.top():
@@ -99,32 +116,34 @@ class GridWidget(QGraphicsPathItem):
         y_path.moveTo(QPointF(rect.left(), y))
         y_path.lineTo(QPointF(rect.right(), y))
         
-        path.addPath(y_multiply(y_path, math.floor(rect.bottom() - y), cell_y))
-
+        print('beff y_moutlipi')
+        path.addPath(y_multiply(y_path, 1 + math.floor((rect.bottom() - y) / cell_y), cell_y))
+        print('afte y_moutlipi')
         self.setPath(path)
-        self.setPen(QPen(
-            QBrush(QColor(128, 128, 128, 20)), 0.5, Qt.SolidLine, Qt.FlatCap))
+        self.setPen(theme.fill_pen())
+        # self.setPen(QPen(
+        #     QBrush(QColor(128, 128, 128, 20)), 0.5, Qt.SolidLine, Qt.FlatCap))
         self.setBrush(QBrush(Qt.NoBrush))
 
     def update_path(self):
+        self.setZValue(-1.0)
+        self._bounding_rect = self._scene.sceneRect()
+         
         if self.style is GridStyle.CHESSBOARD:
             self.chess_board()
         else:
             self.grid_path()
     
     def chess_board(self):
+        theme = canvas.theme.grid.chessboard
+        
+        cell_x = options.cell_width
+        cell_y = options.cell_height
+        cell_x = cell_x * math.ceil(theme.grid_min_width() / cell_x)
+        cell_y = cell_y * math.ceil(theme.grid_min_height() / cell_y)
+        
         path = QPainterPath(QPointF(0.0, 0.0))
-        true_cell_x = float(options.cell_width)
-        true_cell_y = float(options.cell_height)
         
-        cell_x_min = 4
-        cell_y_min = 4
-        
-        cell_x = options.cell_width * math.ceil(cell_x_min / options.cell_width)
-        cell_y = options.cell_height * math.ceil(cell_y_min / options.cell_height)
-        
-        # cell_x = true_cell_x * 8
-        # cell_y = true_cell_y * 18
         
         rect = self._scene.sceneRect()
         
@@ -133,8 +152,6 @@ class GridWidget(QGraphicsPathItem):
         # x += cell_x / 2.0
         y = rect.top()
         y -= y % (cell_y * 2)
-        x_start = x
-        y_start = y
         
         x += 2 * cell_x
         y += 2 * cell_y
@@ -359,12 +376,16 @@ class GridWidget(QGraphicsPathItem):
         # gradient.setColorAt(0.5, color_alter)
         # gradient.setColorAt(1.0, color_main)
         
-        
+        pen = QPen(theme.fill_pen())
+        pen.setWidthF(cell_x)
         
         self.setPen(QPen(
-            color_main, cell_x, Qt.SolidLine, Qt.FlatCap))
-        finish_time = time.time()
+            theme.fill_pen().color(), cell_x, Qt.SolidLine, Qt.FlatCap))
+        # finish_time = time.time()
         # print('ça prend : ', (finish_time - start_time) * 1000, 'ms')
+    
+    def boundingRect(self) -> QRectF:
+        return self._bounding_rect
     
     def paint(self, painter: QPainter, option, widget):
         # return super().paint(painter, option, widget)

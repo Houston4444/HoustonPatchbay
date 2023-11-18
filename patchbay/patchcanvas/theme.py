@@ -124,6 +124,9 @@ class StyleAttributer:
         self._port_type_spacing = None
         self._box_footer = None
 
+        self._grid_min_width = None
+        self._grid_min_height = None
+
         self._path = path
         self._parent = parent
 
@@ -281,6 +284,14 @@ class StyleAttributer:
             if isinstance(value, (int, float)):
                 self._box_footer = rail_float(value, 0, 50)
 
+        elif attribute == 'grid-min-width':
+            if isinstance(value, (int, float)):
+                self._grid_min_width = rail_float(value, 1, 100000)
+                
+        elif attribute == 'grid-min-height':
+            if isinstance(value, (int, float)):
+                self._grid_min_height = rail_float(value, 1, 100000)
+
         else:
             _logger.error(f"{self._path}: unknown key: {attribute}")
 
@@ -433,6 +444,12 @@ class StyleAttributer:
     def box_footer(self) -> float:
         return self.get_value_of('_box_footer')
     
+    def grid_min_width(self) -> float:
+        return self.get_value_of('_grid_min_width')
+    
+    def grid_min_height(self) -> float:
+        return self.get_value_of('_grid_min_height')
+    
     def _set_titles_templates_cache(self):
         if self._titles_templates_cache is not None:
             return
@@ -531,6 +548,18 @@ class GuiButtonStyleAttributer(StyleAttributer):
         self.subs += ['gui_visible', 'gui_hidden']
 
 
+class GridStyleAttributer(StyleAttributer):
+    def __init__(self, path: str, parent=None):
+        StyleAttributer.__init__(self, path, parent)
+        self._grid_min_width = 100.0
+        self._grid_min_height = 100.0
+        
+        self.technical_grid = StyleAttributer('.technical_grid', self)
+        self.grid = StyleAttributer('.grid', self)
+        self.chessboard = StyleAttributer('.chessboard', self)
+        self.subs += ['technical_grid', 'grid', 'chessboard']
+
+
 class IconTheme:
     def __init__(self):
         src = ':/canvas/dark/'
@@ -614,11 +643,12 @@ class Theme(StyleAttributer):
         self.hardware_rack = UnselectedStyleAttributer('.hardware_rack', self)
         self.monitor_decoration = UnselectedStyleAttributer('.monitor_decoration', self)
         self.gui_button = GuiButtonStyleAttributer('.gui_button', self)
+        self.grid = GridStyleAttributer('.grid', self)
         
         self.subs += ['box', 'box_wrapper', 'box_header_line', 'box_shadow',
                       'portgroup', 'port', 'line',
                       'rubberband', 'hardware_rack',
-                      'monitor_decoration', 'gui_button']
+                      'monitor_decoration', 'gui_button', 'grid']
     
     @classmethod
     def set_file_path(cls, theme_file_path: str):

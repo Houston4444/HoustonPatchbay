@@ -1,5 +1,5 @@
 from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QMouseEvent, QPainter
+from PyQt5.QtGui import QMouseEvent, QPainter, QTransform
 from PyQt5.QtWidgets import QApplication, QGraphicsView, QScrollBar
 
 from .init_values import AliasingReason, canvas
@@ -33,11 +33,17 @@ class PatchGraphicsView(QGraphicsView):
         self.setVerticalScrollBar(self._v_scroll_bar)
 
         self._panning = False
+        self.transforming = False
 
         try:
             self._middle_button = Qt.MiddleButton
         except:
             self._middle_button = Qt.MidButton
+
+    # def setTransform(self, matrix: QTransform):
+    #     self.transforming = True
+    #     super().setTransform(matrix)
+    #     self.transforming = False
 
     def mousePressEvent(self, event):
         if (event.button() == self._middle_button

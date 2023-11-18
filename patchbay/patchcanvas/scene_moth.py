@@ -45,9 +45,8 @@ from .init_values import (
 from .box_widget import BoxWidget
 from .connectable_widget import ConnectableWidget
 from .line_widget import LineWidget
-from .icon_widget import IconPixmapWidget, IconSvgWidget
 from .grid_widget import GridWidget
-from .grouped_lines_widget import GroupedLinesWidget
+from .scene_view import PatchGraphicsView
 
 _logger = logging.getLogger(__name__)
 
@@ -88,7 +87,7 @@ class PatchSceneMoth(QGraphicsScene):
     scene_group_moved = pyqtSignal(int, int, QPointF)
     plugin_selected = pyqtSignal(list)
 
-    def __init__(self, view: QGraphicsView):
+    def __init__(self, view: PatchGraphicsView):
         QGraphicsScene.__init__(self)
 
         self._scale_area = False
@@ -484,6 +483,9 @@ class PatchSceneMoth(QGraphicsScene):
         self._cursor_cut = QCursor(QPixmap(f":/cursors/cut-{cur_color}.png"), 1, 1)
         self._cursor_zoom_area = QCursor(
             QPixmap(f":/cursors/zoom-area-{cur_color}.png"), 8, 7)
+        
+        self.update_grid_style()
+        # self.update_grid_widget()
 
     def drawBackground(self, painter, rect):
         painter.save()
@@ -736,6 +738,9 @@ class PatchSceneMoth(QGraphicsScene):
                     box.top_icon.update_zoom(scale * factor)
 
     def update_grid_widget(self):
+        if self._view.transforming:
+            return
+        
         if self._grid_widget is not None:
             self._grid_widget.update_path()
 
@@ -748,7 +753,8 @@ class PatchSceneMoth(QGraphicsScene):
         else:
             self._grid_widget = GridWidget(self, style=options.grid_style)
             self._grid_widget.update_path()
-            self.addItem(self._grid_widget)     
+            self.addItem(self._grid_widget)
+            self._grid_widget.setZValue(0.0)
 
         self.update()
 
