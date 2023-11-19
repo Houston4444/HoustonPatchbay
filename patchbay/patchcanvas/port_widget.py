@@ -42,7 +42,8 @@ from .init_values import (
     canvas,
     CallbackAct,
     PortMode,
-    PortType)
+    PortType,
+    Zv)
 
 from .utils import canvas_callback
 from .connectable_widget import ConnectableWidget
@@ -231,6 +232,8 @@ class PortWidget(ConnectableWidget):
                     self.setSelected(self._portgrp_widget.isSelected())
                 elif not self._portgrp_widget.changing_select_state:
                     self._portgrp_widget.ensure_selection_with_ports()
+            
+            self.setZValue(Zv.SEL_PORT.value if self.isSelected() else Zv.PORT.value)
             
             if self._connections:
                 other_group_ids = set[int]()

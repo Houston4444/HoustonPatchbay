@@ -30,7 +30,8 @@ from .init_values import (
     options,
     CanvasItemType,
     PortType,
-    PortMode)
+    PortMode,
+    Zv)
 
 
 _groups_to_check = set[tuple[int, int]]()
@@ -86,6 +87,12 @@ class GroupedLinesWidget(QGraphicsPathItem):
 
         self.setBrush(QColor(0, 0, 0, 0))
         self.setGraphicsEffect(None)
+        
+        if theme_state is ConnectionThemeState.SELECTED:
+            self.setZValue(Zv.SEL_LINE.value)
+        else:
+            self.setZValue(Zv.LINE.value)
+        
         self.update_lines_pos()
 
     @staticmethod
@@ -180,7 +187,8 @@ class GroupedLinesWidget(QGraphicsPathItem):
             for tstate_dict in pt_dict.values():
                 for widget in tstate_dict.values():
                     widget.semi_hide(semi_hidden)
-                    widget.setZValue(1.0 if semi_hidden else 2.0)
+                    widget.setZValue(
+                        Zv.OPAC_LINE.value if semi_hidden else Zv.LINE.value)
 
     @staticmethod
     def update_opacity():

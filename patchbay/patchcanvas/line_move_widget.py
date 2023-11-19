@@ -26,7 +26,8 @@ from .init_values import (
     canvas,
     CanvasItemType,
     PortMode,
-    PortType)
+    PortType,
+    Zv)
 
 # only to get parent type in IDE
 if TYPE_CHECKING:
@@ -55,6 +56,7 @@ class LineMoveWidget(QGraphicsPathItem):
         self._item_x = self.scenePos().x()
         self._item_y = self.scenePos().y()
         self._item_width = parent.get_connection_distance()
+        self.setZValue(Zv.MOV_LINE.value)
 
     def set_destination_portgrp_pos(self, port_pos: int, portgrp_len: int):
         self._port_posinportgrp_to = port_pos
@@ -78,7 +80,6 @@ class LineMoveWidget(QGraphicsPathItem):
         pen.setColor(theme.background_color())
         pen.setStyle(Qt.DotLine if self.ready_to_disc else Qt.SolidLine)
         pen.setCapStyle(Qt.FlatCap)
-        pen.setWidthF(pen.widthF() + 0.00001)
         self.setPen(pen)
 
         phi = 0.75 if self._portgrp_len > 2 else 0.62

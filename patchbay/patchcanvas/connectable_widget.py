@@ -5,8 +5,17 @@ from PyQt5.QtCore import Qt, QRectF, QPointF
 from PyQt5.QtGui import QCursor
 from PyQt5.QtWidgets import QGraphicsItem
 
-from .init_values import (AliasingReason, CallbackAct, ConnectableObject, ConnectionObject, PortMode, PortSubType,
-                          PortType, canvas, options)
+from .init_values import (
+    AliasingReason,
+    CallbackAct,
+    ConnectableObject,
+    ConnectionObject,
+    PortMode,
+    PortSubType,
+    PortType,
+    Zv,
+    canvas,
+    options)
 from .line_move_widget import LineMoveWidget
 from .grouped_lines_widget import GroupedLinesWidget, GroupOutInsDict
 
@@ -305,13 +314,9 @@ class ConnectableWidget(QGraphicsItem):
 
         if not self._line_mov_list:
             self._last_rclick_item = None
-            canvas.last_z_value += 1
-            self.setZValue(canvas.last_z_value)
-            canvas.last_z_value += 1
-
-            for port in canvas.list_ports(group_id=self._group_id):
-                if port.port_id in self._port_ids:
-                    port.widget.setZValue(canvas.last_z_value)
+            
+            self.parentItem().setZValue(Zv.MOV_LINE_BOX.value)
+            self.setZValue(Zv.MOV_LINE_PORT.value)
 
             for i in range(len(self._port_ids)):
                 line_mov = LineMoveWidget(
@@ -321,8 +326,6 @@ class ConnectableWidget(QGraphicsItem):
                 self._line_mov_list.append(line_mov)
 
             canvas.is_line_mov = True
-            canvas.last_z_value += 1
-            self.parentItem().setZValue(canvas.last_z_value)
 
         item = canvas.scene.get_connectable_item_at(event.scenePos(), self)
         
@@ -480,6 +483,8 @@ class ConnectableWidget(QGraphicsItem):
 
                 elif self._last_rclick_item:
                     canvas.scene.clearSelection()
+                    
+                self.parentItem().setZValue(Zv.BOX.value)
 
             if self._cursor_moving:
                 canvas.scene.set_cursor(QCursor(Qt.ArrowCursor))

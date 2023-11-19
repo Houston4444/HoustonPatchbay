@@ -40,6 +40,7 @@ from .init_values import (
     canvas,
     options,
     CallbackAct,
+    Zv,
     MAX_PLUGIN_ID_ALLOWED)
 
 from .box_widget import BoxWidget
@@ -57,7 +58,7 @@ class RubberbandRect(QGraphicsRectItem):
     def __init__(self, scene: QGraphicsScene):
         QGraphicsRectItem.__init__(self, QRectF(0, 0, 0, 0))
 
-        self.setZValue(-1)
+        self.setZValue(Zv.RUBBERBAND.value)
         self.hide()
 
         scene.addItem(self)
@@ -485,7 +486,6 @@ class PatchSceneMoth(QGraphicsScene):
             QPixmap(f":/cursors/zoom-area-{cur_color}.png"), 8, 7)
         
         self.update_grid_style()
-        # self.update_grid_widget()
 
     def drawBackground(self, painter, rect):
         painter.save()
@@ -753,8 +753,8 @@ class PatchSceneMoth(QGraphicsScene):
         else:
             self._grid_widget = GridWidget(self, style=options.grid_style)
             self._grid_widget.update_path()
+            self._grid_widget.setZValue(Zv.GRID.value)
             self.addItem(self._grid_widget)
-            self._grid_widget.setZValue(0.0)
 
         self.update()
 

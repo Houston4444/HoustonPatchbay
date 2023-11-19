@@ -47,7 +47,8 @@ from .init_values import (
     BoxLayoutMode,
     BoxType,
     BoxFlag,
-    BoxPos
+    BoxPos,
+    Zv
 )
 
 from .utils import nearest_on_grid
@@ -282,25 +283,16 @@ def add_group(group_id: int, group_name: str, split: bool,
 
     if split:
         out_box = BoxWidget(group, PortMode.OUTPUT)
-        # out_box.setPos(bx_poses[PortMode.OUTPUT].to_point())
         out_box.set_top_left(nearest_on_grid(bx_poses[PortMode.OUTPUT].pos))
-        canvas.last_z_value += 1
-        out_box.setZValue(canvas.last_z_value)
 
         in_box = BoxWidget(group, PortMode.INPUT)
-        # in_box.setPos(bx_poses[PortMode.INPUT].to_point())
         in_box.set_top_left(nearest_on_grid(bx_poses[PortMode.INPUT].pos))
-        canvas.last_z_value += 1
-        in_box.setZValue(canvas.last_z_value)
 
         group.widgets = [out_box, in_box]
 
     else:
         box = BoxWidget(group, PortMode.BOTH)
         box.set_top_left(nearest_on_grid(bx_poses[PortMode.BOTH].pos))
-        # box.setPos(bx_poses[PortMode.BOTH].to_point())
-        canvas.last_z_value += 1
-        box.setZValue(canvas.last_z_value)
         group.widgets = [box, None]
 
     canvas.add_group(group)
@@ -984,9 +976,6 @@ def add_port(group_id: int, port_id: int, port_name: str,
     port.widget.setVisible(not box_widget.is_wrapped())
     canvas.add_port(port)
 
-    canvas.last_z_value += 1
-    port.widget.setZValue(canvas.last_z_value)
-
     if canvas.loading_items:
         return
 
@@ -1390,10 +1379,10 @@ def semi_hide_groups(group_ids: set[int]):
         for widget in group.widgets:
             if widget is not None:
                 widget.semi_hide(semi_hidden)
-                widget.setZValue(0.0 if semi_hidden else 3.0)
+                widget.setZValue(
+                    Zv.OPAC_BOX.value if semi_hidden else Zv.BOX.value)
     
     GroupedLinesWidget.groups_semi_hidden(group_ids)
-    canvas.last_z_value = 3
 
 @patchbay_api
 def select_port(group_id: int, port_id: int):

@@ -235,6 +235,26 @@ class GridStyle(Enum):
         return GridStyle.NONE
 
 
+class Zv(Enum):
+    '''enum for zValue'''
+    GRID = auto()
+    RUBBERBAND = auto()
+    OPAC_LINE = auto() # line semi-hidden by filter
+    OPAC_BOX = auto() # box semi-hidden by filter
+    LINE = auto()
+    BOX = auto()
+    NEW_BOX = auto()
+    PORT = auto()
+    SEL_PORT = auto()
+    SEL_BOX_LINE = auto() # line with a selected box
+    SEL_LINE = auto()
+    SEL_BOX = auto()
+    MOV_LINE_BOX = auto()
+    MOV_LINE_PORT = auto()
+    MOV_LINE_SEL_PORT = auto()
+    MOV_LINE = auto()
+
+
 class AliasingReason(Flag):
     NONE = 0x00
     USER_MOVE = auto()

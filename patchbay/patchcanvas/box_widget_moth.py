@@ -43,7 +43,8 @@ from .init_values import (
     BoxLayoutMode,
     MAX_PLUGIN_ID_ALLOWED,
     BoxType,
-    Direction)
+    Direction,
+    Zv)
 
 from .utils import canvas_callback, nearest_on_grid, nearest_on_grid_check_others
 from .box_widget_shadow import BoxWidgetShadow
@@ -217,6 +218,7 @@ class BoxWidgetMoth(QGraphicsItem):
         self._layout: BoxLayout = None
 
         canvas.scene.addItem(self)
+        self.setZValue(Zv.NEW_BOX.value)
 
     def get_group_id(self):
         return self._group_id
@@ -485,13 +487,13 @@ class BoxWidgetMoth(QGraphicsItem):
         self._last_pos = self.pos()
 
     def reset_lines_z_value(self, under: bool):
-        if self._current_port_mode is not PortMode.BOTH:
-            return
-        
         for lines in GroupedLinesWidget.widgets_for_box(
                 self._group_id, PortMode.BOTH):
-            lines.setZValue(self.zValue() - 1 if under
-                            else self.zValue() + 1)
+            if under:
+                lines.setZValue(Zv.SEL_BOX_LINE.value)
+            else:
+                lines.setZValue(Zv.LINE.value)
+
 
     def semi_hide(self, yesno: bool):
         self._is_semi_hidden = yesno
@@ -578,8 +580,9 @@ class BoxWidgetMoth(QGraphicsItem):
         if change == QGraphicsItem.ItemSelectedHasChanged:
             is_selected = bool(value)
             if is_selected:
-                canvas.last_z_value += 1
-                self.setZValue(canvas.last_z_value)
+                self.setZValue(Zv.SEL_BOX.value)
+            else:
+                self.setZValue(Zv.BOX.value)
             
             self.reset_lines_z_value(is_selected)
 
@@ -633,9 +636,6 @@ class BoxWidgetMoth(QGraphicsItem):
         QGraphicsItem.mouseDoubleClickEvent(self, event)
 
     def mousePressEvent(self, event):
-        canvas.last_z_value += 1
-        self.setZValue(canvas.last_z_value)
-        
         self._cursor_moving = False
         if canvas.menu_shown and canvas.menu_click_pos == QCursor.pos():
             # prevent box move if user just quit a context menu with click outside
