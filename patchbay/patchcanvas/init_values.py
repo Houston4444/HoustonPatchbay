@@ -487,7 +487,6 @@ class Canvas:
         self.group_plugin_map = {}
 
         self.scene = None
-        self.last_z_value = 0
         self.initial_pos = QPointF(0, 0)
         self.size_rect = QRectF()
         self.antialiasing = True

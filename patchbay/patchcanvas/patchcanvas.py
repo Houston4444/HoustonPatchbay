@@ -160,7 +160,6 @@ def init(view: PatchGraphicsView, callback: Callable,
     canvas.scene = PatchScene(view)
     view.setScene(canvas.scene)
     
-    canvas.last_z_value = 0
     canvas.initial_pos = QPointF(0, 0)
     canvas.size_rect = QRectF()
 
@@ -209,8 +208,6 @@ def clear():
 
     for idx in group_list_ids:
         remove_group(idx)
-
-    canvas.last_z_value = 0
 
     canvas.clear_all()
     canvas.group_plugin_map = {}
