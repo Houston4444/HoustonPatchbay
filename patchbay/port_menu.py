@@ -5,7 +5,7 @@ from PyQt5.QtWidgets import (
     QMenu, QCheckBox, QFrame, QLabel, QHBoxLayout,
     QSpacerItem, QSizePolicy, QWidgetAction,
     QApplication, QAction)
-from PyQt5.QtGui import QIcon, QColor, QKeyEvent, QPixmap, QMouseEvent, QCursor
+from PyQt5.QtGui import QIcon, QColor, QKeyEvent, QPixmap, QMouseEvent, QCursor, QFocusEvent
 from PyQt5.QtCore import Qt, QSize, pyqtSlot, QEvent, QPoint
 
 
@@ -149,6 +149,8 @@ class CheckFrame(QFrame):
         self._layout.setSpacing(0)
         self._layout.setContentsMargins(0, 0, 0, 0)
         self._layout.addWidget(self._check_box)
+        spacer1 = QSpacerItem(2, 2, QSizePolicy.Fixed, QSizePolicy.Fixed)
+        self._layout.addSpacerItem(spacer1)
         self._layout.addWidget(self._label_left)
         spacer = QSpacerItem(2, 2, QSizePolicy.Expanding, QSizePolicy.Minimum)
         self._layout.addSpacerItem(spacer)
@@ -166,27 +168,23 @@ class CheckFrame(QFrame):
 
         full_theme = canvas.theme
         theme = full_theme.port
-        line_theme = full_theme.line        
 
         if isinstance(po, Portgroup):
             theme = full_theme.portgroup
         
         if po.full_type()[0] is PortType.AUDIO_JACK:
             theme = theme.cv if po.full_type()[1] is PortSubType.CV else theme.audio
-            line_theme = line_theme.audio
             
         elif po.full_type()[0] is PortType.MIDI_JACK:
             theme = theme.midi
-            line_theme = line_theme.midi
             
         elif po.full_type()[0] is PortType.MIDI_ALSA:
             theme = theme.alsa
-            line_theme = line_theme.alsa
+
+        self._theme = theme
 
         text_color = theme.text_color().name()
-        border_color = theme.fill_pen().color().name()
-        h_text_color = theme.selected.text_color().name()
-        
+        border_color = theme.fill_pen().color().name()        
         border_width = theme.fill_pen().widthF()
         
         TOP, RIGHT, BOTTOM, LEFT = 0, 1, 2, 3
@@ -221,7 +219,7 @@ class CheckFrame(QFrame):
         
         self._label_left.setFont(theme.font())
         self._label_left.setStyleSheet(
-            f"QLabel{{color: {text_color}}} QLabel:focus{{color: {h_text_color}}} ")
+            f"QLabel{{color: {text_color}}}")
         
         if self._label_right is not None:
             port_theme = full_theme.port
@@ -253,7 +251,16 @@ class CheckFrame(QFrame):
     def enterEvent(self, event):
         super().enterEvent(event)
         self.setFocus()
-
+        
+    def focusInEvent(self, event: QFocusEvent):
+        super().focusInEvent(event)
+        text_color = self._theme.selected.text_color().name()
+        self._label_left.setStyleSheet(f"QLabel{{color: {text_color}}}")
+        
+    def focusOutEvent(self, event: QFocusEvent):
+        super().focusOutEvent(event)
+        text_color = self._theme.text_color().name()
+        self._label_left.setStyleSheet(f"QLabel{{color: {text_color}}}")
 
 class GroupConnectMenu(QMenu):
     def __init__(self, group: Group, po: Union[Port, Portgroup],
