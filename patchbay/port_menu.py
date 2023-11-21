@@ -5,11 +5,11 @@ from PyQt5.QtWidgets import (
     QMenu, QCheckBox, QFrame, QLabel, QHBoxLayout,
     QSpacerItem, QSizePolicy, QWidgetAction,
     QApplication, QAction)
-from PyQt5.QtGui import QIcon, QColor, QKeyEvent, QPixmap, QMouseEvent, QCursor, QFocusEvent
-from PyQt5.QtCore import Qt, QSize, pyqtSlot, QEvent, QPoint
+from PyQt5.QtGui import QIcon, QColor, QKeyEvent, QPixmap, QMouseEvent, QCursor, QFocusEvent, QPaintEvent, QPainter, QPen, QBrush, QPolygonF
+from PyQt5.QtCore import Qt, QSize, pyqtSlot, QEvent, QPoint, QPointF
 
 
-from .patchcanvas import canvas, CallbackAct, BoxType
+from .patchcanvas import canvas, CallbackAct, BoxType, options
 from .patchcanvas.theme import StyleAttributer
 from .patchcanvas.utils import (
     get_portgroup_name_from_ports_names, get_icon, is_dark_theme)
@@ -50,6 +50,13 @@ class PortCheckBox(QCheckBox):
                  parent: 'CheckFrame', pg_pos=0, pg_len=1):
         QCheckBox.__init__(self, "", parent)
         self.setTristate(True)
+        
+        port_height = int(canvas.theme.port_height * options.default_zoom / 100.0) + 2
+        self.setMinimumHeight(port_height)
+        self.setMinimumWidth(port_height)
+        
+        self.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+        
         self._po = p_object
         self._parent = parent
         self._pg_pos = pg_pos
@@ -76,6 +83,8 @@ class PortCheckBox(QCheckBox):
             theme = theme.alsa
             line_theme = line_theme.alsa
 
+        self._theme = theme
+        self._line_theme = line_theme
         text_color = theme.text_color().name(QColor.HexArgb)
         border_color = theme.fill_pen().color().name(QColor.HexArgb)
         h_text_color = theme.selected.text_color().name(QColor.HexArgb)
@@ -132,13 +141,43 @@ class PortCheckBox(QCheckBox):
         self._parent.connection_asked_from_box(
             self._po, not self.isChecked())
 
+    def paintEvent(self, event: QPaintEvent):
+        painter = QPainter()
+        painter.begin(self)
+        painter.setRenderHint(QPainter.Antialiasing)
+        pen = QPen(self._theme.fill_pen())
+        pen.setWidth(1)
+        painter.setPen(pen)
+        bg = QColor(canvas.theme.scene_background_color)
+        bg.setAlphaF(1.0)
+        painter.setBrush(QBrush(bg))
+        
+        rect = event.rect().adjusted(2, 2, -2, -2)        
+        painter.drawRoundedRect(rect, 2.0, 2.0)
+        
+        line_color = self._line_theme.background_color()
+        painter.setBrush(QBrush(line_color))
+        painter.setPen(QPen(Qt.NoPen))
+        circle_rect = rect.adjusted(3, 3, -3, -3)
+        
+        if self.checkState() == 2:
+            circle_rect = rect.adjusted(3, 3, -3, -3)
+            painter.drawEllipse(circle_rect)
+        elif self.checkState() == 1:
+            moon_rect = rect.adjusted(2, 2, -2, -2)
+            painter.drawPie(moon_rect, 70*16, 220*16)
+
+        painter.end()
+
 
 class CheckFrame(QFrame):
     def __init__(self, p_object: Union[Port, Portgroup],
                  port_name: str, port_name_end: str,
                  parent: 'ConnectMenu', pg_pos=0, pg_len=1):
         QFrame.__init__(self, parent)
-        # self.setMinimumSize(QSize(100, 18))
+        port_height = int(canvas.theme.port_height * options.default_zoom / 100.0) + 2
+        self.setMinimumHeight(port_height)
+        self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
         
         self._p_object = p_object
         self._parent = parent
@@ -232,6 +271,8 @@ class CheckFrame(QFrame):
             self._label_right.setStyleSheet(
                 f"QLabel{{margin-left: 3px; margin-right: 0px; padding: 0px; {theme_css(port_theme)}}} "
                 f"QLabel:focus{{{theme_css(port_theme.selected)}}}")
+        
+        
 
     def set_check_state(self, check_state: int):
         self._check_box.setCheckState(check_state)
@@ -262,6 +303,21 @@ class CheckFrame(QFrame):
         text_color = self._theme.text_color().name()
         self._label_left.setStyleSheet(f"QLabel{{color: {text_color}}}")
 
+
+class DangerousMenu(QMenu):
+    def __init__(self, parent, po: Union[Port, Portgroup]):
+        QMenu.__init__(self, parent)
+        if po.full_type()[1] is PortSubType.CV:
+            dangerous_name = _translate(
+                'patchbay', 'Audio | DANGEROUS !!!')
+        else:
+            dangerous_name = _translate(
+                'patchbay', 'CV | DANGEROUS !!!')
+        
+        self.setTitle(dangerous_name)
+        self.setIcon(QIcon.fromTheme('emblem-warning'))
+
+
 class GroupConnectMenu(QMenu):
     def __init__(self, group: Group, po: Union[Port, Portgroup],
                  parent: 'ConnectMenu'):
@@ -273,6 +329,10 @@ class GroupConnectMenu(QMenu):
         QMenu.__init__(self, short_group_name, parent)
         self.hovered.connect(self._mouse_hover_menu)
         self.aboutToShow.connect(self._about_to_show)
+        
+        self._parent = parent
+        if isinstance(parent, DangerousMenu):
+            self._parent = parent.parent()
         
         theme = canvas.theme.box        
         if group.cnv_box_type is BoxType.CLIENT:
@@ -300,21 +360,20 @@ class GroupConnectMenu(QMenu):
         action.defaultWidget().setFocus()
     
     def _about_to_show(self):
-        parent: AbstractConnectionsMenu = self.parent()
-        self.setMinimumWidth(parent.group_min_width)
+        self.setMinimumWidth(self._parent.group_min_width)
 
         if not self._elements_added:
             for cft in self._check_frame_templates:
                 check_frame = CheckFrame(*cft)
-                parent._check_frames[cft[0]] = check_frame
+                self._parent._check_frames[cft[0]] = check_frame
 
                 action = QWidgetAction(self)
                 action.setDefaultWidget(check_frame)
                 self.addAction(action)
             self._elements_added = True
-            parent._patch_may_have_change()
+            self._parent._patch_may_have_change()
 
-        parent.set_group_min_width(self.sizeHint().width())
+        self._parent.set_group_min_width(self.sizeHint().width())
     
     def prepare_check_frame(self, *args):
         self._check_frame_templates.append(args)
@@ -492,14 +551,7 @@ class ConnectMenu(AbstractConnectionsMenu):
     def _fill_all_ports(self, dangerous=False) -> bool:
         main_menu = self
         if dangerous:
-            if self._po.full_type()[1] is PortSubType.CV:
-                dangerous_name = _translate(
-                    'patchbay', 'Audio | DANGEROUS !!!')
-            else:
-                dangerous_name = _translate(
-                    'patchbay', 'CV | DANGEROUS !!!')
-            main_menu = QMenu(dangerous_name, self)
-            main_menu.setIcon(QIcon.fromTheme('emblem-warning'))
+            main_menu = DangerousMenu(self, self._po)
         
         has_dangerous_ports = False
 
