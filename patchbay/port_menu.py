@@ -836,6 +836,9 @@ class PoMenu(AbstractConnectionsMenu):
                         if port.full_type() != self._po.full_type():
                             continue
                         
+                        if port.mode() is not self._po.mode():
+                            continue
+                        
                         if not port_found:
                             if port is self._po:
                                 port_found = True
