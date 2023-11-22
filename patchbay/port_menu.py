@@ -330,9 +330,9 @@ class GroupConnectMenu(QMenu):
         self.hovered.connect(self._mouse_hover_menu)
         self.aboutToShow.connect(self._about_to_show)
         
-        self._parent = parent
+        self._connect_menu = parent
         if isinstance(parent, DangerousMenu):
-            self._parent = parent.parent()
+            self._connect_menu = parent.parent()
         
         theme = canvas.theme.box        
         if group.cnv_box_type is BoxType.CLIENT:
@@ -360,20 +360,20 @@ class GroupConnectMenu(QMenu):
         action.defaultWidget().setFocus()
     
     def _about_to_show(self):
-        self.setMinimumWidth(self._parent.group_min_width)
+        self.setMinimumWidth(self._connect_menu.group_min_width)
 
         if not self._elements_added:
             for cft in self._check_frame_templates:
                 check_frame = CheckFrame(*cft)
-                self._parent._check_frames[cft[0]] = check_frame
+                self._connect_menu._check_frames[cft[0]] = check_frame
 
                 action = QWidgetAction(self)
                 action.setDefaultWidget(check_frame)
                 self.addAction(action)
             self._elements_added = True
-            self._parent._patch_may_have_change()
+            self._connect_menu._patch_may_have_change()
 
-        self._parent.set_group_min_width(self.sizeHint().width())
+        self._connect_menu.set_group_min_width(self.sizeHint().width())
     
     def prepare_check_frame(self, *args):
         self._check_frame_templates.append(args)
