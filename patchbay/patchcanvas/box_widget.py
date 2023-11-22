@@ -867,7 +867,7 @@ class BoxWidget(BoxWidgetMoth):
                     # portgrp will have a name
                     # to ensure that portgroup widget is large enough
                     max_port_in_pg_width = max(max_port_in_pg_width,
-                                               port_print_width + 4)
+                                               port_print_width + 6)
 
             out_in_portgrp_x = (self._width - port_out_offset
                                 - max_port_in_pg_width)

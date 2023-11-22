@@ -37,7 +37,8 @@ from .init_values import (
     canvas,
     CallbackAct,
     PortMode,
-    PortType)
+    PortType,
+    Zv)
 
 if TYPE_CHECKING:
     from .box_widget import BoxWidget
@@ -171,6 +172,12 @@ class PortgroupWidget(ConnectableWidget):
                 self.setSelected(False)
                 return
         self.setSelected(True)
+
+    def set_z_value_connecting(self):
+        self.parentItem().setZValue(Zv.MOV_LINE_BOX.value)
+        self.setZValue(Zv.MOV_LINE_PORTGRP.value)
+        for port_widget in self._ports_widgets:
+            port_widget.setZValue(Zv.MOV_LINE_PORT.value)
 
     def itemChange(self, change: int, value: bool):
         if change == QGraphicsItem.ItemSelectedHasChanged:

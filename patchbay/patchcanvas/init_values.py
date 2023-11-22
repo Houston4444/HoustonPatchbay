@@ -250,8 +250,8 @@ class Zv(Enum):
     SEL_LINE = auto()
     SEL_BOX = auto()
     MOV_LINE_BOX = auto()
+    MOV_LINE_PORTGRP = auto()
     MOV_LINE_PORT = auto()
-    MOV_LINE_SEL_PORT = auto()
     MOV_LINE = auto()
 
 
