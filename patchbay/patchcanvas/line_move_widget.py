@@ -39,8 +39,6 @@ class LineMoveWidget(QGraphicsPathItem):
                  port_posinportgrp: int, portgrp_lenght: int,
                  parent: 'ConnectableWidget'):
         QGraphicsPathItem.__init__(self)
-        
-        self.setParentItem(parent)
         self._parent_is_portgroup = bool(len(parent.get_port_ids()) > 1)
 
         self.ready_to_disc = False
@@ -53,10 +51,12 @@ class LineMoveWidget(QGraphicsPathItem):
         self._portgrp_len_to = portgrp_lenght
 
         # Port position doesn't change while moving around line
-        self._item_x = self.scenePos().x()
-        self._item_y = self.scenePos().y()
+        self._item_x = parent.scenePos().x()
+        self._item_y = parent.scenePos().y()
+        
         self._item_width = parent.get_connection_distance()
         self.setZValue(Zv.MOV_LINE.value)
+        canvas.scene.addItem(self)
 
     def set_destination_portgrp_pos(self, port_pos: int, portgrp_len: int):
         self._port_posinportgrp_to = port_pos
@@ -123,12 +123,16 @@ class LineMoveWidget(QGraphicsPathItem):
                 new_y1 = first_new_y + (self._port_posinportgrp_to * delta)
                 new_y = new_y1 - ( (last_new_y - first_new_y) / 2 ) \
                         - canvas.theme.port_height * phito
+                        
+        old_y += self._item_y
 
         final_x = scene_pos.x() - self._item_x
         final_y = scene_pos.y() - self._item_y + new_y
+        final_x = scene_pos.x()
+        final_y = scene_pos.y() + new_y
 
         if self._port_mode is PortMode.OUTPUT:
-            old_x = self._item_width
+            old_x = self._item_x + self._item_width
             mid_x = abs(final_x - old_x) / 2
             new_x1 = old_x + mid_x
             new_x2 = final_x - mid_x
@@ -139,7 +143,7 @@ class LineMoveWidget(QGraphicsPathItem):
                 new_x2 -= abs(diffxy)
 
         elif self._port_mode is PortMode.INPUT:
-            old_x = 0.0
+            old_x = self._item_x
             mid_x = abs(final_x - old_x) / 2
             new_x1 = old_x - mid_x
             new_x2 = final_x + mid_x
