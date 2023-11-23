@@ -228,7 +228,7 @@ class PortWidget(ConnectableWidget):
             self.setZValue(Zv.MOV_LINE_PORT.value)
 
     def itemChange(self, change: int, value: bool):
-        if change == QGraphicsItem.ItemSelectedHasChanged:
+        if change == QGraphicsItem.ItemSelectedHasChanged:            
             if self.changing_select_state:
                 self.changing_select_state = False
                 return
@@ -241,7 +241,8 @@ class PortWidget(ConnectableWidget):
                 elif not self._portgrp_widget.changing_select_state:
                     self._portgrp_widget.ensure_selection_with_ports()
             
-            self.setZValue(Zv.SEL_PORT.value if self.isSelected() else Zv.PORT.value)
+            self.setZValue(Zv.SEL_PORT.value if self.isSelected()
+                           else Zv.PORT.value)
             
             if self._connections:
                 other_group_ids = set[int]()
@@ -317,6 +318,12 @@ class PortWidget(ConnectableWidget):
 
     def boundingRect(self):        
         return QRectF(0.0, 0.0, self._port_width, canvas.theme.port_height)
+
+    def mousePressEvent(self, event):
+        if (self._portgrp_widget is not None
+                and self._portgrp_widget.isSelected()):
+            self._portgrp_widget.setSelected(False)
+        super().mousePressEvent(event)
 
     def paint(self, painter, option, widget):
         if canvas.loading_items:
