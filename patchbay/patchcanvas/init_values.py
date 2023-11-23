@@ -244,6 +244,7 @@ class Zv(Enum):
     LINE = auto()
     BOX = auto()
     NEW_BOX = auto()
+    PORTGRP = auto()
     PORT = auto()
     SEL_PORT = auto()
     SEL_BOX_LINE = auto() # line with a selected box

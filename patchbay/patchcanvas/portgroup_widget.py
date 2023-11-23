@@ -173,11 +173,17 @@ class PortgroupWidget(ConnectableWidget):
                 return
         self.setSelected(True)
 
-    def set_z_value_connecting(self):
-        self.parentItem().setZValue(Zv.MOV_LINE_BOX.value)
-        self.setZValue(Zv.MOV_LINE_PORTGRP.value)
-        for port_widget in self._ports_widgets:
-            port_widget.setZValue(Zv.MOV_LINE_PORT.value)
+    def set_z_value_connecting(self, finished=False):
+        if finished:
+            self.parentItem().setZValue(Zv.BOX.value)
+            self.setZValue(Zv.PORTGRP.value)
+            for port_widget in self._ports_widgets:
+                port_widget.setZValue(Zv.PORT.value)
+        else:
+            self.parentItem().setZValue(Zv.MOV_LINE_BOX.value)
+            self.setZValue(Zv.MOV_LINE_PORTGRP.value)
+            for port_widget in self._ports_widgets:
+                port_widget.setZValue(Zv.MOV_LINE_PORT.value)
 
     def itemChange(self, change: int, value: bool):
         if change == QGraphicsItem.ItemSelectedHasChanged:

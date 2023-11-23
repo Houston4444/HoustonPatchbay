@@ -244,10 +244,10 @@ class ConnectableWidget(QGraphicsItem):
                                     hover_group_id, hover_port_id,
                                     self._group_id, port_id)
     
-    def set_z_value_connecting(self):
+    def set_z_value_connecting(self, finished=False):
         'see port_widget and portgroup_widget'
         ...
-    
+
     def parentItem(self) -> 'BoxWidget':
         # only here to say IDE parent is a CanvasBox
         return super().parentItem()
@@ -485,8 +485,8 @@ class ConnectableWidget(QGraphicsItem):
 
                 elif self._last_rclick_item:
                     canvas.scene.clearSelection()
-                    
-                self.parentItem().setZValue(Zv.BOX.value)
+                
+                self.set_z_value_connecting(finished=True)
 
             if self._cursor_moving:
                 canvas.scene.set_cursor(QCursor(Qt.ArrowCursor))
