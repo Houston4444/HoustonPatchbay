@@ -764,8 +764,16 @@ class BoxWidgetMoth(QGraphicsItem):
             round(self.x()), round(self.y()))
 
     def fix_pos_after_move(self):
-        for box in canvas.scene.get_selected_boxes():
-            box.fix_pos(check_others=True)
+        selected_boxes = canvas.scene.get_selected_boxes()
+        if len(selected_boxes) == 1:
+            self.fix_pos(check_others=True)
+            self.send_move_callback()
+            return
+
+        # many selected boxes, do not auto-adapt the position
+        # to other existing boxes (no check_others)
+        for box in selected_boxes:
+            box.fix_pos()
             box.send_move_callback()
 
     def set_in_cache(self, yesno: bool):
