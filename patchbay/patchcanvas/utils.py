@@ -489,24 +489,28 @@ def nearest_on_grid(xy: tuple[int, int]) -> tuple[int, int]:
 
 def nearest_on_grid_check_others(
         xy: tuple[int, int], orig_box: 'BoxWidget') -> tuple[int, int]:
+    '''return the pos for a just moved box,
+       may be not exactly the nearest point on grid,
+       to prevent unwanted other boxes move.'''
     check_rect = orig_box.boundingRect().translated(QPointF(*xy))
     search_rect = check_rect.adjusted(-4.0, -4.0, 4.0, 4.0)
 
     boxes = [b for b in canvas.scene.list_boxes_at(search_rect)
              if b is not orig_box]
+    x, y = xy
+    new_x, new_y = nearest_on_grid(xy)
     
     for box in boxes:
         rect = box.sceneBoundingRect()
-        x, y = xy
 
-        if previous_top_on_grid(y) == previous_top_on_grid(rect.bottom()):
-            new_x, new_y = nearest_on_grid(xy)
+        if (previous_top_on_grid(y)
+                == previous_top_on_grid(rect.bottom())):
             return (new_x, previous_top_on_grid(y) + options.cell_height)
         
-        if next_bottom_on_grid(check_rect.bottom()) == next_bottom_on_grid(rect.top()):
-            new_x, new_y = nearest_on_grid(xy)
+        if (next_bottom_on_grid(check_rect.bottom())
+                == next_bottom_on_grid(rect.top())):
             return (new_x, next_top_on_grid(y) - options.cell_height)
-            
+     
     return nearest_on_grid(xy)
 
 def previous_left_on_grid(x: int) -> int:
@@ -543,18 +547,20 @@ def next_top_on_grid(y: int) -> int:
     cell_y = options.cell_height
     margin = options.cell_margin
     
-    ret = int(cell_y * (y // cell_y) + margin)
+    ret = int(cell_y * ((y - 1) // cell_y) + margin)
     if ret < y:
         ret += cell_y
-    
+
     return ret
 
 def next_bottom_on_grid(y: int) -> int:
     cell_y = options.cell_height
     margin = options.cell_margin
-    
+
     ret = int(cell_y * (1 + y // cell_y) - margin)
-        
+    if ret < y:
+        ret += cell_y
+
     return ret
 
 def next_width_on_grid(width: Union[float, int]) -> int:

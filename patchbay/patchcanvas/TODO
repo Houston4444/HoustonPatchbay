@@ -6,7 +6,8 @@ test pipewire
 voir : canvas initial_pos
 
 vérifier ouverture des gpos à l'ancienne
-Certaines boîtes changent de dispo après wrap
+
+cache des titres de boite à remettre
 
 
 Passage à GroupedConns:
@@ -24,7 +25,3 @@ Réparer aire la plus petite ou pas (4 modes)
 
 Virer connection_lines de BoxWidget et PortWidget
 
-Bugs en cours:
-    grid 1x1 bring neighboors
-    Guitar Voice Ardour pas de mise en stéréo possible 
-    connect menu color text
