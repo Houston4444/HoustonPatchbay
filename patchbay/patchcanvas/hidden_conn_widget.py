@@ -3,7 +3,7 @@ from PyQt5.QtWidgets import QGraphicsPathItem
 from PyQt5.QtGui import QPolygonF, QPen, QColor, QBrush, QPainter, QPainterPath
 from PyQt5.QtCore import QPointF, Qt
 
-from .init_values import PortMode, PortType, canvas, CanvasItemType, options
+from .init_values import PortMode, PortType, canvas, CanvasItemType, options, Zv
 
 if TYPE_CHECKING:
     from .port_widget import PortWidget
@@ -32,6 +32,7 @@ class HiddenConnWidget(QGraphicsPathItem):
         self.update_theme()
         self.update_line_pos()
         self.update_line_gradient()
+        self.setZValue(Zv.HIDDEN_CONN.value)
         
     def semi_hide(self, yesno: bool):
         self._semi_hidden = yesno

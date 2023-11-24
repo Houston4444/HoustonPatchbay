@@ -239,8 +239,10 @@ class Zv(Enum):
     '''enum for zValue'''
     GRID = auto()
     RUBBERBAND = auto()
+    OPAC_HIDDEN_CONN = auto()
     OPAC_LINE = auto() # line semi-hidden by filter
     OPAC_BOX = auto() # box semi-hidden by filter
+    HIDDEN_CONN = auto()
     LINE = auto()
     BOX = auto()
     NEW_BOX = auto()

@@ -1039,7 +1039,7 @@ def port_has_hidden_connection(group_id: int, port_id: int, yesno: bool):
     if port is None:
         _logger.critical(
             f"{_logging_str} - Unable to find port to set hidden connection")
-        return 
+        return
 
     if bool(port.hidden_conn_widget is None) == bool(not yesno):
         return
@@ -1047,15 +1047,15 @@ def port_has_hidden_connection(group_id: int, port_id: int, yesno: bool):
     if yesno:
         port.hidden_conn_widget = HiddenConnWidget(port.widget)
         canvas.scene.addItem(port.hidden_conn_widget)
-        
+
     else:
         canvas.scene.removeItem(port.hidden_conn_widget)
         del port.hidden_conn_widget
         port.hidden_conn_widget = None
-        
+
     if canvas.loading_items:
         return
-    
+
     QTimer.singleShot(0, canvas.scene.update)
 
 @patchbay_api

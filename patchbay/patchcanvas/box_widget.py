@@ -1192,6 +1192,11 @@ class BoxWidget(BoxWidgetMoth):
         if theme_change:
             for portgrp in self._portgrp_list:
                 portgrp.widget.update_theme()
+                
+            for port in self._port_list:
+                if port.hidden_conn_widget is not None:
+                    port.hidden_conn_widget.update_theme()
+                    port.hidden_conn_widget.update_line_gradient()
 
         if options.auto_hide_groups and not self._port_list:
             self.setVisible(False)
