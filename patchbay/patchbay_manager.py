@@ -1253,7 +1253,7 @@ class PatchbayManager:
             editor_text = self._export_port_list_to_patchichi()
 
         file_dict = dict[str, Any]()
-        file_dict['VERSION'] = (0, 1)       
+        file_dict['VERSION'] = (0, 2)       
         file_dict['editor_text'] = editor_text
         file_dict['connections'] = [
             (c.port_out.full_name, c.port_in.full_name)
