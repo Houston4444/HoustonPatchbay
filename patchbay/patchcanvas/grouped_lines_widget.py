@@ -365,14 +365,14 @@ class GroupedLinesWidget(QGraphicsPathItem):
         if self._hidding_port_mode is PortMode.NULL:
             return
         
-        gradient = QLinearGradient(self._group_out_x, 0.0, self._group_in_x, 0.0)
+        epsy = 0.001
 
-        if not 0.0 < ratio < 1.0:
+        if not epsy < ratio < 1.0 - epsy:
             return
 
+        gradient = QLinearGradient(self._group_out_x, 0.0, self._group_in_x, 0.0)
         transparent = QColor(0, 0, 0, 0)
         color_main = self._th_attribs.color_main
-        epsy = 0.001
 
         if self._hidding_port_mode is PortMode.INPUT:
             gradient.setColorAt(0.0, color_main)

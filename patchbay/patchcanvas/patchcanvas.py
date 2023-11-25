@@ -1246,6 +1246,7 @@ def animate_before_hide_box(group_id: int, port_mode: PortMode):
     
     for box in group.widgets:
         if box.get_port_mode() is port_mode:
+            box.pos_before_hide = box.scenePos()
             canvas.scene.add_box_to_animation_hidding(box)
             break
 

@@ -214,6 +214,8 @@ class BoxWidgetMoth(QGraphicsItem):
         self._painter_path_sel = QPainterPath()
         self._layout: BoxLayout = None
 
+        self.pos_before_hide = QPointF()
+
         canvas.scene.addItem(self)
         self.setZValue(Zv.NEW_BOX.value)
 
@@ -396,10 +398,12 @@ class BoxWidgetMoth(QGraphicsItem):
         if ratio >= 1.0:
             # the box may still exist but not be visible
             # after hidding.
-            self.setOpacity(1.0)
+            self.setScale(1.0)
+            self.setPos(self.pos_before_hide)
         else:
-            self.setOpacity(1.0 - hidding_ratio)
-        self.update()
+            self.setScale(1.0 - hidding_ratio)
+            self.setX(self.pos_before_hide.x() + self._width * 0.5 * hidding_ratio)
+            self.setY(self.pos_before_hide.y() + self._height * 0.5 * hidding_ratio)
 
     def hide_ports_for_wrap(self, hide: bool):
         for portgrp in canvas.list_portgroups(group_id=self._group_id):
