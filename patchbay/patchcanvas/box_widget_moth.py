@@ -26,7 +26,7 @@ from enum import Enum
 from PyQt5.QtCore import Qt, QPointF, QRectF, QTimer
 from PyQt5.QtGui import (QCursor, QFontMetrics, QImage, QFont,
                          QLinearGradient, QPainter, QPen, QPolygonF,
-                         QColor, QPainterPath, QBrush)
+                         QColor, QPainterPath, QBrush, QTransform)
 from PyQt5.QtWidgets import QGraphicsItem, QApplication
 
 from .init_values import (
@@ -393,17 +393,22 @@ class BoxWidgetMoth(QGraphicsItem):
         self.update_positions()
 
     def animate_hidding(self, ratio: float):
-        hidding_ratio = ratio ** 2.0
+        hidding_ratio = ratio ** 0.25
 
         if ratio >= 1.0:
             # the box may still exist but not be visible
             # after hidding.
-            self.setScale(1.0)
+            self.setTransform(QTransform())
             self.setPos(self.pos_before_hide)
         else:
-            self.setScale(1.0 - hidding_ratio)
-            self.setX(self.pos_before_hide.x() + self._width * 0.5 * hidding_ratio)
-            self.setY(self.pos_before_hide.y() + self._height * 0.5 * hidding_ratio)
+            transform = QTransform()
+            transform.scale(1.0 - hidding_ratio, 1.0)
+            self.setTransform(transform)
+            
+            if self._current_port_mode is PortMode.BOTH:
+                self.setX(self.pos_before_hide.x() + self._width * 0.5 * hidding_ratio)
+            elif self._current_port_mode is PortMode.INPUT:
+                self.setX(self.pos_before_hide.x() + self._width * hidding_ratio)
 
     def hide_ports_for_wrap(self, hide: bool):
         for portgrp in canvas.list_portgroups(group_id=self._group_id):
