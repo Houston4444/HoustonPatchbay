@@ -240,5 +240,5 @@ class GroupMenu(QMenu):
     
     @pyqtSlot()
     def _hide_box(self):
-        canvas.callback(CallbackAct.GROUP_HIDE_BOX,
-                        self._group.group_id, self._port_mode)
+        patchcanvas.animate_before_hide_box(
+            self._group.group_id, self._port_mode)

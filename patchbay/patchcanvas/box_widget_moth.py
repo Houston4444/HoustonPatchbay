@@ -71,9 +71,6 @@ class WrappingState(Enum):
     WRAPPING = 1
     WRAPPED = 2
     UNWRAPPING = 3
-    
-    def next_state(self) -> 'WrappingState':
-        return WrappingState((self.value + 1) % 4)
 
 
 class TitleLine:
@@ -392,6 +389,17 @@ class BoxWidgetMoth(QGraphicsItem):
                         * self._wrapping_ratio)
 
         self.update_positions()
+
+    def animate_hidding(self, ratio: float):
+        hidding_ratio = ratio ** 2.0
+
+        if ratio >= 1.0:
+            # the box may still exist but not be visible
+            # after hidding.
+            self.setOpacity(1.0)
+        else:
+            self.setOpacity(1.0 - hidding_ratio)
+        self.update()
 
     def hide_ports_for_wrap(self, hide: bool):
         for portgrp in canvas.list_portgroups(group_id=self._group_id):
@@ -762,6 +770,10 @@ class BoxWidgetMoth(QGraphicsItem):
 
         group.box_poses[self._port_mode].pos = (
             round(self.x()), round(self.y()))
+
+    def send_hide_callback(self):
+        canvas_callback(
+            CallbackAct.GROUP_HIDE_BOX, self._group_id, self._port_mode)
 
     def fix_pos_after_move(self):
         selected_boxes = canvas.scene.get_selected_boxes()
@@ -1226,6 +1238,9 @@ class BoxWidgetMoth(QGraphicsItem):
             for xy in bottom_points:
                 hw_poly_bottom += QPointF(*xy)
             painter.drawPolygon(hw_poly_bottom)
+
+    # def _paint_hidding_polygon(self, painter: QPainter):
+    #     theme = canvas.theme.background_color()
 
     def _paint_inline_display(self, painter: QPainter):
         if self._plugin_inline is InlineDisplay.DISABLED:

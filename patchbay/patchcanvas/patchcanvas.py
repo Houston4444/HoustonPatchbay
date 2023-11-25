@@ -54,7 +54,6 @@ from .init_values import (
 from .utils import nearest_on_grid
 from .box_widget import BoxWidget
 from .port_widget import PortWidget
-from .line_widget import LineWidget
 from .grouped_lines_widget import GroupedLinesWidget
 from .hidden_conn_widget import HiddenConnWidget
 from .theme_manager import ThemeManager
@@ -187,8 +186,6 @@ def init(view: PatchGraphicsView, callback: Callable,
         canvas.theme.load_cache()
 
     canvas.scene.zoom_reset()    
-    # canvas.scene.update_grid_style()
-    
     canvas.initiated = True
 
 @patchbay_api
@@ -227,7 +224,8 @@ def clear():
 
     QTimer.singleShot(0, canvas.scene.update)
 
-# ------------------------------------------------------------------------------------------------------------
+# -------
+
 @patchbay_api
 def set_initial_pos(x: int, y: int):
     canvas.initial_pos.setX(x)
@@ -1238,6 +1236,18 @@ def disconnect_ports(connection_id: int):
         return
 
     QTimer.singleShot(0, canvas.scene.update)
+
+@patchbay_api
+def animate_before_hide_box(group_id: int, port_mode: PortMode):
+    group = canvas.get_group(group_id)
+    if group is None:
+        _logger.info(f"{_logging_str} - failed to find group")
+        return
+    
+    for box in group.widgets:
+        if box.get_port_mode() is port_mode:
+            canvas.scene.add_box_to_animation_hidding(box)
+            break
 
 # ----------------------------------------------------------------------------
 

@@ -78,6 +78,10 @@ class GroupedLinesWidget(QGraphicsPathItem):
         self._group_in_id = group_in_id
         self._port_type = port_type
 
+        self._group_out_x = 0.0
+        self._group_in_x = 0.0
+        self._hidding_port_mode = PortMode.NULL
+
         self._semi_hidden = False        
         
         self._th_attribs: _ThemeAttributes = None
@@ -205,6 +209,8 @@ class GroupedLinesWidget(QGraphicsPathItem):
     def update_lines_pos(self, fast_move=False):
         paths = dict[tuple[float, float], QPainterPath]()
 
+        groups_x_done = False
+
         for conn in canvas.list_connections(
                 group_out_id=self._group_out_id,
                 group_in_id=self._group_in_id):
@@ -224,6 +230,10 @@ class GroupedLinesWidget(QGraphicsPathItem):
             item1_y = port_out_con_pos.y()
             item2_x = port_in_con_pos.x()
             item2_y = port_in_con_pos.y()
+            
+            if not groups_x_done:
+                self._group_out_x = item1_x
+                self._group_in_x = item2_x
 
             if (item1_y, item2_y) in paths.keys():
                 # same coords, do not draw 2 times the same path.
@@ -350,3 +360,42 @@ class GroupedLinesWidget(QGraphicsPathItem):
         
             self.setPen(QPen(QBrush(color_main),
                              tha.base_width, Qt.SolidLine, Qt.FlatCap))
+            
+    def animate_hidding(self, ratio: float):
+        if self._hidding_port_mode is PortMode.NULL:
+            return
+        
+        gradient = QLinearGradient(self._group_out_x, 0.0, self._group_in_x, 0.0)
+
+        if not 0.0 < ratio < 1.0:
+            return
+
+        transparent = QColor(0, 0, 0, 0)
+        color_main = self._th_attribs.color_main
+        epsy = 0.001
+
+        if self._hidding_port_mode is PortMode.INPUT:
+            gradient.setColorAt(0.0, color_main)
+            gradient.setColorAt(1.0 - ratio - epsy, color_main)
+            gradient.setColorAt(1.0 - ratio + epsy, transparent)
+            gradient.setColorAt(1.0, transparent)
+
+        elif self._hidding_port_mode is PortMode.OUTPUT:
+            gradient.setColorAt(0.0, transparent)
+            gradient.setColorAt(ratio - epsy, transparent)
+            gradient.setColorAt(ratio + epsy, color_main)
+            gradient.setColorAt(1.0, color_main)
+
+        else:
+            gradient.setColorAt(0.0, transparent)
+            gradient.setColorAt(ratio * 0.5 - epsy, transparent)
+            gradient.setColorAt(ratio * 0.5 + epsy, color_main)
+            gradient.setColorAt((1.0 - ratio) * 0.5 - epsy, color_main)
+            gradient.setColorAt((1.0 - ratio) * 0.5 + epsy, transparent)
+            gradient.setColorAt(1.0, transparent)
+
+        self.setPen(QPen(gradient, self._th_attribs.base_width,
+                         Qt.SolidLine, Qt.FlatCap))
+
+    def add_hidding_port_mode(self, port_mode: PortMode):
+        self._hidding_port_mode |= port_mode

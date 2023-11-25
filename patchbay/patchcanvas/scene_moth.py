@@ -46,6 +46,7 @@ from .init_values import (
 from .box_widget import BoxWidget
 from .connectable_widget import ConnectableWidget
 from .line_widget import LineWidget
+from .grouped_lines_widget import GroupedLinesWidget
 from .grid_widget import GridWidget
 from .scene_view import PatchGraphicsView
 
@@ -114,6 +115,7 @@ class PatchSceneMoth(QGraphicsScene):
 
         self.move_boxes = list[MovingBox]()
         self.wrapping_boxes = list[WrappingBox]()
+        self.hidding_boxes = list[BoxWidget]()
         self._MOVE_DURATION = 0.300 # 300ms
         self._MOVE_TIMER_INTERVAL = 20 # 20 ms step animation (50 Hz)
         self._move_timer_start_at = 0.0
@@ -364,7 +366,25 @@ class PatchSceneMoth(QGraphicsScene):
                     wrapping_box.widget.animate_wrapping(1.00)
                 else:
                     wrapping_box.widget.animate_wrapping(ratio)
-                
+        
+        lines_widgets = set[GroupedLinesWidget]()
+        for hidding_box in self.hidding_boxes:
+            hidding_box.animate_hidding(ratio)
+            port_mode = hidding_box.get_port_mode()
+            if port_mode & PortMode.OUTPUT:
+                for lw in GroupedLinesWidget.widgets_for_box(
+                        hidding_box._group_id, PortMode.OUTPUT):
+                    lw.add_hidding_port_mode(PortMode.OUTPUT)
+                    lines_widgets.add(lw)
+            if port_mode & PortMode.INPUT:
+                for lw in GroupedLinesWidget.widgets_for_box(
+                        hidding_box._group_id, PortMode.INPUT):
+                    lw.add_hidding_port_mode(PortMode.INPUT)
+                    lines_widgets.add(lw)
+        
+        for lw in lines_widgets:
+            lw.animate_hidding(ratio)
+
         self.resize_the_scene()
 
         if time_since_start >= self._MOVE_DURATION:
@@ -372,6 +392,9 @@ class PatchSceneMoth(QGraphicsScene):
             self._move_box_timer.stop()
             canvas.set_aliasing_reason(AliasingReason.ANIMATION, False)
             
+            for box in self.hidding_boxes:
+                box.send_hide_callback()
+            self.hidding_boxes.clear()
             # box update positions is forbidden while widget is in self.move_boxes
             # So we copy the list before to clear it
             # then we can ask update_positions on widgets
@@ -433,6 +456,14 @@ class PatchSceneMoth(QGraphicsScene):
             wrapping_box.widget = box_widget
             wrapping_box.wrap = wrap
             self.wrapping_boxes.append(wrapping_box)
+        
+        if not self._move_box_timer.isActive():
+            self._move_timer_start_at = time.time()
+            self._move_timer_last_time = self._move_timer_start_at
+            self._move_box_timer.start()
+
+    def add_box_to_animation_hidding(self, box_widget: BoxWidget):
+        self.hidding_boxes.append(box_widget)
         
         if not self._move_box_timer.isActive():
             self._move_timer_start_at = time.time()
