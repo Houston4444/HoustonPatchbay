@@ -134,7 +134,7 @@ class BoxWidgetMoth(QGraphicsItem):
 
         self._connection_lines = list[LineWidget]()
 
-        self._is_hardware = bool(group.box_type is BoxType.HARDWARE)
+        self.is_hardware = bool(group.box_type is BoxType.HARDWARE)
         self._icon_name = group.icon_name
 
         self._title_lines = list[TitleLine]()
@@ -166,7 +166,7 @@ class BoxWidgetMoth(QGraphicsItem):
 
         # Shadow
         shadow_theme = canvas.theme.box_shadow
-        if self._is_hardware:
+        if self.is_hardware:
             shadow_theme = shadow_theme.hardware
         elif self._box_type is BoxType.CLIENT:
             shadow_theme = shadow_theme.client
@@ -472,7 +472,7 @@ class BoxWidgetMoth(QGraphicsItem):
         
         if yesno:
             new_bounding_rect = QRectF(0, 0, self._width, self._wrapped_height)
-            if self._is_hardware:
+            if self.is_hardware:
                 new_bounding_rect = QRectF(- hws, - hws, self._width + 2 * hws,
                                            self._wrapped_height + 2 * hws)
             
@@ -480,7 +480,7 @@ class BoxWidgetMoth(QGraphicsItem):
 
         else:
             new_bounding_rect = QRectF(x_diff, 0, self._unwrapped_width, self._unwrapped_height)
-            if self._is_hardware:
+            if self.is_hardware:
                 new_bounding_rect = QRectF(x_diff - hws, - hws , self._unwrapped_width + 2 * hws,
                                            self._unwrapped_height + 2 * hws)
             
@@ -737,7 +737,7 @@ class BoxWidgetMoth(QGraphicsItem):
     
     def fix_pos(self, check_others=False):
         x, y = int(self.x()), int(self.y())
-        if self._is_hardware:
+        if self.is_hardware:
             x -= canvas.theme.hardware_rack_width
             y -= canvas.theme.hardware_rack_width
 
@@ -746,7 +746,7 @@ class BoxWidgetMoth(QGraphicsItem):
         else:
             new_x, new_y = nearest_on_grid((x, y))
 
-        if self._is_hardware:
+        if self.is_hardware:
             new_x += canvas.theme.hardware_rack_width
             new_y += canvas.theme.hardware_rack_width
         
@@ -757,7 +757,7 @@ class BoxWidgetMoth(QGraphicsItem):
             canvas.scene.add_box_to_animation(self, new_x, new_y)
 
     def set_top_left(self, xy: tuple[int, int]):        
-        if self._is_hardware:
+        if self.is_hardware:
             point = QPointF(*xy)
             point += QPointF(
                 canvas.theme.hardware_rack_width,
@@ -824,7 +824,7 @@ class BoxWidgetMoth(QGraphicsItem):
                 portgroup.widget.setCacheMode(cache_mode)
 
     def boundingRect(self):
-        if self._is_hardware:
+        if self.is_hardware:
             hws = canvas.theme.hardware_rack_width
             
             return QRectF(- hws, - hws,
@@ -844,7 +844,7 @@ class BoxWidgetMoth(QGraphicsItem):
         wtheme = canvas.theme.box_wrapper
         hltheme = canvas.theme.box_header_line
         
-        if self._is_hardware:
+        if self.is_hardware:
             theme = theme.hardware
             wtheme = wtheme.hardware
             hltheme = hltheme.hardware
@@ -1126,7 +1126,7 @@ class BoxWidgetMoth(QGraphicsItem):
         painter.restore()
 
     def _paint_hardware_rack(self, painter: QPainter):
-        if not self._is_hardware:
+        if not self.is_hardware:
             return
         
         d = float(canvas.theme.hardware_rack_width)
@@ -1303,7 +1303,7 @@ class BoxWidgetMoth(QGraphicsItem):
         if for_wrapper:
             theme = canvas.theme.box_wrapper
         
-        if self._is_hardware:
+        if self.is_hardware:
             theme = theme.hardware
         elif self._box_type == BoxType.CLIENT:
             theme = theme.client

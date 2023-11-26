@@ -810,7 +810,7 @@ def move_group_boxes(
         box_pos = box.pos()
         xy = nearest_on_grid(box_poses[PortMode.BOTH].pos)
         if (not force
-                and int(box_pos.x()) == xy[0] and int(box_pos.y()) == xy[1]):
+                and (int(box_pos.x(), int(box_pos.y()) == xy))):
             return
         
         canvas.scene.add_box_to_animation(box, xy[0], xy[1],

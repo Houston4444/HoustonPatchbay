@@ -40,10 +40,10 @@ class BoxLayout:
         theme = box.get_theme()
         cls.pen_width = theme.fill_pen().widthF()
         cls.port_spacing = theme.port_spacing()
-        cls.hwr = canvas.theme.hardware_rack_width if box._is_hardware else 0
+        cls.hwr = canvas.theme.hardware_rack_width if box.is_hardware else 0
         cls.port_mode = box._current_port_mode
         cls.can_handle_gui = box._can_handle_gui
-        cls.is_hardware = box._is_hardware
+        cls.is_hardware = box.is_hardware
     
     @classmethod
     def width_for_ports(cls):

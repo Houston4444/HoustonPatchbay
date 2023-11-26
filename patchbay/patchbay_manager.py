@@ -604,7 +604,7 @@ class PatchbayManager:
 
         for connection in self.connections:
             connection.remove_from_canvas()
-            
+
         groups_and_pos = dict[Group, GroupPos]()
 
         for group in self.groups:
@@ -636,7 +636,7 @@ class PatchbayManager:
             conn.add_to_canvas()
 
         self.optimize_operation(False)
-        
+
         patchcanvas.redraw_all_groups(force_no_prevent_overlap=True)
 
         for group, gpos in groups_and_pos.items():            
