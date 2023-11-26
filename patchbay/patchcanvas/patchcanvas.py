@@ -51,7 +51,10 @@ from .init_values import (
     Zv
 )
 
-from .utils import nearest_on_grid
+from .utils import (
+    nearest_on_grid, 
+    previous_left_on_grid,
+    previous_top_on_grid)
 from .box_widget import BoxWidget
 from .port_widget import PortWidget
 from .grouped_lines_widget import GroupedLinesWidget
@@ -472,8 +475,6 @@ def split_group(group_id: int, on_place=False):
 
     if on_place and item is not None:
         pos = item.pos()
-        # tmp_group.in_pos = pos.toPoint()
-        # tmp_group.out_pos = pos.toPoint()
         for port_mode in PortMode.INPUT, PortMode.OUTPUT:
             box_pos = tmp_group.box_poses[port_mode]
             box_pos.set_pos_from_pt(pos)
@@ -544,14 +545,17 @@ def split_group(group_id: int, on_place=False):
             if box.get_current_port_mode() is PortMode.OUTPUT:
                 canvas.scene.add_box_to_animation(
                     box,
-                    int(ex_rect.right() + (full_width - ex_rect.width()) / 2
-                        - box.boundingRect().width()),
-                    int(ex_rect.y()))
+                    previous_left_on_grid(
+                        int(ex_rect.right() + (full_width - ex_rect.width()) / 2
+                        - box.boundingRect().width())),
+                    previous_top_on_grid(
+                        int(ex_rect.y())))
             else:
                 canvas.scene.add_box_to_animation(
                     box,
-                    int(ex_rect.left() - (full_width - ex_rect.width()) / 2),
-                    int(ex_rect.y()))
+                    previous_left_on_grid(
+                        int(ex_rect.left() - (full_width - ex_rect.width()) / 2)),
+                    previous_top_on_grid(int(ex_rect.y())))
 
     QTimer.singleShot(0, canvas.scene.update)
 
