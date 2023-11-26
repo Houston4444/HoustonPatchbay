@@ -394,8 +394,10 @@ class BoxWidgetMoth(QGraphicsItem):
 
     def animate_hidding(self, ratio: float):
         hidding_ratio = ratio ** 0.25
+        if self._port_list:
+            self.setVisible(True)
 
-        if ratio >= 1.0:
+        if ratio <= 0.0 or ratio >= 1.0:
             # the box may still exist but not be visible
             # after hidding.
             self.setTransform(QTransform())

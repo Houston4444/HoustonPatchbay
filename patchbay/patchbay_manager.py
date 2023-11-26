@@ -419,6 +419,7 @@ class PatchbayManager:
         if group is None:
             return
         
+        hidden_sides = group.current_position.hidden_sides
         group.current_position.hidden_sides = PortMode.NULL
         group.save_current_position()
         
@@ -432,7 +433,7 @@ class PatchbayManager:
                 conn.add_to_canvas()
 
         self.optimize_operation(False)
-        patchcanvas.redraw_group(group_id, ensure_visible=True)
+        patchcanvas.animate_after_restore_box(group_id, hidden_sides)
         patchcanvas.canvas.scene.resize_the_scene()
 
     def restore_all_group_hidden_sides(self):

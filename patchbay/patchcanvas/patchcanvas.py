@@ -1245,11 +1245,25 @@ def animate_before_hide_box(group_id: int, port_mode: PortMode):
         return
     
     for box in group.widgets:
-        if box.get_port_mode() is port_mode:
+        if box is not None and box.get_port_mode() is port_mode:
             box.pos_before_hide = box.scenePos()
             canvas.scene.add_box_to_animation_hidding(box)
             break
 
+@patchbay_api
+def animate_after_restore_box(group_id: int, port_mode: PortMode):
+    group = canvas.get_group(group_id)
+    if group is None:
+        _logger.info(f"{_logging_str} - failed to find group")
+        return
+
+    for box in group.widgets:
+        if box is not None and box.get_port_mode() is port_mode:
+            box.update_positions(force_hidden=True)
+            GroupedLinesWidget.start_transparent(group_id, port_mode)
+            box.pos_before_hide = box.scenePos()
+            canvas.scene.add_box_to_animation_restore(box)
+    
 # ----------------------------------------------------------------------------
 
 @patchbay_api

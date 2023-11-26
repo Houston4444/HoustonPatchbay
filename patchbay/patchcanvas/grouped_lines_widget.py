@@ -36,6 +36,14 @@ from .init_values import (
 
 _groups_to_check = set[tuple[int, int]]()
 _all_lines_widgets = {}
+
+# for appear box animation,
+# we need that new lines start totally transparent,
+# we stock group_id in these two sets.
+_transparent_start_outs = set[int]()
+_transparent_start_ins = set[int]()
+
+
 if TYPE_CHECKING:
     _all_lines_widgets = dict[
         tuple[int, int],
@@ -80,24 +88,29 @@ class GroupedLinesWidget(QGraphicsPathItem):
 
         self._group_out_x = 0.0
         self._group_in_x = 0.0
-        self._hidding_port_mode = PortMode.NULL
 
         self._semi_hidden = False        
         
         self._th_attribs: _ThemeAttributes = None
         self._theme_state = theme_state
         self.update_theme()
-        self.update_line_gradient()
-
-        self.setBrush(QColor(0, 0, 0, 0))
-        self.setGraphicsEffect(None)
         
         if theme_state is ConnectionThemeState.SELECTED:
             self.setZValue(Zv.SEL_LINE.value)
         else:
             self.setZValue(Zv.LINE.value)
         
-        self.update_lines_pos()
+        self._hidding_port_mode = PortMode.NULL
+        if group_out_id in _transparent_start_outs:
+            self._hidding_port_mode |= PortMode.OUTPUT
+        if group_in_id in _transparent_start_ins:
+            self._hidding_port_mode |= PortMode.INPUT
+        
+        if self._hidding_port_mode is not PortMode.NULL:
+            self.update_lines_pos(fast_move=True)
+            self.animate_hidding(1.0)
+        else:
+            self.update_lines_pos()
 
     @staticmethod
     def prepare_conn_changes(group_out_id: int, group_in_id: int):
@@ -117,6 +130,7 @@ class GroupedLinesWidget(QGraphicsPathItem):
             _all_lines_widgets[(group_out_id, group_in_id)] = gp_dict
         
         to_update = dict[PortType, set[ConnectionThemeState]]()
+        new_widgets = set[GroupedLinesWidget]()
         
         for conn in canvas.list_connections(
                 group_out_id=group_out_id, group_in_id=group_in_id):
@@ -139,6 +153,7 @@ class GroupedLinesWidget(QGraphicsPathItem):
                     group_out_id, group_in_id, conn.port_type,
                     theme_state)
                 canvas.scene.addItem(pt_dict[theme_state])
+                new_widgets.add(pt_dict[theme_state])
 
         for port_type in gp_dict.keys():
             pt_dict = gp_dict.get(port_type)
@@ -158,7 +173,7 @@ class GroupedLinesWidget(QGraphicsPathItem):
                 if theme_state not in to_update[port_type]:
                     canvas.scene.removeItem(widget)
                     attrs_to_del.add(theme_state)
-                else:
+                elif widget not in new_widgets:
                     widget.update_theme()
                     widget.update_lines_pos()
                     
@@ -201,6 +216,18 @@ class GroupedLinesWidget(QGraphicsPathItem):
                 for widget in tstate_dict.values():
                     if widget._semi_hidden:
                         widget.update_line_gradient()
+
+    @staticmethod
+    def start_transparent(group_id: int, port_mode: PortMode):
+        if port_mode & PortMode.OUTPUT:
+            _transparent_start_outs.add(group_id)
+        if port_mode & PortMode.INPUT:
+            _transparent_start_ins.add(group_id)
+
+    @staticmethod
+    def clear_transparent_starts():
+        _transparent_start_ins.clear()
+        _transparent_start_outs.clear()
 
     def semi_hide(self, yesno: bool):
         self._semi_hidden = yesno
@@ -263,7 +290,6 @@ class GroupedLinesWidget(QGraphicsPathItem):
             mid_x = min(mid_x, max(200.0, x_diff / 2))
 
             path = QPainterPath(port_out_con_pos)
-            # path = QPainterPath(item1_con_pos)
             path.cubicTo(item1_x + mid_x, item1_y,
                          item2_x - mid_x, item2_y,
                          item2_x, item2_y)
@@ -366,9 +392,15 @@ class GroupedLinesWidget(QGraphicsPathItem):
             return
         
         epsy = 0.001
-
-        if not epsy < ratio < 1.0 - epsy:
+        
+        if ratio <= 0.0:
+            # the appear box animation is finished
+            # the lines have now to be drawn normally
+            self._hidding_port_mode = PortMode.NULL
+            self.update_line_gradient()
             return
+
+        ratio = max(min(ratio, 1.0 - epsy), epsy)
 
         gradient = QLinearGradient(self._group_out_x, 0.0, self._group_in_x, 0.0)
         transparent = QColor(0, 0, 0, 0)
