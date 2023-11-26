@@ -239,7 +239,6 @@ class Zv(Enum):
     '''enum for zValue'''
     GRID = auto()
     RUBBERBAND = auto()
-    OPAC_HIDDEN_CONN = auto()
     OPAC_LINE = auto() # line semi-hidden by filter
     OPAC_BOX = auto() # box semi-hidden by filter
     HIDDEN_CONN = auto()
@@ -300,7 +299,6 @@ class CanvasOptionsObject:
     box_grouped_auto_layout_ratio = 1.0
     cell_width = 16
     cell_height = 12
-    cell_margin = 2
 
 
 # Canvas features

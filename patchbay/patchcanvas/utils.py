@@ -475,7 +475,7 @@ def nearest_on_grid(xy: tuple[int, int]) -> tuple[int, int]:
     x, y = xy
     cell_x = options.cell_width
     cell_y = options.cell_height
-    margin = options.cell_margin
+    margin = canvas.theme.box_spacing // 2
 
     ret_x = cell_x * (x // cell_x) + margin
     if x - ret_x > cell_x / 2:
@@ -515,7 +515,7 @@ def nearest_on_grid_check_others(
 
 def previous_left_on_grid(x: int) -> int:
     cell_x = options.cell_width
-    margin = options.cell_margin
+    margin = canvas.theme.box_spacing / 2
     
     ret = int(cell_x * (x // cell_x) + margin)
     if ret > x:
@@ -525,7 +525,7 @@ def previous_left_on_grid(x: int) -> int:
 
 def next_left_on_grid(x: int) -> int:
     cell_x = options.cell_width
-    margin = options.cell_margin
+    margin = canvas.theme.box_spacing / 2
     
     ret = int(cell_x * (x // cell_x) + margin)
     if ret < x:
@@ -535,7 +535,7 @@ def next_left_on_grid(x: int) -> int:
 
 def previous_top_on_grid(y: int) -> int:
     cell_y = options.cell_height
-    margin = options.cell_margin
+    margin = canvas.theme.box_spacing / 2
     
     ret = int(cell_y * (y // cell_y) + margin)
     if ret > y:
@@ -545,7 +545,7 @@ def previous_top_on_grid(y: int) -> int:
 
 def next_top_on_grid(y: int) -> int:
     cell_y = options.cell_height
-    margin = options.cell_margin
+    margin = canvas.theme.box_spacing / 2
     
     ret = int(cell_y * ((y - 1) // cell_y) + margin)
     if ret < y:
@@ -555,7 +555,7 @@ def next_top_on_grid(y: int) -> int:
 
 def next_bottom_on_grid(y: int) -> int:
     cell_y = options.cell_height
-    margin = options.cell_margin
+    margin = canvas.theme.box_spacing / 2
 
     ret = int(cell_y * (1 + y // cell_y) - margin)
     if ret < y:
@@ -565,8 +565,8 @@ def next_bottom_on_grid(y: int) -> int:
 
 def next_width_on_grid(width: Union[float, int]) -> int:
     cell_x = options.cell_width
-    margin = options.cell_margin
-    ret = cell_x * (1 + (width // cell_x)) - 2 * margin
+    box_spacing = canvas.theme.box_spacing
+    ret = cell_x * (1 + (width // cell_x)) - box_spacing
     while ret < width:
         ret += cell_x
     
@@ -574,8 +574,8 @@ def next_width_on_grid(width: Union[float, int]) -> int:
 
 def next_height_on_grid(height: Union[float, int]) -> int:
     cell_y = options.cell_height
-    margin = options.cell_margin
-    ret = cell_y * (1 + (height // cell_y)) - 2 * margin
+    box_spacing = canvas.theme.box_spacing
+    ret = cell_y * (1 + (height // cell_y)) - box_spacing
     while ret < height:
         ret += cell_y
     

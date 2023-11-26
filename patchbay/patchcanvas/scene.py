@@ -126,7 +126,7 @@ class PatchScene(PatchSceneMoth):
             x = rect.left()
             y = rect.top()
             
-            spacing = options.cell_margin * 2
+            spacing = canvas.theme.box_spacing
             
             if direction in (Direction.LEFT, Direction.RIGHT):
                 # spacing = box_spacing
@@ -394,7 +394,7 @@ class PatchScene(PatchSceneMoth):
             self, box_widget: BoxWidget, new_scene_rect: QRectF):
         neighbors = [box_widget]
         limit_top = box_widget.pos().y()
-        box_spacing = options.cell_margin * 2
+        box_spacing = canvas.theme.box_spacing
         
         for neighbor in neighbors:
             srect = neighbor.boundingRect()

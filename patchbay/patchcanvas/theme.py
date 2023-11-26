@@ -782,11 +782,18 @@ class Theme(StyleAttributer):
             if key == 'body':
                 for body_key, body_value in value.items():
                     if body_key in (
-                            'port-height', 'box-spacing', 'box-spacing-horizontal',
+                            'port-height', 'box-spacing-horizontal',
                             'magnet', 'hardware-rack-width'):
                         if not isinstance(body_value, int):
                             continue
+                        body_key: str
                         self.__setattr__(body_key.replace('-', '_'), body_value)
+
+                    elif body_key == 'box-spacing':
+                        # box_spacing must be an even number 
+                        if not isinstance(body_value, int):
+                            continue
+                        self.box_spacing = 2 * (body_value // 2)
 
                     elif body_key == 'background':
                         self.scene_background_color = _to_qcolor(body_value)
