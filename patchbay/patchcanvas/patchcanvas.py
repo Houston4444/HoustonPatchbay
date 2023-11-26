@@ -1258,7 +1258,7 @@ def animate_after_restore_box(group_id: int, port_mode: PortMode):
         return
 
     for box in group.widgets:
-        if box is not None and box.get_port_mode() is port_mode:
+        if box is not None and port_mode & box.get_port_mode():
             box.update_positions(force_hidden=True)
             GroupedLinesWidget.start_transparent(group_id, port_mode)
             box.pos_before_hide = box.scenePos()
