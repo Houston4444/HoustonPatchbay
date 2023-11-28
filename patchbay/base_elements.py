@@ -36,10 +36,6 @@ class PortTypesViewFlag(IntFlag):
     VIDEO = 0x08
     ALSA = 0x10
     ALL = AUDIO | MIDI | CV | VIDEO | ALSA
-    
-    @classmethod
-    def _missing_(cls, value) -> 'PortTypesViewFlag':
-        return PortTypesViewFlag.ALL
 
     def to_config_str(self):
         if self is PortTypesViewFlag.ALL:
