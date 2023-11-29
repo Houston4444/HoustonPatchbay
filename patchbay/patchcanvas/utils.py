@@ -492,8 +492,9 @@ def nearest_on_grid_check_others(
     '''return the pos for a just moved box,
        may be not exactly the nearest point on grid,
        to prevent unwanted other boxes move.'''
-    check_rect = orig_box.boundingRect().translated(QPointF(*xy))
-    search_rect = check_rect.adjusted(-4.0, -4.0, 4.0, 4.0)
+    spacing = canvas.theme.box_spacing
+    check_rect = orig_box.boundingRect().translated(QPointF(*xy))    
+    search_rect = check_rect.adjusted(- spacing, - spacing, spacing, spacing)
 
     boxes = [b for b in canvas.scene.list_boxes_at(search_rect)
              if b is not orig_box]
