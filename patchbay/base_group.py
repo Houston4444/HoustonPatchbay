@@ -337,6 +337,8 @@ class Group:
         if gpos.is_splitted():
             if not ex_gpos_splitted:
                 patchcanvas.split_group(self.group_id)
+                patchcanvas.move_group_boxes(
+                    self.group_id, gpos.boxes, force=view_change)
 
             for port_mode in PortMode.INPUT, PortMode.OUTPUT: 
                 patchcanvas.wrap_group_box(

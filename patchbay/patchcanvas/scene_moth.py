@@ -430,7 +430,6 @@ class PatchSceneMoth(QGraphicsScene):
                         box.update_positions()
                     box.send_move_callback()
 
-                    # self.deplace_boxes_from_repulsers([box])
             self.deplace_boxes_from_repulsers(boxes)
             canvas.qobject.move_boxes_finished.emit()
 

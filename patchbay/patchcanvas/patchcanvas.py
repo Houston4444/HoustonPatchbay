@@ -468,17 +468,21 @@ def split_group(group_id: int, on_place=False):
             f"{_logging_str} - group is already splitted")
         return
 
+    if 'USB' in group.group_name:
+        print('SPliit', group.group_name, group.box_poses)
+
     item = group.widgets[0]
     tmp_group = group.copy_no_widget()
 
     ex_rect = QRectF(item.sceneBoundingRect())
 
-    if on_place and item is not None:
+    if item is not None:
         pos = item.pos()
         for port_mode in PortMode.INPUT, PortMode.OUTPUT:
             box_pos = tmp_group.box_poses[port_mode]
             box_pos.set_pos_from_pt(pos)
-            box_pos.set_wrapped(item.is_wrapped())
+            if on_place:
+                box_pos.set_wrapped(item.is_wrapped())
 
     wrap = item.is_wrapped()
 
@@ -539,23 +543,42 @@ def split_group(group_id: int, on_place=False):
             box.set_wrapped(wrap, animate=False)
             box.update_positions(even_animated=True, prevent_overlap=False)
             full_width += box.boundingRect().width()
-            
-    for box in canvas.get_group(group_id).widgets:
-        if box is not None:
-            if box.get_current_port_mode() is PortMode.OUTPUT:
-                canvas.scene.add_box_to_animation(
-                    box,
-                    previous_left_on_grid(
-                        int(ex_rect.right() + (full_width - ex_rect.width()) / 2
-                        - box.boundingRect().width())),
-                    previous_top_on_grid(
-                        int(ex_rect.y())))
-            else:
-                canvas.scene.add_box_to_animation(
-                    box,
-                    previous_left_on_grid(
-                        int(ex_rect.left() - (full_width - ex_rect.width()) / 2)),
-                    previous_top_on_grid(int(ex_rect.y())))
+                
+    if on_place:
+        for box in canvas.get_group(group_id).widgets:
+            if box is not None:
+                if box.get_current_port_mode() is PortMode.OUTPUT:
+                    canvas.scene.add_box_to_animation(
+                        box,
+                        previous_left_on_grid(
+                            int(ex_rect.right() + (full_width - ex_rect.width()) / 2
+                            - box.boundingRect().width())),
+                        previous_top_on_grid(
+                            int(ex_rect.y())))
+                else:
+                    canvas.scene.add_box_to_animation(
+                        box,
+                        previous_left_on_grid(
+                            int(ex_rect.left() - (full_width - ex_rect.width()) / 2)),
+                        previous_top_on_grid(int(ex_rect.y())))
+    # else:
+    #     for box in canvas.get_group(group_id).widgets:
+    #         if box is not None:
+    #             if box.get_current_port_mode() is PortMode.OUTPUT:
+    #                 canvas.scene.add_box_to_animation(
+    #                     box,
+    #                     nearest_on_grid()
+    #                     previous_left_on_grid(
+    #                         int(ex_rect.right() + (full_width - ex_rect.width()) / 2
+    #                         - box.boundingRect().width())),
+    #                     previous_top_on_grid(
+    #                         int(ex_rect.y())))
+    #             else:
+    #                 canvas.scene.add_box_to_animation(
+    #                     box,
+    #                     previous_left_on_grid(
+    #                         int(ex_rect.left() - (full_width - ex_rect.width()) / 2)),
+    #                     previous_top_on_grid(int(ex_rect.y())))
 
     QTimer.singleShot(0, canvas.scene.update)
 
@@ -793,27 +816,26 @@ def move_group_boxes(
             if box is None:
                 continue
 
-            box_pos = box.pos()
-
-            if (not force
-                    and int(box_pos.x()) == xy[0]
-                    and int(box_pos.y()) == xy[1]):
+            if not force and box.top_left() == xy:
                 continue
 
+            hwr = canvas.theme.hardware_rack_width if box.is_hardware else 0
+
             canvas.scene.add_box_to_animation(
-                box, xy[0], xy[1], force_anim=animate)
+                box, xy[0] + hwr, xy[1] + hwr, force_anim=animate)
     else:
         box = group.widgets[0]
         if box is None:
             return
 
-        box_pos = box.pos()
         xy = nearest_on_grid(box_poses[PortMode.BOTH].pos)
-        if (not force
-                and (int(box_pos.x(), int(box_pos.y()) == xy))):
+        
+        if not force and box.top_left() == xy:
             return
         
-        canvas.scene.add_box_to_animation(box, xy[0], xy[1],
+        hwr = canvas.theme.hardware_rack_width if box.is_hardware else 0
+        
+        canvas.scene.add_box_to_animation(box, xy[0] + hwr, xy[1] + hwr,
                                           force_anim=animate)
 
 @patchbay_api

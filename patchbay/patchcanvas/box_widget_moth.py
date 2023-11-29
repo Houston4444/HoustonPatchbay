@@ -756,6 +756,10 @@ class BoxWidgetMoth(QGraphicsItem):
         else:
             canvas.scene.add_box_to_animation(self, new_x, new_y)
 
+    def top_left(self) -> tuple[int, int]:
+        return (round(self.sceneBoundingRect().left()),
+                round(self.sceneBoundingRect().top()))
+
     def set_top_left(self, xy: tuple[int, int]):        
         if self.is_hardware:
             point = QPointF(*xy)
@@ -769,8 +773,7 @@ class BoxWidgetMoth(QGraphicsItem):
     def send_move_callback(self):
         canvas_callback(CallbackAct.GROUP_MOVE, self._group_id,
                         self._port_mode,
-                        round(self.sceneBoundingRect().left()),
-                        round(self.sceneBoundingRect().top()))
+                        *self.top_left())
 
         group = canvas.get_group(self._group_id)
         if group is None:
@@ -779,8 +782,7 @@ class BoxWidgetMoth(QGraphicsItem):
                 f"Box has no group_id {self._group_id} in canvas")
             return
 
-        group.box_poses[self._port_mode].pos = (
-            round(self.x()), round(self.y()))
+        group.box_poses[self._port_mode].pos = self.top_left()
 
     def send_hide_callback(self):
         canvas_callback(

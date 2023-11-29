@@ -639,7 +639,7 @@ class PatchbayManager:
 
         patchcanvas.redraw_all_groups(force_no_prevent_overlap=True)
 
-        for group, gpos in groups_and_pos.items():            
+        for group, gpos in groups_and_pos.items():
             group.set_group_position(gpos, view_change=True)
 
         patchcanvas.repulse_all_boxes()
@@ -771,14 +771,9 @@ class PatchbayManager:
 
             self._next_group_id += 1
             self._add_group(group)
-            group_is_new = True
 
         group.add_port(port)
         group.graceful_port(port)
-
-        if group_is_new:
-            gpos = self.get_group_position(group_name)
-            group.set_group_position(gpos)
 
         group.add_to_canvas()
         port.add_to_canvas()

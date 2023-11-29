@@ -122,7 +122,7 @@ class TypeFilterFrame(QFrame):
         if alternate:
             self._exclusive_choice(PortTypesViewFlag.ALSA)
             return
-        
+
         self.ui.checkBoxAlsaFilter.setChecked(
             not self.ui.checkBoxAlsaFilter.isChecked())
         self._change_port_types_view()
