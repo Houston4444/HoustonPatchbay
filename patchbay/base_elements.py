@@ -238,12 +238,12 @@ class GroupPos:
     def copy(self) -> 'GroupPos':
         group_pos = GroupPos()
         group_pos.__dict__ = self.__dict__.copy()
+
+        group_pos.boxes = dict[PortMode, BoxPos]()
         for port_mode, box_pos in self.boxes.items():
             group_pos.boxes[port_mode] = box_pos.copy()
-        return group_pos
 
-    def eat(self, other: 'GroupPos'):
-        self.__dict__ = other.__dict__.copy()
+        return group_pos
 
     @staticmethod
     def from_new_dict(ptv: PortTypesViewFlag, group_name: str,

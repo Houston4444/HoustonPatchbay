@@ -348,7 +348,7 @@ class Group:
 
         else:
             patchcanvas.wrap_group_box(
-                self.group_id, PortMode.NULL,
+                self.group_id, PortMode.BOTH,
                 gpos.boxes[PortMode.BOTH].is_wrapped(),
                 prevent_overlap=prevent_overlap)
 

@@ -163,7 +163,11 @@ class BoxPos:
 
     def __init__(self, box_pos: Optional['BoxPos']=None) -> None:
         if box_pos:
-            self.pos = tuple(box_pos.pos)
+            # faster way I found to copy a tuple without
+            # linking to it.
+            # write self.pos = tuple(box_pos.pos) does not
+            # copy the tuple.
+            self.pos = tuple(list(box_pos.pos))
             self.zone = box_pos.zone
             self.layout_mode = box_pos.layout_mode
             self.flags = box_pos.flags
@@ -202,9 +206,7 @@ class BoxPos:
         self.pos = (int(point.x()), int(point.y()))
 
     def copy(self) -> 'BoxPos':
-        new_box_pos = BoxPos()
-        new_box_pos.__dict__ = self.__dict__.copy()
-        return new_box_pos
+        return BoxPos(self)
 
     
 # For Repulsive boxes

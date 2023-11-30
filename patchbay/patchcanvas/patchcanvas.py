@@ -816,27 +816,27 @@ def move_group_boxes(
             if box is None:
                 continue
 
-            if not force and box.top_left() == xy:
-                continue
+            if force or box.top_left() != xy:
+                hwr = (canvas.theme.hardware_rack_width
+                       if box.is_hardware else 0)
 
-            hwr = canvas.theme.hardware_rack_width if box.is_hardware else 0
+                canvas.scene.add_box_to_animation(
+                    box, xy[0] + hwr, xy[1] + hwr, force_anim=animate)
 
-            canvas.scene.add_box_to_animation(
-                box, xy[0] + hwr, xy[1] + hwr, force_anim=animate)
     else:
         box = group.widgets[0]
         if box is None:
             return
 
         xy = nearest_on_grid(box_poses[PortMode.BOTH].pos)
-        
-        if not force and box.top_left() == xy:
-            return
-        
-        hwr = canvas.theme.hardware_rack_width if box.is_hardware else 0
-        
-        canvas.scene.add_box_to_animation(box, xy[0] + hwr, xy[1] + hwr,
-                                          force_anim=animate)
+
+        if force or box.top_left() != xy:
+            hwr = (canvas.theme.hardware_rack_width
+                   if box.is_hardware else 0)
+
+            canvas.scene.add_box_to_animation(
+                box, xy[0] + hwr, xy[1] + hwr,
+                force_anim=animate)
 
 @patchbay_api
 def wrap_group_box(group_id: int, port_mode: PortMode, yesno: bool,
