@@ -1177,18 +1177,21 @@ class BoxWidget(BoxWidgetMoth):
 
         self.prepareGeometryChange()
         
-        self._current_port_mode = PortMode.NULL
-        self._port_list.clear()
-        self._portgrp_list.clear()
+        if (self._wrapping_state
+                not in (WrappingState.WRAPPING, WrappingState.UNWRAPPING)):
+            # update port/portgrp list if box is not in wrapping animation
+            self._current_port_mode = PortMode.NULL
+            self._port_list.clear()
+            self._portgrp_list.clear()
 
-        for port in canvas.list_ports(group_id=self._group_id):
-            if port.port_mode & self._port_mode:
-                self._port_list.append(port)
-                self._current_port_mode |= port.port_mode
+            for port in canvas.list_ports(group_id=self._group_id):
+                if port.port_mode & self._port_mode:
+                    self._port_list.append(port)
+                    self._current_port_mode |= port.port_mode
 
-        for portgrp in canvas.list_portgroups(group_id=self._group_id):
-            if self._current_port_mode & portgrp.port_mode:
-                self._portgrp_list.append(portgrp)
+            for portgrp in canvas.list_portgroups(group_id=self._group_id):
+                if self._current_port_mode & portgrp.port_mode:
+                    self._portgrp_list.append(portgrp)
         
         if theme_change:
             for portgrp in self._portgrp_list:

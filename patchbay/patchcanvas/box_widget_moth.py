@@ -390,7 +390,7 @@ class BoxWidgetMoth(QGraphicsItem):
                     + (self._x_after_wrap - self._x_before_wrap)
                         * self._wrapping_ratio)
 
-        self.update_positions()
+        self.update_positions(even_animated=True)
 
     def animate_hidding(self, ratio: float):
         hidding_ratio = ratio ** 0.25
