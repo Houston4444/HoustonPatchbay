@@ -448,7 +448,6 @@ class BoxWidget(BoxWidgetMoth):
         # first look in cache if title sizes are stocked
         all_title_templates = box_theme.get_title_templates(
             self._group_name, self._can_handle_gui, self.has_top_icon())
-        all_title_templates = list[dict[str, int]]()
         lines_choice_max = len(all_title_templates) - 1
 
         if not all_title_templates:
