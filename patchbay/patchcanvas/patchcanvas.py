@@ -805,38 +805,78 @@ def move_group_boxes(
     if group is None:
         return
 
-    if group.splitted:
-        for port_mode in (PortMode.OUTPUT, PortMode.INPUT):
-            xy = nearest_on_grid(box_poses[port_mode].pos)
-
-            box = group.widgets[0]
-            if port_mode is PortMode.INPUT:
+    for port_mode in PortMode.INPUT, PortMode.OUTPUT, PortMode.BOTH:
+        box_pos = BoxPos(box_poses[port_mode])
+        group.box_poses[port_mode] = box_pos
+        if group.splitted:
+            if port_mode is PortMode.OUTPUT:
+                box = group.widgets[0]
+            elif port_mode is PortMode.INPUT:
                 box = group.widgets[1]
-
-            if box is None:
+            else:
                 continue
-
-            if force or box.top_left() != xy:
-                hwr = (canvas.theme.hardware_rack_width
-                       if box.is_hardware else 0)
-
-                canvas.scene.add_box_to_animation(
-                    box, xy[0] + hwr, xy[1] + hwr, force_anim=animate)
-
-    else:
-        box = group.widgets[0]
+        else:
+            if port_mode is PortMode.BOTH:
+                box = group.widgets[0]
+            else:
+                continue
+        
         if box is None:
-            return
-
-        xy = nearest_on_grid(box_poses[PortMode.BOTH].pos)
-
+            continue
+        
+        xy = nearest_on_grid(box_pos.pos)
+        
         if force or box.top_left() != xy:
             hwr = (canvas.theme.hardware_rack_width
-                   if box.is_hardware else 0)
+                    if box.is_hardware else 0)
 
             canvas.scene.add_box_to_animation(
-                box, xy[0] + hwr, xy[1] + hwr,
-                force_anim=animate)
+                box, xy[0] + hwr, xy[1] + hwr, force_anim=animate)
+        
+        box.set_wrapped(box_pos.is_wrapped(), animate=animate,
+                        prevent_overlap=False)
+        
+
+    # if group.splitted:
+    #     for port_mode in (PortMode.OUTPUT, PortMode.INPUT):
+    #         box_pos = box_poses[port_mode]
+    #         xy = nearest_on_grid(box_pos.pos)
+
+    #         if port_mode is PortMode.OUTPUT:
+    #             box = group.widgets[0]
+    #         else:
+    #             box = group.widgets[1]
+
+    #         if box is None:
+    #             continue
+
+    #         if force or box.top_left() != xy:
+    #             hwr = (canvas.theme.hardware_rack_width
+    #                    if box.is_hardware else 0)
+
+    #             canvas.scene.add_box_to_animation(
+    #                 box, xy[0] + hwr, xy[1] + hwr, force_anim=animate)
+            
+    #         box.set_wrapped(box_pos.is_wrapped(), animate=animate,
+    #                         prevent_overlap=False)
+
+    # else:
+    #     box = group.widgets[0]
+    #     if box is None:
+    #         return
+    #     box_pos = box_poses[PortMode.BOTH]
+    #     xy = nearest_on_grid(box_pos.pos)
+
+    #     if force or box.top_left() != xy:
+    #         hwr = (canvas.theme.hardware_rack_width
+    #                if box.is_hardware else 0)
+
+    #         canvas.scene.add_box_to_animation(
+    #             box, xy[0] + hwr, xy[1] + hwr,
+    #             force_anim=animate)
+        
+    #     box.set_wrapped(box_pos.is_wrapped(), animate=animate,
+    #                     prevent_overlap=False)
 
 @patchbay_api
 def wrap_group_box(group_id: int, port_mode: PortMode, yesno: bool,

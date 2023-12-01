@@ -331,8 +331,6 @@ class Group:
             gpos.boxes,
             force=view_change)
 
-        prevent_overlap = not view_change
-
         # restore split and wrapped modes
         if gpos.is_splitted():
             if not ex_gpos_splitted:
@@ -340,18 +338,7 @@ class Group:
                 patchcanvas.move_group_boxes(
                     self.group_id, gpos.boxes, force=view_change)
 
-            for port_mode in PortMode.INPUT, PortMode.OUTPUT: 
-                patchcanvas.wrap_group_box(
-                    self.group_id, port_mode,
-                    gpos.boxes[port_mode].is_wrapped(),
-                    prevent_overlap=prevent_overlap)
-
         else:
-            patchcanvas.wrap_group_box(
-                self.group_id, PortMode.BOTH,
-                gpos.boxes[PortMode.BOTH].is_wrapped(),
-                prevent_overlap=prevent_overlap)
-
             if ex_gpos_splitted:
                 patchcanvas.animate_before_join(self.group_id)
 
