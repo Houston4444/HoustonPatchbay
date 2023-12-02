@@ -482,7 +482,6 @@ class BoxWidgetMoth(QGraphicsItem):
             
             canvas.scene.deplace_boxes_from_repulsers(
                 [self],
-                new_scene_rect=new_bounding_rect.translated(self.pos()),
                 wanted_direction=Direction.DOWN)
 
     def update_positions(self, even_animated=False):

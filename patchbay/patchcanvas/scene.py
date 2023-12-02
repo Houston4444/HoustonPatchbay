@@ -206,20 +206,17 @@ class PatchScene(PatchSceneMoth):
             self._full_repulse_boxes.add(box)
             srect = box.after_wrap_rect()
 
-            if new_scene_rect is not None:
-                srect = new_scene_rect
+            # if box is already moving, consider its end position
+            for moving_box in self.move_boxes:
+                if moving_box.widget is box:
+                    if moving_box.joining:
+                        # if this box is joining, it will be removed soon
+                        # so, it has not to be a repulser
+                        return
+                    srect.translate(moving_box.to_pt)
+                    break
             else:
-                # if box is already moving, consider its end position
-                for moving_box in self.move_boxes:
-                    if moving_box.widget is box:
-                        if moving_box.joining:
-                            # if this box is joining, it will be removed soon
-                            # so, it has not to be a repulser
-                            return
-                        srect.translate(moving_box.to_pt)
-                        break
-                else:
-                    srect.translate(box.pos())
+                srect.translate(box.pos())
 
             repulser = BoxAndRect(srect, box)
             repulsers.append(repulser)
