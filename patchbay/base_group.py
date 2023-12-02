@@ -1,3 +1,4 @@
+import time
 from typing import TYPE_CHECKING, Union
 
 
@@ -9,6 +10,7 @@ from .base_elements import (
     PortType,
     PortSubType,
     JackPortFlag,
+    PortTypesViewFlag,
     PortgroupMem)
 from .base_port import Port
 from .base_portgroup import Portgroup
@@ -44,6 +46,8 @@ class Group:
         self.cnv_name = ''
         self.cnv_box_type = BoxType.APPLICATION
         self.cnv_icon_name = ''
+        
+        self.contains_ptv = PortTypesViewFlag.NONE
 
     def __repr__(self) -> str:
         return f"Group({self.name})"
@@ -251,6 +255,23 @@ class Group:
                 self.save_current_position()
 
         self.ports.append(port)
+        
+        port_type, port_sub_type = port.full_type()
+        if port_type is PortType.AUDIO_JACK:
+            if port_sub_type is PortSubType.CV:
+                ptv_flag = PortTypesViewFlag.CV
+            else:
+                ptv_flag = PortTypesViewFlag.AUDIO
+        elif port_type is PortType.MIDI_JACK:
+            ptv_flag = PortTypesViewFlag.MIDI
+        elif port_type is PortType.MIDI_ALSA:
+            ptv_flag = PortTypesViewFlag.ALL
+        elif port_type is PortType.VIDEO:
+            ptv_flag = PortTypesViewFlag.VIDEO
+        else:
+            ptv_flag = PortTypesViewFlag.NONE
+        
+        self.contains_ptv |= ptv_flag
         self.manager._ports_by_name[port.full_name] = port
 
     def remove_port(self, port: Port):
@@ -313,34 +334,50 @@ class Group:
     def save_current_position(self):
         self.manager.save_group_position(self.current_position)
 
-    def set_group_position(self, group_position: GroupPos, view_change=False):
+    def set_group_position(self, group_position: GroupPos, view_change=False, animate=True):
         if not self.in_canvas:
             return
+
+        times_dict = dict[str, float]()
+        times_dict['start'] = time.time()
 
         ex_gpos_splitted = self.current_position.is_splitted()
         self.current_position = group_position
         gpos = self.current_position
 
-        for port_mode, box_pos in group_position.boxes.items():
-            patchcanvas.set_group_layout_mode(
-                self.group_id, port_mode, box_pos.layout_mode,
-                prevent_overlap=False)
+        times_dict['start quasi'] = time.time()
+        
+        if animate:
+            for port_mode, box_pos in group_position.boxes.items():
+                patchcanvas.set_group_layout_mode(
+                    self.group_id, port_mode, box_pos.layout_mode,
+                    prevent_overlap=False)
+
+        times_dict['aft layout'] = time.time()
 
         patchcanvas.move_group_boxes(
             self.group_id,
             gpos.boxes,
-            force=view_change)
+            force=view_change, animate=animate)
+
+        times_dict['aft move'] = time.time()
 
         # restore split and wrapped modes
         if gpos.is_splitted():
             if not ex_gpos_splitted:
                 patchcanvas.split_group(self.group_id)
                 patchcanvas.move_group_boxes(
-                    self.group_id, gpos.boxes, force=view_change)
+                    self.group_id, gpos.boxes, force=view_change, animate=animate)
 
         else:
             if ex_gpos_splitted:
                 patchcanvas.animate_before_join(self.group_id)
+                
+        times_dict['finissied'] = time.time()
+        
+        # if 'VocalsNanoFX6G' in self.name:
+        #     for string, value in times_dict.items():
+        #         print('alp', self, value, string)
 
     def set_layout_mode(self, port_mode: PortMode, layout_mode: BoxLayoutMode):
         self.current_position.boxes[port_mode].layout_mode = layout_mode

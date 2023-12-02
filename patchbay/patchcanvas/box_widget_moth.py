@@ -435,8 +435,6 @@ class BoxWidgetMoth(QGraphicsItem):
                          in (WrappingState.WRAPPED, WrappingState.WRAPPING)):
             return
 
-        # self._wrapped = yesno
-
         if yesno:
             self.hide_ports_for_wrap(True)
 
@@ -452,8 +450,6 @@ class BoxWidgetMoth(QGraphicsItem):
         else:
             self._wrapping_state = WrappingState.UNWRAPPING
 
-        # self._wrapping = yesno
-        # self._unwrapping = not yesno
         canvas.scene.add_box_to_animation_wrapping(self, yesno)
         
         self._x_before_wrap = self.x()
@@ -824,6 +820,23 @@ class BoxWidgetMoth(QGraphicsItem):
             if (self._current_port_mode & portgroup.port_mode
                     and portgroup.widget is not None):
                 portgroup.widget.setCacheMode(cache_mode)
+
+    def after_wrap_rect(self):
+        if self._wrapping_state in (WrappingState.NORMAL,
+                                    WrappingState.UNWRAPPING):
+            width = self._unwrapped_width
+            height = self._unwrapped_height
+        else:
+            width = self._wrapped_width
+            height = self._wrapped_height
+        
+        if self.is_hardware:
+            hws = canvas.theme.hardware_rack_width
+            
+            return QRectF(- hws, - hws,
+                          width + 2 * hws,
+                          height + 2 * hws)
+        return QRectF(0.0, 0.0, width, height)
 
     def boundingRect(self):
         if self.is_hardware:

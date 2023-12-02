@@ -72,6 +72,7 @@ class MovingBox:
     widget: BoxWidget
     from_pt: QPointF
     to_pt: QPoint
+    final_rect: QRectF
     start_time: float
     joining: bool
 
@@ -155,6 +156,7 @@ class PatchSceneMoth(QGraphicsScene):
         # reimplement Qt function and fix missing rubberband after clear
         QGraphicsScene.clear(self)
         self._rubberband = RubberbandRect(self)
+        self._grid_widget = None
         self.update_theme()
 
     def set_anti_aliasing(self, yesno: bool):
@@ -453,6 +455,8 @@ class PatchSceneMoth(QGraphicsScene):
 
         moving_box.from_pt = box_widget.pos()
         moving_box.to_pt = QPoint(to_x, to_y)
+        moving_box.final_rect = \
+            box_widget.after_wrap_rect().translated(moving_box.to_pt)
         moving_box.start_time = time.time() - self._move_timer_start_at
         moving_box.joining = joining
 
@@ -477,6 +481,12 @@ class PatchSceneMoth(QGraphicsScene):
             wrapping_box.widget = box_widget
             wrapping_box.wrap = wrap
             self.wrapping_boxes.append(wrapping_box)
+            
+        for moving_box in self.move_boxes:
+            if moving_box.widget is box_widget:
+                moving_box.final_rect = \
+                    box_widget.after_wrap_rect().translated(moving_box.to_pt)
+                break
         
         if not self._move_box_timer.isActive():
             self._move_timer_start_at = time.time()

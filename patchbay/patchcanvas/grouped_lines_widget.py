@@ -113,6 +113,10 @@ class GroupedLinesWidget(QGraphicsPathItem):
             self.update_lines_pos()
 
     @staticmethod
+    def clear_all_widgets():
+        _all_lines_widgets.clear()
+
+    @staticmethod
     def prepare_conn_changes(group_out_id: int, group_in_id: int):
         _groups_to_check.add((group_out_id, group_in_id))
         

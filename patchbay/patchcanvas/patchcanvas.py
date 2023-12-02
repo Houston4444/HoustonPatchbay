@@ -468,9 +468,6 @@ def split_group(group_id: int, on_place=False):
             f"{_logging_str} - group is already splitted")
         return
 
-    if 'USB' in group.group_name:
-        print('SPliit', group.group_name, group.box_poses)
-
     item = group.widgets[0]
     tmp_group = group.copy_no_widget()
 
@@ -721,14 +718,14 @@ def redraw_all_groups(force_no_prevent_overlap=False, theme_change=False):
         QTimer.singleShot(0, canvas.scene.update)
 
 @patchbay_api
-def redraw_group(group_id: int, ensure_visible=False):
+def redraw_group(group_id: int, ensure_visible=False, prevent_overlap=True):
     group = canvas.get_group(group_id)
     if group is None:
         return
 
     for box in group.widgets:
         if box is not None:
-            box.update_positions()
+            box.update_positions(prevent_overlap=prevent_overlap)
 
     canvas.scene.update()
 
@@ -824,14 +821,17 @@ def move_group_boxes(
         if box is None:
             continue
         
+        box.set_layout_mode(box_pos.layout_mode)
+        
         xy = nearest_on_grid(box_pos.pos)
         
-        if force or box.top_left() != xy:
-            hwr = (canvas.theme.hardware_rack_width
-                    if box.is_hardware else 0)
+        hwr = canvas.theme.hardware_rack_width if box.is_hardware else 0
 
+        if animate:        
             canvas.scene.add_box_to_animation(
                 box, xy[0] + hwr, xy[1] + hwr, force_anim=animate)
+        else:
+            box.set_top_left(xy)
         
         box.set_wrapped(box_pos.is_wrapped(), animate=animate,
                         prevent_overlap=False)
@@ -907,7 +907,9 @@ def set_group_layout_mode(group_id: int, port_mode: PortMode,
         return
 
     for box in group.widgets:
-        if box is not None and box._port_mode is port_mode:
+        if (box is not None
+                and box.get_port_mode() is port_mode
+                and box._layout_mode is not layout_mode):
             box.set_layout_mode(layout_mode)
             box.update_positions(prevent_overlap=prevent_overlap)
 
@@ -1220,6 +1222,11 @@ def remove_portgroup(group_id: int, portgrp_id: int):
         box_widget.update_positions()
 
     QTimer.singleShot(0, canvas.scene.update)
+
+@patchbay_api
+def clear_all():
+    GroupedLinesWidget.clear_all_widgets()
+    canvas.clear_all_2()
 
 @patchbay_api
 def connect_ports(connection_id: int, group_out_id: int, port_out_id: int,

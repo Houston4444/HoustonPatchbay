@@ -475,7 +475,6 @@ class Canvas:
         self.port_list = list[PortObject]()
         self.portgrp_list = list[PortgrpObject]()
         self.connection_list = list[ConnectionObject]()
-        self.grouped_conns = {}
 
         self._groups_dict = dict[int, GroupObject]()
         self._all_boxes = []
@@ -526,6 +525,24 @@ class Canvas:
         self._conns_dict.clear()
         self._conns_outin_dict.clear()
         self._conns_inout_dict.clear()
+
+    def clear_all_2(self):
+        self.group_list.clear()
+        self._groups_dict.clear()
+        self._groups_dict.clear()
+        self._all_boxes.clear()
+        self.port_list.clear()
+        self._ports_dict.clear()
+        self.portgrp_list.clear()
+        self._portgrps_dict.clear()
+        self._ports_dict.clear()
+        self.connection_list.clear()
+        self._conns_dict.clear()
+        self._conns_outin_dict.clear()
+        self._conns_inout_dict.clear()
+        self.clipboard.clear()
+        self.group_plugin_map.clear()
+        self.scene.clear()
 
     def add_group(self, group: GroupObject):
         self.group_list.append(group)
@@ -623,7 +640,7 @@ class Canvas:
                 conn.connection_id)
         except:
             pass
-    
+
     def get_group(self, group_id: int) -> GroupObject:
         return self._groups_dict.get(group_id)
     

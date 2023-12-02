@@ -204,7 +204,7 @@ class PatchScene(PatchSceneMoth):
         
         for box in repulser_boxes:
             self._full_repulse_boxes.add(box)
-            srect = box.boundingRect()
+            srect = box.after_wrap_rect()
 
             if new_scene_rect is not None:
                 srect = new_scene_rect
@@ -231,6 +231,7 @@ class PatchScene(PatchSceneMoth):
                           canvas.theme.box_spacing_horizontal,
                           canvas.theme.box_spacing))
 
+            # search intersections in non moving boxes
             for widget in self.items(search_rect, Qt.IntersectsItemShape,
                                      Qt.AscendingOrder):
                 if not isinstance(widget, BoxWidget):
@@ -249,6 +250,7 @@ class PatchScene(PatchSceneMoth):
                         widget.get_current_port_mode()):
                     items_to_move.append(BoxAndRect(irect, widget))
 
+            # search intersections in moving boxes
             for moving_box in self.move_boxes:
                 if (moving_box.widget in repulser_boxes
                         or moving_box.joining
@@ -256,7 +258,7 @@ class PatchScene(PatchSceneMoth):
                     continue
 
                 widget = moving_box.widget
-                irect = widget.boundingRect()
+                irect = widget.after_wrap_rect()
                 irect.translate(moving_box.to_pt)
                 
                 if rect_has_to_move_from(
@@ -386,12 +388,15 @@ class PatchScene(PatchSceneMoth):
     def full_repulse(self):
         self._full_repulse_boxes.clear()
         for box in canvas.list_boxes():
-            if box not in self._full_repulse_boxes:            
+            if box not in self._full_repulse_boxes:
                 self.deplace_boxes_from_repulsers([box])
         self._full_repulse_boxes.clear()
 
     def bring_neighbors_and_deplace_boxes(
             self, box_widget: BoxWidget, new_scene_rect: QRectF):
+        if not options.prevent_overlap:
+            return
+        
         neighbors = [box_widget]
         limit_top = box_widget.pos().y()
         box_spacing = canvas.theme.box_spacing

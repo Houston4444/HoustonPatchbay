@@ -4,6 +4,7 @@ import logging
 import operator
 from pathlib import Path
 from dataclasses import dataclass
+import time
 from typing import TYPE_CHECKING, Any, Callable, Optional, Union
 
 from PyQt5.QtGui import QCursor, QGuiApplication
@@ -596,32 +597,85 @@ class PatchbayManager:
         if not force and port_types_view is self.port_types_view:
             return
         
+        ex_ptv = self.port_types_view
         self.port_types_view = port_types_view
 
         # Prevent visual update at each canvas item creation
         # because we may create/remove a lot of ports here
         self.optimize_operation(True)
 
-        for connection in self.connections:
-            connection.remove_from_canvas()
+        start_time = time.time()
+        times_dict = {}
+        times_dict['start'] = time.time()
+
+        rm_all_before = bool(ex_ptv & self.port_types_view
+                             is PortTypesViewFlag.NONE)
+
+        if rm_all_before:
+            # there is no common port between previous and next view
+            # strategy is to remove fastly all contents of the patchcanvas.
+            
+            for connection in self.connections:
+                connection.in_canvas = False
+            
+            times_dict['chaba conns'] = time.time()
+            
+            for group in self.groups:
+                group.in_canvas = False
+                for portgroup in group.portgroups:
+                    portgroup.in_canvas = False
+                for port in group.ports:
+                    port.in_canvas = False
+                    
+            times_dict['bef clear all2'] = time.time()
+            patchcanvas.clear_all()
+
+        else:
+            for connection in self.connections:
+                connection.remove_from_canvas()
+
+        times_dict['aft rem conns'] = time.time()
 
         groups_and_pos = dict[Group, GroupPos]()
+        groups_to_redraw = set[Group]()
 
         for group in self.groups:
+            ziggy_dict = dict[str, float]()
+            ziggy_dict['start'] = time.time()
             new_gpos = self.get_group_position(group.name)
+
+            # force redraw if a layout mode changes.
+            for port_mode in PortMode.INPUT, PortMode.OUTPUT, PortMode.BOTH:
+                if (group.current_position.boxes[port_mode].layout_mode
+                        is not new_gpos.boxes[port_mode].layout_mode):
+                    groups_to_redraw.add(group)
             
-            for portgroup in group.portgroups:
-                portgroup.remove_from_canvas()
-            for port in group.ports:
-                port.remove_from_canvas()
-
-            group.add_to_canvas()
-
-            for port in group.ports:
-                port.add_to_canvas(gpos=new_gpos)
+            ziggy_dict['aft pos'] = time.time()
+            
+            if (self.port_types_view & group.contains_ptv
+                    is not ex_ptv & group.contains_ptv):
+                groups_to_redraw.add(group)
+                
+                if not rm_all_before:
+                    for portgroup in group.portgroups:
+                        portgroup.remove_from_canvas()
+                        
+                    # ziggy_dict['aft rm portgrps'] = time.time()
                     
-            for portgroup in group.portgroups:
-                portgroup.add_to_canvas()
+                    for port in group.ports:
+                        port.remove_from_canvas()
+
+                ziggy_dict['aft rm ports'] = time.time()
+
+                group.add_to_canvas()
+
+                for port in group.ports:
+                    port.add_to_canvas(gpos=new_gpos)
+                        
+                for portgroup in group.portgroups:
+                    portgroup.add_to_canvas()
+                
+            ziggy_dict['aft add ports'] = time.time()
             
             for port in group.ports:
                 if port.in_canvas:
@@ -631,19 +685,60 @@ class PatchbayManager:
                 group.remove_from_canvas()
             
             groups_and_pos[group] = new_gpos
+            
+            ziggy_dict['ennd'] = time.time()
+            
+            if group.name == 'Non-Mixer-XT.Synths (Main)':
+                for key, value in ziggy_dict.items():
+                    print('apppse', group.name, value, key)
+
+        times_dict['bef add conns'] = time.time()
 
         for conn in self.connections:
             conn.add_to_canvas()
 
+        times_dict['aft add conns'] = time.time()
+
         self.optimize_operation(False)
 
-        patchcanvas.redraw_all_groups(force_no_prevent_overlap=True)
+        if time.time() - start_time > 0.200:
+            self.optimize_operation(True)
+            for group, gpos in groups_and_pos.items():
+                group.set_group_position(gpos, view_change=True, animate=False)
 
-        for group, gpos in groups_and_pos.items():
-            group.set_group_position(gpos, view_change=True)
+            times_dict['loong aft set poses'] = time.time()
+            self.optimize_operation(False)
 
-        patchcanvas.repulse_all_boxes()
+            for group in groups_to_redraw:
+                if group.in_canvas:
+                    patchcanvas.redraw_group(
+                        group.group_id, prevent_overlap=False)
+            
+            # patchcanvas.redraw_all_groups(force_no_prevent_overlap=True)
+            times_dict['loong aft redraw'] = time.time()
+            patchcanvas.repulse_all_boxes()
+            times_dict['loong aft repulse'] = time.time()
+        else:
+            for group in groups_to_redraw:
+                if group.in_canvas:
+                    patchcanvas.redraw_group(
+                        group.group_id, prevent_overlap=False)
+            # patchcanvas.redraw_all_groups(force_no_prevent_overlap=True)
 
+            times_dict['after_redraw groups'] = time.time()
+
+            for group, gpos in groups_and_pos.items():
+                group.set_group_position(gpos, view_change=True)
+
+            times_dict['after set group pos'] = time.time()
+
+            patchcanvas.repulse_all_boxes()
+
+        times_dict['finished'] = time.time()
+
+        print('len(groups)', len(self.groups))
+        for label, time_ in times_dict.items():
+            print('oze', time_, label)
         self.sg.port_types_view_changed.emit(self.port_types_view)
 
     # --- options triggers ---
