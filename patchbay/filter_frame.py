@@ -122,11 +122,14 @@ class FilterFrame(QFrame):
     
     @pyqtSlot(int)
     def _port_types_view_changed(self, port_types_view: int):
+        if not self.isVisible():
+            return
         self._filter_groups()
     
     def set_patchbay_manager(self, patchbay_manager: 'PatchbayManager'):
         self.patchbay_manager = patchbay_manager
-        self.patchbay_manager.sg.port_types_view_changed.connect(self._port_types_view_changed)
+        self.patchbay_manager.sg.port_types_view_changed.connect(
+            self._port_types_view_changed)
         self.ui.frameTypeFilter.set_patchbay_manager(patchbay_manager)
     
     def set_filter_text(self, text: str):

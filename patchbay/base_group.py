@@ -335,14 +335,15 @@ class Group:
         self.manager.save_group_position(self.current_position)
 
     def set_group_position(self, group_position: GroupPos, view_change=False, animate=True):
+        ex_gpos_splitted = self.current_position.is_splitted()
+        self.current_position = group_position
+
         if not self.in_canvas:
             return
 
         times_dict = dict[str, float]()
         times_dict['start'] = time.time()
 
-        ex_gpos_splitted = self.current_position.is_splitted()
-        self.current_position = group_position
         gpos = self.current_position
 
         times_dict['start quasi'] = time.time()
@@ -372,7 +373,11 @@ class Group:
         else:
             if ex_gpos_splitted:
                 patchcanvas.animate_before_join(self.group_id)
-                
+        
+        if 'GxTubeS' in self.name:
+            print('àlafin', self.name, self.current_position.port_types_view)
+            
+            
         times_dict['finissied'] = time.time()
         
         # if 'VocalsNanoFX6G' in self.name:

@@ -158,7 +158,7 @@ class GroupPos:
     def __init__(self):
         self.boxes = dict[PortMode, BoxPos]()
         
-        for port_mode in (PortMode.INPUT, PortMode.OUTPUT, PortMode.BOTH):
+        for port_mode in PortMode.in_out_both():
             self.boxes[port_mode] = BoxPos()
     
     @staticmethod
@@ -202,7 +202,7 @@ class GroupPos:
             except:
                 gpos.hidden_sides = PortMode.NULL
         
-        for port_mode in PortMode.INPUT, PortMode.OUTPUT, PortMode.BOTH:
+        for port_mode in PortMode.in_out_both():
             if port_mode is PortMode.INPUT:
                 if isinstance(in_zone, str):
                     gpos.boxes[port_mode].zone = in_zone

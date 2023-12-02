@@ -18,6 +18,7 @@
 # For a full copy of the GNU General Public License see the doc/GPL.txt file.
 
 from dataclasses import dataclass
+from typing import Optional
 from PyQt5.QtCore import (QRectF, QMarginsF, Qt)
 from PyQt5.QtWidgets import QGraphicsView
 
@@ -29,7 +30,7 @@ from .init_values import (
 from .utils import (previous_left_on_grid, next_left_on_grid,
                     previous_top_on_grid, next_top_on_grid)
 
-from .scene_moth import PatchSceneMoth
+from .scene_moth import MovingBox, PatchSceneMoth
 from .box_widget import BoxWidget
 
 
@@ -78,7 +79,7 @@ class PatchScene(PatchSceneMoth):
 
     def deplace_boxes_from_repulsers(self, repulser_boxes: list[BoxWidget],
                                      wanted_direction=Direction.NONE,
-                                     new_scene_rect=None):
+                                     mov_repulsables: Optional[list[MovingBox]]=None):
         ''' This function change the place of boxes in order to have no box overlapping
             other boxes.'''
         def get_direction(fixed_rect: QRectF, moving_rect: QRectF,
@@ -228,41 +229,56 @@ class PatchScene(PatchSceneMoth):
                           canvas.theme.box_spacing_horizontal,
                           canvas.theme.box_spacing))
 
-            # search intersections in non moving boxes
-            for widget in self.items(search_rect, Qt.IntersectsItemShape,
-                                     Qt.AscendingOrder):
-                if not isinstance(widget, BoxWidget):
-                    continue
-                
-                if (widget in repulser_boxes
-                        or widget in [b.item for b in to_move_boxes]
-                        or widget in [b.widget for b in self.move_boxes]):
-                    continue
+            if mov_repulsables is not None:
+                for moving_box in mov_repulsables:
+                    if (moving_box.widget in repulser_boxes
+                            or moving_box.joining
+                            or moving_box.widget in [b.item for b in to_move_boxes]):
+                        continue
+                    
+                    widget = moving_box.widget
+                    irect = moving_box.final_rect
+                    
+                    if rect_has_to_move_from(
+                            repulser.rect, irect,
+                            repulser.item.get_current_port_mode(),
+                            widget.get_current_port_mode()):
+                        items_to_move.append(BoxAndRect(irect, widget))
+            else:
+                # search intersections in non moving boxes
+                for widget in self.items(search_rect, Qt.IntersectsItemShape,
+                                        Qt.AscendingOrder):
+                    if not isinstance(widget, BoxWidget):
+                        continue
+                    
+                    if (widget in repulser_boxes
+                            or widget in [b.item for b in to_move_boxes]
+                            or widget in [b.widget for b in self.move_boxes]):
+                        continue
 
-                irect = widget.sceneBoundingRect()
+                    irect = widget.sceneBoundingRect()
 
-                if rect_has_to_move_from(
-                        repulser.rect, irect,
-                        repulser.item.get_current_port_mode(),
-                        widget.get_current_port_mode()):
-                    items_to_move.append(BoxAndRect(irect, widget))
+                    if rect_has_to_move_from(
+                            repulser.rect, irect,
+                            repulser.item.get_current_port_mode(),
+                            widget.get_current_port_mode()):
+                        items_to_move.append(BoxAndRect(irect, widget))
 
-            # search intersections in moving boxes
-            for moving_box in self.move_boxes:
-                if (moving_box.widget in repulser_boxes
-                        or moving_box.joining
-                        or moving_box.widget in [b.item for b in to_move_boxes]):
-                    continue
+                # search intersections in moving boxes
+                for moving_box in self.move_boxes:
+                    if (moving_box.widget in repulser_boxes
+                            or moving_box.joining
+                            or moving_box.widget in [b.item for b in to_move_boxes]):
+                        continue
 
-                widget = moving_box.widget
-                irect = widget.after_wrap_rect()
-                irect.translate(moving_box.to_pt)
-                
-                if rect_has_to_move_from(
-                        repulser.rect, irect,
-                        repulser.item.get_current_port_mode(),
-                        widget.get_current_port_mode()):
-                    items_to_move.append(BoxAndRect(irect, widget))
+                    widget = moving_box.widget
+                    irect = moving_box.final_rect
+                    
+                    if rect_has_to_move_from(
+                            repulser.rect, irect,
+                            repulser.item.get_current_port_mode(),
+                            widget.get_current_port_mode()):
+                        items_to_move.append(BoxAndRect(irect, widget))
             
             for item_to_move in items_to_move:
                 item = item_to_move.item
@@ -382,11 +398,23 @@ class PatchScene(PatchSceneMoth):
             self.add_box_to_animation(
                 item, int(to_send_rect.left()), int(to_send_rect.top()))
 
-    def full_repulse(self):
+    def full_repulse(self, view_change=False):
         self._full_repulse_boxes.clear()
-        for box in canvas.list_boxes():
-            if box not in self._full_repulse_boxes:
-                self.deplace_boxes_from_repulsers([box])
+        if view_change:
+            moving_boxes = self.move_boxes.copy()
+            # for moving_box in moving_boxes:
+            while moving_boxes:
+                self.deplace_boxes_from_repulsers(
+                    [moving_boxes[0].widget],
+                    mov_repulsables=moving_boxes)
+                to_rm_movboxes = [mb for mb in moving_boxes
+                                  if mb.widget in self._full_repulse_boxes]
+                for to_rm_mb in to_rm_movboxes:
+                    moving_boxes.remove(to_rm_mb)
+        else:
+            for box in canvas.list_boxes():
+                if box not in self._full_repulse_boxes:
+                    self.deplace_boxes_from_repulsers([box])
         self._full_repulse_boxes.clear()
 
     def bring_neighbors_and_deplace_boxes(

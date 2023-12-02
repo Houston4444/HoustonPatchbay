@@ -25,3 +25,5 @@ Quand une boite est décachée, choisir une position libre
 Pas de bring neightboors sans prevent_overlap !!!
 Pot de pus du hardware rack à gérer
 gérer wrap et layout avec BoxPos
+bug: après change port types view, y a des boîtes avec ports cachés
+après restore box, prevent overlap

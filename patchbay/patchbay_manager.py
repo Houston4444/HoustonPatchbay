@@ -373,6 +373,9 @@ class PatchbayManager:
             return
         
         group.current_position.hidden_sides |= port_mode
+        for pmode in PortMode.INPUT, PortMode.OUTPUT, PortMode.BOTH:
+            if port_mode & pmode:
+                group.current_position.boxes[pmode].set_hidden(True)
         group.save_current_position()
 
         self.optimize_operation(True)
@@ -422,6 +425,8 @@ class PatchbayManager:
         
         hidden_sides = group.current_position.hidden_sides
         group.current_position.hidden_sides = PortMode.NULL
+        for port_mode in PortMode.in_out_both():
+            group.current_position.boxes[port_mode].set_hidden(False)
         group.save_current_position()
         
         self.optimize_operation(True)
@@ -599,13 +604,12 @@ class PatchbayManager:
         
         ex_ptv = self.port_types_view
         self.port_types_view = port_types_view
-
+        print('Change view', ex_ptv, '->', port_types_view)
         # Prevent visual update at each canvas item creation
         # because we may create/remove a lot of ports here
         self.optimize_operation(True)
 
-        start_time = time.time()
-        times_dict = {}
+        times_dict = dict[str, float]()
         times_dict['start'] = time.time()
 
         rm_all_before = bool(ex_ptv & self.port_types_view
@@ -642,25 +646,39 @@ class PatchbayManager:
         for group in self.groups:
             ziggy_dict = dict[str, float]()
             ziggy_dict['start'] = time.time()
+            
+            if 'GxTubeS' in group.name:
+                print('sld', group.name, group.current_position.port_types_view)
+            
             new_gpos = self.get_group_position(group.name)
 
+            no_redraw = False
+            force_rebuild = False
+            
             # force redraw if a layout mode changes.
-            for port_mode in PortMode.INPUT, PortMode.OUTPUT, PortMode.BOTH:
+            for port_mode in PortMode.in_out_both():
                 if (group.current_position.boxes[port_mode].layout_mode
                         is not new_gpos.boxes[port_mode].layout_mode):
-                    groups_to_redraw.add(group)
-            
+                    no_redraw = True
+                if (group.current_position.boxes[port_mode].is_hidden()
+                        is not new_gpos.boxes[port_mode].is_hidden()):
+                    force_rebuild = True
+
+            if 'Midi Through' in group.name:
+                print('blala', group.name, force_rebuild)
+                print(group.current_position.as_new_dict(), group.current_position.port_types_view)
+                print(new_gpos.as_new_dict(), new_gpos.port_types_view)
             ziggy_dict['aft pos'] = time.time()
             
-            if (self.port_types_view & group.contains_ptv
-                    is not ex_ptv & group.contains_ptv):
-                groups_to_redraw.add(group)
+            if (force_rebuild
+                    or self.port_types_view & group.contains_ptv
+                       is not ex_ptv & group.contains_ptv):
+                if not no_redraw:
+                    groups_to_redraw.add(group)
                 
                 if not rm_all_before:
                     for portgroup in group.portgroups:
                         portgroup.remove_from_canvas()
-                        
-                    # ziggy_dict['aft rm portgrps'] = time.time()
                     
                     for port in group.ports:
                         port.remove_from_canvas()
@@ -701,44 +719,27 @@ class PatchbayManager:
 
         self.optimize_operation(False)
 
-        if time.time() - start_time > 0.200:
-            self.optimize_operation(True)
-            for group, gpos in groups_and_pos.items():
-                group.set_group_position(gpos, view_change=True, animate=False)
+        for group in groups_to_redraw:
+            if group.in_canvas:
+                patchcanvas.redraw_group(
+                    group.group_id, prevent_overlap=False)
 
-            times_dict['loong aft set poses'] = time.time()
-            self.optimize_operation(False)
+        times_dict['after_redraw groups'] = time.time()
 
-            for group in groups_to_redraw:
-                if group.in_canvas:
-                    patchcanvas.redraw_group(
-                        group.group_id, prevent_overlap=False)
-            
-            # patchcanvas.redraw_all_groups(force_no_prevent_overlap=True)
-            times_dict['loong aft redraw'] = time.time()
-            patchcanvas.repulse_all_boxes()
-            times_dict['loong aft repulse'] = time.time()
-        else:
-            for group in groups_to_redraw:
-                if group.in_canvas:
-                    patchcanvas.redraw_group(
-                        group.group_id, prevent_overlap=False)
-            # patchcanvas.redraw_all_groups(force_no_prevent_overlap=True)
+        for group, gpos in groups_and_pos.items():
+            if 'GxTubeS' in group.name:
+                print('Sett it', group.name)
+            group.set_group_position(gpos, view_change=True)
 
-            times_dict['after_redraw groups'] = time.time()
+        times_dict['after set group pos'] = time.time()
 
-            for group, gpos in groups_and_pos.items():
-                group.set_group_position(gpos, view_change=True)
-
-            times_dict['after set group pos'] = time.time()
-
-            patchcanvas.repulse_all_boxes()
+        patchcanvas.repulse_all_boxes(view_change=True)
 
         times_dict['finished'] = time.time()
 
         print('len(groups)', len(self.groups))
-        for label, time_ in times_dict.items():
-            print('oze', time_, label)
+        # for label, time_ in times_dict.items():
+        #     print('oze', time_, label)
         self.sg.port_types_view_changed.emit(self.port_types_view)
 
     # --- options triggers ---

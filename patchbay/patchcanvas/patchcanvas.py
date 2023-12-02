@@ -261,7 +261,7 @@ def add_group(group_id: int, group_name: str, split: bool,
         return
 
     bx_poses = dict[PortMode, BoxPos]()
-    for port_mode in PortMode.OUTPUT, PortMode.INPUT, PortMode.BOTH:
+    for port_mode in PortMode.in_out_both():
         box_pos = box_poses.get(port_mode)
         bx_poses[port_mode] = BoxPos() if box_pos is None else BoxPos(box_pos)
 
@@ -675,9 +675,9 @@ def join_group(group_id: int, origin_box_mode=PortMode.NULL):
     QTimer.singleShot(0, canvas.scene.update)
 
 @patchbay_api
-def repulse_all_boxes():
+def repulse_all_boxes(view_change=False):
     if options.prevent_overlap:
-        canvas.scene.full_repulse()
+        canvas.scene.full_repulse(view_change=view_change)
 
 @patchbay_api
 def redraw_all_groups(force_no_prevent_overlap=False, theme_change=False):    
@@ -802,9 +802,13 @@ def move_group_boxes(
     if group is None:
         return
 
-    for port_mode in PortMode.INPUT, PortMode.OUTPUT, PortMode.BOTH:
+    for port_mode in PortMode.in_out_both():
         box_pos = BoxPos(box_poses[port_mode])
+        was_hidden = group.box_poses[port_mode].is_hidden()
+        is_hidden = box_pos.is_hidden()
+
         group.box_poses[port_mode] = box_pos
+
         if group.splitted:
             if port_mode is PortMode.OUTPUT:
                 box = group.widgets[0]
@@ -827,7 +831,7 @@ def move_group_boxes(
         
         hwr = canvas.theme.hardware_rack_width if box.is_hardware else 0
 
-        if animate:        
+        if animate:
             canvas.scene.add_box_to_animation(
                 box, xy[0] + hwr, xy[1] + hwr, force_anim=animate)
         else:
@@ -1019,7 +1023,7 @@ def add_port(group_id: int, port_id: int, port_name: str,
 
     n = 0
     if (group.splitted
-            and group.widgets[0].get_port_mode() != port_mode
+            and group.widgets[0].get_port_mode() is not port_mode
             and group.widgets[1] is not None):
         n = 1
 
@@ -1060,7 +1064,7 @@ def remove_port(group_id: int, port_id: int):
 
     if port.hidden_conn_widget is not None:
         canvas.scene.removeItem(port.hidden_conn_widget)
-    del port.hidden_conn_widget
+        port.hidden_conn_widget = None
 
     item = port.widget
     box = None

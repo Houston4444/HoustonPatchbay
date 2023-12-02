@@ -62,6 +62,12 @@ class PortMode(IntFlag):
             return PortMode.BOTH
         return PortMode.NULL
 
+    @staticmethod
+    def in_out_both() -> Iterator['PortMode']:
+        yield PortMode.INPUT
+        yield PortMode.OUTPUT
+        yield PortMode.BOTH
+
 
 class PortType(IntFlag):
     NULL = 0x00
