@@ -262,6 +262,7 @@ class Zv(Enum):
     MOV_LINE_BOX = auto()
     MOV_LINE_PORTGRP = auto()
     MOV_LINE_PORT = auto()
+    BOX_HIDDER = auto()
     MOV_LINE = auto()
 
 

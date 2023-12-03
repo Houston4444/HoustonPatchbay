@@ -373,7 +373,7 @@ class PatchbayManager:
             return
         
         group.current_position.hidden_sides |= port_mode
-        for pmode in PortMode.INPUT, PortMode.OUTPUT, PortMode.BOTH:
+        for pmode in PortMode.in_out_both():
             if port_mode & pmode:
                 group.current_position.boxes[pmode].set_hidden(True)
         group.save_current_position()

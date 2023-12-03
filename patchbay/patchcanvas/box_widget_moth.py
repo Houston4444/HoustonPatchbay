@@ -20,6 +20,7 @@
 import logging
 from math import ceil
 from struct import pack
+from typing import Optional
 from sip import voidptr
 import sys
 from enum import Enum
@@ -55,6 +56,7 @@ from .line_widget import LineWidget
 from .grouped_lines_widget import GroupedLinesWidget
 from .theme import BoxStyleAttributer
 from .box_layout import BoxLayout
+from .box_hidder import BoxHidder
 
 _logger = logging.getLogger(__name__)
 
@@ -149,6 +151,8 @@ class BoxWidgetMoth(QGraphicsItem):
         self._wrapping_ratio = 1.0
         self._wrap_triangle_pos = UnwrapButton.NONE
 
+        self._box_hidder: Optional[BoxHidder] = None
+
         self._port_list = list[PortObject]()
         self._portgrp_list = list[PortgrpObject]()
 
@@ -213,8 +217,6 @@ class BoxWidgetMoth(QGraphicsItem):
         self._painter_path = QPainterPath()
         self._painter_path_sel = QPainterPath()
         self._layout: BoxLayout = None
-
-        self.pos_before_hide = QPointF()
 
         canvas.scene.addItem(self)
         self.setZValue(Zv.NEW_BOX.value)
@@ -397,20 +399,14 @@ class BoxWidgetMoth(QGraphicsItem):
         if self._port_list:
             self.setVisible(True)
 
-        if ratio <= 0.0 or ratio >= 1.0:
-            # the box may still exist but not be visible
-            # after hidding.
-            self.setTransform(QTransform())
-            self.setPos(self.pos_before_hide)
+        if ratio <= 0.0:
+            if self._box_hidder is not None:
+                canvas.scene.removeItem(self._box_hidder)
+                self._box_hidder = None
         else:
-            transform = QTransform()
-            transform.scale(1.0 - hidding_ratio, 1.0)
-            self.setTransform(transform)
-            
-            if self._current_port_mode is PortMode.BOTH:
-                self.setX(self.pos_before_hide.x() + self._width * 0.5 * hidding_ratio)
-            elif self._current_port_mode is PortMode.INPUT:
-                self.setX(self.pos_before_hide.x() + self._width * hidding_ratio)
+            if self._box_hidder is None:
+                self._box_hidder = BoxHidder(self)
+            self._box_hidder.set_hide_ratio(hidding_ratio)
 
     def hide_ports_for_wrap(self, hide: bool):
         for portgrp in canvas.list_portgroups(group_id=self._group_id):
