@@ -148,10 +148,13 @@ class BoxWidgetMoth(QGraphicsItem):
         else:
             self._wrapping_state = WrappingState.NORMAL
 
+        # if group.box_poses[port_mode].is_hidden():
+        #     self._box_hidder = BoxHidder(self)
+        # else:
+        self.hidder_widget: Optional[BoxHidder] = None
+
         self._wrapping_ratio = 1.0
         self._wrap_triangle_pos = UnwrapButton.NONE
-
-        self._box_hidder: Optional[BoxHidder] = None
 
         self._port_list = list[PortObject]()
         self._portgrp_list = list[PortgrpObject]()
@@ -400,13 +403,13 @@ class BoxWidgetMoth(QGraphicsItem):
             self.setVisible(True)
 
         if ratio <= 0.0:
-            if self._box_hidder is not None:
-                canvas.scene.removeItem(self._box_hidder)
-                self._box_hidder = None
+            if self.hidder_widget is not None:
+                canvas.scene.removeItem(self.hidder_widget)
+                self.hidder_widget = None
         else:
-            if self._box_hidder is None:
-                self._box_hidder = BoxHidder(self)
-            self._box_hidder.set_hide_ratio(hidding_ratio)
+            if self.hidder_widget is None:
+                self.hidder_widget = BoxHidder(self)
+            self.hidder_widget.set_hide_ratio(hidding_ratio)
 
     def hide_ports_for_wrap(self, hide: bool):
         for portgrp in canvas.list_portgroups(group_id=self._group_id):

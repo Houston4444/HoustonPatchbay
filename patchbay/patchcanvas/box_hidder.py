@@ -12,8 +12,6 @@ if TYPE_CHECKING:
 class BoxHidder(QGraphicsItem):
     def __init__(self, parent: Optional['QGraphicsItem'] = ...):
         super().__init__(parent)
-        self._orig_rect = self.parentItem().boundingRect()
-
         self.setZValue(ZvBox.HIDDER.value)
         self._hide_ratio = 0.0
         
@@ -26,12 +24,12 @@ class BoxHidder(QGraphicsItem):
         return super().parentItem()
     
     def boundingRect(self) -> QRectF:
-        return self._orig_rect
+        return self.parentItem().boundingRect()
     
     def paint(self, painter: QPainter, option, widget):
         # return super().paint(painter, option, widget)
         painter.save()
-        rect = QRectF(self._orig_rect)
+        rect = QRectF(self.parentItem().boundingRect())
         rect.setHeight(rect.height() * self._hide_ratio)
         # left_rect = QRectF(rect)
         # left_rect.setRight(rect.width() * 0.5 * self._hide_ratio)

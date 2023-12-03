@@ -806,6 +806,8 @@ def move_group_boxes(
         box_pos = BoxPos(box_poses[port_mode])
         was_hidden = group.box_poses[port_mode].is_hidden()
         is_hidden = box_pos.is_hidden()
+        if 'PulseAudio' in group.group_name:
+            print('apo', group.group_name, port_mode, was_hidden, is_hidden)
 
         group.box_poses[port_mode] = box_pos
 
@@ -832,10 +834,9 @@ def move_group_boxes(
         hwr = canvas.theme.hardware_rack_width if box.is_hardware else 0
 
         if animate:
-            if was_hidden and not is_hidden:
-                print('oirgfigfi', box._group_name)
+            if not is_hidden and box.hidder_widget is not None:
                 box.update_positions()
-                box.setPos(QPointF(float(xy[0] + hwr), float(xy[1] + hwr)))
+                box.set_top_left((xy[0] + hwr, xy[1] + hwr))
                 GroupedLinesWidget.start_transparent(group_id, port_mode)
                 canvas.scene.add_box_to_animation_restore(box)
 

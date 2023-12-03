@@ -28,6 +28,4 @@ gérer wrap et layout avec BoxPos
 bug: après change port types view, y a des boîtes avec ports cachés
 après restore box, prevent overlap
 après set theme, check group icon
-remove force_hidden option for update_postions
-rm box_before_hide pos
-animate hidding PortmOde.BOTH
+animate hidding PortmOde.BOTH connections
