@@ -36,14 +36,13 @@ from .grouped_lines_widget import GroupedLinesWidget
 from .init_values import (
     CanvasItemType,
     ConnectionObject,
-    ConnectionThemeState,
     PortObject,
     PortSubType,
     canvas,
     CallbackAct,
     PortMode,
     PortType,
-    Zv)
+    ZvBox)
 
 from .utils import canvas_callback
 from .connectable_widget import ConnectableWidget
@@ -96,6 +95,7 @@ class PortWidget(ConnectableWidget):
         self._connections = list[ConnectionObject]()
         self._connect_pos = QPointF(0.0, 0.0)
         self._update_connect_pos()
+        self.setZValue(ZvBox.PORT.value)
 
     def get_port_id(self) -> int:
         return self._port_id
@@ -220,14 +220,6 @@ class PortWidget(ConnectableWidget):
         super().setVisible(visible)
         self._update_connect_pos()
 
-    def set_z_value_connecting(self, finished=False):
-        if finished:
-            self.parentItem().setZValue(Zv.BOX.value)
-            self.setZValue(Zv.PORT.value)
-        else:
-            self.parentItem().setZValue(Zv.MOV_LINE_BOX.value)
-            self.setZValue(Zv.MOV_LINE_PORT.value)
-
     def itemChange(self, change: int, value: bool):
         if change == QGraphicsItem.ItemSelectedHasChanged:            
             if self.changing_select_state:
@@ -242,8 +234,8 @@ class PortWidget(ConnectableWidget):
                 elif not self._portgrp_widget.changing_select_state:
                     self._portgrp_widget.ensure_selection_with_ports()
             
-            self.setZValue(Zv.SEL_PORT.value if self.isSelected()
-                           else Zv.PORT.value)
+            self.setZValue(ZvBox.SEL_PORT.value if self.isSelected()
+                           else ZvBox.PORT.value)
             
             if self._connections:
                 other_group_ids = set[int]()

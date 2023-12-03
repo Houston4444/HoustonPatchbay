@@ -3,7 +3,7 @@ from PyQt5.QtWidgets import QGraphicsItem
 from PyQt5.QtGui import QPainter, QPen, QBrush
 from PyQt5.QtCore import QRectF, Qt
 
-from .init_values import canvas, Zv
+from .init_values import canvas, ZvBox
 
 if TYPE_CHECKING:
     from .box_widget import BoxWidget
@@ -14,7 +14,7 @@ class BoxHidder(QGraphicsItem):
         super().__init__(parent)
         self._orig_rect = self.parentItem().boundingRect()
 
-        self.setZValue(Zv.BOX_HIDDER.value)
+        self.setZValue(ZvBox.HIDDER.value)
         self._hide_ratio = 0.0
         
     def set_hide_ratio(self, ratio: float):

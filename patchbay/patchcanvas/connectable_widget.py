@@ -243,10 +243,6 @@ class ConnectableWidget(QGraphicsItem):
                                     CallbackAct.PORTS_CONNECT,
                                     hover_group_id, hover_port_id,
                                     self._group_id, port_id)
-    
-    def set_z_value_connecting(self, finished=False):
-        'see port_widget and portgroup_widget'
-        ...
 
     def parentItem(self) -> 'BoxWidget':
         # only here to say IDE parent is a CanvasBox
@@ -318,7 +314,6 @@ class ConnectableWidget(QGraphicsItem):
 
         if not self._line_mov_list:
             self._last_rclick_item = None            
-            self.set_z_value_connecting()
 
             for i in range(len(self._port_ids)):
                 line_mov = LineMoveWidget(
@@ -485,8 +480,6 @@ class ConnectableWidget(QGraphicsItem):
 
                 elif self._last_rclick_item:
                     canvas.scene.clearSelection()
-                
-                self.set_z_value_connecting(finished=True)
 
             if self._cursor_moving:
                 canvas.scene.set_cursor(QCursor(Qt.ArrowCursor))

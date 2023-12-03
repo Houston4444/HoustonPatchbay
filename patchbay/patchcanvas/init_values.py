@@ -244,7 +244,7 @@ class GridStyle(Enum):
 
 
 class Zv(Enum):
-    '''enum for zValue'''
+    '''enum for zValue for objects directly in the scene'''
     GRID = auto()
     RUBBERBAND = auto()
     OPAC_LINE = auto() # line semi-hidden by filter
@@ -253,17 +253,18 @@ class Zv(Enum):
     LINE = auto()
     BOX = auto()
     NEW_BOX = auto()
-    PORTGRP = auto()
-    PORT = auto()
-    SEL_PORT = auto()
     SEL_BOX_LINE = auto() # line with a selected box
     SEL_LINE = auto()
     SEL_BOX = auto()
-    MOV_LINE_BOX = auto()
-    MOV_LINE_PORTGRP = auto()
-    MOV_LINE_PORT = auto()
-    BOX_HIDDER = auto()
     MOV_LINE = auto()
+
+
+class ZvBox(Enum):
+    '''enum for zValue for objects directly in a box'''
+    PORTGRP = auto()
+    PORT = auto()
+    SEL_PORT = auto()
+    HIDDER = auto()
 
 
 class AliasingReason(Flag):

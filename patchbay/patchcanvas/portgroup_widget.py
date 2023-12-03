@@ -34,6 +34,7 @@ from .init_values import (
     CanvasItemType,
     PortSubType,
     PortgrpObject,
+    ZvBox,
     canvas,
     CallbackAct,
     PortMode,
@@ -91,6 +92,8 @@ class PortgroupWidget(ConnectableWidget):
 
         for port_widget in self._ports_widgets:
             port_widget.set_portgroup_widget(self)
+            
+        self.setZValue(ZvBox.PORTGRP.value)
 
     def get_connection_distance(self) -> float:
         return self._portgrp_width
@@ -172,18 +175,6 @@ class PortgroupWidget(ConnectableWidget):
                 self.setSelected(False)
                 return
         self.setSelected(True)
-
-    def set_z_value_connecting(self, finished=False):
-        if finished:
-            self.parentItem().setZValue(Zv.BOX.value)
-            self.setZValue(Zv.PORTGRP.value)
-            for port_widget in self._ports_widgets:
-                port_widget.setZValue(Zv.PORT.value)
-        else:
-            self.parentItem().setZValue(Zv.MOV_LINE_BOX.value)
-            self.setZValue(Zv.MOV_LINE_PORTGRP.value)
-            for port_widget in self._ports_widgets:
-                port_widget.setZValue(Zv.MOV_LINE_PORT.value)
 
     def itemChange(self, change: int, value: bool):
         if change == QGraphicsItem.ItemSelectedHasChanged:
