@@ -1162,8 +1162,7 @@ class BoxWidget(BoxWidgetMoth):
         return UnwrapButton.NONE
 
     def update_positions(self, even_animated=False, without_connections=False,
-                         prevent_overlap=True, theme_change=False,
-                         update=True, force_hidden=False):
+                         prevent_overlap=True, theme_change=False):
         if canvas.loading_items:
             return
 
@@ -1204,11 +1203,8 @@ class BoxWidget(BoxWidgetMoth):
         if options.auto_hide_groups and not self._port_list:
             self.setVisible(False)
             return
-
-        if force_hidden:
-            self.setVisible(False)
-        else:
-            self.setVisible(True)
+    
+        self.setVisible(True)
     
         align_port_types = self._should_align_port_types()
         ports_min_sizes = self._get_ports_min_sizes(align_port_types)
@@ -1288,9 +1284,6 @@ class BoxWidget(BoxWidgetMoth):
                 canvas.scene.deplace_boxes_from_repulsers([self])
 
         self.update_positions_pending = False
-        
-        if not update:
-            return
         
         self.update()
 

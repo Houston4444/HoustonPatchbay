@@ -834,7 +834,7 @@ def move_group_boxes(
         if animate:
             if was_hidden and not is_hidden:
                 print('oirgfigfi', box._group_name)
-                box.update_positions(force_hidden=True)
+                box.update_positions()
                 box.setPos(QPointF(float(xy[0] + hwr), float(xy[1] + hwr)))
                 GroupedLinesWidget.start_transparent(group_id, port_mode)
                 canvas.scene.add_box_to_animation_restore(box)
@@ -1342,7 +1342,7 @@ def animate_after_restore_box(group_id: int, port_mode: PortMode):
 
     for box in group.widgets:
         if box is not None and port_mode & box.get_port_mode():
-            box.update_positions(force_hidden=True)
+            box.update_positions()
             GroupedLinesWidget.start_transparent(group_id, port_mode)
             canvas.scene.add_box_to_animation_restore(box)
     

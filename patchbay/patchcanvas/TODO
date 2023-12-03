@@ -30,4 +30,4 @@ après restore box, prevent overlap
 après set theme, check group icon
 remove force_hidden option for update_postions
 rm box_before_hide pos
-ZvBox
+animate hidding PortmOde.BOTH
