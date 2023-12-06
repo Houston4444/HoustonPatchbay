@@ -88,6 +88,8 @@ class GroupedLinesWidget(QGraphicsPathItem):
 
         self._group_out_x = 0.0
         self._group_in_x = 0.0
+        self._group_out_mid_y = 0.0
+        self._group_in_mid_y = 0.0
 
         self._semi_hidden = False        
         
@@ -241,6 +243,10 @@ class GroupedLinesWidget(QGraphicsPathItem):
         paths = dict[tuple[float, float], QPainterPath]()
 
         groups_x_done = False
+        group_out_min_y = float('inf')
+        group_out_max_y = float('-inf')
+        group_in_min_y = float('inf')
+        group_in_max_y = float('-inf')
 
         for conn in canvas.list_connections(
                 group_out_id=self._group_out_id,
@@ -270,6 +276,11 @@ class GroupedLinesWidget(QGraphicsPathItem):
                 # same coords, do not draw 2 times the same path.
                 # (both boxes are very probably wrapped).
                 continue
+
+            group_out_min_y = min(group_out_min_y, item1_y)
+            group_out_max_y = max(group_out_max_y, item1_y)
+            group_in_min_y = min(group_in_min_y, item2_y)
+            group_in_max_y = max(group_in_max_y, item2_y)
             
             existing_path = False
             
@@ -305,6 +316,9 @@ class GroupedLinesWidget(QGraphicsPathItem):
             main_path.addPath(path)
 
         self.setPath(main_path)
+
+        self._group_out_mid_y = (group_out_max_y + group_out_min_y) * 0.5
+        self._group_in_mid_y = (group_in_max_y + group_in_min_y) * 0.5
         
         if not fast_move:
             # line gradient is not updated at mouse move event or when box 
@@ -404,9 +418,10 @@ class GroupedLinesWidget(QGraphicsPathItem):
             self.update_line_gradient()
             return
 
-        ratio = max(min(ratio, 1.0 - epsy), epsy)
+        ratio = max(min(ratio, 1.0 - epsy * 2), epsy * 2)
 
-        gradient = QLinearGradient(self._group_out_x, 0.0, self._group_in_x, 0.0)
+        gradient = QLinearGradient(self._group_out_x, self._group_out_mid_y,
+                                   self._group_in_x, self._group_in_mid_y)
         transparent = QColor(0, 0, 0, 0)
         color_main = self._th_attribs.color_main
 
