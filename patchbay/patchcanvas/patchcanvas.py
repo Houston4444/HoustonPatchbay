@@ -834,11 +834,20 @@ def move_group_boxes(
         hwr = canvas.theme.hardware_rack_width if box.is_hardware else 0
 
         if animate:
-            if not is_hidden and box.hidder_widget is not None:
-                box.update_positions()
+            if box.isVisible() and is_hidden:
                 box.set_top_left((xy[0] + hwr, xy[1] + hwr))
                 GroupedLinesWidget.start_transparent(group_id, port_mode)
-                canvas.scene.add_box_to_animation_restore(box)
+                canvas.scene.add_box_to_animation_hidding(box)
+            
+            elif box.hidder_widget is not None:
+                if box.isVisible():
+                    box.update_positions()
+                    box.set_top_left((xy[0] + hwr, xy[1] + hwr))
+                    GroupedLinesWidget.start_transparent(group_id, port_mode)
+                    canvas.scene.add_box_to_animation_restore(box)
+                else:
+                    canvas.scene.removeItem(box.hidder_widget)
+                    box.hidder_widget = None
 
             canvas.scene.add_box_to_animation(
                 box, xy[0] + hwr, xy[1] + hwr, force_anim=animate)

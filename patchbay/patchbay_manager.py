@@ -372,10 +372,7 @@ class PatchbayManager:
         if group is None:
             return
         
-        group.current_position.hidden_sides |= port_mode
-        for pmode in PortMode.in_out_both():
-            if port_mode & pmode:
-                group.current_position.boxes[pmode].set_hidden(True)
+        group.current_position.set_hidden_port_mode(port_mode)
         group.save_current_position()
 
         self.optimize_operation(True)
@@ -423,10 +420,8 @@ class PatchbayManager:
         if group is None:
             return
         
-        hidden_sides = group.current_position.hidden_sides
-        group.current_position.hidden_sides = PortMode.NULL
-        for port_mode in PortMode.in_out_both():
-            group.current_position.boxes[port_mode].set_hidden(False)
+        hidden_port_mode = group.current_position.hidden_port_mode()
+        group.current_position.set_hidden_port_mode(PortMode.NULL)        
         group.save_current_position()
         
         self.optimize_operation(True)
@@ -439,24 +434,22 @@ class PatchbayManager:
                 conn.add_to_canvas()
 
         self.optimize_operation(False)
-        patchcanvas.animate_after_restore_box(group_id, hidden_sides)
+        patchcanvas.animate_after_restore_box(group_id, hidden_port_mode)
         patchcanvas.canvas.scene.resize_the_scene()
 
     def restore_all_group_hidden_sides(self):
         self.optimize_operation(True)
 
         for group in self.groups:
-            if group.current_position.hidden_sides:
-                group.current_position.hidden_sides = PortMode.NULL
+            if group.current_position.hidden_port_mode():
+                group.current_position.set_hidden_port_mode(PortMode.NULL)
                 group.add_all_ports_to_canvas()
 
         # forget all hidden boxes even if these boxes are not
         # currently present in the patchbay.
         for ptv, pos_dict in self.views[self.VIEW_NUMBER].items():
             for group_name, gpos in pos_dict.items():
-                gpos.hidden_sides = PortMode.NULL
-        # for gpos in self.group_positions:
-        #     gpos.hidden_sides = PortMode.NULL
+                gpos.set_hidden_port_mode(PortMode.NULL)
         
         for conn in self.connections:
             conn.add_to_canvas()
@@ -687,8 +680,12 @@ class PatchbayManager:
 
                 group.add_to_canvas()
 
+                hidden_for_port = (group.current_position.hidden_port_mode()
+                                   & new_gpos.hidden_port_mode())
+
                 for port in group.ports:
-                    port.add_to_canvas(gpos=new_gpos)
+                    # port.add_to_canvas(gpos=new_gpos)
+                    port.add_to_canvas(hidden_sides=hidden_for_port)
                         
                 for portgroup in group.portgroups:
                     portgroup.add_to_canvas()
