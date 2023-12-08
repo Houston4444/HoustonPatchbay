@@ -398,10 +398,6 @@ class BoxWidgetMoth(QGraphicsItem):
         self.update_positions(even_animated=True)
 
     def animate_hidding(self, ratio: float):
-        hidding_ratio = ratio ** 0.25
-        # if self._port_list:
-        #     self.setVisible(True)
-
         if ratio <= 0.0:
             if self.hidder_widget is not None:
                 canvas.scene.removeItem(self.hidder_widget)
@@ -409,7 +405,7 @@ class BoxWidgetMoth(QGraphicsItem):
         else:
             if self.hidder_widget is None:
                 self.hidder_widget = BoxHidder(self)
-            self.hidder_widget.set_hide_ratio(hidding_ratio)
+            self.hidder_widget.set_hide_ratio(ratio)
         
         # set Z value
         zv = Zv.HIDDING_BOX

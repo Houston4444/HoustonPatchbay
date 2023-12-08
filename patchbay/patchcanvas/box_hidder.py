@@ -16,7 +16,7 @@ class BoxHidder(QGraphicsItem):
         self._hide_ratio = 0.0
         
     def set_hide_ratio(self, ratio: float):
-        self._hide_ratio = ratio
+        self._hide_ratio = ratio ** 1.5
         self.update()
         
     def parentItem(self) -> 'BoxWidget':
