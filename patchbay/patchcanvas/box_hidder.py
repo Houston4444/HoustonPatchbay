@@ -1,9 +1,9 @@
 from typing import TYPE_CHECKING, Optional
 from PyQt5.QtWidgets import QGraphicsItem
-from PyQt5.QtGui import QPainter, QPen, QBrush
-from PyQt5.QtCore import QRectF, Qt
+from PyQt5.QtGui import QPainter, QPen, QBrush, QPolygonF
+from PyQt5.QtCore import QRectF, Qt, QPointF
 
-from .init_values import canvas, ZvBox
+from .init_values import canvas, ZvBox, PortMode
 
 if TYPE_CHECKING:
     from .box_widget import BoxWidget
@@ -29,35 +29,72 @@ class BoxHidder(QGraphicsItem):
     def paint(self, painter: QPainter, option, widget):
         # return super().paint(painter, option, widget)
         painter.save()
-        rect = QRectF(self.parentItem().boundingRect())
-        rect.setHeight(rect.height() * self._hide_ratio)
-        # left_rect = QRectF(rect)
-        # left_rect.setRight(rect.width() * 0.5 * self._hide_ratio)
-        # right_rect = QRectF(rect)
-        # right_rect.setLeft(rect.right() - rect.width() * 0.5 * self._hide_ratio)
+        orig_rect = self.parentItem().boundingRect()
+        # rect = QRectF(orig_rect)
+        # rect.setHeight(rect.height() * self._hide_ratio)
+        # rect.translate(0.0, self.parentItem().boundingRect().height() * (1 - self._hide_ratio))
 
         box_theme = self.parentItem().get_theme()
-        # if self.parentItem().isSelected():
-        #     box_theme = box_theme.selected
-        radius = box_theme.border_radius()
+        # radius = box_theme.border_radius()
         
+        square_side = orig_rect.width() + orig_rect.height()
+        right = orig_rect.right()
+        bottom = orig_rect.bottom()
+        left = orig_rect.left()
+        top = orig_rect.top()
+        ratio = self._hide_ratio
+        th_top = bottom - square_side * ratio
+        th_left = right - square_side * ratio
+        th_right = left + square_side * ratio
+        
+        if self.parentItem().get_port_mode() & PortMode.OUTPUT:
+            points = [(right, bottom),
+                      (right, max(th_top, top))]
+            
+            if th_top < top:
+                points += [(max(left, right - (top - th_top)), top)]
+                
+            if th_left < left:
+                points += [(left, max(top, bottom - (left - th_left)))]
+            
+            points += [(max(left, th_left), bottom),
+                       (right, bottom)]
+        else:
+            points = [(left, bottom),
+                      (left, max(th_top, top))]
+            
+            if th_top < top:
+                points += [(min(right, left + (top - th_top)), top)]
+                
+            if th_right > right:
+                points += [(right, max(top, bottom - (right - th_right)))]
+            
+            points += [(min(right, th_right), bottom),
+                       (left, bottom)]
+        
+        polygon = QPolygonF()
+        for xy in points:
+            polygon += QPointF(*xy)
+
         if canvas.theme.scene_background_image is not None:
             painter.setPen(QPen(Qt.NoPen))
             bg_brush = QBrush()
             bg_brush.setTextureImage(canvas.theme.scene_background_image)
             painter.setBrush(bg_brush)
-            if radius:
-                painter.drawRoundedRect(rect, radius, radius)
-            else:
-                painter.drawRect(rect)
+            # if radius:
+            #     painter.drawRoundedRect(rect, radius, radius)
+            # else:
+            #     painter.drawRect(rect)
+            painter.drawPolygon(polygon)
             
         painter.setPen(box_theme.fill_pen())
         painter.setBrush(canvas.theme.scene_background_color)
-        if radius:
-            painter.drawRoundedRect(rect, radius, radius)
-        else:
-            # painter.drawRect(rect)
-            painter.drawRect(rect)
+        # if radius:
+        #     painter.drawRoundedRect(rect, radius, radius)
+        # else:
+        #     # painter.drawRect(rect)
+        #     painter.drawRect(rect)
+        painter.drawPolygon(polygon)
         
         painter.restore()
         
