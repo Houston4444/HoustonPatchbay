@@ -721,6 +721,7 @@ def redraw_all_groups(force_no_prevent_overlap=False, theme_change=False):
 def redraw_group(group_id: int, ensure_visible=False, prevent_overlap=True):
     group = canvas.get_group(group_id)
     if group is None:
+        _logger.error(f"{_logging_str}, no group to redraw")
         return
 
     for box in group.widgets:
@@ -796,8 +797,7 @@ def animate_before_join(group_id: int,
 
 @patchbay_api
 def move_group_boxes(
-        group_id: int, box_poses: dict[PortMode, BoxPos],
-        animate=True, force=False):
+        group_id: int, box_poses: dict[PortMode, BoxPos], animate=True):
     group = canvas.get_group(group_id)
     if group is None:
         return

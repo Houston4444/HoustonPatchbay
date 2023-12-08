@@ -359,7 +359,7 @@ class Group:
         patchcanvas.move_group_boxes(
             self.group_id,
             gpos.boxes,
-            force=view_change, animate=animate)
+            animate=animate)
 
         times_dict['aft move'] = time.time()
 
@@ -368,7 +368,7 @@ class Group:
             if not ex_gpos_splitted:
                 patchcanvas.split_group(self.group_id)
                 patchcanvas.move_group_boxes(
-                    self.group_id, gpos.boxes, force=view_change, animate=animate)
+                    self.group_id, gpos.boxes, animate=animate)
 
         else:
             if ex_gpos_splitted:

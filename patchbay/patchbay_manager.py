@@ -442,10 +442,14 @@ class PatchbayManager:
     def restore_all_group_hidden_sides(self):
         self.optimize_operation(True)
 
+        print('RESSTTOORE AALLL HIDDENN')
+
+        groups_to_restore = set[Group]()
         for group in self.groups:
             if group.current_position.hidden_port_mode():
                 group.current_position.set_hidden_port_mode(PortMode.NULL)
                 group.add_all_ports_to_canvas()
+                groups_to_restore.add(group)
 
         # forget all hidden boxes even if these boxes are not
         # currently present in the patchbay.
@@ -457,7 +461,12 @@ class PatchbayManager:
             conn.add_to_canvas()
             
         self.optimize_operation(False)
-        patchcanvas.redraw_all_groups()
+        
+        for group in groups_to_restore:
+            patchcanvas.redraw_group(
+                group.group_id, prevent_overlap=False)
+            patchcanvas.move_group_boxes(
+                group.group_id, group.current_position.boxes)
 
     def get_group_from_name(self, group_name: str) -> Union[Group, None]:
         return self._groups_by_name.get(group_name)
