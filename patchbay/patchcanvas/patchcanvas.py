@@ -806,7 +806,7 @@ def move_group_boxes(
         box_pos = BoxPos(box_poses[port_mode])
         was_hidden = group.box_poses[port_mode].is_hidden()
         is_hidden = box_pos.is_hidden()
-        if 'PulseAudio' in group.group_name:
+        if 'Keystation' in group.group_name:
             print('apo', group.group_name, port_mode, was_hidden, is_hidden)
 
         group.box_poses[port_mode] = box_pos
@@ -827,32 +827,37 @@ def move_group_boxes(
         if box is None:
             continue
         
+        if 'Keystation' in group.group_name:
+            print('Silii', box)
+        
         box.set_layout_mode(box_pos.layout_mode)
         
         xy = nearest_on_grid(box_pos.pos)
         
         hwr = canvas.theme.hardware_rack_width if box.is_hardware else 0
+        new_xy = (xy[0] + hwr, xy[1] + hwr)
 
         if animate:
             if box.isVisible() and is_hidden:
-                box.set_top_left((xy[0] + hwr, xy[1] + hwr))
+                # box.set_top_left((xy[0] + hwr, xy[1] + hwr))
                 GroupedLinesWidget.start_transparent(group_id, port_mode)
                 canvas.scene.add_box_to_animation_hidding(box)
-            
-            elif box.hidder_widget is not None:
-                if box.isVisible():
-                    box.update_positions()
-                    box.set_top_left((xy[0] + hwr, xy[1] + hwr))
-                    GroupedLinesWidget.start_transparent(group_id, port_mode)
-                    canvas.scene.add_box_to_animation_restore(box)
-                else:
-                    canvas.scene.removeItem(box.hidder_widget)
-                    box.hidder_widget = None
 
-            canvas.scene.add_box_to_animation(
-                box, xy[0] + hwr, xy[1] + hwr, force_anim=animate)
+            else:
+                if box.hidder_widget is not None:
+                    if box.isVisible():
+                        box.update_positions()
+                        box.set_top_left(new_xy)
+                        GroupedLinesWidget.start_transparent(group_id, port_mode)
+                        canvas.scene.add_box_to_animation_restore(box)
+                    else:
+                        canvas.scene.removeItem(box.hidder_widget)
+                        box.hidder_widget = None
+
+                canvas.scene.add_box_to_animation(
+                    box, new_xy[0], new_xy[1], force_anim=animate)
         else:
-            box.set_top_left(xy)
+            box.set_top_left(new_xy)
         
         box.set_wrapped(box_pos.is_wrapped(), animate=animate,
                         prevent_overlap=False)

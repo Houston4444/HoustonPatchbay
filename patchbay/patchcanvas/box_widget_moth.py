@@ -399,8 +399,8 @@ class BoxWidgetMoth(QGraphicsItem):
 
     def animate_hidding(self, ratio: float):
         hidding_ratio = ratio ** 0.25
-        if self._port_list:
-            self.setVisible(True)
+        # if self._port_list:
+        #     self.setVisible(True)
 
         if ratio <= 0.0:
             if self.hidder_widget is not None:
@@ -410,6 +410,12 @@ class BoxWidgetMoth(QGraphicsItem):
             if self.hidder_widget is None:
                 self.hidder_widget = BoxHidder(self)
             self.hidder_widget.set_hide_ratio(hidding_ratio)
+        
+        # set Z value
+        zv = Zv.HIDDING_BOX
+        if ratio <= 0.0 or ratio >= 1.0:
+            zv = Zv.SEL_BOX if self.isSelected() else Zv.BOX
+        self.setZValue(zv.value)
 
     def hide_ports_for_wrap(self, hide: bool):
         for portgrp in canvas.list_portgroups(group_id=self._group_id):

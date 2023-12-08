@@ -372,7 +372,9 @@ class PatchbayManager:
         if group is None:
             return
         
-        group.current_position.set_hidden_port_mode(port_mode)
+        hidden_port_mode = (
+            group.current_position.hidden_port_mode()| port_mode)
+        group.current_position.set_hidden_port_mode(hidden_port_mode)
         group.save_current_position()
 
         self.optimize_operation(True)
@@ -597,7 +599,7 @@ class PatchbayManager:
         
         ex_ptv = self.port_types_view
         self.port_types_view = port_types_view
-        print('Change view', ex_ptv, '->', port_types_view)
+        print('---CCHANGE VIIEW---', ex_ptv, '->', port_types_view)
         # Prevent visual update at each canvas item creation
         # because we may create/remove a lot of ports here
         self.optimize_operation(True)
@@ -610,7 +612,7 @@ class PatchbayManager:
 
         if rm_all_before:
             # there is no common port between previous and next view
-            # strategy is to remove fastly all contents of the patchcanvas.
+            # strategy is to remove fastly all contents from the patchcanvas.
             
             for connection in self.connections:
                 connection.in_canvas = False
@@ -645,17 +647,20 @@ class PatchbayManager:
             
             new_gpos = self.get_group_position(group.name)
 
-            no_redraw = False
+            redrawn_for_layout_mode = False
             force_rebuild = False
             
             # force redraw if a layout mode changes.
             for port_mode in PortMode.in_out_both():
                 if (group.current_position.boxes[port_mode].layout_mode
                         is not new_gpos.boxes[port_mode].layout_mode):
-                    no_redraw = True
+                    redrawn_for_layout_mode = True
                 if (group.current_position.boxes[port_mode].is_hidden()
                         is not new_gpos.boxes[port_mode].is_hidden()):
                     force_rebuild = True
+
+            if 'Keystation' in group.name:
+                print('asmmqq', group.name, redrawn_for_layout_mode, force_rebuild)
 
             if 'Midi Through' in group.name:
                 print('blala', group.name, force_rebuild)
@@ -666,7 +671,7 @@ class PatchbayManager:
             if (force_rebuild
                     or self.port_types_view & group.contains_ptv
                        is not ex_ptv & group.contains_ptv):
-                if not no_redraw:
+                if force_rebuild or not redrawn_for_layout_mode:
                     groups_to_redraw.add(group)
                 
                 if not rm_all_before:
@@ -684,8 +689,8 @@ class PatchbayManager:
                                    & new_gpos.hidden_port_mode())
 
                 for port in group.ports:
-                    # port.add_to_canvas(gpos=new_gpos)
-                    port.add_to_canvas(hidden_sides=hidden_for_port)
+                    port.add_to_canvas(
+                        ignore_gpos=True, hidden_sides=hidden_for_port)
                         
                 for portgroup in group.portgroups:
                     portgroup.add_to_canvas()
@@ -702,10 +707,6 @@ class PatchbayManager:
             groups_and_pos[group] = new_gpos
             
             ziggy_dict['ennd'] = time.time()
-            
-            if group.name == 'Non-Mixer-XT.Synths (Main)':
-                for key, value in ziggy_dict.items():
-                    print('apppse', group.name, value, key)
 
         times_dict['bef add conns'] = time.time()
 
@@ -717,6 +718,8 @@ class PatchbayManager:
         self.optimize_operation(False)
 
         for group in groups_to_redraw:
+            if 'Keystation' in group.name:
+                print('Tooo redraw', group.name, group.in_canvas)
             if group.in_canvas:
                 patchcanvas.redraw_group(
                     group.group_id, prevent_overlap=False)
@@ -724,7 +727,7 @@ class PatchbayManager:
         times_dict['after_redraw groups'] = time.time()
 
         for group, gpos in groups_and_pos.items():
-            if 'GxTubeS' in group.name:
+            if 'Keystation' in group.name:
                 print('Sett it', group.name)
             group.set_group_position(gpos, view_change=True)
 

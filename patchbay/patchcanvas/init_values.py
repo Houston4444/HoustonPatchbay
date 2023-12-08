@@ -249,6 +249,7 @@ class Zv(Enum):
     RUBBERBAND = auto()
     OPAC_LINE = auto() # line semi-hidden by filter
     OPAC_BOX = auto() # box semi-hidden by filter
+    HIDDING_BOX = auto()
     HIDDEN_CONN = auto()
     LINE = auto()
     BOX = auto()

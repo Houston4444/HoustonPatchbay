@@ -93,7 +93,7 @@ class Port:
         self.last_digit_to_add = ''
         self.rename_in_canvas()
 
-    def add_to_canvas(self, hidden_sides=PortMode.NULL):
+    def add_to_canvas(self, ignore_gpos=False, hidden_sides=PortMode.NULL):
     # def add_to_canvas(self, gpos: Optional[GroupPos]=None):
         if self.manager.very_fast_operation:
             return
@@ -114,11 +114,15 @@ class Port:
         if not self.manager.port_type_shown(self.full_type()):
             return
 
-        if hidden_sides & self.mode():
-            return
+        if ignore_gpos:
+            if hidden_sides & self.mode():
+                return
+        else:
+            if self.group.current_position.hidden_port_mode() & self.mode():
+                return
+        
         # if gpos is None:
         #     gpos = self.group.current_position
-
         # if gpos.hidden_sides & self.mode():
         #     return
 

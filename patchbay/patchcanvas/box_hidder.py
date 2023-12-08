@@ -17,7 +17,6 @@ class BoxHidder(QGraphicsItem):
         
     def set_hide_ratio(self, ratio: float):
         self._hide_ratio = ratio
-        print('raiooo', ratio)
         self.update()
         
     def parentItem(self) -> 'BoxWidget':
@@ -37,11 +36,13 @@ class BoxHidder(QGraphicsItem):
         box_theme = self.parentItem().get_theme()
         # radius = box_theme.border_radius()
         
+        pen = box_theme.fill_pen()
+        lh = pen.widthF() / 2.0
         square_side = orig_rect.width() + orig_rect.height()
-        right = orig_rect.right()
-        bottom = orig_rect.bottom()
-        left = orig_rect.left()
-        top = orig_rect.top()
+        right = orig_rect.right() - lh
+        bottom = orig_rect.bottom() - lh
+        left = orig_rect.left() + lh
+        top = orig_rect.top() + lh
         ratio = self._hide_ratio
         th_top = bottom - square_side * ratio
         th_left = right - square_side * ratio
@@ -67,7 +68,7 @@ class BoxHidder(QGraphicsItem):
                 points += [(min(right, left + (top - th_top)), top)]
                 
             if th_right > right:
-                points += [(right, max(top, bottom - (right - th_right)))]
+                points += [(right, max(top, bottom - (th_right - right)))]
             
             points += [(min(right, th_right), bottom),
                        (left, bottom)]
