@@ -20,7 +20,7 @@
 import logging
 from math import ceil
 from struct import pack
-from typing import Optional
+from typing import Optional, Union
 from sip import voidptr
 import sys
 from enum import Enum
@@ -732,31 +732,24 @@ class BoxWidgetMoth(QGraphicsItem):
         QGraphicsItem.mouseReleaseEvent(self, event)
     
     def fix_pos(self, check_others=False):
-        x, y = int(self.x()), int(self.y())
-        if self.is_hardware:
-            x -= canvas.theme.hardware_rack_width
-            y -= canvas.theme.hardware_rack_width
+        xy = self.top_left()
 
         if check_others:
-            new_x, new_y = nearest_on_grid_check_others((x, y), self)
+            new_xy = nearest_on_grid_check_others(xy, self)
         else:
-            new_x, new_y = nearest_on_grid((x, y))
-
-        if self.is_hardware:
-            new_x += canvas.theme.hardware_rack_width
-            new_y += canvas.theme.hardware_rack_width
+            new_xy = nearest_on_grid(xy)
         
-        if (x, y) == (new_x, new_y):
-            self.setPos(QPointF(x, y))
+        if xy == new_xy:
+            self.set_top_left(xy)
             self.repaint_lines()
         else:
-            canvas.scene.add_box_to_animation(self, new_x, new_y)
+            canvas.scene.add_box_to_animation(self, *new_xy)
 
     def top_left(self) -> tuple[int, int]:
         return (round(self.sceneBoundingRect().left()),
                 round(self.sceneBoundingRect().top()))
 
-    def set_top_left(self, xy: tuple[int, int]):        
+    def set_top_left(self, xy: Union[tuple[int, int], tuple[float, float]]):        
         if self.is_hardware:
             point = QPointF(*xy)
             point += QPointF(
@@ -831,12 +824,12 @@ class BoxWidgetMoth(QGraphicsItem):
             height = self._wrapped_height
         
         if self.is_hardware:
-            hws = canvas.theme.hardware_rack_width
+            hws = float(canvas.theme.hardware_rack_width)
             
             return QRectF(- hws, - hws,
-                          width + 2 * hws,
-                          height + 2 * hws)
-        return QRectF(0.0, 0.0, width, height)
+                          width + 2.0 * hws,
+                          height + 2.0 * hws)
+        return QRectF(0.0, 0.0, float(width), float(height))
 
     def boundingRect(self):
         if self.is_hardware:

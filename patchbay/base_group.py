@@ -131,38 +131,6 @@ class Group:
         
         patchcanvas.rename_group(self.group_id, display_name)
 
-    def split_in_canvas(self):
-        box_rect = patchcanvas.get_box_rect(self.group_id, PortMode.BOTH)
-
-        self.manager.optimize_operation(True)
-        for conn in self.manager.connections:
-            if conn.port_out.group is self or conn.port_in.group is self:
-                conn.remove_from_canvas()
-
-        self.remove_all_ports_from_canvas()
-        gpos = self.current_position
-
-        self.remove_from_canvas()
-        
-        self.current_position.set_splitted(True)
-        wrapped = gpos.boxes[PortMode.BOTH].is_wrapped()
-        for port_mode in PortMode.INPUT, PortMode.OUTPUT:
-            gpos.boxes[port_mode].pos = gpos.boxes[PortMode.BOTH].pos
-            gpos.boxes[port_mode].set_wrapped(
-                gpos.boxes[PortMode.BOTH].is_wrapped())
-        
-        self.add_to_canvas()
-        self.add_all_ports_to_canvas()
-
-        for conn in self.manager.connections:
-            if conn.port_out.group is self or conn.port_in.group is self:
-                conn.add_to_canvas()
-
-        self.manager.optimize_operation(False)
-        patchcanvas.redraw_group(self.group_id)
-        patchcanvas.move_splitted_boxes_on_place(
-            self.group_id, box_rect.width())
-
     def _get_box_type_and_icon(self) -> tuple[BoxType, str]:
         box_type = BoxType.APPLICATION
         icon_name = self.name.partition('.')[0].lower()

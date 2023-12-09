@@ -18,7 +18,7 @@
 # For a full copy of the GNU General Public License see the doc/GPL.txt file.
 
 from dataclasses import dataclass
-from typing import Optional
+from typing import Optional, Union
 from PyQt5.QtCore import (QRectF, QMarginsF, Qt)
 from PyQt5.QtWidgets import QGraphicsView
 
@@ -27,7 +27,7 @@ from .init_values import (
     options,
     PortMode,
     Direction)
-from .utils import (previous_left_on_grid, next_left_on_grid,
+from .utils import (nearest_on_grid, previous_left_on_grid, next_left_on_grid,
                     previous_top_on_grid, next_top_on_grid)
 
 from .scene_moth import MovingBox, PatchSceneMoth
@@ -70,9 +70,9 @@ class ToMoveBox:
     
 
 class PatchScene(PatchSceneMoth):
-    " This class part of the scene is for repulsive boxes option"
-    " because the algorythm is not simple and takes a lot of lines."
-    " See scene_moth.py for others scene methods."
+    '''This class part of the scene is for repulsive boxes option
+       because the algorythm is not simple and takes a lot of lines.
+       See scene_moth.py for others scene methods.'''
     def __init__(self, view: QGraphicsView):
         PatchSceneMoth.__init__(self, view)
         self._full_repulse_boxes = set[BoxWidget]()
@@ -107,12 +107,14 @@ class PatchScene(PatchSceneMoth):
                 return Direction.DOWN
             return Direction.UP
         
-        def repulse(direction: Direction, fixed, moving,
+        def repulse(direction: Direction,
+                    fixed: Union[BoxWidget, QRectF],
+                    moving: Union[BoxWidget, QRectF],
                     fixed_port_mode: PortMode,
                     moving_port_mode: PortMode) -> QRectF:
-            ''' returns a QRectF to be placed at side of fixed_rect
-                where fixed_rect is an already determinated futur place
-                for a box '''
+            '''returns a QRectF to be placed at side of fixed_rect
+               where fixed_rect is an already determinated futur place
+               for a box'''
                 
             if isinstance(fixed, BoxWidget):
                 fixed_rect = fixed.boundingRect().translated(fixed.pos())
@@ -124,26 +126,28 @@ class PatchScene(PatchSceneMoth):
             else:
                 rect = moving
             
+            print('fixed', type(fixed), fixed_rect.left(), fixed_rect.top())
+            print('movin', type(moving), rect.left(), rect.top())
+            
             x = rect.left()
             y = rect.top()
             
             spacing = canvas.theme.box_spacing
+            spacing_hor = canvas.theme.box_spacing_horizontal
             
             if direction in (Direction.LEFT, Direction.RIGHT):
-                # spacing = box_spacing
-
-                if direction == Direction.LEFT:
+                if direction is Direction.LEFT:
                     if (fixed_port_mode & PortMode.INPUT
                             or moving_port_mode & PortMode.OUTPUT):
                         x = previous_left_on_grid(
-                            fixed_rect.left() - rect.width() - 24)
+                            fixed_rect.left() - rect.width() - spacing_hor)
                     else: 
                         x = previous_left_on_grid(
                             fixed_rect.left() - rect.width() - spacing)
                 else:
                     if (fixed_port_mode & PortMode.OUTPUT
                             or moving_port_mode & PortMode.INPUT):
-                        x = next_left_on_grid(fixed_rect.right() + 24)
+                        x = next_left_on_grid(fixed_rect.right() + spacing_hor)
                     else:
                         x = next_left_on_grid(fixed_rect.right() + spacing)
 
@@ -154,14 +158,15 @@ class PatchScene(PatchSceneMoth):
                     y = fixed_rect.top()
                 elif bottom_diff <= magnet:
                     y = fixed_rect.bottom() - rect.height()
-            
+                # x2, y = nearest_on_grid((x, y))
+
             elif direction in (Direction.UP, Direction.DOWN):
-                if direction == Direction.UP:
+                if direction is Direction.UP:
                     y = previous_top_on_grid(
                         fixed_rect.top() - rect.height() - spacing)
                 else:
                     y = next_top_on_grid(fixed_rect.bottom() + spacing)
-                
+
                 left_diff = abs(fixed_rect.left() - rect.left())
                 right_diff = abs(fixed_rect.right() - rect.right())
                 
@@ -169,6 +174,7 @@ class PatchScene(PatchSceneMoth):
                     x = fixed_rect.left()
                 elif right_diff <= magnet:
                     x = fixed_rect.right() - rect.width()
+                # x, y2 = nearest_on_grid((x, y))
 
             return QRectF(float(x), float(y), rect.width(), rect.height())
 
@@ -205,7 +211,6 @@ class PatchScene(PatchSceneMoth):
         
         for box in repulser_boxes:
             self._full_repulse_boxes.add(box)
-            srect = box.after_wrap_rect()
 
             # if box is already moving, consider its end position
             for moving_box in self.move_boxes:
@@ -214,10 +219,10 @@ class PatchScene(PatchSceneMoth):
                         # if this box is joining, it will be removed soon
                         # so, it has not to be a repulser
                         return
-                    srect.translate(moving_box.to_pt)
+                    srect = moving_box.final_rect
                     break
             else:
-                srect.translate(box.pos())
+                srect = box.after_wrap_rect().translated(box.pos())
 
             repulser = BoxAndRect(srect, box)
             repulsers.append(repulser)
@@ -392,11 +397,8 @@ class PatchScene(PatchSceneMoth):
                 to_move_boxes.append(to_move_box)
 
             # now we decide where the box is moved
-            pos_offset = item.boundingRect().topLeft()
-            to_send_rect = new_rect.translated(- pos_offset)
-
             self.add_box_to_animation(
-                item, int(to_send_rect.left()), int(to_send_rect.top()))
+                item, int(new_rect.left()), int(new_rect.top()))
 
     def full_repulse(self, view_change=False):
         self._full_repulse_boxes.clear()
@@ -450,8 +452,8 @@ class PatchScene(PatchSceneMoth):
         repulser_boxes = list[BoxWidget]()
 
         for neighbor in neighbors:
-            self.add_box_to_animation(
-                neighbor, int(neighbor.pos().x()), int(neighbor.pos().y() - less_y))
+            x, y = neighbor.top_left()           
+            self.add_box_to_animation(neighbor, x, int(y - less_y))
             repulser_boxes.append(neighbor)
         repulser_boxes.append(box_widget)
         

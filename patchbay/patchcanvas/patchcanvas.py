@@ -421,39 +421,6 @@ def get_box_rect(group_id: int, port_mode: PortMode) -> QRectF:
         return QRectF()
 
 @patchbay_api
-def move_splitted_boxes_on_place(group_id: int, orig_width: int):
-    group = canvas.get_group(group_id)
-    if group is None:
-        _logger.error(f"{_logging_str} - unable to find group")
-        return
-
-    if not group.splitted:
-        return
-    
-    out_item = group.widgets[0]
-    if out_item is None:
-        return
-
-    in_item = group.widgets[1]
-    if in_item is None:
-        _logger.error(
-            f"{_logging_str} - group has no widget box")
-        return
-    
-    pos = in_item.pos()
-    in_width = in_item.boundingRect().width()
-    out_width = out_item.boundingRect().width()
-    total_width = in_width + canvas.theme.box_spacing + out_width
-    
-    left = int(pos.x() + (orig_width - total_width) / 2)
-    
-    canvas.scene.add_box_to_animation(
-        in_item, left, int(pos.y()))
-    canvas.scene.add_box_to_animation(
-        out_item, left + in_width + canvas.theme.box_spacing, int(pos.y()))
-    
-
-@patchbay_api
 def split_group(group_id: int, on_place=False):
     item = None
 
@@ -558,24 +525,6 @@ def split_group(group_id: int, on_place=False):
                         previous_left_on_grid(
                             int(ex_rect.left() - (full_width - ex_rect.width()) / 2)),
                         previous_top_on_grid(int(ex_rect.y())))
-    # else:
-    #     for box in canvas.get_group(group_id).widgets:
-    #         if box is not None:
-    #             if box.get_current_port_mode() is PortMode.OUTPUT:
-    #                 canvas.scene.add_box_to_animation(
-    #                     box,
-    #                     nearest_on_grid()
-    #                     previous_left_on_grid(
-    #                         int(ex_rect.right() + (full_width - ex_rect.width()) / 2
-    #                         - box.boundingRect().width())),
-    #                     previous_top_on_grid(
-    #                         int(ex_rect.y())))
-    #             else:
-    #                 canvas.scene.add_box_to_animation(
-    #                     box,
-    #                     previous_left_on_grid(
-    #                         int(ex_rect.left() - (full_width - ex_rect.width()) / 2)),
-    #                     previous_top_on_grid(int(ex_rect.y())))
 
     QTimer.singleShot(0, canvas.scene.update)
 
@@ -831,15 +780,10 @@ def move_group_boxes(
             print('Silii', box)
         
         box.set_layout_mode(box_pos.layout_mode)
-        
         xy = nearest_on_grid(box_pos.pos)
-        
-        hwr = canvas.theme.hardware_rack_width if box.is_hardware else 0
-        new_xy = (xy[0] + hwr, xy[1] + hwr)
 
         if animate:
             if box.isVisible() and is_hidden:
-                # box.set_top_left((xy[0] + hwr, xy[1] + hwr))
                 GroupedLinesWidget.start_transparent(group_id, port_mode)
                 canvas.scene.add_box_to_animation_hidding(box)
 
@@ -847,7 +791,7 @@ def move_group_boxes(
                 if box.hidder_widget is not None:
                     if box.isVisible():
                         box.update_positions()
-                        box.set_top_left(new_xy)
+                        box.set_top_left(xy)
                         GroupedLinesWidget.start_transparent(group_id, port_mode)
                         canvas.scene.add_box_to_animation_restore(box)
                     else:
@@ -855,54 +799,12 @@ def move_group_boxes(
                         box.hidder_widget = None
 
                 canvas.scene.add_box_to_animation(
-                    box, new_xy[0], new_xy[1], force_anim=animate)
+                    box, *xy, force_anim=animate)
         else:
             box.set_top_left(xy)
         
         box.set_wrapped(box_pos.is_wrapped(), animate=animate,
                         prevent_overlap=False)
-        
-
-    # if group.splitted:
-    #     for port_mode in (PortMode.OUTPUT, PortMode.INPUT):
-    #         box_pos = box_poses[port_mode]
-    #         xy = nearest_on_grid(box_pos.pos)
-
-    #         if port_mode is PortMode.OUTPUT:
-    #             box = group.widgets[0]
-    #         else:
-    #             box = group.widgets[1]
-
-    #         if box is None:
-    #             continue
-
-    #         if force or box.top_left() != xy:
-    #             hwr = (canvas.theme.hardware_rack_width
-    #                    if box.is_hardware else 0)
-
-    #             canvas.scene.add_box_to_animation(
-    #                 box, xy[0] + hwr, xy[1] + hwr, force_anim=animate)
-            
-    #         box.set_wrapped(box_pos.is_wrapped(), animate=animate,
-    #                         prevent_overlap=False)
-
-    # else:
-    #     box = group.widgets[0]
-    #     if box is None:
-    #         return
-    #     box_pos = box_poses[PortMode.BOTH]
-    #     xy = nearest_on_grid(box_pos.pos)
-
-    #     if force or box.top_left() != xy:
-    #         hwr = (canvas.theme.hardware_rack_width
-    #                if box.is_hardware else 0)
-
-    #         canvas.scene.add_box_to_animation(
-    #             box, xy[0] + hwr, xy[1] + hwr,
-    #             force_anim=animate)
-        
-    #     box.set_wrapped(box_pos.is_wrapped(), animate=animate,
-    #                     prevent_overlap=False)
 
 @patchbay_api
 def wrap_group_box(group_id: int, port_mode: PortMode, yesno: bool,

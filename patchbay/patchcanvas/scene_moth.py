@@ -360,7 +360,7 @@ class PatchSceneMoth(QGraphicsScene):
                      + ((moving_box.to_pt.y() - moving_box.from_pt.y())
                         * (ratio ** 0.6)))
 
-                moving_box.widget.setPos(x, y)
+                moving_box.widget.set_top_left((x, y))
                 moving_box.widget.repaint_lines(fast_move=True)
 
         for wrapping_box in self.wrapping_boxes:
@@ -437,6 +437,8 @@ class PatchSceneMoth(QGraphicsScene):
 
     def add_box_to_animation(self, box_widget: BoxWidget, to_x: int, to_y: int,
                              force_anim=True, joining=False):
+        '''add a box to the move animation, to_x and to_y refer to the top left
+           of the box at the end of animation.'''
         for moving_box in self.move_boxes:
             if moving_box.widget is box_widget:
                 break
@@ -446,17 +448,21 @@ class PatchSceneMoth(QGraphicsScene):
                 # and force_anim is False,
                 # then box position is directly changed
                 if box_widget is not None:
-                    box_widget.setPos(int(to_x), int(to_y))
+                    box_widget.set_top_left((int(to_x), int(to_y)))
                 return
 
             moving_box = MovingBox()
             moving_box.widget = box_widget
             self.move_boxes.append(moving_box)
 
-        moving_box.from_pt = box_widget.pos()
+        moving_box.from_pt = QPoint(*box_widget.top_left())
         moving_box.to_pt = QPoint(to_x, to_y)
-        moving_box.final_rect = \
-            box_widget.after_wrap_rect().translated(moving_box.to_pt)
+        
+        aft_wrap_rect = box_widget.after_wrap_rect()
+        final_rect = QRectF(
+            0.0, 0.0, aft_wrap_rect.width(), aft_wrap_rect.height())
+        final_rect.translate(moving_box.to_pt)
+        moving_box.final_rect = final_rect
         moving_box.start_time = time.time() - self._move_timer_start_at
         moving_box.joining = joining
 
