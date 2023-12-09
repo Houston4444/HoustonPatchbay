@@ -857,7 +857,7 @@ def move_group_boxes(
                 canvas.scene.add_box_to_animation(
                     box, new_xy[0], new_xy[1], force_anim=animate)
         else:
-            box.set_top_left(new_xy)
+            box.set_top_left(xy)
         
         box.set_wrapped(box_pos.is_wrapped(), animate=animate,
                         prevent_overlap=False)

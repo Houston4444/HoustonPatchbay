@@ -189,8 +189,9 @@ class Callbacker:
             menu = PoMenu(self.mng, portgroup)
         menu.exec(QPoint(x, y))
 
-    def _bg_right_click(self, x: int, y: int):
+    def _bg_right_click(self, x: int, y: int, scene_x: float, scene_y: float):
         if self.mng.canvas_menu is not None:
+            self.mng.canvas_menu.remember_scene_pos(scene_x, scene_y)
             self.mng.canvas_menu.exec(QPoint(x, y))
     
     def _bg_double_click(self):

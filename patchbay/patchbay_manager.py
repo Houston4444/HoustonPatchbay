@@ -417,16 +417,31 @@ class PatchbayManager:
         patchcanvas.redraw_group(group_id)
         patchcanvas.canvas.scene.resize_the_scene()
 
-    def restore_group_hidden_sides(self, group_id: int):
+    def restore_group_hidden_sides(
+            self, group_id: int, scene_pos: tuple[int, int]):
         group = self.get_group_from_id(group_id)
         if group is None:
             return
         
-        hidden_port_mode = group.current_position.hidden_port_mode()
-        group.current_position.set_hidden_port_mode(PortMode.NULL)        
-        group.save_current_position()
-        
+        gpos = group.current_position
+        hidden_port_mode = gpos.hidden_port_mode()
+        if hidden_port_mode is PortMode.NULL:
+            return
+
+        for port_mode in PortMode.in_out_both():
+            if hidden_port_mode & port_mode:
+                gpos.boxes[port_mode].pos = scene_pos
+
         self.optimize_operation(True)
+        
+        # if hidden_port_mode is PortMode.BOTH and gpos.is_splitted():
+        #     patchcanvas.join_group(group.group_id)
+        #     # gpos.set_splitted(False)
+
+        print('scenene pos', scene_pos)
+            
+        gpos.set_hidden_port_mode(PortMode.NULL)
+        group.save_current_position()
 
         group.add_to_canvas()
         group.add_all_ports_to_canvas()
@@ -436,8 +451,12 @@ class PatchbayManager:
                 conn.add_to_canvas()
 
         self.optimize_operation(False)
-        patchcanvas.animate_after_restore_box(group_id, hidden_port_mode)
-        patchcanvas.canvas.scene.resize_the_scene()
+        patchcanvas.redraw_group(group.group_id, prevent_overlap=False)
+        patchcanvas.move_group_boxes(group.group_id, group.current_position.boxes, animate=False)
+        patchcanvas.move_group_boxes(group.group_id, group.current_position.boxes, animate=True)
+        patchcanvas.redraw_group(group.group_id, prevent_overlap=True)
+        # patchcanvas.animate_after_restore_box(group_id, hidden_port_mode)
+        # patchcanvas.canvas.scene.resize_the_scene()
 
     def restore_all_group_hidden_sides(self):
         self.optimize_operation(True)

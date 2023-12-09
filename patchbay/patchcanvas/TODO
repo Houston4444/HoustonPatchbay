@@ -29,3 +29,4 @@ bug: après change port types view, y a des boîtes avec ports cachés
 après restore box, prevent overlap
 après set theme, check group icon
 animate hidding PortmOde.BOTH connections
+remove box from animation avec click selectif

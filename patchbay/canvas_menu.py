@@ -2,10 +2,10 @@
 from typing import TYPE_CHECKING
 from PyQt5.QtGui import QIcon, QDesktopServices
 from PyQt5.QtWidgets import QMenu, QApplication
-from PyQt5.QtCore import QLocale, QUrl, pyqtSlot
+from PyQt5.QtCore import QLocale, QUrl, pyqtSlot, QPointF
 
 from . import patchcanvas
-from .patchcanvas import utils
+from .patchcanvas import utils, canvas
 from .base_elements import PortType, PortTypesViewFlag
 
 
@@ -18,12 +18,12 @@ _translate = QApplication.translate
 class CanvasMenu(QMenu):
     def __init__(self, patchbay_manager: 'PatchbayManager'):
         QMenu.__init__(self, _translate('patchbay', 'Patchbay'))
-        self.patchbay_manager = patchbay_manager
+        self.mng = patchbay_manager
 
         # fix wrong menu position with Wayland,
         # see https://community.kde.org/Guidelines_and_HOWTOs/Wayland_Porting_Notes
         self.winId()
-        main_win = self.patchbay_manager.main_win
+        main_win = self.mng.main_win
         main_win.winId()
         parent_window_handle = main_win.windowHandle()
         if not parent_window_handle:
@@ -32,9 +32,9 @@ class CanvasMenu(QMenu):
                 parent_window_handle = native_parent_widget.windowHandle()
         self.windowHandle().setTransientParent(parent_window_handle)
 
-        self.patchbay_manager.sg.port_types_view_changed.connect(
+        self.mng.sg.port_types_view_changed.connect(
             self._port_types_view_changed)
-        self.patchbay_manager.sg.alsa_midi_enabled_changed.connect(
+        self.mng.sg.alsa_midi_enabled_changed.connect(
             self._alsa_midi_enabled)
 
         self.action_fullscreen = self.addAction(
@@ -139,13 +139,18 @@ class CanvasMenu(QMenu):
         self.action_manual.setIcon(QIcon.fromTheme('system-help'))
         self.action_manual.triggered.connect(self.internal_manual)
         self.action_manual.setVisible(
-            self.patchbay_manager._manual_path is not None)
+            self.mng._manual_path is not None)
 
         self.action_options = self.addAction(
             _translate('patchbay', "Canvas options"))
         self.action_options.setIcon(QIcon.fromTheme("configure"))
         self.action_options.triggered.connect(
             patchbay_manager.show_options_dialog)
+        
+        self._scene_pos = (0, 0)
+
+    def remember_scene_pos(self, x: float, y: float):
+        self._scene_pos = (int(x), int(y))
 
     def _port_types_view_changed(self, port_types_view: int):
         self.action_all_types.setChecked(
@@ -160,23 +165,23 @@ class CanvasMenu(QMenu):
             port_types_view == PortTypesViewFlag.ALSA)
 
     def port_types_view_all_types_choice(self):
-        self.patchbay_manager.change_port_types_view(
+        self.mng.change_port_types_view(
             PortTypesViewFlag.ALL)
 
     def port_types_view_audio_choice(self):
-        self.patchbay_manager.change_port_types_view(
+        self.mng.change_port_types_view(
             PortTypesViewFlag.AUDIO)
 
     def port_types_view_midi_choice(self):
-        self.patchbay_manager.change_port_types_view(
+        self.mng.change_port_types_view(
             PortTypesViewFlag.MIDI)
 
     def port_types_view_cv_choice(self):
-        self.patchbay_manager.change_port_types_view(
+        self.mng.change_port_types_view(
             PortTypesViewFlag.CV)
 
     def port_types_view_alsa_choice(self):
-        self.patchbay_manager.change_port_types_view(
+        self.mng.change_port_types_view(
             PortTypesViewFlag.ALSA)
 
     def _alsa_midi_enabled(self, yesno: bool):
@@ -195,7 +200,7 @@ class CanvasMenu(QMenu):
         dark = utils.is_dark_theme(self)
         has_hiddens = False
         
-        for group in self.patchbay_manager.groups:
+        for group in self.mng.groups:
             hidden_port_mode = group.current_position.hidden_port_mode()
             if hidden_port_mode:
                 group_act = self.show_hiddens_menu.addAction(
@@ -209,9 +214,9 @@ class CanvasMenu(QMenu):
                 has_hiddens = True
         
         if not has_hiddens:
-            ptv_view = self.patchbay_manager.views[
-                self.patchbay_manager.VIEW_NUMBER].get(
-                    self.patchbay_manager.port_types_view)
+            ptv_view = self.mng.views[
+                self.mng.VIEW_NUMBER].get(
+                    self.mng.port_types_view)
             
             for group_name, gpos in ptv_view.items():
                 if gpos.hidden_port_mode():
@@ -238,15 +243,16 @@ class CanvasMenu(QMenu):
     @pyqtSlot()
     def _show_hidden_group(self):
         group_id: int = self.sender().data()
-        self.patchbay_manager.restore_group_hidden_sides(group_id)
+        
+        self.mng.restore_group_hidden_sides(group_id, self._scene_pos)
     
     @pyqtSlot()
     def _show_all_hidden_groups(self):
-        self.patchbay_manager.restore_all_group_hidden_sides()
+        self.mng.restore_all_group_hidden_sides()
     
     def internal_manual(self):
         short_locale = 'en'
-        manual_dir = self.patchbay_manager._manual_path
+        manual_dir = self.mng._manual_path
         if manual_dir is None:
             return        
         

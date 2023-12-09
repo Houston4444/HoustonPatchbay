@@ -1029,8 +1029,12 @@ class PatchSceneMoth(QGraphicsScene):
                 return
 
             event.accept()
-            sc_pos = event.screenPos()
-            canvas.callback(CallbackAct.BG_RIGHT_CLICK, sc_pos.x(), sc_pos.y())
+            screen_pos = event.screenPos()
+            scene_pos = event.scenePos()
+            canvas.callback(
+                CallbackAct.BG_RIGHT_CLICK,
+                screen_pos.x(), screen_pos.y(),
+                scene_pos.x(), scene_pos.y())
             return
 
         QGraphicsScene.contextMenuEvent(self, event)
