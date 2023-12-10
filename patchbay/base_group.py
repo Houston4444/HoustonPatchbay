@@ -233,7 +233,7 @@ class Group:
         elif port_type is PortType.MIDI_JACK:
             ptv_flag = PortTypesViewFlag.MIDI
         elif port_type is PortType.MIDI_ALSA:
-            ptv_flag = PortTypesViewFlag.ALL
+            ptv_flag = PortTypesViewFlag.ALSA
         elif port_type is PortType.VIDEO:
             ptv_flag = PortTypesViewFlag.VIDEO
         else:
