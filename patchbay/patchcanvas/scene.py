@@ -126,9 +126,6 @@ class PatchScene(PatchSceneMoth):
             else:
                 rect = moving
             
-            print('fixed', type(fixed), fixed_rect.left(), fixed_rect.top())
-            print('movin', type(moving), rect.left(), rect.top())
-            
             x = rect.left()
             y = rect.top()
             
@@ -403,7 +400,9 @@ class PatchScene(PatchSceneMoth):
     def full_repulse(self, view_change=False):
         self._full_repulse_boxes.clear()
         if view_change:
-            moving_boxes = self.move_boxes.copy()
+            # moving_boxes = self.move_boxes.copy()
+            moving_boxes = [b for b in self.move_boxes
+                            if not b.joining and not b in self.hidding_boxes]
             # for moving_box in moving_boxes:
             while moving_boxes:
                 self.deplace_boxes_from_repulsers(
