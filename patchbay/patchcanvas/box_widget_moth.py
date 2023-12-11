@@ -428,8 +428,13 @@ class BoxWidgetMoth(QGraphicsItem):
             if port.widget is not None:
                 port.widget.setVisible(not hide)
 
+    def ports_are_visible(self) -> bool:
+        return self._wrapping_state is WrappingState.NORMAL
+
     def is_wrapped(self) -> bool:
-        return bool(self._wrapping_state is not WrappingState.NORMAL)
+        return bool(
+            self._wrapping_state in (
+                WrappingState.WRAPPED, WrappingState.WRAPPING))
 
     def set_wrapped(self, yesno: bool, animate=True, prevent_overlap=True):
         if yesno == bool(self._wrapping_state

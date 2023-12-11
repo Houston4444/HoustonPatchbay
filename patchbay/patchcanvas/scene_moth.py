@@ -24,11 +24,22 @@ from math import floor
 import time
 from typing import Optional
 
-from PyQt5.QtCore import (QT_VERSION, pyqtSignal, pyqtSlot,
-                          Qt, QPoint, QPointF, QRectF, QTimer, QMarginsF)
+from PyQt5.QtCore import (
+    QT_VERSION,
+    pyqtSignal,
+    pyqtSlot,
+    Qt,
+    QPoint,
+    QPointF,
+    QRectF,
+    QTimer,
+    QMarginsF)
 from PyQt5.QtGui import QCursor, QPixmap, QPolygonF, QBrush, QPainter
-from PyQt5.QtWidgets import (QGraphicsRectItem, QGraphicsScene, QApplication,
-                             QGraphicsView, QGraphicsItem)
+from PyQt5.QtWidgets import (
+    QGraphicsRectItem,
+    QGraphicsScene,
+    QApplication,
+    QGraphicsItem)
 
 # Imports (locals)
 from .init_values import (
@@ -118,7 +129,7 @@ class PatchSceneMoth(QGraphicsScene):
         self.wrapping_boxes = list[WrappingBox]()
         self.hidding_boxes = list[BoxWidget]()
         self.restore_boxes = list[BoxWidget]()
-        self._MOVE_DURATION = 0.300 # 300ms
+        self._MOVE_DURATION = 1.300 # 300ms
         self._MOVE_TIMER_INTERVAL = 20 # 20 ms step animation (50 Hz)
         self._move_timer_start_at = 0.0
         self._move_timer_last_time = 0.0
@@ -436,7 +447,7 @@ class PatchSceneMoth(QGraphicsScene):
             canvas.qobject.move_boxes_finished.emit()
 
     def add_box_to_animation(self, box_widget: BoxWidget, to_x: int, to_y: int,
-                             force_anim=True, joining=False):
+                             force_anim=True, joining=False, joined_rect=QRectF()):
         '''add a box to the move animation, to_x and to_y refer to the top left
            of the box at the end of animation.'''
         for moving_box in self.move_boxes:
@@ -458,11 +469,15 @@ class PatchSceneMoth(QGraphicsScene):
         moving_box.from_pt = QPoint(*box_widget.top_left())
         moving_box.to_pt = QPoint(to_x, to_y)
         
-        aft_wrap_rect = box_widget.after_wrap_rect()
-        final_rect = QRectF(
-            0.0, 0.0, aft_wrap_rect.width(), aft_wrap_rect.height())
-        final_rect.translate(moving_box.to_pt)
-        moving_box.final_rect = final_rect
+        if joining:
+            moving_box.final_rect = joined_rect
+        else:
+            aft_wrap_rect = box_widget.after_wrap_rect()
+            final_rect = QRectF(
+                0.0, 0.0, aft_wrap_rect.width(), aft_wrap_rect.height())
+            final_rect.translate(moving_box.to_pt)
+            moving_box.final_rect = final_rect
+        
         moving_box.start_time = time.time() - self._move_timer_start_at
         moving_box.joining = joining
 
@@ -514,6 +529,14 @@ class PatchSceneMoth(QGraphicsScene):
             self._move_timer_start_at = time.time()
             self._move_timer_last_time = self._move_timer_start_at
             self._move_box_timer.start()
+
+    def remove_box(self, box_widget: BoxWidget):
+        for box_list in (self.move_boxes, self.wrapping_boxes,
+                         self.hidding_boxes, self.restore_boxes):
+            if box_widget in box_list:
+                box_list.remove(box_widget) 
+        
+        self.removeItem(box_widget)
 
     def center_view_on(self, widget):
         self._view.centerOn(widget)

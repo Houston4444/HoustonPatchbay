@@ -63,7 +63,7 @@ class BoxWidget(BoxWidgetMoth):
         self._ex_ports_y_segments_dict = dict[str, list[list[int]]]()
 
     def __repr__(self) -> str:
-        return f"BoxWidget({self._group_name}, {self._current_port_mode.name})"
+        return f"BoxWidget({self._group_name}, {self._port_mode.name})"
 
     def _get_portgroup_name(self, portgrp_id: int):
         return get_portgroup_name_from_ports_names(
@@ -1164,6 +1164,7 @@ class BoxWidget(BoxWidgetMoth):
     def update_positions(self, even_animated=False, without_connections=False,
                          prevent_overlap=True, theme_change=False):
         if canvas.loading_items:
+            print("Pas d'update loading items", self)
             return
 
         if (not even_animated

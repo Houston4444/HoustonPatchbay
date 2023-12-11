@@ -430,7 +430,7 @@ class GroupPos:
                        and self.boxes[PortMode.OUTPUT].is_wrapped())
             self.boxes[PortMode.BOTH].set_wrapped(wrapped)
 
-    def hidden_port_mode(self) -> PortMode:
+    def hidden_port_modes(self) -> PortMode:
         if self.is_splitted():
             hd_port_mode = PortMode.NULL
             for port_mode in PortMode.INPUT, PortMode.OUTPUT:

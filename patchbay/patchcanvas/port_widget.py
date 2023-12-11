@@ -192,8 +192,7 @@ class PortWidget(ConnectableWidget):
                        + (self._pg_pos * delta)
                        - (height * self._pg_pos))
             
-        # if not self.isVisible():
-        if self.parentItem()._wrapping_state.value > 0:
+        if not self.isVisible():
             # item is hidden port when its box is folded
             y_delta = height - y_delta
 

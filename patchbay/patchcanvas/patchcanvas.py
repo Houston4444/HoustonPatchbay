@@ -25,7 +25,6 @@ from typing import Callable
 from PyQt5.QtCore import (pyqtSlot, QObject, QPointF, QRectF,
                           QSettings, QTimer, pyqtSignal)
 
-
 # local imports
 from .init_values import (
     AliasingReason,
@@ -97,7 +96,7 @@ class CanvasObject(QObject):
     def __init__(self, parent=None):
         QObject.__init__(self, parent)
         self.groups_to_join = list[tuple[GroupObject, PortMode]]()
-        self.move_boxes_finished.connect(self.join_after_move)
+        self.move_boxes_finished.connect(self._join_after_move)
         self.connect_update_timer = QTimer()
         self.connect_update_timer.setInterval(0)
         self.connect_update_timer.setSingleShot(True)
@@ -135,7 +134,7 @@ class CanvasObject(QObject):
         canvas.set_aliasing_reason(AliasingReason.VIEW_MOVE, False)
 
     @pyqtSlot()
-    def join_after_move(self):
+    def _join_after_move(self):
         for group, origin_box_mode in self.groups_to_join:
             join_group(group.group_id, origin_box_mode)
 
@@ -311,25 +310,11 @@ def remove_group(group_id: int, save_positions=True):
 
     if group.splitted:
         s_item = group.widgets[1]
-
-        for moving_box in canvas.scene.move_boxes:
-            if moving_box.widget is s_item:
-                canvas.scene.move_boxes.remove(moving_box)
-                break
-
         s_item.remove_icon_from_scene()
-        
-        canvas.scene.removeItem(s_item)
-        del s_item
+        canvas.scene.remove_box(s_item)
     
-    for moving_box in canvas.scene.move_boxes:
-        if moving_box.widget is item:
-            canvas.scene.move_boxes.remove(moving_box)
-            break
-
     item.remove_icon_from_scene()
-    canvas.scene.removeItem(item)
-    del item
+    canvas.scene.remove_box(item)
 
     canvas.remove_group(group)
     canvas.group_plugin_map.pop(group.plugin_id, None)
@@ -421,7 +406,7 @@ def get_box_rect(group_id: int, port_mode: PortMode) -> QRectF:
         return QRectF()
 
 @patchbay_api
-def split_group(group_id: int, on_place=False):
+def split_group(group_id: int, on_place=False, redraw=True):
     item = None
 
     # Step 1 - Store all Item data
@@ -438,7 +423,7 @@ def split_group(group_id: int, on_place=False):
     item = group.widgets[0]
     tmp_group = group.copy_no_widget()
 
-    ex_rect = QRectF(item.sceneBoundingRect())
+    ex_rect = QRectF(item.sceneBoundingRect())        
 
     if item is not None:
         pos = item.pos()
@@ -456,6 +441,7 @@ def split_group(group_id: int, on_place=False):
     conns_data = [c.copy_no_widget()
                   for c in canvas.list_connections(group_id=group_id)]
 
+    loading_items = canvas.loading_items
     canvas.loading_items = True
 
     # Step 2 - Remove Item and Children
@@ -498,7 +484,10 @@ def split_group(group_id: int, on_place=False):
         connect_ports(conn.connection_id, conn.group_out_id, conn.port_out_id,
                       conn.group_in_id, conn.port_in_id)
 
-    canvas.loading_items = False
+    canvas.loading_items = loading_items
+    
+    if not redraw:
+        return
     
     full_width = canvas.theme.box_spacing
     
@@ -734,15 +723,126 @@ def animate_before_join(group_id: int,
     canvas.qobject.groups_to_join.append((group, origin_box_mode))
 
     if origin_box_mode is PortMode.OUTPUT:
-        x, y = int(group.widgets[0].pos().x()), int(group.widgets[0].pos().y())
+        x, y = group.widgets[0].top_left()
     elif origin_box_mode is PortMode.INPUT:
-        x, y = int(group.widgets[1].pos().x()), int(group.widgets[1].pos().y())
+        x, y = group.widgets[1].top_left()
     else:
         x, y = group.box_poses[PortMode.BOTH].pos
 
     for widget in group.widgets:
         canvas.scene.add_box_to_animation(
             widget, x, y, joining=True)
+
+
+@patchbay_api
+def move_group_boxes_new(
+        group_id: int,
+        box_poses: dict[PortMode, BoxPos],
+        split: bool,
+        redraw=PortMode.NULL):
+    group = canvas.get_group(group_id)
+    if group is None:
+        return
+
+    join = False
+    splitted = False
+    orig_rect = QRectF()
+
+    if group.splitted != split:
+        if split:
+            if group.widgets[0] is not None:
+                orig_rect = QRectF(group.widgets[0].sceneBoundingRect())
+
+            split_group(group_id, redraw=False)
+            
+            group = canvas.get_group(group_id)
+            if group is None:
+                _logger.error(
+                    f'{_logging_str}, Failed to refind the group after split')
+                return
+
+            splitted = True
+            redraw |= PortMode.BOTH
+        else:
+            join = True
+
+    for port_mode, box_pos, in box_poses.items():
+        group.box_poses[port_mode] = BoxPos(box_pos)
+        
+        for box in group.widgets:
+            if box is None or box.get_port_mode() is not port_mode:
+                continue
+            
+            if box._layout_mode is not box_pos.layout_mode:
+                box.set_layout_mode(box_pos.layout_mode)
+                redraw |= port_mode
+            
+            if box.hidder_widget is not None and not box_pos.is_hidden():
+                redraw |= port_mode
+
+            if box.is_wrapped() is not box_pos.is_wrapped():
+                # we need to update the box now, because the port_list
+                # of the box is not re-evaluted when we update positions
+                # during the wrap/unwrap animation.
+                box.update_positions(
+                    prevent_overlap=False, even_animated=True)
+                box.set_wrapped(
+                    box_pos.is_wrapped(), prevent_overlap=False)
+                redraw &= ~port_mode
+
+            if redraw | port_mode:
+                box.update_positions(even_animated=True, prevent_overlap=False)
+
+            if splitted and not orig_rect.isNull():
+                # the splitted boxes start with inputs aligned to the inputs
+                #  of the previous joined box, and same for the outputs.
+                if port_mode is PortMode.INPUT:
+                    box.set_top_left((orig_rect.left(), orig_rect.top()))
+                elif port_mode is PortMode.OUTPUT:
+                    box.set_top_left(
+                        (orig_rect.right() - box.boundingRect().width(),
+                            orig_rect.top()))
+
+            xy = nearest_on_grid(box_pos.pos)
+
+            if box.isVisible() and box_pos.is_hidden():
+                GroupedLinesWidget.start_transparent(group_id, port_mode)
+                canvas.scene.add_box_to_animation_hidding(box)
+            else:
+                if box.hidder_widget is not None:
+                    if box.isVisible():
+                        box.set_top_left(xy)
+                        GroupedLinesWidget.start_transparent(group_id, port_mode)
+                        canvas.scene.add_box_to_animation_restore(box)
+                    else:
+                        canvas.scene.removeItem(box.hidder_widget)
+                        box.hidder_widget = None
+
+                if join:
+                    both_pos = nearest_on_grid(box_poses[PortMode.BOTH].pos)
+
+                    if port_mode is PortMode.OUTPUT:
+                        if not (group, PortMode.NULL) in canvas.qobject.groups_to_join:
+                            canvas.qobject.groups_to_join.append(
+                                (group, PortMode.NULL))
+
+                        joined_widget = BoxWidget(group, PortMode.BOTH)
+                        joined_rect = joined_widget.get_dummy_rect()
+                        joined_rect.translate(QPointF(*both_pos))
+                        x, y = both_pos
+                        x = joined_rect.right() - box.boundingRect().width()
+                    
+                        canvas.scene.add_box_to_animation(
+                            box, x, y,
+                            force_anim=True, joining=True,
+                            joined_rect=joined_rect)
+                    else:
+                        canvas.scene.add_box_to_animation(
+                            box, *both_pos,
+                            force_anim=True, joining=True)
+                else:
+                    canvas.scene.add_box_to_animation(
+                        box, *xy, force_anim=True)
 
 @patchbay_api
 def move_group_boxes(
@@ -755,8 +855,6 @@ def move_group_boxes(
         box_pos = BoxPos(box_poses[port_mode])
         was_hidden = group.box_poses[port_mode].is_hidden()
         is_hidden = box_pos.is_hidden()
-        if 'Keystation' in group.group_name:
-            print('apo', group.group_name, port_mode, was_hidden, is_hidden)
 
         group.box_poses[port_mode] = box_pos
 
@@ -776,10 +874,6 @@ def move_group_boxes(
         if box is None:
             continue
         
-        if 'Keystation' in group.group_name:
-            print('Silii', box)
-        
-        box.set_layout_mode(box_pos.layout_mode)
         xy = nearest_on_grid(box_pos.pos)
 
         if animate:
@@ -802,9 +896,6 @@ def move_group_boxes(
                     box, *xy, force_anim=animate)
         else:
             box.set_top_left(xy)
-        
-        box.set_wrapped(box_pos.is_wrapped(), animate=animate,
-                        prevent_overlap=False)
 
 @patchbay_api
 def wrap_group_box(group_id: int, port_mode: PortMode, yesno: bool,
@@ -964,7 +1055,7 @@ def add_port(group_id: int, port_id: int, port_name: str,
     port.hidden_conn_widget = None
     port.widget = PortWidget(port, box_widget)
     
-    port.widget.setVisible(not box_widget.is_wrapped())
+    port.widget.setVisible(box_widget.ports_are_visible())
     canvas.add_port(port)
 
     if canvas.loading_items:

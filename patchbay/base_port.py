@@ -118,7 +118,7 @@ class Port:
             if hidden_sides & self.mode():
                 return
         else:
-            if self.group.current_position.hidden_port_mode() & self.mode():
+            if self.group.current_position.hidden_port_modes() & self.mode():
                 return
         
         # if gpos is None:

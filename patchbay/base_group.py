@@ -302,55 +302,23 @@ class Group:
     def save_current_position(self):
         self.manager.save_group_position(self.current_position)
 
-    def set_group_position(self, group_position: GroupPos, view_change=False, animate=True):
-        ex_gpos_splitted = self.current_position.is_splitted()
+    def set_group_position(self, group_position: GroupPos, redraw: PortMode):
+        # ex_gpos_splitted = self.current_position.is_splitted()
         self.current_position = group_position
 
         if not self.in_canvas:
             return
 
-        times_dict = dict[str, float]()
-        times_dict['start'] = time.time()
-
-        gpos = self.current_position
-
-        times_dict['start quasi'] = time.time()
+        # gpos = self.current_position
         
-        if animate:
-            for port_mode, box_pos in group_position.boxes.items():
-                patchcanvas.set_group_layout_mode(
-                    self.group_id, port_mode, box_pos.layout_mode,
-                    prevent_overlap=False)
-
-        times_dict['aft layout'] = time.time()
-
-        patchcanvas.move_group_boxes(
+        patchcanvas.move_group_boxes_new(
             self.group_id,
-            gpos.boxes,
-            animate=animate)
+            self.current_position.boxes,
+            split=self.current_position.is_splitted(),
+            redraw=PortMode.BOTH)
 
-        times_dict['aft move'] = time.time()
-
-        # restore split and wrapped modes
-        if gpos.is_splitted():
-            if not ex_gpos_splitted:
-                patchcanvas.split_group(self.group_id)
-                patchcanvas.move_group_boxes(
-                    self.group_id, gpos.boxes, animate=animate)
-
-        else:
-            if ex_gpos_splitted:
-                patchcanvas.animate_before_join(self.group_id)
-        
-        if 'GxTubeS' in self.name:
-            print('àlafin', self.name, self.current_position.port_types_view)
-            
-            
-        times_dict['finissied'] = time.time()
-        
-        # if 'VocalsNanoFX6G' in self.name:
-        #     for string, value in times_dict.items():
-        #         print('alp', self, value, string)
+        # if ex_gpos_splitted and not gpos.is_splitted():
+        #     patchcanvas.animate_before_join(self.group_id)
 
     def set_layout_mode(self, port_mode: PortMode, layout_mode: BoxLayoutMode):
         self.current_position.boxes[port_mode].layout_mode = layout_mode

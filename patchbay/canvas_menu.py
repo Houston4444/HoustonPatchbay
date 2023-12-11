@@ -201,7 +201,7 @@ class CanvasMenu(QMenu):
         has_hiddens = False
         
         for group in self.mng.groups:
-            hidden_port_mode = group.current_position.hidden_port_mode()
+            hidden_port_mode = group.current_position.hidden_port_modes()
             if hidden_port_mode:
                 group_act = self.show_hiddens_menu.addAction(
                     group.cnv_name)
@@ -219,7 +219,7 @@ class CanvasMenu(QMenu):
                     self.mng.port_types_view)
             
             for group_name, gpos in ptv_view.items():
-                if gpos.hidden_port_mode():
+                if gpos.hidden_port_modes():
                     has_hiddens = True
                     break
             # for gpos in self.patchbay_manager.group_positions:

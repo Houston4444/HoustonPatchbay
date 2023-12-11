@@ -6,6 +6,7 @@ from pathlib import Path
 from dataclasses import dataclass
 import time
 from typing import TYPE_CHECKING, Any, Callable, Optional, Union
+from unittest.mock import patch
 
 from PyQt5.QtGui import QCursor, QGuiApplication
 from PyQt5.QtWidgets import QMainWindow, QMessageBox, QWidget
@@ -373,7 +374,7 @@ class PatchbayManager:
             return
         
         hidden_port_mode = (
-            group.current_position.hidden_port_mode()| port_mode)
+            group.current_position.hidden_port_modes()| port_mode)
         group.current_position.set_hidden_port_mode(hidden_port_mode)
         group.save_current_position()
 
@@ -424,7 +425,7 @@ class PatchbayManager:
             return
         
         gpos = group.current_position
-        hidden_port_mode = gpos.hidden_port_mode()
+        hidden_port_mode = gpos.hidden_port_modes()
         if hidden_port_mode is PortMode.NULL:
             return
 
@@ -465,7 +466,7 @@ class PatchbayManager:
 
         groups_to_restore = set[Group]()
         for group in self.groups:
-            if group.current_position.hidden_port_mode():
+            if group.current_position.hidden_port_modes():
                 group.current_position.set_hidden_port_mode(PortMode.NULL)
                 group.add_all_ports_to_canvas()
                 groups_to_restore.add(group)
@@ -632,9 +633,6 @@ class PatchbayManager:
         # because we may create/remove a lot of ports here
         self.optimize_operation(True)
 
-        times_dict = dict[str, float]()
-        times_dict['start'] = time.time()
-
         rm_all_before = bool(ex_ptv & self.port_types_view
                              is PortTypesViewFlag.NONE)
 
@@ -644,9 +642,7 @@ class PatchbayManager:
             
             for connection in self.connections:
                 connection.in_canvas = False
-            
-            times_dict['chaba conns'] = time.time()
-            
+                        
             for group in self.groups:
                 group.in_canvas = False
                 for portgroup in group.portgroups:
@@ -654,53 +650,26 @@ class PatchbayManager:
                 for port in group.ports:
                     port.in_canvas = False
                     
-            times_dict['bef clear all2'] = time.time()
             patchcanvas.clear_all()
 
         else:
             for connection in self.connections:
                 connection.remove_from_canvas()
 
-        times_dict['aft rem conns'] = time.time()
-
         groups_and_pos = dict[Group, GroupPos]()
         groups_to_redraw = set[Group]()
 
         for group in self.groups:
-            ziggy_dict = dict[str, float]()
-            ziggy_dict['start'] = time.time()
-            
-            if 'GxTubeS' in group.name:
-                print('sld', group.name, group.current_position.port_types_view)
-            
             new_gpos = self.get_group_position(group.name)
-
-            redrawn_for_layout_mode = False
-            force_rebuild = False
+            needs_split = bool(new_gpos.is_splitted()
+                               and not group.current_position.is_splitted())
             
-            # force redraw if a layout mode changes.
-            for port_mode in PortMode.in_out_both():
-                if (group.current_position.boxes[port_mode].layout_mode
-                        is not new_gpos.boxes[port_mode].layout_mode):
-                    redrawn_for_layout_mode = True
-                if (group.current_position.boxes[port_mode].is_hidden()
-                        is not new_gpos.boxes[port_mode].is_hidden()):
-                    force_rebuild = True
-
-            if 'Keystation' in group.name:
-                print('asmmqq', group.name, redrawn_for_layout_mode, force_rebuild)
-
-            if 'Midi Through' in group.name:
-                print('blala', group.name, force_rebuild)
-                print(group.current_position.as_new_dict(), group.current_position.port_types_view)
-                print(new_gpos.as_new_dict(), new_gpos.port_types_view)
-            ziggy_dict['aft pos'] = time.time()
-            
-            if (force_rebuild
+            if (group.current_position.hidden_port_modes()
+                        is not new_gpos.hidden_port_modes() 
                     or self.port_types_view & group.contains_ptv
-                       is not ex_ptv & group.contains_ptv):
-                if force_rebuild or not redrawn_for_layout_mode:
-                    groups_to_redraw.add(group)
+                       is not ex_ptv & group.contains_ptv
+                    or needs_split):
+                groups_to_redraw.add(group)
                 
                 if not rm_all_before:
                     for portgroup in group.portgroups:
@@ -709,12 +678,19 @@ class PatchbayManager:
                     for port in group.ports:
                         port.remove_from_canvas()
 
-                ziggy_dict['aft rm ports'] = time.time()
+                # if needs_split:
+                #     group.remove_from_canvas()
+                #     for port_mode in PortMode.INPUT, PortMode.OUTPUT:
+                #         group.current_position.boxes[port_mode].pos = \
+                #             group.current_position.boxes[PortMode.BOTH].pos
+                #     group.current_position.set_splitted(True)
 
                 group.add_to_canvas()
 
-                hidden_for_port = (group.current_position.hidden_port_mode()
-                                   & new_gpos.hidden_port_mode())
+                # only ports which should be hidden in previous and next
+                # view will be hidden (before to animate).
+                hidden_for_port = (group.current_position.hidden_port_modes()
+                                   & new_gpos.hidden_port_modes())
 
                 for port in group.ports:
                     port.add_to_canvas(
@@ -722,8 +698,6 @@ class PatchbayManager:
                         
                 for portgroup in group.portgroups:
                     portgroup.add_to_canvas()
-                
-            ziggy_dict['aft add ports'] = time.time()
             
             for port in group.ports:
                 if port.in_canvas:
@@ -733,41 +707,17 @@ class PatchbayManager:
                 group.remove_from_canvas()
             
             groups_and_pos[group] = new_gpos
-            
-            ziggy_dict['ennd'] = time.time()
-
-        times_dict['bef add conns'] = time.time()
 
         for conn in self.connections:
             conn.add_to_canvas()
 
-        times_dict['aft add conns'] = time.time()
-
         self.optimize_operation(False)
 
-        for group in groups_to_redraw:
-            if 'Keystation' in group.name:
-                print('Tooo redraw', group.name, group.in_canvas)
-            if group.in_canvas:
-                patchcanvas.redraw_group(
-                    group.group_id, prevent_overlap=False)
-
-        times_dict['after_redraw groups'] = time.time()
-
         for group, gpos in groups_and_pos.items():
-            if 'Keystation' in group.name:
-                print('Sett it', group.name)
-            group.set_group_position(gpos, view_change=True)
-
-        times_dict['after set group pos'] = time.time()
+            group.set_group_position(gpos, PortMode.BOTH)
 
         patchcanvas.repulse_all_boxes(view_change=True)
 
-        times_dict['finished'] = time.time()
-
-        print('len(groups)', len(self.groups))
-        # for label, time_ in times_dict.items():
-        #     print('oze', time_, label)
         self.sg.port_types_view_changed.emit(self.port_types_view)
 
     # --- options triggers ---
