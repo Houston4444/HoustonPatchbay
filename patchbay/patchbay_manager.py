@@ -2,6 +2,7 @@
 import json
 import logging
 import operator
+from os import times
 from pathlib import Path
 from dataclasses import dataclass
 import time
@@ -629,6 +630,8 @@ class PatchbayManager:
         ex_ptv = self.port_types_view
         self.port_types_view = port_types_view
         print('---CCHANGE VIIEW---', ex_ptv, '->', port_types_view)
+        times_dict = dict[str, float]()
+        times_dict['start'] = time.time()
         # Prevent visual update at each canvas item creation
         # because we may create/remove a lot of ports here
         self.optimize_operation(True)
@@ -656,20 +659,25 @@ class PatchbayManager:
             for connection in self.connections:
                 connection.remove_from_canvas()
 
-        groups_and_pos = dict[Group, GroupPos]()
-        groups_to_redraw = set[Group]()
+        times_dict['aft remove all'] = time.time()
+
+        groups_and_pos = dict[Group, tuple[GroupPos, PortMode]]()
 
         for group in self.groups:
             new_gpos = self.get_group_position(group.name)
-            needs_split = bool(new_gpos.is_splitted()
-                               and not group.current_position.is_splitted())
+            in_outs_ptv = group.ins_ptv | group.outs_ptv
+            redraw_mode = PortMode.NULL
             
             if (group.current_position.hidden_port_modes()
                         is not new_gpos.hidden_port_modes() 
-                    or self.port_types_view & group.contains_ptv
-                       is not ex_ptv & group.contains_ptv
-                    or needs_split):
-                groups_to_redraw.add(group)
+                    or self.port_types_view & in_outs_ptv
+                       is not ex_ptv & in_outs_ptv):
+                if (self.port_types_view & group.ins_ptv
+                        is not ex_ptv & group.ins_ptv):
+                    redraw_mode |= PortMode.INPUT
+                if (self.port_types_view & group.outs_ptv
+                        is not ex_ptv & group.outs_ptv):
+                    redraw_mode |= PortMode.OUTPUT
                 
                 if not rm_all_before:
                     for portgroup in group.portgroups:
@@ -677,13 +685,6 @@ class PatchbayManager:
                     
                     for port in group.ports:
                         port.remove_from_canvas()
-
-                # if needs_split:
-                #     group.remove_from_canvas()
-                #     for port_mode in PortMode.INPUT, PortMode.OUTPUT:
-                #         group.current_position.boxes[port_mode].pos = \
-                #             group.current_position.boxes[PortMode.BOTH].pos
-                #     group.current_position.set_splitted(True)
 
                 group.add_to_canvas()
 
@@ -706,17 +707,28 @@ class PatchbayManager:
             else:
                 group.remove_from_canvas()
             
-            groups_and_pos[group] = new_gpos
+            groups_and_pos[group] = (new_gpos, redraw_mode)
+
+        times_dict['bef readd conns'] = time.time()
 
         for conn in self.connections:
             conn.add_to_canvas()
 
         self.optimize_operation(False)
 
-        for group, gpos in groups_and_pos.items():
-            group.set_group_position(gpos, PortMode.BOTH)
+        times_dict['aft readd conns'] = time.time()
+
+        for group, gpos_redraw in groups_and_pos.items():
+            group.set_group_position(*gpos_redraw)
+
+        times_dict['aft group posionts'] = time.time()
 
         patchcanvas.repulse_all_boxes(view_change=True)
+
+        times_dict['aft_repluse end'] = time.time()
+        
+        for key, value in times_dict.items():
+            print('ae', value, key)
 
         self.sg.port_types_view_changed.emit(self.port_types_view)
 

@@ -47,7 +47,8 @@ class Group:
         self.cnv_box_type = BoxType.APPLICATION
         self.cnv_icon_name = ''
         
-        self.contains_ptv = PortTypesViewFlag.NONE
+        self.outs_ptv = PortTypesViewFlag.NONE
+        self.ins_ptv = PortTypesViewFlag.NONE
 
     def __repr__(self) -> str:
         return f"Group({self.name})"
@@ -239,7 +240,11 @@ class Group:
         else:
             ptv_flag = PortTypesViewFlag.NONE
         
-        self.contains_ptv |= ptv_flag
+        if port.mode() is PortMode.OUTPUT:
+            self.outs_ptv |= ptv_flag
+        else:
+            self.ins_ptv |= ptv_flag
+            
         self.manager._ports_by_name[port.full_name] = port
 
     def remove_port(self, port: Port):

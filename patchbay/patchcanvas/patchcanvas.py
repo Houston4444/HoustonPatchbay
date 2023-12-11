@@ -790,7 +790,7 @@ def move_group_boxes_new(
                     box_pos.is_wrapped(), prevent_overlap=False)
                 redraw &= ~port_mode
 
-            if redraw | port_mode:
+            if redraw & port_mode:
                 box.update_positions(even_animated=True, prevent_overlap=False)
 
             if splitted and not orig_rect.isNull():
