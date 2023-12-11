@@ -308,22 +308,16 @@ class Group:
         self.manager.save_group_position(self.current_position)
 
     def set_group_position(self, group_position: GroupPos, redraw: PortMode):
-        # ex_gpos_splitted = self.current_position.is_splitted()
         self.current_position = group_position
 
         if not self.in_canvas:
             return
-
-        # gpos = self.current_position
         
         patchcanvas.move_group_boxes_new(
             self.group_id,
             self.current_position.boxes,
             split=self.current_position.is_splitted(),
             redraw=PortMode.BOTH)
-
-        # if ex_gpos_splitted and not gpos.is_splitted():
-        #     patchcanvas.animate_before_join(self.group_id)
 
     def set_layout_mode(self, port_mode: PortMode, layout_mode: BoxLayoutMode):
         self.current_position.boxes[port_mode].layout_mode = layout_mode

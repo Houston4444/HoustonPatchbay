@@ -435,6 +435,10 @@ def split_group(group_id: int, on_place=False, redraw=True):
 
     wrap = item.is_wrapped()
 
+    port_ids_with_hidden_conns = [
+        p.port_id for p in canvas.list_ports(group_id=group_id)
+        if p.hidden_conn_widget is not None]
+
     portgrps_data = [pg.copy_no_widget() for pg 
                      in canvas.list_portgroups(group_id=group_id)]
     ports_data = [p.copy_no_widget() for p in canvas.list_ports(group_id=group_id)]
@@ -479,6 +483,9 @@ def split_group(group_id: int, on_place=False, redraw=True):
         add_portgroup(group_id, portgrp.portgrp_id, portgrp.port_mode,
                       portgrp.port_type, portgrp.port_subtype,
                       portgrp.port_id_list)
+
+    for port_id in port_ids_with_hidden_conns:
+        port_has_hidden_connection(group_id, port_id, True)
 
     for conn in conns_data:
         connect_ports(conn.connection_id, conn.group_out_id, conn.port_out_id,
@@ -540,12 +547,16 @@ def join_group(group_id: int, origin_box_mode=PortMode.NULL):
     if group.handle_client_gui:
         tmp_widget.set_optional_gui_state(group.gui_visible)
     tmp_rect = QRectF(tmp_widget.get_dummy_rect())
-    canvas.scene.removeItem(tmp_widget)
+    canvas.scene.remove_box(tmp_widget)
     del tmp_widget
 
     tmp_group = group.copy_no_widget()
 
     wrap = item_in.is_wrapped() and item_out.is_wrapped()
+
+    port_ids_with_hidden_conns = [
+        p.port_id for p in canvas.list_ports(group_id=group_id)
+        if p.hidden_conn_widget is not None]
 
     portgrps_data = [pg.copy_no_widget() for pg in
                      canvas.list_portgroups(group_id=group_id)]
@@ -597,6 +608,9 @@ def join_group(group_id: int, origin_box_mode=PortMode.NULL):
         add_portgroup(group_id, portgrp.portgrp_id, portgrp.port_mode,
                       portgrp.port_type, portgrp.port_subtype,
                       portgrp.port_id_list)
+
+    for port_id in port_ids_with_hidden_conns:
+        port_has_hidden_connection(group_id, port_id, True)
 
     for conn in conns_data:
         connect_ports(conn.connection_id, conn.group_out_id, conn.port_out_id,
@@ -802,7 +816,7 @@ def move_group_boxes_new(
                     box.set_top_left(
                         (orig_rect.right() - box.boundingRect().width(),
                             orig_rect.top()))
-
+            
             xy = nearest_on_grid(box_pos.pos)
 
             if box.isVisible() and box_pos.is_hidden():
@@ -828,6 +842,7 @@ def move_group_boxes_new(
 
                         joined_widget = BoxWidget(group, PortMode.BOTH)
                         joined_rect = joined_widget.get_dummy_rect()
+                        canvas.scene.remove_box(joined_widget)
                         joined_rect.translate(QPointF(*both_pos))
                         x, y = both_pos
                         x = joined_rect.right() - box.boundingRect().width()

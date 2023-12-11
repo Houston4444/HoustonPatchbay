@@ -234,7 +234,6 @@ class PatchScene(PatchSceneMoth):
             if mov_repulsables is not None:
                 for moving_box in mov_repulsables:
                     if (moving_box.widget in repulser_boxes
-                            or moving_box.joining
                             or moving_box.widget in [b.item for b in to_move_boxes]):
                         continue
                     
@@ -402,9 +401,8 @@ class PatchScene(PatchSceneMoth):
         if view_change:
             # moving_boxes = self.move_boxes.copy()
             moving_boxes = [b for b in self.move_boxes
-                            if (b.widget.isVisible()
-                                and not b in self.hidding_boxes
-                                and not b.final_rect.isNull())]
+                            if (not b.final_rect.isNull()
+                                and not b in self.hidding_boxes)]
             # for moving_box in moving_boxes:
             while moving_boxes:
                 self.deplace_boxes_from_repulsers(

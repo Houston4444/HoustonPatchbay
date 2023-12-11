@@ -62,8 +62,6 @@ class Callbacker:
         if group is None:
             return
         group.current_position.boxes[port_mode].pos = (x, y)
-        if 'GxTubeS' in group.name:
-            print('GROUP_MOVE', group.current_position.port_types_view)
         group.save_current_position()
     
     def _group_wrap(self, group_id: int, splitted_mode, yesno: bool):

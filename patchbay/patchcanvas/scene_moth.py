@@ -129,7 +129,7 @@ class PatchSceneMoth(QGraphicsScene):
         self.wrapping_boxes = list[WrappingBox]()
         self.hidding_boxes = list[BoxWidget]()
         self.restore_boxes = list[BoxWidget]()
-        self._MOVE_DURATION = 1.300 # 300ms
+        self._MOVE_DURATION = 0.300 # 300ms
         self._MOVE_TIMER_INTERVAL = 20 # 20 ms step animation (50 Hz)
         self._move_timer_start_at = 0.0
         self._move_timer_last_time = 0.0
@@ -469,7 +469,7 @@ class PatchSceneMoth(QGraphicsScene):
         moving_box.from_pt = QPoint(*box_widget.top_left())
         moving_box.to_pt = QPoint(to_x, to_y)
         
-        if joining:
+        if joining or not box_widget.isVisible():
             moving_box.final_rect = joined_rect
         else:
             aft_wrap_rect = box_widget.after_wrap_rect()

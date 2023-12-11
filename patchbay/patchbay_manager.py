@@ -623,15 +623,15 @@ class PatchbayManager:
         self._next_portgroup_id = 1
         self._next_connection_id = 0
 
-    def change_port_types_view(self, port_types_view: PortTypesViewFlag, force=False):
+    def change_port_types_view(
+            self, port_types_view: PortTypesViewFlag, force=False):
         if not force and port_types_view is self.port_types_view:
             return
         
         ex_ptv = self.port_types_view
         self.port_types_view = port_types_view
-        print('---CCHANGE VIIEW---', ex_ptv, '->', port_types_view)
-        times_dict = dict[str, float]()
-        times_dict['start'] = time.time()
+        _logger.info(f"Change Port Types View: {ex_ptv} -> {port_types_view}")
+
         # Prevent visual update at each canvas item creation
         # because we may create/remove a lot of ports here
         self.optimize_operation(True)
@@ -641,8 +641,7 @@ class PatchbayManager:
 
         if rm_all_before:
             # there is no common port between previous and next view
-            # strategy is to remove fastly all contents from the patchcanvas.
-            
+            # strategy is to remove fastly all contents from the patchcanvas.            
             for connection in self.connections:
                 connection.in_canvas = False
                         
@@ -659,15 +658,13 @@ class PatchbayManager:
             for connection in self.connections:
                 connection.remove_from_canvas()
 
-        times_dict['aft remove all'] = time.time()
-
         groups_and_pos = dict[Group, tuple[GroupPos, PortMode]]()
 
         for group in self.groups:
             new_gpos = self.get_group_position(group.name)
             in_outs_ptv = group.ins_ptv | group.outs_ptv
             redraw_mode = PortMode.NULL
-            
+
             if (group.current_position.hidden_port_modes()
                         is not new_gpos.hidden_port_modes() 
                     or self.port_types_view & in_outs_ptv
@@ -685,7 +682,7 @@ class PatchbayManager:
                     
                     for port in group.ports:
                         port.remove_from_canvas()
-
+                
                 group.add_to_canvas()
 
                 # only ports which should be hidden in previous and next
@@ -709,26 +706,15 @@ class PatchbayManager:
             
             groups_and_pos[group] = (new_gpos, redraw_mode)
 
-        times_dict['bef readd conns'] = time.time()
-
         for conn in self.connections:
             conn.add_to_canvas()
 
         self.optimize_operation(False)
 
-        times_dict['aft readd conns'] = time.time()
-
         for group, gpos_redraw in groups_and_pos.items():
             group.set_group_position(*gpos_redraw)
 
-        times_dict['aft group posionts'] = time.time()
-
         patchcanvas.repulse_all_boxes(view_change=True)
-
-        times_dict['aft_repluse end'] = time.time()
-        
-        for key, value in times_dict.items():
-            print('ae', value, key)
 
         self.sg.port_types_view_changed.emit(self.port_types_view)
 
