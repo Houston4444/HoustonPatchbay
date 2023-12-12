@@ -531,8 +531,17 @@ class PatchSceneMoth(QGraphicsScene):
             self._move_box_timer.start()
 
     def remove_box(self, box_widget: BoxWidget):
-        for box_list in (self.move_boxes, self.wrapping_boxes,
-                         self.hidding_boxes, self.restore_boxes):
+        for move_box in self.move_boxes:
+            if move_box.widget is box_widget:
+                self.move_boxes.remove(move_box)
+                break
+            
+        for wrapping_box in self.wrapping_boxes:
+            if wrapping_box.widget is box_widget:
+                self.wrapping_boxes.remove(wrapping_box)
+                break
+        
+        for box_list in (self.hidding_boxes, self.restore_boxes):
             if box_widget in box_list:
                 box_list.remove(box_widget) 
         

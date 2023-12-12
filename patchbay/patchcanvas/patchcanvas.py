@@ -525,7 +525,8 @@ def split_group(group_id: int, on_place=False, redraw=True):
     QTimer.singleShot(0, canvas.scene.update)
 
 @patchbay_api
-def join_group(group_id: int, origin_box_mode=PortMode.NULL):
+def join_group(group_id: int, origin_box_mode=PortMode.NULL,
+               prevent_overlap=True):
     item_in = None
     item_out = None
 
@@ -621,7 +622,7 @@ def join_group(group_id: int, origin_box_mode=PortMode.NULL):
             box.set_wrapped(wrap, animate=False)
 
     canvas.loading_items = False
-    redraw_group(group_id)
+    redraw_group(group_id, prevent_overlap=prevent_overlap)
 
     canvas.callback(CallbackAct.GROUP_JOINED, group_id)
     QTimer.singleShot(0, canvas.scene.update)

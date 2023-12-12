@@ -284,7 +284,7 @@ class BoxWidgetMoth(QGraphicsItem):
         if isinstance(self.top_icon, IconSvgWidget):
             self.remove_icon_from_scene()
 
-        if box_type == BoxType.HARDWARE and (not icon_name or icon_name == 'a2j'):
+        if box_type is BoxType.HARDWARE and (not icon_name or icon_name == 'a2j'):
             self.top_icon = IconSvgWidget(box_type, icon_name, self._port_mode, self)
             return
 
