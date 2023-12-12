@@ -694,6 +694,10 @@ class BoxWidgetMoth(QGraphicsItem):
 
         if self._mouse_down:
             if not self._cursor_moving:
+                # if box is moved by animation, animation could relocate
+                # the box just after, prevent this.
+                canvas.scene.remove_box_from_animation(self)
+
                 canvas.scene.set_cursor(QCursor(Qt.SizeAllCursor))
                 self._cursor_moving = True
                 canvas.scene.fix_temporary_scroll_bars()

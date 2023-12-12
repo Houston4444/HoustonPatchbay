@@ -1164,7 +1164,6 @@ class BoxWidget(BoxWidgetMoth):
     def update_positions(self, even_animated=False, without_connections=False,
                          prevent_overlap=True, theme_change=False):
         if canvas.loading_items:
-            print("Pas d'update loading items", self)
             return
 
         if (not even_animated

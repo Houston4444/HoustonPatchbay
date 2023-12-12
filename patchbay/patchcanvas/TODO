@@ -7,8 +7,6 @@ voir : canvas initial_pos
 
 vérifier ouverture des gpos à l'ancienne
 
-cache des titres de boite à remettre
-
 
 Passage à GroupedConns:
     # PortWidget add_line_to_port: pour itemChange (selected + in_front)
@@ -21,12 +19,6 @@ Réparer aire la plus petite ou pas (4 modes)
 
 Virer connection_lines de BoxWidget et PortWidget
 
-Quand une boite est décachée, choisir une position libre
-Pas de bring neightboors sans prevent_overlap !!!
 Pot de pus du hardware rack à gérer
-gérer wrap et layout avec BoxPos
-bug: après change port types view, y a des boîtes avec ports cachés
-après restore box, prevent overlap
 après set theme, check group icon
 animate hidding PortmOde.BOTH connections
-remove box from animation avec click selectif

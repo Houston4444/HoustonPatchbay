@@ -492,6 +492,12 @@ class PatchSceneMoth(QGraphicsScene):
             # we need to keep it prevented at animation start
             canvas.set_aliasing_reason(AliasingReason.ANIMATION, True)
 
+    def remove_box_from_animation(self, box_widget: BoxWidget):
+        for moving_box in self.move_boxes:
+            if moving_box.widget is box_widget:
+                self.move_boxes.remove(moving_box)
+                break
+
     def add_box_to_animation_wrapping(self, box_widget: BoxWidget, wrap: bool):
         for wrapping_box in self.wrapping_boxes:
             if wrapping_box.widget is box_widget:
