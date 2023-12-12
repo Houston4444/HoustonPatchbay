@@ -418,7 +418,6 @@ class PatchScene(PatchSceneMoth):
                 item, int(new_rect.left()), int(new_rect.top()))
 
     def full_repulse(self, view_change=False):
-        print('FULL REPULSE start')
         if not options.prevent_overlap:
             return
         
@@ -441,7 +440,6 @@ class PatchScene(PatchSceneMoth):
                 if box not in self._full_repulse_boxes:
                     self.deplace_boxes_from_repulsers([box])
         self._full_repulse_boxes.clear()
-        print('FULL REPULSE finished')
 
     def bring_neighbors_and_deplace_boxes(
             self, box_widget: BoxWidget, new_scene_rect: QRectF):

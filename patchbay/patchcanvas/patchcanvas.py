@@ -95,7 +95,7 @@ class CanvasObject(QObject):
 
     def __init__(self, parent=None):
         QObject.__init__(self, parent)
-        self.groups_to_join = list[tuple[GroupObject, PortMode]]()
+        self.groups_to_join = list[tuple[int, PortMode]]()
         self.move_boxes_finished.connect(self._join_after_move)
         self.connect_update_timer = QTimer()
         self.connect_update_timer.setInterval(0)
@@ -135,8 +135,13 @@ class CanvasObject(QObject):
 
     @pyqtSlot()
     def _join_after_move(self):
-        for group, origin_box_mode in self.groups_to_join:
-            join_group(group.group_id, origin_box_mode)
+        for group_id, origin_box_mode in self.groups_to_join:
+            join_group(group_id, origin_box_mode)
+
+        if options.prevent_overlap:            
+            for group_id, origin_box_mode in self.groups_to_join:
+                group = canvas.get_group(group_id)
+                canvas.scene.deplace_boxes_from_repulsers([group.widgets[0]])
 
         self.groups_to_join.clear()
         
@@ -442,16 +447,11 @@ def split_group(group_id: int, on_place=False, redraw=True):
     portgrps_data = [pg.copy_no_widget() for pg 
                      in canvas.list_portgroups(group_id=group_id)]
     ports_data = [p.copy_no_widget() for p in canvas.list_ports(group_id=group_id)]
-    conns_data = [c.copy_no_widget()
-                  for c in canvas.list_connections(group_id=group_id)]
 
     loading_items = canvas.loading_items
     canvas.loading_items = True
 
     # Step 2 - Remove Item and Children
-    for conn in conns_data:
-        disconnect_ports(conn.connection_id)
-
     for portgrp in portgrps_data:
         if portgrp.group_id == group_id:
             remove_portgroup(group_id, portgrp.portgrp_id)
@@ -487,10 +487,6 @@ def split_group(group_id: int, on_place=False, redraw=True):
     for port_id in port_ids_with_hidden_conns:
         port_has_hidden_connection(group_id, port_id, True)
 
-    for conn in conns_data:
-        connect_ports(conn.connection_id, conn.group_out_id, conn.port_out_id,
-                      conn.group_in_id, conn.port_in_id)
-
     canvas.loading_items = loading_items
     
     if not redraw:
@@ -525,8 +521,7 @@ def split_group(group_id: int, on_place=False, redraw=True):
     QTimer.singleShot(0, canvas.scene.update)
 
 @patchbay_api
-def join_group(group_id: int, origin_box_mode=PortMode.NULL,
-               prevent_overlap=True):
+def join_group(group_id: int, origin_box_mode=PortMode.NULL):
     item_in = None
     item_out = None
 
@@ -563,15 +558,10 @@ def join_group(group_id: int, origin_box_mode=PortMode.NULL,
                      canvas.list_portgroups(group_id=group_id)]
     ports_data = [p.copy_no_widget()
                   for p in canvas.list_ports(group_id=group_id)]
-    conns_data = [c.copy_no_widget() 
-                  for c in canvas.list_connections(group_id=group_id)]
 
     canvas.loading_items = True
 
     # Step 2 - Remove Item and Children
-    for conn in conns_data:
-        disconnect_ports(conn.connection_id)
-
     for portgrp in portgrps_data:
         remove_portgroup(group_id, portgrp.portgrp_id)
 
@@ -613,16 +603,12 @@ def join_group(group_id: int, origin_box_mode=PortMode.NULL,
     for port_id in port_ids_with_hidden_conns:
         port_has_hidden_connection(group_id, port_id, True)
 
-    for conn in conns_data:
-        connect_ports(conn.connection_id, conn.group_out_id, conn.port_out_id,
-                      conn.group_in_id, conn.port_in_id)
-
     for box in canvas.get_group(group_id).widgets:
         if box is not None:
             box.set_wrapped(wrap, animate=False)
 
     canvas.loading_items = False
-    redraw_group(group_id, prevent_overlap=prevent_overlap)
+    redraw_group(group_id, prevent_overlap=False)
 
     canvas.callback(CallbackAct.GROUP_JOINED, group_id)
     QTimer.singleShot(0, canvas.scene.update)
@@ -735,7 +721,7 @@ def animate_before_join(group_id: int,
     if group is None:
         return
 
-    canvas.qobject.groups_to_join.append((group, origin_box_mode))
+    canvas.qobject.groups_to_join.append((group.group_id, origin_box_mode))
 
     if origin_box_mode is PortMode.OUTPUT:
         x, y = group.widgets[0].top_left()
@@ -839,7 +825,7 @@ def move_group_boxes_new(
                     if port_mode is PortMode.OUTPUT:
                         if not (group, PortMode.NULL) in canvas.qobject.groups_to_join:
                             canvas.qobject.groups_to_join.append(
-                                (group, PortMode.NULL))
+                                (group.group_id, PortMode.NULL))
 
                         joined_widget = BoxWidget(group, PortMode.BOTH)
                         joined_rect = joined_widget.get_dummy_rect()
