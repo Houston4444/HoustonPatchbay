@@ -619,6 +619,21 @@ def repulse_all_boxes(view_change=False):
         canvas.scene.full_repulse(view_change=view_change)
 
 @patchbay_api
+def repulse_from_group(group_id: int, port_mode: PortMode):
+    if not options.prevent_overlap:
+        return
+
+    group = canvas.get_group(group_id)
+    if group is None:
+        return
+    
+    for box in group.widgets:
+        if (box is not None
+                and box.isVisible()
+                and box.get_port_mode() & port_mode):
+            canvas.scene.deplace_boxes_from_repulsers([box])
+
+@patchbay_api
 def redraw_all_groups(force_no_prevent_overlap=False, theme_change=False):    
     # We are redrawing all groups.
     # For optimization reason we prevent here to resize the scene
@@ -734,9 +749,8 @@ def animate_before_join(group_id: int,
         canvas.scene.add_box_to_animation(
             widget, x, y, joining=True)
 
-
 @patchbay_api
-def move_group_boxes_new(
+def move_group_boxes(
         group_id: int,
         box_poses: dict[PortMode, BoxPos],
         split: bool,
@@ -792,7 +806,8 @@ def move_group_boxes_new(
                 redraw &= ~port_mode
 
             if redraw & port_mode:
-                box.update_positions(even_animated=True, prevent_overlap=False)
+                box.update_positions(
+                    even_animated=True, prevent_overlap=False)
 
             if splitted and not orig_rect.isNull():
                 # the splitted boxes start with inputs aligned to the inputs
@@ -814,6 +829,7 @@ def move_group_boxes_new(
                     if box.isVisible():
                         box.set_top_left(xy)
                         GroupedLinesWidget.start_transparent(group_id, port_mode)
+                        
                         canvas.scene.add_box_to_animation_restore(box)
                     else:
                         canvas.scene.removeItem(box.hidder_widget)
@@ -845,59 +861,6 @@ def move_group_boxes_new(
                 else:
                     canvas.scene.add_box_to_animation(
                         box, *xy, force_anim=True)
-
-@patchbay_api
-def move_group_boxes(
-        group_id: int, box_poses: dict[PortMode, BoxPos], animate=True):
-    group = canvas.get_group(group_id)
-    if group is None:
-        return
-
-    for port_mode in PortMode.in_out_both():
-        box_pos = BoxPos(box_poses[port_mode])
-        was_hidden = group.box_poses[port_mode].is_hidden()
-        is_hidden = box_pos.is_hidden()
-
-        group.box_poses[port_mode] = box_pos
-
-        if group.splitted:
-            if port_mode is PortMode.OUTPUT:
-                box = group.widgets[0]
-            elif port_mode is PortMode.INPUT:
-                box = group.widgets[1]
-            else:
-                continue
-        else:
-            if port_mode is PortMode.BOTH:
-                box = group.widgets[0]
-            else:
-                continue
-        
-        if box is None:
-            continue
-        
-        xy = nearest_on_grid(box_pos.pos)
-
-        if animate:
-            if box.isVisible() and is_hidden:
-                GroupedLinesWidget.start_transparent(group_id, port_mode)
-                canvas.scene.add_box_to_animation_hidding(box)
-
-            else:
-                if box.hidder_widget is not None:
-                    if box.isVisible():
-                        box.update_positions()
-                        box.set_top_left(xy)
-                        GroupedLinesWidget.start_transparent(group_id, port_mode)
-                        canvas.scene.add_box_to_animation_restore(box)
-                    else:
-                        canvas.scene.removeItem(box.hidder_widget)
-                        box.hidder_widget = None
-
-                canvas.scene.add_box_to_animation(
-                    box, *xy, force_anim=animate)
-        else:
-            box.set_top_left(xy)
 
 @patchbay_api
 def wrap_group_box(group_id: int, port_mode: PortMode, yesno: bool,

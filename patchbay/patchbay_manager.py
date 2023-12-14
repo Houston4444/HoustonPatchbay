@@ -434,17 +434,10 @@ class PatchbayManager:
             if hidden_port_mode & port_mode:
                 gpos.boxes[port_mode].pos = scene_pos
 
-        self.optimize_operation(True)
-        
-        # if hidden_port_mode is PortMode.BOTH and gpos.is_splitted():
-        #     patchcanvas.join_group(group.group_id)
-        #     # gpos.set_splitted(False)
-
-        print('scenene pos', scene_pos)
-            
         gpos.set_hidden_port_mode(PortMode.NULL)
         group.save_current_position()
 
+        self.optimize_operation(True)
         group.add_to_canvas()
         group.add_all_ports_to_canvas()
                 
@@ -453,17 +446,13 @@ class PatchbayManager:
                 conn.add_to_canvas()
 
         self.optimize_operation(False)
-        patchcanvas.redraw_group(group.group_id, prevent_overlap=False)
-        patchcanvas.move_group_boxes(group.group_id, group.current_position.boxes, animate=False)
-        patchcanvas.move_group_boxes(group.group_id, group.current_position.boxes, animate=True)
-        patchcanvas.redraw_group(group.group_id, prevent_overlap=True)
-        # patchcanvas.animate_after_restore_box(group_id, hidden_port_mode)
-        # patchcanvas.canvas.scene.resize_the_scene()
+        patchcanvas.move_group_boxes(
+            group.group_id, gpos.boxes, gpos.is_splitted(),
+            redraw=hidden_port_mode)
+        patchcanvas.repulse_from_group(group.group_id, hidden_port_mode)
 
     def restore_all_group_hidden_sides(self):
         self.optimize_operation(True)
-
-        print('RESSTTOORE AALLL HIDDENN')
 
         groups_to_restore = set[Group]()
         for group in self.groups:
@@ -484,10 +473,10 @@ class PatchbayManager:
         self.optimize_operation(False)
         
         for group in groups_to_restore:
-            patchcanvas.redraw_group(
-                group.group_id, prevent_overlap=False)
             patchcanvas.move_group_boxes(
-                group.group_id, group.current_position.boxes)
+                group.group_id, group.current_position.boxes,
+                group.current_position.is_splitted(), redraw=PortMode.BOTH)
+            patchcanvas.repulse_from_group(group.group_id, PortMode.BOTH)
 
     def get_group_from_name(self, group_name: str) -> Union[Group, None]:
         return self._groups_by_name.get(group_name)

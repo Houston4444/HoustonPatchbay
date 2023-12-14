@@ -313,11 +313,11 @@ class Group:
         if not self.in_canvas:
             return
         
-        patchcanvas.move_group_boxes_new(
+        patchcanvas.move_group_boxes(
             self.group_id,
             self.current_position.boxes,
             split=self.current_position.is_splitted(),
-            redraw=PortMode.BOTH)
+            redraw=redraw)
 
     def set_layout_mode(self, port_mode: PortMode, layout_mode: BoxLayoutMode):
         self.current_position.boxes[port_mode].layout_mode = layout_mode
