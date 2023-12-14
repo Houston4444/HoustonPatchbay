@@ -517,6 +517,8 @@ def split_group(group_id: int, on_place=False, redraw=True):
                         previous_left_on_grid(
                             int(ex_rect.left() - (full_width - ex_rect.width()) / 2)),
                         previous_top_on_grid(int(ex_rect.y())))
+                
+                canvas.scene.deplace_boxes_from_repulsers([box])
 
     QTimer.singleShot(0, canvas.scene.update)
 

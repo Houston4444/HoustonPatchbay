@@ -429,7 +429,6 @@ class PatchSceneMoth(QGraphicsScene):
             self.hidding_boxes.clear()
             self.restore_boxes.clear()
             GroupedLinesWidget.clear_transparent_starts()
-            
             # box update positions is forbidden while widget is in self.move_boxes
             # So we copy the list before to clear it
             # then we can ask update_positions on widgets
@@ -443,7 +442,6 @@ class PatchSceneMoth(QGraphicsScene):
                         box.update_positions()
                     box.send_move_callback()
 
-            self.deplace_boxes_from_repulsers(boxes)
             canvas.qobject.move_boxes_finished.emit()
 
     def add_box_to_animation(self, box_widget: BoxWidget, to_x: int, to_y: int,

@@ -719,13 +719,8 @@ class BoxWidgetMoth(QGraphicsItem):
             canvas.scene.reset_scroll_bars()
             self.fix_pos_after_move()
 
-            # get all selected boxes
-            repulsers = []
-            for widget in canvas.list_boxes():
-                if widget.isSelected():
-                    repulsers.append(widget)
-
-            canvas.scene.deplace_boxes_from_repulsers(repulsers)
+            canvas.scene.deplace_boxes_from_repulsers(
+                [b for b in canvas.list_boxes() if b.isSelected()])
             canvas.set_aliasing_reason(AliasingReason.USER_MOVE, False)
 
             QTimer.singleShot(0, canvas.scene.update)
