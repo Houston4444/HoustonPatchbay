@@ -794,7 +794,7 @@ def move_group_boxes(
                 box.set_layout_mode(box_pos.layout_mode)
                 redraw |= port_mode
             
-            if box.hidder_widget is not None and not box_pos.is_hidden():
+            if box.is_hidding_or_restore() and not box_pos.is_hidden():
                 redraw |= port_mode
 
             if box.is_wrapped() is not box_pos.is_wrapped():
@@ -827,7 +827,7 @@ def move_group_boxes(
                 GroupedLinesWidget.start_transparent(group_id, port_mode)
                 canvas.scene.add_box_to_animation_hidding(box)
             else:
-                if box.hidder_widget is not None:
+                if box.is_hidding_or_restore():
                     if box.isVisible():
                         box.set_top_left(xy)
                         GroupedLinesWidget.start_transparent(group_id, port_mode)

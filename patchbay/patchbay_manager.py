@@ -652,36 +652,44 @@ class PatchbayManager:
         for group in self.groups:
             new_gpos = self.get_group_position(group.name)
             in_outs_ptv = group.ins_ptv | group.outs_ptv
+            hidden_modes = group.current_position.hidden_port_modes()
+            new_hidden_modes = new_gpos.hidden_port_modes()
             redraw_mode = PortMode.NULL
 
-            if (group.current_position.hidden_port_modes()
-                        is not new_gpos.hidden_port_modes() 
+            if (hidden_modes is not new_hidden_modes
                     or self.port_types_view & in_outs_ptv
                        is not ex_ptv & in_outs_ptv):
+                if new_hidden_modes is not hidden_modes:
+                    for port_mode in PortMode.INPUT, PortMode.OUTPUT:
+                        if (not new_hidden_modes & port_mode
+                                and hidden_modes & port_mode):
+                            redraw_mode |= port_mode
+
                 if (self.port_types_view & group.ins_ptv
                         is not ex_ptv & group.ins_ptv):
                     redraw_mode |= PortMode.INPUT
+
                 if (self.port_types_view & group.outs_ptv
                         is not ex_ptv & group.outs_ptv):
                     redraw_mode |= PortMode.OUTPUT
-                
+
                 if not rm_all_before:
                     for portgroup in group.portgroups:
-                        portgroup.remove_from_canvas()
+                        if portgroup.port_mode & redraw_mode:
+                            portgroup.remove_from_canvas()
                     
                     for port in group.ports:
-                        port.remove_from_canvas()
+                        if port.mode() & redraw_mode:
+                            port.remove_from_canvas()
                 
                 group.add_to_canvas()
 
                 # only ports which should be hidden in previous and next
                 # view will be hidden (before to animate).
-                hidden_for_port = (group.current_position.hidden_port_modes()
-                                   & new_gpos.hidden_port_modes())
-
                 for port in group.ports:
                     port.add_to_canvas(
-                        ignore_gpos=True, hidden_sides=hidden_for_port)
+                        ignore_gpos=True,
+                        hidden_sides=hidden_modes & new_hidden_modes)
                         
                 for portgroup in group.portgroups:
                     portgroup.add_to_canvas()
