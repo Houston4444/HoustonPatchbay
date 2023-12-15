@@ -64,7 +64,7 @@ class Callbacker:
         group.current_position.boxes[port_mode].pos = (x, y)
         group.save_current_position()
     
-    def _group_wrap(self, group_id: int, splitted_mode, yesno: bool):
+    def _group_wrap(self, group_id: int, splitted_mode: PortMode, yesno: bool):
         group = self.mng.get_group_from_id(group_id)
         if group is not None:
             group.wrap_box(splitted_mode, yesno)

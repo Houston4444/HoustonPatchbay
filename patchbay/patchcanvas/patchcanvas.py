@@ -429,16 +429,15 @@ def split_group(group_id: int, on_place=False, redraw=True):
     tmp_group = group.copy_no_widget()
 
     ex_rect = QRectF(item.sceneBoundingRect())        
+    wrap = item.is_wrapped()
 
     if item is not None:
         pos = item.pos()
         for port_mode in PortMode.INPUT, PortMode.OUTPUT:
             box_pos = tmp_group.box_poses[port_mode]
             box_pos.set_pos_from_pt(pos)
-            if on_place:
-                box_pos.set_wrapped(item.is_wrapped())
-
-    wrap = item.is_wrapped()
+            if on_place or not redraw:
+                box_pos.set_wrapped(wrap)
 
     port_ids_with_hidden_conns = [
         p.port_id for p in canvas.list_ports(group_id=group_id)
@@ -612,7 +611,6 @@ def join_group(group_id: int, origin_box_mode=PortMode.NULL):
     canvas.loading_items = False
     redraw_group(group_id, prevent_overlap=False)
 
-    canvas.callback(CallbackAct.GROUP_JOINED, group_id)
     QTimer.singleShot(0, canvas.scene.update)
 
 @patchbay_api
@@ -796,15 +794,20 @@ def move_group_boxes(
             
             if box.is_hidding_or_restore() and not box_pos.is_hidden():
                 redraw |= port_mode
-
-            if box.is_wrapped() is not box_pos.is_wrapped():
+            
+            if join:
+                wanted_wrap = box_poses[PortMode.BOTH].is_wrapped()
+            else:
+                wanted_wrap = box_pos.is_wrapped()
+                    
+            if box.is_wrapped() is not wanted_wrap:
                 # we need to update the box now, because the port_list
                 # of the box is not re-evaluted when we update positions
                 # during the wrap/unwrap animation.
                 box.update_positions(
                     prevent_overlap=False, even_animated=True)
                 box.set_wrapped(
-                    box_pos.is_wrapped(), prevent_overlap=False)
+                    wanted_wrap, prevent_overlap=False)
                 redraw &= ~port_mode
 
             if redraw & port_mode:

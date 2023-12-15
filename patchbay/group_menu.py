@@ -201,9 +201,8 @@ class GroupMenu(QMenu):
     
     @pyqtSlot()
     def _join(self):
-        canvas.callback(
-            CallbackAct.GROUP_JOIN,
-            self._group.group_id, self._port_mode)
+        patchcanvas.animate_before_join(self._group.group_id, self._port_mode)
+        self._group.current_position.set_splitted(False)
     
     @pyqtSlot()  
     def _split(self):
