@@ -618,10 +618,7 @@ class PatchSceneMoth(QGraphicsScene):
         full_rect = QRectF()
 
         for widget in canvas.list_boxes():
-            if widget.get_current_port_mode() is PortMode.NULL:
-                continue
-            full_rect |= widget.sceneBoundingRect().marginsAdded(
-                QMarginsF(50.0, 20.0, 50.0, 20.0))
+            full_rect |= widget.rect_needed_in_scene()
 
         return full_rect
 

@@ -24,10 +24,10 @@ from typing import Optional, Union
 from sip import voidptr
 import sys
 from enum import Enum
-from PyQt5.QtCore import Qt, QPointF, QRectF, QTimer
+from PyQt5.QtCore import Qt, QPointF, QRectF, QTimer, QMarginsF
 from PyQt5.QtGui import (QCursor, QFontMetrics, QImage, QFont,
                          QLinearGradient, QPainter, QPen, QPolygonF,
-                         QColor, QPainterPath, QBrush, QTransform)
+                         QColor, QPainterPath, QBrush)
 from PyQt5.QtWidgets import QGraphicsItem, QApplication
 
 from .init_values import (
@@ -842,6 +842,27 @@ class BoxWidgetMoth(QGraphicsItem):
                           width + 2.0 * hws,
                           height + 2.0 * hws)
         return QRectF(0.0, 0.0, float(width), float(height))
+
+    def rect_needed_in_scene(self) -> QRectF:
+        '''return the rect that can change the scene size'''
+        if (self._current_port_mode is PortMode.NULL
+                or not self.isVisible()
+                or self.hidder_widget is not None):
+            return QRectF()
+        
+        # the scene size needs a little margin at top and bottom
+        # of the box.
+        # It needs a bigger margin on sides with ports,
+        # for the possible connections.
+        
+        if self._current_port_mode is PortMode.OUTPUT:
+            return self.sceneBoundingRect().marginsAdded(
+                QMarginsF(20.0, 20.0, 50.0, 20.0))
+        if self._current_port_mode is PortMode.INPUT:
+            return self.sceneBoundingRect().marginsAdded(
+                QMarginsF(50.0, 20.0, 20.0, 20.0))
+        return self.sceneBoundingRect().marginsAdded(
+            QMarginsF(50.0, 20.0, 50.0, 20.0))
 
     def boundingRect(self):
         if self.is_hardware:
