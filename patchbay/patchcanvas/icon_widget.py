@@ -20,7 +20,7 @@
 import logging
 import os
 
-from PyQt5.QtCore import QRectF, QFile
+from PyQt5.QtCore import QRectF, QFile, Qt
 from PyQt5.QtGui import QPainter, QIcon, QPixmap
 from PyQt5.QtSvg import QGraphicsSvgItem, QSvgRenderer
 from PyQt5.QtWidgets import QGraphicsPixmapItem
@@ -134,12 +134,14 @@ class IconSvgWidget(QGraphicsSvgItem):
         QGraphicsSvgItem.__init__(self, parent)
         self._renderer = None
         self._size = QRectF(4, 4, 24, 24)
+        self._icon_size = 24
         self.set_icon(box_type, name, port_mode)
 
     def set_icon(self, box_type: BoxType, name: str, port_mode: PortMode):
         name = name.lower()
         icon_path = ""
         theme = canvas.theme.icon
+        box_theme = canvas.theme.box
 
         if box_type is BoxType.APPLICATION:
             self._size = QRectF(3, 2, 19, 18)
@@ -167,9 +169,13 @@ class IconSvgWidget(QGraphicsSvgItem):
                 self._size = QRectF(4, 4, 24, 24)
 
         elif box_type is BoxType.HARDWARE:
+            box_theme = box_theme.hardware
+            icon_size = int(box_theme.icon_size())
+            self._size = QRectF(4, 4, icon_size, icon_size)
+            self._icon_size = icon_size
+
             if name == "a2j":
                 icon_path = theme.hardware_midi
-                self._size = QRectF(4, 4, 24, 24)
             else:
                 if port_mode is PortMode.INPUT:
                     icon_path = theme.hardware_playback
@@ -177,7 +183,6 @@ class IconSvgWidget(QGraphicsSvgItem):
                     icon_path = theme.hardware_capture
                 else:
                     icon_path = theme.hardware_grouped
-                self._size = QRectF(4, 4, 24, 24)
 
         elif box_type is BoxType.DISTRHO:
             icon_path = ":/scalable/pb_distrho.svg"
@@ -192,18 +197,21 @@ class IconSvgWidget(QGraphicsSvgItem):
             self._size = QRectF(5, 4, 16, 16)
 
         elif box_type is BoxType.LADISH_ROOM:
-            # TODO - make a unique ladish-room icon
             icon_path = ":/scalable/pb_hardware.svg"
             self._size = QRectF(5, 2, 16, 16)
 
         elif box_type is BoxType.MONITOR:
+            box_theme = box_theme.monitor
+            icon_size = int(box_theme.icon_size())
+            self._size = QRectF(4, 4, icon_size, icon_size)
+            self._icon_size = icon_size
+            
             if name == 'monitor_capture':
                 icon_path = theme.monitor_capture
             elif name == 'monitor_playback':
                 icon_path = theme.monitor_playback
             else:
                 icon_path = ":/canvas/dark/" + name
-            self._size = QRectF(4, 4, 24, 24)
 
         else:
             self._size = QRectF(0, 0, 0, 0)
@@ -212,6 +220,7 @@ class IconSvgWidget(QGraphicsSvgItem):
             return
 
         self._renderer = QSvgRenderer(icon_path, canvas.scene)
+        self._renderer.setAspectRatioMode(Qt.KeepAspectRatio)
         self.setSharedRenderer(self._renderer)
         self.update()
         
@@ -225,7 +234,7 @@ class IconSvgWidget(QGraphicsSvgItem):
         return False
 
     def set_pos(self, x: int, y: int):
-        self._size = QRectF(x, y, 24, 24)
+        self._size = QRectF(x, y, self._icon_size, self._icon_size)
 
     def boundingRect(self):
         return self._size
