@@ -46,6 +46,10 @@ if TYPE_CHECKING:
 _logger = logging.getLogger(__name__)
 _logging_str = ''
 
+_PG_NAME_ENDS = (' ', '_', '.', '-', '#', ':', 'out', 'in', 'Out',
+                 'In', 'Output', 'Input', 'output', 'input',
+                 ' AUX', '_AUX')
+
 # decorator
 def easy_log(func):
     ''' decorator for API callable functions.
@@ -193,9 +197,6 @@ def get_portgroup_name_from_ports_names(ports_names: list[str]):
     if len(ports_names) < 2:
         return ''
 
-    PG_NAME_ENDS = (' ', '_', '.', '-', '#', ':', 'out', 'in', 'Out',
-                    'In', 'Output', 'Input', 'output', 'input', ' AUX', '_AUX')
-
     # set portgrp name
     portgrp_name = ''
 
@@ -209,7 +210,7 @@ def get_portgroup_name_from_ports_names(ports_names: list[str]):
     # reduce portgrp name until it ends with one of the patterns
     # in portgrp_name_ends
     while portgrp_name:
-        if (portgrp_name.endswith((PG_NAME_ENDS))
+        if (portgrp_name.endswith((_PG_NAME_ENDS))
                 or portgrp_name in ports_names):
             break
         
