@@ -99,6 +99,7 @@ def rail_float(value, mini: float, maxi: float) -> float:
 def rail_int(value, mini: int, maxi: int) -> int:
     return max(min(int(value), int(maxi)), int(mini))
 
+
 class StyleAttributer:
     def __init__(self, path: str, parent=None):
         self.subs = list[str]()
@@ -123,6 +124,7 @@ class StyleAttributer:
         self._port_spacing = None
         self._port_type_spacing = None
         self._box_footer = None
+        self._icon_size = None
 
         self._grid_min_width = None
         self._grid_min_height = None
@@ -283,14 +285,26 @@ class StyleAttributer:
         elif attribute == 'box-footer':
             if isinstance(value, (int, float)):
                 self._box_footer = rail_float(value, 0, 50)
+            else:
+                err = True
+
+        elif attribute == 'icon-size':
+            if isinstance(value, (int, float)):
+                self._icon_size = rail_float(value, 8, 1024)
+            else:
+                err = True
 
         elif attribute == 'grid-min-width':
             if isinstance(value, (int, float)):
                 self._grid_min_width = rail_float(value, 1, 100000)
+            else:
+                err = True
                 
         elif attribute == 'grid-min-height':
             if isinstance(value, (int, float)):
                 self._grid_min_height = rail_float(value, 1, 100000)
+            else:
+                err = True
 
         else:
             _logger.error(f"{self._path}: unknown key: {attribute}")
@@ -444,6 +458,9 @@ class StyleAttributer:
     def box_footer(self) -> float:
         return self.get_value_of('_box_footer')
     
+    def icon_size(self) -> float:
+        return self.get_value_of('_icon_size')
+    
     def grid_min_width(self) -> float:
         return self.get_value_of('_grid_min_width')
     
@@ -487,17 +504,17 @@ class StyleAttributer:
         self._titles_templates_cache[title][gui_key][icon_key] = templates
     
     def get_title_templates(
-            self, title: str, handle_gui: bool, with_icon: bool) -> list[dict[str, int]]:
+            self, title: str, handle_gui: bool, icon_size: int) -> list[dict[str, int]]:
         if self._titles_templates_cache is None:
             self._set_titles_templates_cache()
         
         gui_key = 'with_gui' if handle_gui else 'without_gui'
-        icon_key = 'with_icon' if with_icon else 'without_icon'
+        # icon_key = 'with_icon' if with_icon else 'without_icon'
     
         if (title in self._titles_templates_cache
                 and gui_key in self._titles_templates_cache[title]
-                and icon_key in self._titles_templates_cache[title][gui_key]):
-            return self._titles_templates_cache[title][gui_key][icon_key]
+                and icon_size in self._titles_templates_cache[title][gui_key]):
+            return self._titles_templates_cache[title][gui_key][icon_size]
         
         return []
     
@@ -616,6 +633,7 @@ class Theme(StyleAttributer):
         self._port_in_offset_mode = 'bore'
         self._port_out_offset_mode = 'bore'
         self._box_footer = 0
+        self._icon_size = 24
 
         self.scene_background_color = QColor('black')
         self.scene_background_image = QImage()

@@ -68,11 +68,12 @@ class IconPixmapWidget(QGraphicsPixmapItem):
     def __init__(self, box_type: BoxType, icon_name: str, parent):
         QGraphicsPixmapItem.__init__(self, parent)
 
-        self._size = QRectF(0.0, 0.0, 24.0, 24.0)
-        self.icon = None
-        self.x_offset = 4
-        self.y_offset = 4
+        box_theme = canvas.theme.box
+        if box_type is BoxType.CLIENT:
+            box_theme = box_theme.client
 
+        self._icon_size = box_theme.icon_size()
+        self.icon = None
         self._pixmaps_cache = dict[int, QPixmap]()
 
         self.set_icon(box_type, icon_name)
@@ -82,7 +83,7 @@ class IconPixmapWidget(QGraphicsPixmapItem):
 
         if not self.icon.isNull():
             scale = canvas.scene.get_zoom_scale()
-            pix_size = int(0.5 + 24 * scale)
+            pix_size = int(0.5 + self._icon_size * scale)
             
             self_icon_pix_cache = _icons_pixmaps_cache.get(self.icon)
             if self_icon_pix_cache is None:
@@ -105,7 +106,7 @@ class IconPixmapWidget(QGraphicsPixmapItem):
         if self.icon is None or scale <= 0.0:
             return
 
-        pix_size = int(0.5 + 24 *scale)
+        pix_size = int(0.5 + self._icon_size *scale)
         pixmap = _icons_pixmaps_cache[self.icon].get(pix_size)
         
         if pixmap is None:
@@ -115,15 +116,13 @@ class IconPixmapWidget(QGraphicsPixmapItem):
         self.setPixmap(pixmap)
         self.setScale(1.0 / scale)
 
-    def is_null(self)->bool:
+    def is_null(self) -> bool:
         if self.icon is None:
             return True
 
         return self.icon.isNull()
 
     def set_pos(self, x: int, y: int):
-        self.x_offset = x
-        self.y_offset = y
         self.setPos(float(x), float(y))
         
     def type(self) -> CanvasItemType:

@@ -443,11 +443,16 @@ class BoxWidget(BoxWidgetMoth):
         box_theme = self.get_theme()
         font_size = box_theme.font().pixelSize()
 
+        if self.has_top_icon():
+            icon_size = int(box_theme.icon_size())
+        else:
+            icon_size = 0
+        
         # Check Text Name size
         
         # first look in cache if title sizes are stocked
         all_title_templates = box_theme.get_title_templates(
-            self._group_name, self._can_handle_gui, self.has_top_icon())
+            self._group_name, self._can_handle_gui, icon_size)
         lines_choice_max = len(all_title_templates) - 1
 
         if not all_title_templates:
@@ -467,7 +472,7 @@ class BoxWidget(BoxWidgetMoth):
             title_height = title_line_y_start + 3
             
             if self.has_top_icon():
-                header_height = 3 + 24 + 3
+                header_height = 3 + icon_size + 3
             else:
                 header_height = title_height
 
@@ -485,9 +490,9 @@ class BoxWidget(BoxWidgetMoth):
                     max_title_width = int(max(max_title_width, title_line.size))
                     header_width = title_line.size + 10
 
-                    if self.has_top_icon() and title_line.y <= 28 + font_size:
+                    if self.has_top_icon() and title_line.y <= icon_size + 6 + font_size:
                         # text line is at right of the icon
-                        header_width += 28
+                        header_width += icon_size + 4
 
                     max_header_width = max(max_header_width, header_width)
                 
@@ -890,6 +895,7 @@ class BoxWidget(BoxWidgetMoth):
         font_size = box_theme.font().pixelSize()
         font_spacing = int(font_size * 1.4)
         pen_width = box_theme.fill_pen().widthF()
+        icon_size = box_theme.icon_size()
 
         # when client is client capable of gui state
         # header has margins
@@ -899,7 +905,7 @@ class BoxWidget(BoxWidgetMoth):
         title_y_start = font_size + 1 + gui_margin + pen_width
 
         if self._title_under_icon:
-            title_y_start = 3 + gui_margin + 24 + font_spacing + pen_width
+            title_y_start = 3 + gui_margin + icon_size + font_spacing + pen_width
         
         for i in range(len(self._title_lines)):
             title_line = self._title_lines[i]
@@ -928,8 +934,9 @@ class BoxWidget(BoxWidgetMoth):
                         title_line.x += 2
                     
                     if self.has_top_icon():
-                        self.top_icon.set_pos(self._width - 24 - 3 - pen_width - gui_margin,
-                                              3 + pen_width + gui_margin)
+                        self.top_icon.set_pos(
+                            self._width - int(icon_size) - 3 - pen_width - gui_margin,
+                            3 + pen_width + gui_margin)
     
                 elif self._current_port_mode is PortMode.OUTPUT:
                     title_line.x = (pen_width + self._header_width
@@ -953,17 +960,17 @@ class BoxWidget(BoxWidgetMoth):
 
         for title_line in self._title_lines:
             title_size = title_line.size
-            if self.has_top_icon() and title_line.y <= 28 + font_size:
+            if self.has_top_icon() and title_line.y <= icon_size + 6 + font_size:
                 # title line is beside icon
-                title_size += 28
+                title_size += icon_size + 4
                 max_title_icon_size = max(max_title_icon_size, title_size)
             max_title_size = max(max_title_size, title_size)
         
         # set title lines X position
         for title_line in self._title_lines:
-            if self.has_top_icon() and title_line.y <= 28 + font_size:
+            if self.has_top_icon() and title_line.y <= icon_size + 6 + font_size:
                 # title line is beside the icon
-                title_line.x = int((self._width - max_title_icon_size) / 2 + 28)
+                title_line.x = int((self._width - max_title_icon_size) / 2 + icon_size + 4)
             else:
                 title_line.x = int((self._width - title_line.size) / 2)
         
