@@ -450,6 +450,14 @@ class PatchSceneMoth(QGraphicsScene):
            of the box at the end of animation.'''
         for moving_box in self.move_boxes:
             if moving_box.widget is box_widget:
+                if moving_box.joining and not joining:
+                    canvas.qobject.rm_group_to_join(
+                        moving_box.widget.get_group_id())
+                    # for group_id, port_mode in canvas.qobject.groups_to_join:
+                    #     if group_id == moving_box.widget.get_group_id():
+                    #         canvas.qobject.groups_to_join.remove(
+                    #             (group_id, port_mode))
+                    #         break
                 break
         else:
             if not force_anim:

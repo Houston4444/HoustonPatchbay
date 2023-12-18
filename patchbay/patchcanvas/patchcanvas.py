@@ -95,8 +95,9 @@ class CanvasObject(QObject):
 
     def __init__(self, parent=None):
         QObject.__init__(self, parent)
-        self.groups_to_join = list[tuple[int, PortMode]]()
+        self._groups_to_join = set[tuple[int, PortMode]]()
         self.move_boxes_finished.connect(self._join_after_move)
+
         self.connect_update_timer = QTimer()
         self.connect_update_timer.setInterval(0)
         self.connect_update_timer.setSingleShot(True)
@@ -135,20 +136,29 @@ class CanvasObject(QObject):
 
     @pyqtSlot()
     def _join_after_move(self):
-        for group_id, origin_box_mode in self.groups_to_join:
+        for group_id, origin_box_mode in self._groups_to_join:
             join_group(group_id, origin_box_mode)
 
         if options.prevent_overlap:            
-            for group_id, origin_box_mode in self.groups_to_join:
+            for group_id, origin_box_mode in self._groups_to_join:
                 group = canvas.get_group(group_id)
                 canvas.scene.deplace_boxes_from_repulsers([group.widgets[0]])
 
-        self.groups_to_join.clear()
+        self._groups_to_join.clear()
         
     def start_aliasing_check(self, aliasing_reason: AliasingReason):
         self._aliasing_reason = aliasing_reason
         self._aliasing_timer_started_at = time.time()
         self._aliasing_move_timer.start()
+    
+    def add_group_to_join(self, group_id: int, orig_port_mode=PortMode.NULL):
+        self._groups_to_join.add((group_id, orig_port_mode))
+    
+    def rm_group_to_join(self, group_id: int):
+        for g_id, port_mode in self._groups_to_join:
+            if group_id == g_id:
+                self._groups_to_join.remove((g_id, port_mode))
+                break
 
 
 @patchbay_api
@@ -736,7 +746,7 @@ def animate_before_join(group_id: int,
     if group is None:
         return
 
-    canvas.qobject.groups_to_join.append((group.group_id, origin_box_mode))
+    canvas.qobject.add_group_to_join(group.group_id, origin_box_mode)
 
     if origin_box_mode is PortMode.OUTPUT:
         x, y = group.widgets[0].top_left()
@@ -844,9 +854,7 @@ def move_group_boxes(
                     both_pos = nearest_on_grid(box_poses[PortMode.BOTH].pos)
 
                     if port_mode is PortMode.OUTPUT:
-                        if not (group, PortMode.NULL) in canvas.qobject.groups_to_join:
-                            canvas.qobject.groups_to_join.append(
-                                (group.group_id, PortMode.NULL))
+                        canvas.qobject.add_group_to_join(group.group_id)
 
                         joined_widget = BoxWidget(group, PortMode.BOTH)
                         joined_rect = joined_widget.get_dummy_rect()

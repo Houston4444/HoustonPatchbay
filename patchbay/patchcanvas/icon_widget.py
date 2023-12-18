@@ -230,7 +230,7 @@ class IconSvgWidget(QGraphicsSvgItem):
     def type(self) -> CanvasItemType:
         return CanvasItemType.ICON
 
-    def is_null(self)->bool:
+    def is_null(self) -> bool:
         return False
 
     def set_pos(self, x: int, y: int):
