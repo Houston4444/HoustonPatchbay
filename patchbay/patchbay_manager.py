@@ -748,7 +748,35 @@ class PatchbayManager:
     def change_theme(self, theme_name: str):
         if not theme_name:
             return
+        
+        for connection in self.connections:
+            connection.in_canvas = False
+        
+        for group in self.groups:
+            for portgroup in group.portgroups:
+                portgroup.in_canvas = False
+            for port in group.ports:
+                port.in_canvas = False
+            group.in_canvas = False
+
+        patchcanvas.clear_all()
         patchcanvas.change_theme(theme_name)
+
+        self.optimize_operation(True)
+
+        for group in self.groups:
+            group.add_to_canvas()
+            for port in group.ports:
+                port.add_to_canvas()
+            for portgroup in group.portgroups:
+                portgroup.add_to_canvas()
+        
+        for connection in self.connections:
+            connection.add_to_canvas()
+
+        self.optimize_operation(False)
+
+        patchcanvas.redraw_all_groups()
 
     def set_elastic_canvas(self, yesno: int):
         patchcanvas.set_elastic(yesno)
