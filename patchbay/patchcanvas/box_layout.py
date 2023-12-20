@@ -3,7 +3,7 @@ from dataclasses import dataclass
 import logging
 from typing import TYPE_CHECKING
 
-from .init_values import PortMode, canvas, BoxLayoutMode
+from .init_values import PortMode, canvas, BoxLayoutMode, options
 from .utils import next_width_on_grid, next_height_on_grid
 
 if TYPE_CHECKING:
@@ -75,7 +75,7 @@ class BoxLayout:
                     self.needed_height = (
                         max(self.header_height,
                             height_for_ports + self.port_spacing)
-                    + 2 * self.pen_width)
+                        + 2 * self.pen_width)
 
                 elif title_on is TitleOn.SIDE_UNDER_ICON:
                     self.header_width = max(
@@ -124,13 +124,23 @@ class BoxLayout:
         self.full_width = next_width_on_grid(self.hwr * 2 + self.needed_width)
         self.full_height = next_height_on_grid(self.hwr * 2 + self.needed_height)
 
-        self.area = self.full_width * self.full_height
+        # n_cells is used to sort layouts, to use the littlest area
+        self._n_cells = (
+            ((self.full_width + canvas.theme.box_spacing) / options.cell_width)
+            * ((self.full_height + canvas.theme.box_spacing) / options.cell_height))
+
+        # with the option box_grouped_auto_layout_ratio,
+        # we simulate that the area can be higher in one_column mode
+        # (PortMode.BOTH and BoxLayoutMode.HIGH)
+        if self.one_column:
+            self._n_cells *= options.box_grouped_auto_layout_ratio
+
         self.width = self.full_width - 2 * self.hwr
         self.height = self.full_height - 2 * self.hwr
 
     def __lt__(self, other: 'BoxLayout') -> bool:
-        if self.area != other.area:
-            return self.area < other.area
+        if self._n_cells != other._n_cells:
+            return self._n_cells < other._n_cells
         
         if self.n_lines != other.n_lines:
             return self.n_lines < other.n_lines
