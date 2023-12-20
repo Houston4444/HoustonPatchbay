@@ -127,8 +127,8 @@ class PatchSceneMoth(QGraphicsScene):
 
         self.move_boxes = list[MovingBox]()
         self.wrapping_boxes = list[WrappingBox]()
-        self.hidding_boxes = list[BoxWidget]()
-        self.restore_boxes = list[BoxWidget]()
+        self.hidding_boxes = set[BoxWidget]()
+        self.restore_boxes = set[BoxWidget]()
         self._MOVE_DURATION = 0.300 # 300ms
         self._MOVE_TIMER_INTERVAL = 20 # 20 ms step animation (50 Hz)
         self._move_timer_start_at = 0.0
@@ -453,11 +453,6 @@ class PatchSceneMoth(QGraphicsScene):
                 if moving_box.joining and not joining:
                     canvas.qobject.rm_group_to_join(
                         moving_box.widget.get_group_id())
-                    # for group_id, port_mode in canvas.qobject.groups_to_join:
-                    #     if group_id == moving_box.widget.get_group_id():
-                    #         canvas.qobject.groups_to_join.remove(
-                    #             (group_id, port_mode))
-                    #         break
                 break
         else:
             if not force_anim:
@@ -527,7 +522,9 @@ class PatchSceneMoth(QGraphicsScene):
             self._move_box_timer.start()
 
     def add_box_to_animation_hidding(self, box_widget: BoxWidget):
-        self.hidding_boxes.append(box_widget)
+        if box_widget in self.restore_boxes:
+            self.restore_boxes.remove(box_widget)
+        self.hidding_boxes.add(box_widget)
         
         if not self._move_box_timer.isActive():
             self._move_timer_start_at = time.time()
@@ -535,7 +532,9 @@ class PatchSceneMoth(QGraphicsScene):
             self._move_box_timer.start()
 
     def add_box_to_animation_restore(self, box_widget: BoxWidget):
-        self.restore_boxes.append(box_widget)
+        if box_widget in self.hidding_boxes:
+            self.hidding_boxes.remove(box_widget)
+        self.restore_boxes.add(box_widget)
         
         if not self._move_box_timer.isActive():
             self._move_timer_start_at = time.time()

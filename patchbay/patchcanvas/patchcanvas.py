@@ -861,7 +861,7 @@ def move_group_boxes(
                         canvas.scene.remove_box(joined_widget)
                         joined_rect.translate(QPointF(*both_pos))
                         x, y = both_pos
-                        x = joined_rect.right() - box.boundingRect().width()
+                        x = int(joined_rect.right() - box.boundingRect().width())
                     
                         canvas.scene.add_box_to_animation(
                             box, x, y,

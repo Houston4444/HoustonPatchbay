@@ -375,7 +375,7 @@ class PatchbayManager:
             return
         
         hidden_port_mode = (
-            group.current_position.hidden_port_modes()| port_mode)
+            group.current_position.hidden_port_modes() | port_mode)
         group.current_position.set_hidden_port_mode(hidden_port_mode)
         group.save_current_position()
 
@@ -659,7 +659,14 @@ class PatchbayManager:
             if (hidden_modes is not new_hidden_modes
                     or self.port_types_view & in_outs_ptv
                        is not ex_ptv & in_outs_ptv):
+                # group needs to be redrawn because visible ports
+                # are not the sames.
+
                 if new_hidden_modes is not hidden_modes:
+                    # During the animation, we need to see the ports we hide
+                    # so the hidden ports in the new view must be shown.
+                    # But, if the ports are hidden in the two views,
+                    # we won't show them.
                     for port_mode in PortMode.INPUT, PortMode.OUTPUT:
                         if (not new_hidden_modes & port_mode
                                 and hidden_modes & port_mode):
