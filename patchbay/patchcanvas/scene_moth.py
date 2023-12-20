@@ -387,12 +387,12 @@ class PatchSceneMoth(QGraphicsScene):
             port_mode = hidding_box.get_port_mode()
             if port_mode & PortMode.OUTPUT:
                 for lw in GroupedLinesWidget.widgets_for_box(
-                        hidding_box._group_id, PortMode.OUTPUT):
+                        hidding_box.get_group_id(), PortMode.OUTPUT):
                     lw.add_hidding_port_mode(PortMode.OUTPUT)
                     lines_widgets.add(lw)
             if port_mode & PortMode.INPUT:
                 for lw in GroupedLinesWidget.widgets_for_box(
-                        hidding_box._group_id, PortMode.INPUT):
+                        hidding_box.get_group_id(), PortMode.INPUT):
                     lw.add_hidding_port_mode(PortMode.INPUT)
                     lines_widgets.add(lw)
         
@@ -405,12 +405,12 @@ class PatchSceneMoth(QGraphicsScene):
             port_mode = restore_box.get_port_mode()
             if port_mode & PortMode.OUTPUT:
                 for lw in GroupedLinesWidget.widgets_for_box(
-                        restore_box._group_id, PortMode.OUTPUT):
+                        restore_box.get_group_id(), PortMode.OUTPUT):
                     lw.add_hidding_port_mode(PortMode.OUTPUT)
                     lines_widgets.add(lw)
             if port_mode & PortMode.INPUT:
                 for lw in GroupedLinesWidget.widgets_for_box(
-                        restore_box._group_id, PortMode.INPUT):
+                        restore_box.get_group_id(), PortMode.INPUT):
                     lw.add_hidding_port_mode(PortMode.INPUT)
                     lines_widgets.add(lw)
         
