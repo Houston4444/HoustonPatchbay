@@ -21,3 +21,12 @@ Virer connection_lines de BoxWidget et PortWidget
 
 Pot de pus du hardware rack à gérer
 animate hidding PortmOde.BOTH connections
+
+Views menu:
+    if at least TWO views:
+        list view menus (disable the current view)
+        separator
+    new_view
+    remove the view -> view list
+    rename the current view
+    remove absent positions

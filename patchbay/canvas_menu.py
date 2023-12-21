@@ -2,12 +2,12 @@
 from typing import TYPE_CHECKING
 from PyQt5.QtGui import QIcon, QDesktopServices
 from PyQt5.QtWidgets import QMenu, QApplication
-from PyQt5.QtCore import QLocale, QUrl, pyqtSlot, QPointF
+from PyQt5.QtCore import QLocale, QUrl, pyqtSlot
 
 from . import patchcanvas
-from .patchcanvas import utils, canvas
+from .patchcanvas import utils
 from .base_elements import PortType, PortTypesViewFlag
-
+from .views_menu import ViewsMenu
 
 if TYPE_CHECKING:
     from .patchbay_manager import PatchbayManager
@@ -57,6 +57,9 @@ class CanvasMenu(QMenu):
         self.show_hiddens_menu.setIcon(QIcon.fromTheme('show_table_row'))
         self.show_hiddens_menu.aboutToShow.connect(self._list_hidden_groups)
         self.addMenu(self.show_hiddens_menu)
+
+        self.views_menu = ViewsMenu(self, patchbay_manager)
+        self.addMenu(self.views_menu)
 
         self.port_types_menu = QMenu(_translate('patchbay', 'Type filter'), self)
         self.port_types_menu.setIcon(QIcon.fromTheme('view-filter'))
@@ -215,18 +218,13 @@ class CanvasMenu(QMenu):
         
         if not has_hiddens:
             ptv_view = self.mng.views[
-                self.mng.VIEW_NUMBER].get(
+                self.mng.view_number].get(
                     self.mng.port_types_view)
             
             for group_name, gpos in ptv_view.items():
                 if gpos.hidden_port_modes():
                     has_hiddens = True
-                    break
-            # for gpos in self.patchbay_manager.group_positions:
-            #     if gpos.port_types_view is self.patchbay_manager.port_types_view:
-            #         if gpos.hidden_sides:
-            #             has_hiddens = True
-            #             break                
+                    break            
         
         if has_hiddens:
             self.show_hiddens_menu.addSeparator()

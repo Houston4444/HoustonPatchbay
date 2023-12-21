@@ -7,7 +7,6 @@ from pathlib import Path
 from dataclasses import dataclass
 import time
 from typing import TYPE_CHECKING, Any, Callable, Optional, Union
-from unittest.mock import patch
 
 from PyQt5.QtGui import QCursor, QGuiApplication
 from PyQt5.QtWidgets import QMainWindow, QMessageBox, QWidget
@@ -17,7 +16,8 @@ from .patchcanvas import patchcanvas, PortType, PortSubType, PortMode
 from .patchcanvas.utils import get_new_group_positions
 from .patchcanvas.scene_view import PatchGraphicsView
 from .patchcanvas.init_values import (
-    AliasingReason, CallbackAct, CanvasFeaturesObject, CanvasOptionsObject, GridStyle)
+    AliasingReason, CallbackAct, CanvasFeaturesObject,
+    CanvasOptionsObject, GridStyle)
 
 from .patchbay_signals import SignalsObject
 from .tools_widgets import PatchbayToolsWidget
@@ -26,7 +26,8 @@ from .options_dialog import CanvasOptionsDialog
 from .filter_frame import FilterFrame
 from .base_elements import (
     GroupPos, PortTypesViewFlag,
-    JackPortFlag, PortgroupMem, ToolDisplayed, TransportPosition)
+    JackPortFlag, PortgroupMem, ToolDisplayed,
+    TransportPosition, ViewData)
 from .base_group import Group
 from .base_connection import Connection
 from .base_port import Port
@@ -121,11 +122,14 @@ class PatchbayManager:
     _ports_by_name = dict[str, Port]()
 
     group_positions = list[GroupPos]()
+    view_number = 0
     views = dict[int, dict[PortTypesViewFlag, dict[str, GroupPos]]]()
+    views_datas = dict[int, ViewData]()
+    
     portgroups_memory = list[PortgroupMem]()
+    
     delayed_orders = list[DelayedOrder]()
     
-    VIEW_NUMBER = 0
 
     def __init__(self, settings: QSettings):
         self.callbacker = Callbacker(self)
@@ -463,7 +467,7 @@ class PatchbayManager:
 
         # forget all hidden boxes even if these boxes are not
         # currently present in the patchbay.
-        for ptv, pos_dict in self.views[self.VIEW_NUMBER].items():
+        for ptv, pos_dict in self.views[self.view_number].items():
             for group_name, gpos in pos_dict.items():
                 gpos.set_hidden_port_mode(PortMode.NULL)
         
@@ -518,10 +522,10 @@ class PatchbayManager:
         pass
 
     def get_group_position(self, group_name: str) -> GroupPos:
-        ptv_view = self.views[self.VIEW_NUMBER].get(self.port_types_view)
+        ptv_view = self.views[self.view_number].get(self.port_types_view)
         if ptv_view is None:
             ptv_view = dict[str, GroupPos]()
-            self.views[self.VIEW_NUMBER][self.port_types_view] = ptv_view
+            self.views[self.view_number][self.port_types_view] = ptv_view
             
         gpos = ptv_view.get(group_name)
         if gpos is not None:
@@ -619,7 +623,7 @@ class PatchbayManager:
         
         ex_ptv = self.port_types_view
         self.port_types_view = port_types_view
-        _logger.info(f"Change Port Types View: {ex_ptv} -> {port_types_view}")
+        _logger.info(f"Change Port Types View: {ex_ptv.name} -> {port_types_view.name}")
 
         # Prevent visual update at each canvas item creation
         # because we may create/remove a lot of ports here
@@ -722,6 +726,60 @@ class PatchbayManager:
 
         self.sg.port_types_view_changed.emit(self.port_types_view)
 
+    def new_view(self, view_number: Optional[int]=None):
+        if view_number is None:
+            new_num = 0
+            while True:
+                for num in self.views.keys():
+                    if new_num == num:
+                        new_num += 1
+                        break
+                else:
+                    break
+        else:
+            new_num = view_number
+
+        self.views[new_num] = {}
+        for ptv, gp_gpos in self.views[self.view_number].items():
+            if self.views[new_num].get(ptv) is None:
+                self.views[new_num][ptv] = {}
+
+            for group_name, gpos in gp_gpos.items():
+                self.views[new_num][ptv][group_name] = gpos.copy()
+
+        self.view_number = new_num
+        self.change_port_types_view(PortTypesViewFlag.ALL, force=True)
+    
+    def rename_current_view(self, new_name: str):
+        view_data = self.views_datas.get(self.view_number)
+        if view_data is None:
+            self.views_datas[self.view_number] = ViewData(
+                new_name, self.port_types_view)
+            return
+
+        view_data.name = new_name
+    
+    def change_view(self, view_number: int):
+        # save the port types view of the current view
+        view_data = self.views_datas.get(self.view_number)
+        if view_data is None:
+            self.views_datas[self.view_number] = ViewData(
+                '', self.port_types_view)
+        else:
+            view_data.default_port_types_view = self.port_types_view
+        
+        if not view_number in self.views.keys():
+            self.new_view(view_number=view_number)
+            return
+        
+        self.view_number = view_number
+        new_view_data = self.views_datas.get(self.view_number)
+        if new_view_data is None:
+            ptv = self.port_types_view
+        else:
+            ptv = new_view_data.default_port_types_view
+        self.change_port_types_view(ptv, force=True)
+    
     # --- options triggers ---
 
     def set_graceful_names(self, yesno: int):
@@ -1361,17 +1419,21 @@ class PatchbayManager:
 
         gprops = {}
 
-        for ptv, pt_dict in self.views[self.VIEW_NUMBER].items():
-            ptv_str = ptv.to_config_str()
-            if not ptv_str:
-                continue
+        for view_number, ptv_dict in self.views.items():
+            view_str = f'VIEW_{view_number}'
+            gprops[view_str] = {}
+            
+            for ptv, pt_dict in ptv_dict.items():
+                ptv_str = ptv.to_config_str()
+                if not ptv_str:
+                    continue
 
-            gprops[ptv_str] = {}
-            for group_name, gpos in pt_dict.items():
-                if gpos.has_sure_existence:
-                    gprops[ptv_str][group_name] = gpos.as_new_dict()
+                gprops[view_str][ptv_str] = {}
+                for group_name, gpos in pt_dict.items():
+                    if gpos.has_sure_existence:
+                        gprops[view_str][ptv_str][group_name] = gpos.as_new_dict()
 
-        file_dict['views'] = {'VIEW_0': gprops}
+        file_dict['views'] = gprops
 
         portgroups = list[dict[str, Any]]()
         for pg_mem in self.portgroups_memory:
