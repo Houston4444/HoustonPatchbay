@@ -68,6 +68,11 @@ class PortTypesViewFlag(IntFlag):
         return ret                   
             
 
+@dataclass
+class ViewData:
+    name: str
+    default_port_types_view: PortTypesViewFlag
+
 
 @dataclass
 class TransportPosition:
@@ -151,7 +156,6 @@ class GroupPos:
     flags: GroupPosFlag = GroupPosFlag.NONE
     hidden_sides: PortMode = PortMode.NULL
     boxes: dict[PortMode, BoxPos]
-    splitted: bool = False
     fully_set: bool = True
     has_sure_existence: bool = True
     
