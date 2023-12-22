@@ -122,14 +122,13 @@ class PatchbayManager:
     _ports_by_name = dict[str, Port]()
 
     group_positions = list[GroupPos]()
-    view_number = 0
+    view_number = 1
     views = dict[int, dict[PortTypesViewFlag, dict[str, GroupPos]]]()
     views_datas = dict[int, ViewData]()
     
     portgroups_memory = list[PortgroupMem]()
     
     delayed_orders = list[DelayedOrder]()
-    
 
     def __init__(self, settings: QSettings):
         self.callbacker = Callbacker(self)
@@ -620,7 +619,6 @@ class PatchbayManager:
             self, port_types_view: PortTypesViewFlag, force=False):
         if not force and port_types_view is self.port_types_view:
             return
-        
         ex_ptv = self.port_types_view
         self.port_types_view = port_types_view
         _logger.info(f"Change Port Types View: {ex_ptv.name} -> {port_types_view.name}")
@@ -728,7 +726,7 @@ class PatchbayManager:
 
     def new_view(self, view_number: Optional[int]=None):
         if view_number is None:
-            new_num = 0
+            new_num = 1
             while True:
                 for num in self.views.keys():
                     if new_num == num:
@@ -747,6 +745,7 @@ class PatchbayManager:
             for group_name, gpos in gp_gpos.items():
                 self.views[new_num][ptv][group_name] = gpos.copy()
 
+        self.sort_views_by_index()
         self.view_number = new_num
         self.change_port_types_view(PortTypesViewFlag.ALL, force=True)
     
@@ -778,8 +777,37 @@ class PatchbayManager:
             ptv = self.port_types_view
         else:
             ptv = new_view_data.default_port_types_view
+
         self.change_port_types_view(ptv, force=True)
     
+    def remove_view(self, view_number: int):
+        if view_number in self.views.keys():
+            self.views.pop(view_number)
+        if view_number in self.views_datas.keys():
+            self.views_datas.pop(view_number)
+        self.sort_views_by_index()
+    
+    def write_view_data(
+            self, view_number: int, name: Optional[str]=None,
+            port_types: Optional[PortTypesViewFlag]=None):
+        view_data = self.views_datas.get(view_number)
+        if view_data is None:
+            if name is None:
+                name = ''
+            if port_types is None:
+                port_types = PortTypesViewFlag.ALL
+
+            view_data = ViewData(name, port_types)
+            
+            self.views_datas[view_number] = view_data
+            return
+        
+        if name is not None:
+            view_data.name = name
+            
+        if port_types is not None:
+            view_data.default_port_types_view = port_types
+
     # --- options triggers ---
 
     def set_graceful_names(self, yesno: int):
@@ -1294,6 +1322,13 @@ class PatchbayManager:
         
         self.sg.patch_may_have_changed.emit()
 
+    def sort_views_by_index(self):
+        indexes = sorted([i for i in self.views.keys()])
+        views = self.views.copy()
+        self.views.clear()
+        for i in indexes:
+            self.views[i] = views[i]
+
     def _export_port_list_to_patchichi(self) -> str:
         def slcol(input_str: str) -> str:
             return input_str.replace(':', '\\:')
@@ -1417,23 +1452,33 @@ class PatchbayManager:
             (c.port_out.full_name, c.port_in.full_name)
             for c in self.connections]
 
-        gprops = {}
+        self.sort_views_by_index()
+        views = []
 
         for view_number, ptv_dict in self.views.items():
-            view_str = f'VIEW_{view_number}'
-            gprops[view_str] = {}
-            
+            view_item = {}
+            view_item['index'] = view_number
+
+            view_data = self.views_datas.get(view_number)
+            if view_data is not None:
+                if view_data.name:
+                    view_item['name'] = view_data.name
+                view_item['default_port_types'] = \
+                    view_data.default_port_types_view.to_config_str()
+                        
             for ptv, pt_dict in ptv_dict.items():
                 ptv_str = ptv.to_config_str()
                 if not ptv_str:
                     continue
+                
+                view_item[ptv_str] = {}
 
-                gprops[view_str][ptv_str] = {}
                 for group_name, gpos in pt_dict.items():
                     if gpos.has_sure_existence:
-                        gprops[view_str][ptv_str][group_name] = gpos.as_new_dict()
+                        view_item[ptv_str][group_name] = gpos.as_new_dict()
+            views.append(view_item)
 
-        file_dict['views'] = gprops
+        file_dict['views'] = views
 
         portgroups = list[dict[str, Any]]()
         for pg_mem in self.portgroups_memory:
