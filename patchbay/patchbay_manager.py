@@ -747,6 +747,7 @@ class PatchbayManager:
 
         self.sort_views_by_index()
         self.view_number = new_num
+        self.sg.views_changed.emit()
         self.change_port_types_view(PortTypesViewFlag.ALL, force=True)
     
     def rename_current_view(self, new_name: str):
@@ -757,6 +758,7 @@ class PatchbayManager:
             return
 
         view_data.name = new_name
+        self.sg.views_changed.emit()
     
     def change_view(self, view_number: int):
         # save the port types view of the current view
@@ -772,6 +774,7 @@ class PatchbayManager:
             return
         
         self.view_number = view_number
+        self.sg.view_changed.emit(view_number)
         new_view_data = self.views_datas.get(self.view_number)
         if new_view_data is None:
             ptv = self.port_types_view
@@ -786,6 +789,7 @@ class PatchbayManager:
         if view_number in self.views_datas.keys():
             self.views_datas.pop(view_number)
         self.sort_views_by_index()
+        self.sg.views_changed.emit()
     
     def write_view_data(
             self, view_number: int, name: Optional[str]=None,
@@ -807,6 +811,8 @@ class PatchbayManager:
             
         if port_types is not None:
             view_data.default_port_types_view = port_types
+        
+        self.sg.views_changed.emit()
 
     # --- options triggers ---
 

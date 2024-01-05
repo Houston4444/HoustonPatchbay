@@ -40,7 +40,8 @@ patchbay: patchbay/ui/canvas_options.py \
 		patchbay/ui/canvas_port_info.py \
 		patchbay/ui/filter_frame.py \
 		patchbay/ui/patchbay_tools.py \
-		patchbay/ui/type_filter_frame.py
+		patchbay/ui/type_filter_frame.py \
+		patchbay/ui/view_selector.py
 
 patchbay/ui/%.py: resources/ui/%.ui
 	$(PYUIC) --import-from=.. $< -o $@

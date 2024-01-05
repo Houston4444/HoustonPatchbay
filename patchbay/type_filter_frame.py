@@ -1,7 +1,6 @@
 
 from typing import TYPE_CHECKING
 
-from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QFrame
 
 from .base_elements import PortTypesViewFlag

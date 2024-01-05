@@ -8,6 +8,8 @@ class SignalsObject(QObject):
     to_main_thread = pyqtSignal(object, tuple, dict)
     callback_sig = pyqtSignal(IntEnum, tuple)
     
+    view_changed = pyqtSignal(int)
+    views_changed = pyqtSignal()
     port_types_view_changed = pyqtSignal(int)
     full_screen_toggle_wanted = pyqtSignal()
     filters_bar_toggle_wanted = pyqtSignal()

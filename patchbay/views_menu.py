@@ -88,7 +88,6 @@ class ViewsMenu(QMenu):
             _translate('views_menu', 'New view name :'))
         
         if ok:
-            print('Okk', new_name)
             self.mng.rename_current_view(new_name)
     
     

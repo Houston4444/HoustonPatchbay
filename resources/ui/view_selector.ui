@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>Form</class>
+ <widget class="QWidget" name="Form">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>217</width>
+    <height>44</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Form</string>
+  </property>
+  <property name="toolTip">
+   <string>View selector</string>
+  </property>
+  <layout class="QHBoxLayout" name="horizontalLayout">
+   <property name="spacing">
+    <number>0</number>
+   </property>
+   <item>
+    <widget class="ViewsComboBox" name="comboBoxView">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="minimumSize">
+      <size>
+       <width>0</width>
+       <height>0</height>
+      </size>
+     </property>
+     <property name="editable">
+      <bool>false</bool>
+     </property>
+     <property name="sizeAdjustPolicy">
+      <enum>QComboBox::AdjustToContents</enum>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QToolButton" name="toolButtonRemove">
+     <property name="styleSheet">
+      <string notr="true">QToolButton{border:none}</string>
+     </property>
+     <property name="text">
+      <string>...</string>
+     </property>
+     <property name="icon">
+      <iconset theme="application-menu">
+       <normaloff>.</normaloff>.</iconset>
+     </property>
+     <property name="popupMode">
+      <enum>QToolButton::InstantPopup</enum>
+     </property>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>ViewsComboBox</class>
+   <extends>QComboBox</extends>
+   <header>..surclassed_widgets</header>
+  </customwidget>
+ </customwidgets>
+ <resources/>
+ <connections/>
+</ui>

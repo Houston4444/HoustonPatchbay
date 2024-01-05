@@ -1,15 +1,16 @@
-import time
 from typing import TYPE_CHECKING
 from PyQt5.QtCore import Qt, pyqtSignal, pyqtSlot, QPoint, QSize
 from PyQt5.QtGui import QWheelEvent, QKeyEvent, QMouseEvent
 from PyQt5.QtWidgets import (QApplication, QProgressBar, QSlider, QToolTip,
-                             QLineEdit, QLabel, QMenu, QAction, QCheckBox)
+                             QLineEdit, QLabel, QMenu, QAction, QCheckBox,
+                             QComboBox)
 
 
 from .base_elements import TransportViewMode, AliasingReason
 
 if TYPE_CHECKING:
     from .patchbay_manager import PatchbayManager
+    from .view_selector_frame import ViewSelectorWidget
 
 _translate = QApplication.translate
 
@@ -225,3 +226,39 @@ class TypeViewCheckBox(QCheckBox):
             return
     
         super().mousePressEvent(event)
+
+
+class ViewsComboBox(QComboBox):
+    def __init__(self, parent: 'ViewSelectorWidget'):
+        super().__init__(parent)
+        self._parent = parent
+        self._editing_text = ''
+        self._selected_index = 0
+        self._selected_view = 1
+        self.editTextChanged.connect(self._edit_text_changed)
+    
+    def set_editable(self):
+        self._selected_index = self.currentIndex()
+        self._selected_view = self.currentData()
+        self.setEditable(True)
+        self.setCurrentText(self.currentText().rpartition(' : ')[2])
+    
+    @pyqtSlot(str)
+    def _edit_text_changed(self, text: str):
+        self._editing_text = text
+        
+    def keyPressEvent(self, event: QKeyEvent):
+        if self.isEditable():
+            if event.key() in (Qt.Key_Return, Qt.Key_Enter):
+                self._parent.write_view_name(
+                    self._selected_view, self._editing_text)
+                self.setEditable(False)
+                self.setCurrentIndex(self._selected_index)
+                event.ignore()
+                return
+        else:
+            if event.key() == Qt.Key_F2:
+                self.set_editable()
+                return
+
+        super().keyPressEvent(event)
