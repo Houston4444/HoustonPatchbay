@@ -450,3 +450,5 @@ class GroupedLinesWidget(QGraphicsPathItem):
 
     def add_hidding_port_mode(self, port_mode: PortMode):
         self._hidding_port_mode |= port_mode
+        
+    

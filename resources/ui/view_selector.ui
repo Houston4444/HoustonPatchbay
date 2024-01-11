@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>217</width>
-    <height>44</height>
+    <width>227</width>
+    <height>46</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -29,7 +29,8 @@
       <string>...</string>
      </property>
      <property name="icon">
-      <iconset theme="dialog-layers"/>
+      <iconset theme="dialog-layers">
+       <normaloff>.</normaloff>.</iconset>
      </property>
      <property name="popupMode">
       <enum>QToolButton::InstantPopup</enum>
@@ -53,8 +54,14 @@
      <property name="editable">
       <bool>false</bool>
      </property>
+     <property name="maxVisibleItems">
+      <number>20</number>
+     </property>
      <property name="sizeAdjustPolicy">
       <enum>QComboBox::AdjustToContents</enum>
+     </property>
+     <property name="frame">
+      <bool>true</bool>
      </property>
     </widget>
    </item>

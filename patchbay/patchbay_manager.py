@@ -748,7 +748,7 @@ class PatchbayManager:
         self.sort_views_by_index()
         self.view_number = new_num
         self.sg.views_changed.emit()
-        self.change_port_types_view(PortTypesViewFlag.ALL, force=True)
+        self.change_port_types_view(self.port_types_view, force=True)
     
     def rename_current_view(self, new_name: str):
         view_data = self.views_datas.get(self.view_number)

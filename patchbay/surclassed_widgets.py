@@ -1,9 +1,11 @@
 from typing import TYPE_CHECKING
 from PyQt5.QtCore import Qt, pyqtSignal, pyqtSlot, QPoint, QSize
-from PyQt5.QtGui import QWheelEvent, QKeyEvent, QMouseEvent
-from PyQt5.QtWidgets import (QApplication, QProgressBar, QSlider, QToolTip,
-                             QLineEdit, QLabel, QMenu, QAction, QCheckBox,
-                             QComboBox)
+from PyQt5.QtGui import (
+    QWheelEvent, QKeyEvent, QMouseEvent)
+from PyQt5.QtWidgets import (
+    QApplication, QProgressBar, QSlider, QToolTip,
+    QLineEdit, QLabel, QMenu, QAction, QCheckBox,
+    QComboBox)
 
 
 from .base_elements import TransportViewMode, AliasingReason
@@ -236,12 +238,14 @@ class ViewsComboBox(QComboBox):
         self._selected_index = 0
         self._selected_view = 1
         self.editTextChanged.connect(self._edit_text_changed)
+        self.view().setMinimumWidth(800)
     
     def set_editable(self):
         self._selected_index = self.currentIndex()
         self._selected_view = self.currentData()
         self.setEditable(True)
-        self.setCurrentText(self.currentText().rpartition(' : ')[2])
+        self.lineEdit().selectAll()
+        self.lineEdit().setFocus()
     
     @pyqtSlot(str)
     def _edit_text_changed(self, text: str):
@@ -261,4 +265,28 @@ class ViewsComboBox(QComboBox):
                 self.set_editable()
                 return
 
+            if event.key() in (Qt.Key_Up, Qt.Key_Down):
+                previous_index = self.currentIndex()
+                super().keyPressEvent(event)
+                
+                # set arrow keys Up/Down circular 
+                if self.currentIndex() == previous_index:
+                    if previous_index == 0:
+                        self.setCurrentIndex(self.count() - 1)
+                    else:
+                        self.setCurrentIndex(0)
+                return
+
         super().keyPressEvent(event)
+        
+    def wheelEvent(self, event: QWheelEvent) -> None:
+        previous_index = self.currentIndex()
+        super().wheelEvent(event)
+
+        # set the wheelEvent circular
+        if self.currentIndex() == previous_index:
+            if previous_index == 0:
+                self.setCurrentIndex(self.count() - 1)
+            else:
+                self.setCurrentIndex(0)        
+        
