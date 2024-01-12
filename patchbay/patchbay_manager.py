@@ -791,6 +791,23 @@ class PatchbayManager:
         self.sort_views_by_index()
         self.sg.views_changed.emit()
     
+    def clear_absents_in_view(self):
+        valid_keys = set[str]()
+        
+        for group in self.groups:
+            valid_keys.add(group.current_position.group_name)
+        
+        to_rm_keys = set[str]()
+        
+        work_dict = self.views[self.view_number][self.port_types_view]
+        
+        for group_name in work_dict.keys():
+            if group_name not in valid_keys:
+                to_rm_keys.add(group_name)
+                
+        for to_rm_key in to_rm_keys:
+            work_dict.pop(to_rm_key)
+    
     def write_view_data(
             self, view_number: int, name: Optional[str]=None,
             port_types: Optional[PortTypesViewFlag]=None):

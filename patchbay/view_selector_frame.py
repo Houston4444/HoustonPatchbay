@@ -68,32 +68,28 @@ class ItemmDeleg(QAbstractItemDelegate):
         row = index.row()
         painter.save()
         
-        if row == self._highlighted_index:
-            pen = QPen(Qt.NoPen)
-            bg = QApplication.palette().alternateBase()
-            # bg = QColor(127, 127, 127, 70)
-            
-            painter.setPen(pen)
-            painter.setBrush(bg)
-            painter.drawRect(QRect(0, row * self._height, self._width, self._height))
+        text_brush = QApplication.palette().text()
         
-        text_brush = QApplication.palette().highlightedText()
+        if row == self._highlighted_index:            
+            painter.setPen(QPen(Qt.NoPen))
+            painter.setBrush(QApplication.palette().highlight())
+            painter.drawRect(QRect(
+                0, row * self._height, self._width, self._height))
+        
+            text_brush = QApplication.palette().highlightedText()
+
         font = QFont()
         painter.setFont(font)
         
-        text_y = font.pointSize() + 0.5 * (self._height - font.pointSize()) + row * self._height
+        text_y = (font.pointSize()
+                  + 0.5 * (self._height - font.pointSize())
+                  + row * self._height)
         text_pos = QPointF(6.0, text_y)
         num_zone_x = self._parent.width() - 30.0
         num_pos = QPointF(num_zone_x + 4.0, text_y)
         
         view_name = self._parent.itemText(row)
         view_num = self._parent.itemData(row)
-
-        painter.setBrush(QColor(127, 127, 127, 80))
-        painter.setPen(QPen(Qt.NoPen))
-        # painter.drawRect(
-        #     QRectF(num_zone_x, 1.0 + row * self._HEIGHT,
-        #            20.0, self._HEIGHT - 2.0))
 
         painter.setPen(QPen(text_brush, 1.0))
         painter.drawText(text_pos, view_name)
@@ -109,11 +105,8 @@ class ItemmDeleg(QAbstractItemDelegate):
 
         painter.drawText(num_pos, num_text)
         
-        # painter.drawText(num_pos, str(view_num))
-        
         painter.restore()
     
-
 
 class ViewSelectorWidget(QWidget):
     def __init__(self, parent=None):
@@ -134,6 +127,11 @@ class ViewSelectorWidget(QWidget):
             QIcon.fromTheme('edit-delete'),
             _translate('views_menu', 'Remove'))
         self._act_remove.triggered.connect(self._remove)
+        
+        self._act_clear_absents = self._menu.addAction(
+            QIcon.fromTheme('edit-clear-all'),
+            _translate('_views_menu', 'Forget the positions of those absents'))
+        self._act_clear_absents.triggered.connect(self._clear_absents)
         
         self._menu.addSeparator()
         self._act_new_view = self._menu.addAction(
@@ -255,7 +253,13 @@ class ViewSelectorWidget(QWidget):
                 self.mng.change_view(view_num)
                 self.mng.remove_view(index)
                 break
-                
+    
+    @pyqtSlot()
+    def _clear_absents(self):
+        index: int = self.ui.comboBoxView.currentData()
+        if self.mng is not None:
+            self.mng.clear_absents_in_view()
+
     @pyqtSlot()
     def _new_view(self):
         if self.mng is not None:
