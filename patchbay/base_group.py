@@ -312,7 +312,7 @@ class Group:
 
         if not self.in_canvas:
             return
-        print('movee group boxess', self.name)
+
         patchcanvas.move_group_boxes(
             self.group_id,
             self.current_position.boxes,

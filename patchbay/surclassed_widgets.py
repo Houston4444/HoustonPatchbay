@@ -262,7 +262,10 @@ class ViewsComboBox(QComboBox):
                 return
         else:
             if event.key() == Qt.Key_F2:
-                self.set_editable()
+                if self.isEditable():
+                    self.setEditable(False)
+                else:
+                    self.set_editable()
                 return
 
             if event.key() in (Qt.Key_Up, Qt.Key_Down):

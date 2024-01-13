@@ -808,6 +808,39 @@ class PatchbayManager:
         for to_rm_key in to_rm_keys:
             work_dict.pop(to_rm_key)
     
+    def remove_all_other_views(self):
+        view_numbers = set([n for n in self.views.keys()
+                            if n != self.view_number])
+        for n in view_numbers:
+            self.views.pop(n)
+            if n in self.views_datas.keys():
+                self.views_datas.pop(n)
+        self.sg.views_changed.emit()
+    
+    def change_view_number(self, new_num: int):
+        if new_num == self.view_number:
+            return
+        
+        if new_num in self.views.keys():
+            # reverse the two view numbers
+            self.views[self.view_number], self.views[new_num] = \
+                self.views[new_num], self.views[self.view_number]
+        else:
+            self.views[new_num] = self.views.pop(self.view_number)
+
+        if self.view_number in self.views_datas.keys():
+            if new_num in self.views_datas.keys():
+                self.views_datas[self.view_number], self.views_datas[new_num] = \
+                    self.views_datas[new_num], self.views_datas[self.view_number]
+            else:
+                self.views_datas[new_num] = self.views_datas.pop(self.view_number)
+        elif new_num in self.views_datas.keys():
+            self.views_datas[self.view_number] = self.views_datas.pop(new_num)
+            
+        self.view_number = new_num
+        self.sort_views_by_index()
+        self.sg.views_changed.emit()
+
     def write_view_data(
             self, view_number: int, name: Optional[str]=None,
             port_types: Optional[PortTypesViewFlag]=None):
@@ -821,6 +854,7 @@ class PatchbayManager:
             view_data = ViewData(name, port_types)
             
             self.views_datas[view_number] = view_data
+            self.sg.views_changed.emit()
             return
         
         if name is not None:
@@ -830,6 +864,15 @@ class PatchbayManager:
             view_data.default_port_types_view = port_types
         
         self.sg.views_changed.emit()
+
+    def get_view_name(self, view_number: int) -> str:
+        if self.views.get(view_number) is None:
+            return ''
+        
+        if self.views_datas.get(view_number) is None:
+            return _translate('views', f'View {view_number}')
+        
+        return self.views_datas[view_number].name
 
     # --- options triggers ---
 

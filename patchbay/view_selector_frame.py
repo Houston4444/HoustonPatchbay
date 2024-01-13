@@ -119,6 +119,19 @@ class ViewSelectorWidget(QWidget):
         self._filling_combo = False
         
         self._menu = QMenu()
+
+        self.ui.toolButtonRemove.setMenu(self._menu)
+        
+        self._selected_index = 0
+        self._selected_view = 1
+        self._editing_text = ''
+        
+        self.item_dellag = ItemmDeleg(self.ui.comboBoxView)
+        self.ui.comboBoxView.setItemDelegate(self.item_dellag)
+        self.ui.comboBoxView.highlighted.connect(self.item_dellag.highlighted)
+    
+    def _build_menu(self):
+        self._menu.clear()
         self._act_rename = self._menu.addAction(
             QIcon.fromTheme('edit-rename'),
             _translate('views_menu', 'Rename'))
@@ -130,24 +143,45 @@ class ViewSelectorWidget(QWidget):
         
         self._act_clear_absents = self._menu.addAction(
             QIcon.fromTheme('edit-clear-all'),
-            _translate('_views_menu', 'Forget the positions of those absents'))
+            _translate('views_menu', 'Forget the positions of those absents'))
         self._act_clear_absents.triggered.connect(self._clear_absents)
         
+        change_num_menu = QMenu(
+            _translate('views_menu', 'Change view number to...'), self._menu)
+        
+        if self.mng is not None and self.mng.views.keys():
+            n_nums = max(max([n for n in self.mng.views.keys()]) + 2, 10)
+        else:
+            n_nums = 10
+        
+        for i in range(1, n_nums):
+            act_new_view_num = change_num_menu.addAction(str(i))
+            if self.mng is not None:
+                if self.mng.views.get(i) is not None:
+                    if self.mng.views_datas.get(i) is not None:
+                        view_name = self.mng.views_datas[i].name
+                        act_new_view_num.setText(f'{i}\t{view_name}')
+
+                    if i == self.mng.view_number:
+                        act_new_view_num.setEnabled(False)
+                    else:
+                        act_new_view_num.setIcon(QIcon.fromTheme('reverse'))
+
+            act_new_view_num.setData(i)
+            act_new_view_num.triggered.connect(self._change_view_number)
+                
+        self._menu.addMenu(change_num_menu)
+        
         self._menu.addSeparator()
+        self._act_remove_others = self._menu.addAction(
+            QIcon.fromTheme('edit-delete'),
+            _translate('views_menu', 'Remove all other views'))
+        self._act_remove_others.triggered.connect(self._remove_all_other_views)
+        
         self._act_new_view = self._menu.addAction(
             QIcon.fromTheme('list-add'),
             _translate('views_menu', 'New View'))
         self._act_new_view.triggered.connect(self._new_view)
-        
-        self.ui.toolButtonRemove.setMenu(self._menu)
-        
-        self._selected_index = 0
-        self._selected_view = 1
-        self._editing_text = ''
-        
-        self.item_dellag = ItemmDeleg(self.ui.comboBoxView)
-        self.ui.comboBoxView.setItemDelegate(self.item_dellag)
-        self.ui.comboBoxView.highlighted.connect(self.item_dellag.highlighted)
     
     def _fill_combo(self):
         if self.mng is None:
@@ -193,6 +227,7 @@ class ViewSelectorWidget(QWidget):
         self.mng.sg.view_changed.connect(self._view_changed)
         self.mng.sg.views_changed.connect(self._views_changed)
         self._fill_combo()
+        self._build_menu()
 
     @pyqtSlot(int)
     def _view_changed(self, view_number: int):
@@ -200,10 +235,12 @@ class ViewSelectorWidget(QWidget):
             if self.ui.comboBoxView.itemData(i) == view_number:
                 self.ui.comboBoxView.setCurrentIndex(i)
                 break
+        self._build_menu()
 
     @pyqtSlot()
     def _views_changed(self):
         self._fill_combo()
+        self._build_menu()
 
     @pyqtSlot(int) 
     def _change_view(self, index: int):
@@ -259,6 +296,17 @@ class ViewSelectorWidget(QWidget):
         index: int = self.ui.comboBoxView.currentData()
         if self.mng is not None:
             self.mng.clear_absents_in_view()
+
+    @pyqtSlot()
+    def _change_view_number(self):
+        new_num: int = self.sender().data()
+        if self.mng is not None:
+            self.mng.change_view_number(new_num)
+
+    @pyqtSlot()
+    def _remove_all_other_views(self):
+        if self.mng is not None:
+            self.mng.remove_all_other_views()
 
     @pyqtSlot()
     def _new_view(self):
