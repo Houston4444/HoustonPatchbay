@@ -102,9 +102,7 @@ class ItemmDeleg(QAbstractItemDelegate):
             painter.setFont(font)
 
         num_pos.setX(self._width - QFontMetricsF(font).width(num_text) - 4.0)
-
         painter.drawText(num_pos, num_text)
-        
         painter.restore()
     
 
@@ -149,12 +147,14 @@ class ViewSelectorWidget(QWidget):
         change_num_menu = QMenu(
             _translate('views_menu', 'Change view number to...'), self._menu)
         
-        if self.mng is not None and self.mng.views.keys():
-            n_nums = max(max([n for n in self.mng.views.keys()]) + 2, 10)
-        else:
-            n_nums = 10
+        view_nums = [n for n in self.mng.views.keys()]
         
-        for i in range(1, n_nums):
+        if self.mng is not None and view_nums:
+            n_nums_in_change_menu = max(max(view_nums) + 2, 10)
+        else:
+            n_nums_in_change_menu = 10
+        
+        for i in range(1, n_nums_in_change_menu):
             act_new_view_num = change_num_menu.addAction(str(i))
             if self.mng is not None:
                 if self.mng.views.get(i) is not None:
@@ -182,6 +182,10 @@ class ViewSelectorWidget(QWidget):
             QIcon.fromTheme('list-add'),
             _translate('views_menu', 'New View'))
         self._act_new_view.triggered.connect(self._new_view)
+        
+        if len(view_nums) <= 1:
+            self._act_remove.setEnabled(False)
+            self._act_remove_others.setEnabled(False)
     
     def _fill_combo(self):
         if self.mng is None:
