@@ -50,6 +50,7 @@ from .init_values import (
     Zv
 )
 
+from .arranger import CanvasArranger
 from .utils import (
     nearest_on_grid, 
     previous_left_on_grid,
@@ -242,6 +243,11 @@ def clear():
     QTimer.singleShot(0, canvas.scene.update)
 
 # -------
+
+@patchbay_api
+def arrange():
+    arranger = CanvasArranger(join_group, split_group)
+    arranger.arrange_boxes()
 
 @patchbay_api
 def set_initial_pos(x: int, y: int):
