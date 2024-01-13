@@ -130,19 +130,19 @@ class ViewSelectorWidget(QWidget):
     
     def _build_menu(self):
         self._menu.clear()
-        self._act_rename = self._menu.addAction(
+        act_rename = self._menu.addAction(
             QIcon.fromTheme('edit-rename'),
             _translate('views_menu', 'Rename'))
-        self._act_rename.triggered.connect(self._rename)
-        self._act_remove = self._menu.addAction(
+        act_rename.triggered.connect(self._rename)
+        act_remove = self._menu.addAction(
             QIcon.fromTheme('edit-delete'),
             _translate('views_menu', 'Remove'))
-        self._act_remove.triggered.connect(self._remove)
+        act_remove.triggered.connect(self._remove)
         
-        self._act_clear_absents = self._menu.addAction(
+        act_clear_absents = self._menu.addAction(
             QIcon.fromTheme('edit-clear-all'),
             _translate('views_menu', 'Forget the positions of those absents'))
-        self._act_clear_absents.triggered.connect(self._clear_absents)
+        act_clear_absents.triggered.connect(self._clear_absents)
         
         change_num_menu = QMenu(
             _translate('views_menu', 'Change view number to...'), self._menu)
@@ -173,19 +173,19 @@ class ViewSelectorWidget(QWidget):
         self._menu.addMenu(change_num_menu)
         
         self._menu.addSeparator()
-        self._act_remove_others = self._menu.addAction(
+        act_remove_others = self._menu.addAction(
             QIcon.fromTheme('edit-delete'),
             _translate('views_menu', 'Remove all other views'))
-        self._act_remove_others.triggered.connect(self._remove_all_other_views)
+        act_remove_others.triggered.connect(self._remove_all_other_views)
         
-        self._act_new_view = self._menu.addAction(
+        act_new_view = self._menu.addAction(
             QIcon.fromTheme('list-add'),
             _translate('views_menu', 'New View'))
-        self._act_new_view.triggered.connect(self._new_view)
+        act_new_view.triggered.connect(self._new_view)
         
         if len(view_nums) <= 1:
-            self._act_remove.setEnabled(False)
-            self._act_remove_others.setEnabled(False)
+            act_remove.setEnabled(False)
+            act_remove_others.setEnabled(False)
     
     def _fill_combo(self):
         if self.mng is None:
