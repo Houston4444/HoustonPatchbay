@@ -231,11 +231,15 @@ class ViewSelectorWidget(QWidget):
 
     @pyqtSlot(int)
     def _view_changed(self, view_number: int):
+        self._filling_combo = True
+
         for i in range(self.ui.comboBoxView.count()):
             if self.ui.comboBoxView.itemData(i) == view_number:
                 self.ui.comboBoxView.setCurrentIndex(i)
                 break
         self._build_menu()
+        
+        self._filling_combo = False
 
     @pyqtSlot()
     def _views_changed(self):

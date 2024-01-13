@@ -774,7 +774,6 @@ class PatchbayManager:
             return
         
         self.view_number = view_number
-        self.sg.view_changed.emit(view_number)
         new_view_data = self.views_datas.get(self.view_number)
         if new_view_data is None:
             ptv = self.port_types_view
@@ -782,6 +781,7 @@ class PatchbayManager:
             ptv = new_view_data.default_port_types_view
 
         self.change_port_types_view(ptv, force=True)
+        self.sg.view_changed.emit(view_number)
     
     def remove_view(self, view_number: int):
         if view_number in self.views.keys():
