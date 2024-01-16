@@ -449,7 +449,8 @@ class PatchSceneMoth(QGraphicsScene):
             self, box_widget: BoxWidget, to_x: int, to_y: int,
             joining=Joining.NO_CHANGE, joined_rect=QRectF()):
         '''add a box to the move animation, to_x and to_y refer to the top left
-           of the box at the end of animation.'''
+           of the box at the end of animation.
+           if joining is set to Joining.YES, joined_rect must be set'''
 
         for moving_box in self.move_boxes:
             if moving_box.widget is box_widget:
@@ -469,13 +470,13 @@ class PatchSceneMoth(QGraphicsScene):
         
         if joining is Joining.YES or not box_widget.isVisible():
             moving_box.final_rect = joined_rect
-        else:
+        elif not moving_box.is_joining:
             aft_wrap_rect = box_widget.after_wrap_rect()
             final_rect = QRectF(
                 0.0, 0.0, aft_wrap_rect.width(), aft_wrap_rect.height())
             final_rect.translate(moving_box.to_pt)
             moving_box.final_rect = final_rect
-        
+
         moving_box.start_time = time.time() - self._move_timer_start_at
         if joining is not Joining.NO_CHANGE:
             moving_box.is_joining = True if joining is Joining.YES else False

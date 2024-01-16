@@ -395,7 +395,7 @@ class BoxWidgetMoth(QGraphicsItem):
                     + (self._x_after_wrap - self._x_before_wrap)
                         * self._wrapping_ratio)
 
-        self.update_positions(even_animated=True)
+        self.update_positions(even_animated=True, prevent_overlap=False)
 
     def animate_hidding(self, ratio: float):
         # ratio goes from 0.0 (hidden) to 1.0 (shown)
@@ -498,7 +498,8 @@ class BoxWidgetMoth(QGraphicsItem):
                 [self],
                 wanted_direction=Direction.DOWN)
 
-    def update_positions(self, even_animated=False):
+    def update_positions(self, even_animated=False, without_connections=False,
+                         prevent_overlap=True, theme_change=False):
         # see box_widget.py
         pass
 

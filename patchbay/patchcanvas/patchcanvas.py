@@ -623,6 +623,7 @@ def join_group(group_id: int, origin_box_mode=PortMode.NULL):
 
     for box in canvas.get_group(group_id).widgets:
         if box is not None:
+            box.send_move_callback()
             box.set_wrapped(wrap, animate=False)
 
     canvas.loading_items = False
