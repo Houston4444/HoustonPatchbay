@@ -97,7 +97,7 @@ class CanvasObject(QObject):
 
     def __init__(self, parent=None):
         QObject.__init__(self, parent)
-        self._groups_to_join = set[tuple[int, PortMode]]()
+        self._gps_to_join = dict[int, PortMode]()
         self.move_boxes_finished.connect(self._join_after_move)
 
         self.connect_update_timer = QTimer()
@@ -138,15 +138,15 @@ class CanvasObject(QObject):
 
     @pyqtSlot()
     def _join_after_move(self):
-        for group_id, origin_box_mode in self._groups_to_join:
+        for group_id, origin_box_mode in self._gps_to_join.items():
             join_group(group_id, origin_box_mode)
 
         if options.prevent_overlap:            
-            for group_id, origin_box_mode in self._groups_to_join:
+            for group_id, origin_box_mode in self._gps_to_join.items():
                 group = canvas.get_group(group_id)
                 canvas.scene.deplace_boxes_from_repulsers([group.widgets[0]])
 
-        self._groups_to_join.clear()
+        self._gps_to_join.clear()
         
     def start_aliasing_check(self, aliasing_reason: AliasingReason):
         self._aliasing_reason = aliasing_reason
@@ -154,13 +154,11 @@ class CanvasObject(QObject):
         self._aliasing_move_timer.start()
     
     def add_group_to_join(self, group_id: int, orig_port_mode=PortMode.NULL):
-        self._groups_to_join.add((group_id, orig_port_mode))
+        self._gps_to_join[group_id] = orig_port_mode
     
     def rm_group_to_join(self, group_id: int):
-        for g_id, port_mode in self._groups_to_join:
-            if group_id == g_id:
-                self._groups_to_join.remove((g_id, port_mode))
-                break
+        if group_id in self._gps_to_join.keys():
+            self._gps_to_join.pop(group_id)
 
 
 @patchbay_api
@@ -782,7 +780,6 @@ def move_group_boxes(
     splitted = False
     orig_rect = QRectF()
 
-    print('moov', group.group_name, group.splitted, split)
     if group.splitted != split:
         if split:
             if group.widgets[0] is not None:

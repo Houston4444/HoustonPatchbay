@@ -454,7 +454,7 @@ class PatchSceneMoth(QGraphicsScene):
 
         for moving_box in self.move_boxes:
             if moving_box.widget is box_widget:
-                if moving_box.is_joining is Joining.YES and joining is Joining.NO:
+                if moving_box.is_joining and joining is Joining.NO:
                     canvas.qobject.rm_group_to_join(
                         moving_box.widget.get_group_id())
                 break
