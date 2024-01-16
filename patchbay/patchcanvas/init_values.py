@@ -277,6 +277,12 @@ class AliasingReason(Flag):
     NAV_ON_BORDERS = auto()
 
 
+class Joining(Enum):
+    NO_CHANGE = 0
+    NO = 1
+    YES = 2
+
+
 class CanvasItemType(IntEnum):
     # this enum is still here if really needed
     # but never really used.

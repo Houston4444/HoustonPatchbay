@@ -32,8 +32,7 @@ from PyQt5.QtCore import (
     QPoint,
     QPointF,
     QRectF,
-    QTimer,
-    QMarginsF)
+    QTimer)
 from PyQt5.QtGui import QCursor, QPixmap, QPolygonF, QBrush, QPainter
 from PyQt5.QtWidgets import (
     QGraphicsRectItem,
@@ -46,6 +45,7 @@ from .init_values import (
     AliasingReason,
     CanvasItemType,
     GridStyle,
+    Joining,
     PortMode,
     Direction,
     canvas,
@@ -85,7 +85,7 @@ class MovingBox:
     to_pt: QPoint
     final_rect: QRectF
     start_time: float
-    joining: bool
+    is_joining: bool
 
 
 class WrappingBox:
@@ -433,7 +433,7 @@ class PatchSceneMoth(QGraphicsScene):
             # box update positions is forbidden while widget is in self.move_boxes
             # So we copy the list before to clear it
             # then we can ask update_positions on widgets
-            boxes = [mb.widget for mb in self.move_boxes if not mb.joining]
+            boxes = [mb.widget for mb in self.move_boxes if not mb.is_joining]
             self.move_boxes.clear()
             self.wrapping_boxes.clear()
 
@@ -445,33 +445,29 @@ class PatchSceneMoth(QGraphicsScene):
 
             canvas.qobject.move_boxes_finished.emit()
 
-    def add_box_to_animation(self, box_widget: BoxWidget, to_x: int, to_y: int,
-                             force_anim=True, joining=False, joined_rect=QRectF()):
+    def add_box_to_animation(
+            self, box_widget: BoxWidget, to_x: int, to_y: int,
+            joining=Joining.NO_CHANGE, joined_rect=QRectF()):
         '''add a box to the move animation, to_x and to_y refer to the top left
            of the box at the end of animation.'''
+
         for moving_box in self.move_boxes:
             if moving_box.widget is box_widget:
-                if moving_box.joining and not joining:
+                if moving_box.is_joining is Joining.YES and joining is Joining.NO:
                     canvas.qobject.rm_group_to_join(
                         moving_box.widget.get_group_id())
                 break
         else:
-            if not force_anim:
-                # if box is not in a current animation
-                # and force_anim is False,
-                # then box position is directly changed
-                if box_widget is not None:
-                    box_widget.set_top_left((int(to_x), int(to_y)))
-                return
-
+            # box is not already moving, create a MovingBox instance
             moving_box = MovingBox()
             moving_box.widget = box_widget
+            moving_box.is_joining = True if joining is Joining.YES else False            
             self.move_boxes.append(moving_box)
 
         moving_box.from_pt = QPoint(*box_widget.top_left())
         moving_box.to_pt = QPoint(to_x, to_y)
         
-        if joining or not box_widget.isVisible():
+        if joining is Joining.YES or not box_widget.isVisible():
             moving_box.final_rect = joined_rect
         else:
             aft_wrap_rect = box_widget.after_wrap_rect()
@@ -481,7 +477,8 @@ class PatchSceneMoth(QGraphicsScene):
             moving_box.final_rect = final_rect
         
         moving_box.start_time = time.time() - self._move_timer_start_at
-        moving_box.joining = joining
+        if joining is not Joining.NO_CHANGE:
+            moving_box.is_joining = True if joining is Joining.YES else False
 
         if not self._move_box_timer.isActive():
             moving_box.start_time = 0.0

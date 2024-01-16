@@ -31,6 +31,7 @@ from .init_values import (
     GridStyle,
     PortSubType,
     PortType,
+    Joining,
     canvas,
     options,
     features,
@@ -764,7 +765,7 @@ def animate_before_join(group_id: int,
 
     for widget in group.widgets:
         canvas.scene.add_box_to_animation(
-            widget, x, y, joining=True)
+            widget, x, y, joining=Joining.YES)
 
 @patchbay_api
 def move_group_boxes(
@@ -874,16 +875,16 @@ def move_group_boxes(
                         print('addiitt', port_mode.name)
                         canvas.scene.add_box_to_animation(
                             box, x, y,
-                            force_anim=True, joining=True,
+                            joining=Joining.YES,
                             joined_rect=joined_rect)
                     else:
                         print('adddooot', port_mode.name)
                         canvas.scene.add_box_to_animation(
                             box, *both_pos,
-                            force_anim=True, joining=True)
+                            joining=Joining.YES)
                 else:
                     canvas.scene.add_box_to_animation(
-                        box, *xy, force_anim=True)
+                        box, *xy, joining=Joining.NO)
 
 @patchbay_api
 def wrap_group_box(group_id: int, port_mode: PortMode, yesno: bool,

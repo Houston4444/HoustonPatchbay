@@ -30,6 +30,8 @@ Views menu:
     rename the current view
     remove absent positions
 
+    Set Forget absents disable if no absents
+
 Views widget:
 
 RaySession/Patchance:
