@@ -6,6 +6,8 @@ from PyQt5.QtCore import pyqtSlot, Qt, QSize, QPointF, QRect, QRectF
 
 from .ui.view_selector import Ui_Form
 
+from .patchcanvas import patchcanvas
+
 if TYPE_CHECKING:
     from patchbay_manager import PatchbayManager
     from surclassed_widgets import ViewsComboBox
@@ -169,8 +171,13 @@ class ViewSelectorWidget(QWidget):
 
             act_new_view_num.setData(i)
             act_new_view_num.triggered.connect(self._change_view_number)
-                
+
         self._menu.addMenu(change_num_menu)
+        
+        act_arrange = self._menu.addAction(
+            QIcon.fromTheme('arrange'),
+            _translate('views_menu', 'Arrange'))
+        act_arrange.triggered.connect(self._arrange)
         
         self._menu.addSeparator()
         act_remove_others = self._menu.addAction(
@@ -310,6 +317,10 @@ class ViewSelectorWidget(QWidget):
         new_num: int = self.sender().data()
         if self.mng is not None:
             self.mng.change_view_number(new_num)
+
+    @pyqtSlot()
+    def _arrange(self):
+        patchcanvas.arrange()
 
     @pyqtSlot()
     def _remove_all_other_views(self):

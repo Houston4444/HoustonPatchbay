@@ -246,8 +246,8 @@ def clear():
 
 @patchbay_api
 def arrange():
-    arranger = CanvasArranger(join_group, split_group)
-    arranger.arrange_boxes()
+    arranger = CanvasArranger(animate_before_join, split_group)
+    arranger.arrange_boxes(hardware_on_sides=True)
 
 @patchbay_api
 def set_initial_pos(x: int, y: int):
@@ -626,6 +626,7 @@ def join_group(group_id: int, origin_box_mode=PortMode.NULL):
 
     canvas.loading_items = False
     redraw_group(group_id, prevent_overlap=False)
+    canvas.callback(CallbackAct.GROUP_JOINED, group_id)
 
     QTimer.singleShot(0, canvas.scene.update)
 
@@ -779,6 +780,7 @@ def move_group_boxes(
     splitted = False
     orig_rect = QRectF()
 
+    print('moov', group.group_name, group.splitted, split)
     if group.splitted != split:
         if split:
             if group.widgets[0] is not None:
@@ -869,11 +871,13 @@ def move_group_boxes(
                         x, y = both_pos
                         x = int(joined_rect.right() - box.boundingRect().width())
                     
+                        print('addiitt', port_mode.name)
                         canvas.scene.add_box_to_animation(
                             box, x, y,
                             force_anim=True, joining=True,
                             joined_rect=joined_rect)
                     else:
+                        print('adddooot', port_mode.name)
                         canvas.scene.add_box_to_animation(
                             box, *both_pos,
                             force_anim=True, joining=True)

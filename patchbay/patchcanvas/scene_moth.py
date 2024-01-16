@@ -429,6 +429,7 @@ class PatchSceneMoth(QGraphicsScene):
             self.hidding_boxes.clear()
             self.restore_boxes.clear()
             GroupedLinesWidget.clear_transparent_starts()
+
             # box update positions is forbidden while widget is in self.move_boxes
             # So we copy the list before to clear it
             # then we can ask update_positions on widgets

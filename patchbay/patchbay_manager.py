@@ -619,9 +619,11 @@ class PatchbayManager:
             self, port_types_view: PortTypesViewFlag, force=False):
         if not force and port_types_view is self.port_types_view:
             return
+
         ex_ptv = self.port_types_view
         self.port_types_view = port_types_view
-        _logger.info(f"Change Port Types View: {ex_ptv.name} -> {port_types_view.name}")
+        _logger.info(
+            f"Change Port Types View: {ex_ptv.name} -> {port_types_view.name}")
 
         # Prevent visual update at each canvas item creation
         # because we may create/remove a lot of ports here

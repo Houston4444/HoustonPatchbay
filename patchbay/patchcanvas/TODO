@@ -14,8 +14,7 @@ Passage à GroupedConns:
     set_connection_in_front:
         pour filter_groups: Attention à RaySession
 
-
-Réparer aire la plus petite ou pas (4 modes)
+connections lines non selectionnées après join ou split
 
 Virer connection_lines de BoxWidget et PortWidget
 
