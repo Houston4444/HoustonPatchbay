@@ -3,7 +3,7 @@ import logging
 from typing import Callable, Optional
 from PyQt5.QtCore import QRectF
 
-from .init_values import BoxPos, PortMode, GroupObject, canvas, BoxType
+from .init_values import BoxPos, PortMode, GroupObject, canvas, BoxType, Joining
 from .utils import nearest_on_grid
 from .box_widget import BoxWidget
 
@@ -609,9 +609,9 @@ class CanvasArranger:
                     group.box_poses[PortMode.BOTH].pos = grid_xy
                     canvas.qobject.add_group_to_join(group.group_id)
                     canvas.scene.add_box_to_animation(
-                        group.widgets[0], *grid_xy, joining=True,
+                        group.widgets[0], *grid_xy, joining=Joining.YES,
                         joined_rect=ba.box_rect)
                     canvas.scene.add_box_to_animation(
-                        group.widgets[1], *grid_xy, joining=True)
+                        group.widgets[1], *grid_xy, joining=Joining.YES)
             else:    
                 canvas.scene.add_box_to_animation(ba.box, *grid_xy)
