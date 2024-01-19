@@ -20,7 +20,21 @@ class ViewsMenu(QMenu):
             _translate('views_menu', 'Views'))
         self.setIcon(QIcon.fromTheme('view-group'))
         self._build()
+    
+    def _are_there_absents(self) -> bool:
+        group_names = set[str]()
+        for group in self.mng.groups:
+            group_names.add(group.name)
         
+        if self.mng.views.get(self.mng.view_number) is None:
+            return False
+
+        for ptv, gp_name_pos in self.mng.views[self.mng.view_number].items():
+            for gp_name in gp_name_pos.keys():
+                if not gp_name in group_names:
+                    return True
+        return False
+    
     def _build(self):
         self.clear()
         
@@ -102,6 +116,9 @@ class ViewsMenu(QMenu):
         if len(view_keys) <= 1:
             act_rm_view.setEnabled(False)
             act_remove_others.setEnabled(False)
+        
+        if not self._are_there_absents():
+            act_clear_absents.setEnabled(False)
 
     @pyqtSlot()
     def _change_view(self):
@@ -128,6 +145,7 @@ class ViewsMenu(QMenu):
     @pyqtSlot()
     def _clear_absents(self):
         self.mng.clear_absents_in_view()
+        self._build()
 
     @pyqtSlot()
     def _change_view_number(self):

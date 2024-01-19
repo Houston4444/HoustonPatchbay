@@ -803,12 +803,13 @@ class PatchbayManager:
         
         work_dict = self.views[self.view_number][self.port_types_view]
         
-        for group_name in work_dict.keys():
-            if group_name not in valid_keys:
-                to_rm_keys.add(group_name)
+        for ptv, work_dict in self.views[self.view_number].items():
+            for group_name in work_dict.keys():
+                if group_name not in valid_keys:
+                    to_rm_keys.add(group_name)
                 
-        for to_rm_key in to_rm_keys:
-            work_dict.pop(to_rm_key)
+            for to_rm_key in to_rm_keys:
+                work_dict.pop(to_rm_key)
     
     def remove_all_other_views(self):
         view_numbers = set([n for n in self.views.keys()

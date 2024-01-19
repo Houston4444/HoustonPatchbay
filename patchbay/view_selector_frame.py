@@ -119,6 +119,7 @@ class ViewSelectorWidget(QWidget):
         self._filling_combo = False
         
         self._menu = QMenu()
+        self._menu.aboutToShow.connect(self._before_show_menu)
 
         self.ui.toolButtonRemove.setMenu(self._menu)
         
@@ -129,6 +130,28 @@ class ViewSelectorWidget(QWidget):
         self.item_dellag = ItemmDeleg(self.ui.comboBoxView)
         self.ui.comboBoxView.setItemDelegate(self.item_dellag)
         self.ui.comboBoxView.highlighted.connect(self.item_dellag.highlighted)
+    
+    @pyqtSlot()
+    def _before_show_menu(self):
+        self._act_clear_absents.setEnabled(self._are_there_absents())
+    
+    def _are_there_absents(self) -> bool:
+        if self.mng is None:
+            return False
+        
+        group_names = set[str]()
+        for group in self.mng.groups:
+            group_names.add(group.name)
+        
+        if self.mng.views.get(self.mng.view_number) is None:
+            return False
+
+        for ptv, gp_name_pos in self.mng.views[self.mng.view_number].items():
+            for gp_name in gp_name_pos.keys():
+                if not gp_name in group_names:
+                    return True
+
+        return False
     
     def _build_menu(self):
         self._menu.clear()
@@ -141,10 +164,10 @@ class ViewSelectorWidget(QWidget):
             _translate('views_menu', 'Remove'))
         act_remove.triggered.connect(self._remove)
         
-        act_clear_absents = self._menu.addAction(
+        self._act_clear_absents = self._menu.addAction(
             QIcon.fromTheme('edit-clear-all'),
             _translate('views_menu', 'Forget the positions of those absents'))
-        act_clear_absents.triggered.connect(self._clear_absents)
+        self._act_clear_absents.triggered.connect(self._clear_absents)
         
         change_num_menu = QMenu(
             _translate('views_menu', 'Change view number to...'), self._menu)
@@ -193,6 +216,9 @@ class ViewSelectorWidget(QWidget):
         if len(view_nums) <= 1:
             act_remove.setEnabled(False)
             act_remove_others.setEnabled(False)
+        
+        if not self._are_there_absents():
+            self._act_clear_absents.setEnabled(False)
     
     def _fill_combo(self):
         if self.mng is None:
