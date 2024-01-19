@@ -133,7 +133,8 @@ class ViewSelectorWidget(QWidget):
     
     @pyqtSlot()
     def _before_show_menu(self):
-        self._act_clear_absents.setEnabled(self._are_there_absents())
+        # self._act_clear_absents.setEnabled(self._are_there_absents())
+        self._build_menu()
     
     def _are_there_absents(self) -> bool:
         if self.mng is None:
@@ -171,7 +172,7 @@ class ViewSelectorWidget(QWidget):
         
         change_num_menu = QMenu(
             _translate('views_menu', 'Change view number to...'), self._menu)
-        
+        change_num_menu.setIcon(QIcon.fromTheme('enumerate'))
         view_nums = [n for n in self.mng.views.keys()]
         
         if self.mng is not None and view_nums:
@@ -200,6 +201,7 @@ class ViewSelectorWidget(QWidget):
         act_arrange = self._menu.addAction(
             QIcon.fromTheme('arrange'),
             _translate('views_menu', 'Arrange'))
+        act_arrange.setIcon(QIcon.fromTheme('code-block'))
         act_arrange.triggered.connect(self._arrange)
         
         self._menu.addSeparator()

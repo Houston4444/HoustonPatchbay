@@ -318,7 +318,6 @@ class CanvasArranger:
         self.ba_to_split = None
         self.ba_networks.clear()
         
-        print('____==CUSTOM')
         if hardware_on_sides:
             for box_arranger in self.box_arrangers:
                 if (box_arranger.col_left == 1
@@ -382,8 +381,6 @@ class CanvasArranger:
         return True
         
     def arrange_boxes(self, hardware_on_sides=True):
-        print('début du script')
-
         correct_leveling = False
         while not correct_leveling:
             for box_arranger in self.box_arrangers:
@@ -451,21 +448,14 @@ class CanvasArranger:
             previous_column = None
             direction = GoTo.NONE
 
-            print('NETWORK')
-
             for ba in ba_network:
                 column = ba.get_column_with_nb(number_of_columns)
-                
-                print('II', ba, column, direction.name)
                 
                 if previous_column is not None and direction is GoTo.NONE:
                     if column > previous_column:
                         direction = GoTo.RIGHT
                     elif column < previous_column:
                         direction = GoTo.LEFT
-                
-                # print('IJ', ba, column, direction.name)
-                # box_rect = ba.box.boundingRect()
             
                 if hardware_on_sides and column in (1, number_of_columns):
                     y_pos = columns_bottoms[column]
@@ -475,32 +465,17 @@ class CanvasArranger:
                         and (direction is GoTo.RIGHT and column > previous_column)
                              or (direction == GoTo.LEFT and column < previous_column)):
                     y_pos = last_top
-
-                # elif (previous_column is not None
-                #         and direction is GoTo.LEFT
-                #         and len(ba.outs_connected_to) == 1):
-                #     y_pos = columns_bottoms[column]
-                    
-                # elif (previous_column is not None
-                #         and direction is GoTo.RIGHT
-                #         and len(ba.ins_connected_to) == 1):
-                #     y_pos = columns_bottoms[column]
                 
                 else:
-                    # y_pos = min([bt for c, bt in columns_bottoms.items()
-                    #              if c in used_columns_in_line] + [0.0])
-                    
                     y_pos = last_bottom
                     for col, bottom in columns_bottoms.items():
                         if col in used_columns_in_line:
                             y_pos = min(y_pos, bottom)
                     
                     used_columns_in_line.clear()
-                    # y_pos = last_bottom
                     last_bottom = 0.0
                     direction = GoTo.NONE
 
-                # print('IK', ba, column, direction.name)
                 y_pos = max(y_pos, columns_bottoms[column])
 
                 ba.column = column
@@ -565,7 +540,6 @@ class CanvasArranger:
         for ba in self.box_arrangers:
             column_width = column_widths.get(ba.column)
             if column_width is None:
-                print('OHOH', ba, ba.get_column_with_nb(number_of_columns), number_of_columns)
                 column_width = 0.0
             column_widths[ba.column] = max(
                 ba.box_rect.width(), column_width)
