@@ -470,6 +470,15 @@ class PatchSceneMoth(QGraphicsScene):
         
         if joining is Joining.YES or not box_widget.isVisible():
             moving_box.final_rect = joined_rect
+
+        elif joining is Joining.NO_CHANGE and moving_box.is_joining:
+            final_rect = QRectF(
+                0.0, 0.0,
+                moving_box.final_rect.width(),
+                moving_box.final_rect.height())
+            final_rect.translate(moving_box.to_pt)
+            moving_box.final_rect = final_rect
+
         elif not moving_box.is_joining:
             aft_wrap_rect = box_widget.after_wrap_rect()
             final_rect = QRectF(
@@ -477,9 +486,10 @@ class PatchSceneMoth(QGraphicsScene):
             final_rect.translate(moving_box.to_pt)
             moving_box.final_rect = final_rect
 
-        moving_box.start_time = time.time() - self._move_timer_start_at
         if joining is not Joining.NO_CHANGE:
             moving_box.is_joining = True if joining is Joining.YES else False
+
+        moving_box.start_time = time.time() - self._move_timer_start_at
 
         if not self._move_box_timer.isActive():
             moving_box.start_time = 0.0
