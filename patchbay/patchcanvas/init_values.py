@@ -93,6 +93,7 @@ class CallbackAct(IntEnum):
     GROUP_INFO = auto()           # group_id: int
     GROUP_RENAME = auto()         # group_id: int
     GROUP_SPLIT = auto()          # group_id: int
+    GROUP_SPLITTED = auto()       # group_id: int
     GROUP_JOIN = auto()           # group_id: int
     GROUP_JOINED = auto()         # group_id: int
     GROUP_MOVE = auto()           # group_id: int, splitted_mode: PortMode, x: int, y: int

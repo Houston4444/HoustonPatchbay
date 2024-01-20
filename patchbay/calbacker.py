@@ -44,6 +44,12 @@ class Callbacker:
             # group.split_in_canvas()
             self.patchcanvas.split_group(
                 group_id, on_place=True)
+            # group.current_position.set_splitted(True)
+            # group.save_current_position()
+
+    def _group_splitted(self, group_id: int):
+        group = self.mng.get_group_from_id(group_id)
+        if group is not None:
             group.current_position.set_splitted(True)
             group.save_current_position()
 

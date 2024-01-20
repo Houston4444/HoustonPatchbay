@@ -51,7 +51,7 @@ from .init_values import (
     Zv
 )
 
-from .arranger import CanvasArranger
+from .arranger import CanvasArranger, CanvasArrangerFaceToFace
 from .utils import (
     nearest_on_grid, 
     previous_left_on_grid,
@@ -245,7 +245,7 @@ def clear():
 
 @patchbay_api
 def arrange():
-    arranger = CanvasArranger(animate_before_join, split_group)
+    arranger = CanvasArrangerFaceToFace(animate_before_join, split_group)
     arranger.arrange_boxes(hardware_on_sides=True)
 
 @patchbay_api
@@ -502,6 +502,7 @@ def split_group(group_id: int, on_place=False, redraw=True):
         port_has_hidden_connection(group_id, port_id, True)
 
     canvas.loading_items = loading_items
+    canvas.callback(CallbackAct.GROUP_SPLITTED, group_id)
     
     if not redraw:
         return

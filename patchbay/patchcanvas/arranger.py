@@ -3,8 +3,10 @@ import logging
 from typing import Callable, Optional
 from PyQt5.QtCore import QRectF
 
-from .init_values import BoxPos, PortMode, GroupObject, canvas, BoxType, Joining
-from .utils import nearest_on_grid
+
+from .init_values import BoxLayoutMode, PortMode, GroupObject, canvas, BoxType, Joining
+from .utils import nearest_on_grid, next_left_on_grid, next_top_on_grid
+from .box_widget_moth import UnwrapButton
 from .box_widget import BoxWidget
 
 _logger = logging.getLogger(__name__)
@@ -243,7 +245,7 @@ class BoxArranger:
 
 
 class CanvasArranger:
-    def __init__(self, join_group: Callable[[int], None],
+    def __init__(self, animate_before_join: Callable[[int], None],
                  split_group: Callable[[int], None]):
         self.box_arrangers = list[BoxArranger]()
         self.ba_networks = list[list[BoxArranger]]()
@@ -253,7 +255,7 @@ class CanvasArranger:
         # around this box arranger.
         self.ba_to_split: BoxArranger = None
 
-        self.join_group = join_group
+        self.anim_before_join = animate_before_join
         self.split_group = split_group
 
         to_split_group_ids = set[int]()
@@ -411,7 +413,7 @@ class CanvasArranger:
                     if (group.box_type is not BoxType.HARDWARE
                             and group.group_id not in group_ids_to_split
                             and group.group_id not in group_ids_join_done):
-                        self.join_group(group.group_id)
+                        self.anim_before_join(group.group_id)
                         group_ids_join_done.add(group.group_id)
                         break
                 else:
@@ -589,3 +591,81 @@ class CanvasArranger:
                         group.widgets[1], *grid_xy, joining=Joining.YES)
             else:    
                 canvas.scene.add_box_to_animation(ba.box, *grid_xy)
+
+
+class CanvasArrangerFaceToFace:
+    def __init__(self, animate_before_join: Callable[[int], None],
+                 split_group: Callable[[int], None]):
+        self.anim_before_join = animate_before_join
+        self.split_group = split_group
+        
+    def arrange_boxes(self, hardware_on_sides=False):
+        # split all groups
+        while True:
+            for group in canvas.group_list:
+                if not group.splitted:
+                    self.split_group(group.group_id)
+                    break
+            else:
+                break
+        
+        max_out_width = 0
+        x_spacing = 300
+        
+        for box in canvas.list_boxes():
+            if not box.isVisible():
+                continue
+            
+            if box._layout_mode is not BoxLayoutMode.AUTO:
+                box.set_layout_mode(BoxLayoutMode.AUTO)
+                box.update_positions(prevent_overlap=False, even_animated=True)
+            
+            layout = box._layout
+            pms = box._layout.pms
+            height_for_ports = max(pms.last_in_pos, pms.last_out_pos)
+            
+            if layout.needed_height - layout.header_height >= 64:
+                box.set_wrapped(True, prevent_overlap=False)
+            else:
+                box.set_layout_mode(BoxLayoutMode.LARGE)
+                box.update_positions(prevent_overlap=False, even_animated=True)
+            
+            if box.get_port_mode() is PortMode.OUTPUT:
+                max_out_width = max(
+                    max_out_width, box.after_wrap_rect().width())
+        
+        out_most_left = next_left_on_grid(0)
+        out_right = out_most_left + max_out_width
+        in_left = next_left_on_grid(out_right + x_spacing)
+        last_out_y = next_top_on_grid(0)
+        last_in_y = last_out_y
+        
+        group_ids = list[int]()
+        for group in canvas.group_list:
+            group_ids.append(group.group_id)
+        group_ids.sort()
+        
+        for group_id in group_ids:
+            group = canvas.get_group(group_id)
+            if group is None:
+                continue
+
+            for box in group.widgets:
+                if box is None or not box.isVisible():
+                    continue
+                
+                box_rect = box.after_wrap_rect()
+                
+                if box.get_port_mode() is PortMode.OUTPUT:
+                    to_x = int(out_right - box_rect.width())
+                    to_y = next_top_on_grid(last_out_y)
+                    last_out_y += box_rect.height() + canvas.theme.box_spacing
+                
+                else:
+                    to_x = in_left
+                    to_y = next_top_on_grid(last_in_y)
+                    last_in_y += box_rect.height() + canvas.theme.box_spacing
+                    
+                canvas.scene.add_box_to_animation(box, to_x, to_y)
+            
+            
