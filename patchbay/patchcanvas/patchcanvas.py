@@ -870,13 +870,11 @@ def move_group_boxes(
                         x, y = both_pos
                         x = int(joined_rect.right() - box.boundingRect().width())
                     
-                        print('addiitt', port_mode.name)
                         canvas.scene.add_box_to_animation(
                             box, x, y,
                             joining=Joining.YES,
                             joined_rect=joined_rect)
                     else:
-                        print('adddooot', port_mode.name)
                         canvas.scene.add_box_to_animation(
                             box, *both_pos,
                             joining=Joining.YES)

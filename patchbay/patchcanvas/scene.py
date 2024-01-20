@@ -425,8 +425,9 @@ class PatchScene(PatchSceneMoth):
         if view_change:
             moving_boxes = [b for b in self.move_boxes
                             if (not b.final_rect.isNull()
+                                and b.widget.isVisible()
                                 and not b in self.hidding_boxes)]
-            # for moving_box in moving_boxes:
+
             while moving_boxes:
                 self.deplace_boxes_from_repulsers(
                     [moving_boxes[0].widget],
