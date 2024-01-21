@@ -2,9 +2,10 @@ from typing import TYPE_CHECKING
 from PyQt5.QtCore import QPoint
 from PyQt5.QtGui import QCursor
 
+
 from . import patchcanvas
 from .patchcanvas import CallbackAct, PortMode, PortType, BoxLayoutMode
-from .base_elements import PortgroupMem
+from .base_elements import PortgroupMem, BoxPos
 from .base_port import Port
 from .port_info_dialog import CanvasPortInfoDialog
 from .port_menu import PoMenu, ConnectMenu
@@ -69,7 +70,17 @@ class Callbacker:
             return
         group.current_position.boxes[port_mode].pos = (x, y)
         group.save_current_position()
-    
+
+    def _group_box_pos_changed(
+            self, group_id: int, port_mode: PortMode, box_pos: BoxPos):
+        group = self.mng.get_group_from_id(group_id)
+        if group is None:
+            return
+
+        group.current_position.boxes[port_mode].eat(box_pos)
+        
+        group.save_current_position()
+
     def _group_wrap(self, group_id: int, splitted_mode: PortMode, yesno: bool):
         group = self.mng.get_group_from_id(group_id)
         if group is not None:

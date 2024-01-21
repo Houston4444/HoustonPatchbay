@@ -424,15 +424,8 @@ class GroupPos:
     def set_splitted(self, yesno: bool):
         if yesno:
             self.flags |= GroupPosFlag.SPLITTED
-            wrapped = self.boxes[PortMode.BOTH].is_wrapped()
-            self.boxes[PortMode.INPUT].set_wrapped(wrapped)
-            self.boxes[PortMode.OUTPUT].set_wrapped(wrapped)
-            
         else:
             self.flags &= ~GroupPosFlag.SPLITTED
-            wrapped = (self.boxes[PortMode.INPUT].is_wrapped()
-                       and self.boxes[PortMode.OUTPUT].is_wrapped())
-            self.boxes[PortMode.BOTH].set_wrapped(wrapped)
 
     def hidden_port_modes(self) -> PortMode:
         if self.is_splitted():
@@ -448,7 +441,8 @@ class GroupPos:
 
     def set_hidden_port_mode(self, hidden_port_mode: PortMode):
         for port_mode in PortMode.in_out_both():
-            self.boxes[port_mode].set_hidden(bool(hidden_port_mode & port_mode))
+            self.boxes[port_mode].set_hidden(
+                bool(hidden_port_mode & port_mode))
         
 
 class PortgroupMem:

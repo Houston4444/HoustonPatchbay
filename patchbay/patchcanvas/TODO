@@ -36,3 +36,10 @@ Views widget:
 
 RaySession/Patchance:
     gérer le viewwidget
+
+Séparation /patchbay et /patchbay/patchcanvas: expliquer
+    arranger.py a besoin des fonctions mères dans patchcanvas, faut-il:
+        mettre l'arrangeur dans /patchbay, mais ça veut dire que le /patchbay doit/peut récupérer des infos sur la taille des éléments
+            Pas logique parce que l'arrangeur n'a pas besoin de connaitre les éléments cachés
+        Assumer le partage des BoxPos (sans copie) entre /patchbay et /patchbay/patchcanvas
+            Où faut-il sauvegarder les BoxPos ? 

@@ -97,10 +97,11 @@ class CallbackAct(IntEnum):
     GROUP_JOIN = auto()           # group_id: int
     GROUP_JOINED = auto()         # group_id: int
     GROUP_MOVE = auto()           # group_id: int, splitted_mode: PortMode, x: int, y: int
+    GROUP_BOX_POS_CHANGED = auto()# group_id: int, port_mode: PortMode, box_pos: BoxPos
     GROUP_WRAP = auto()           # group_id: int, folded: bool
     GROUP_LAYOUT_CHANGE = auto()  # group_id: int, layout_mode: BoxLayoutMode, splitted_mode: PortMode
     GROUP_SELECTED = auto()       # group_id: int, splitted_mode: PortMode
-    GROUP_HIDE_BOX = auto()           # group_id: int, port_mode: PortMode
+    GROUP_HIDE_BOX = auto()       # group_id: int, port_mode: PortMode
     PORTGROUP_ADD = auto()        # group_id: int, port_mode: PortMode,
                                   #      port_type: PortType, port_ids: tuple[int]
     PORTGROUP_REMOVE = auto()     # group_id: int, portgrp_id: int
@@ -170,14 +171,7 @@ class BoxPos:
 
     def __init__(self, box_pos: Optional['BoxPos']=None) -> None:
         if box_pos:
-            # faster way I found to copy a tuple without
-            # linking to it.
-            # write self.pos = tuple(box_pos.pos) does not
-            # copy the tuple.
-            self.pos = tuple(list(box_pos.pos))
-            self.zone = box_pos.zone
-            self.layout_mode = box_pos.layout_mode
-            self.flags = box_pos.flags
+            self.eat(box_pos)
             return
 
         self.pos = (0, 0)
@@ -190,6 +184,16 @@ class BoxPos:
             self.flags |= flag
         else:
             self.flags &= ~flag
+    
+    def eat(self, other: 'BoxPos'):
+        # faster way I found to copy a tuple without
+        # linking to it.
+        # write self.pos = tuple(box_pos.pos) does not
+        # copy the tuple.
+        self.pos = tuple(list(other.pos))
+        self.zone = other.zone
+        self.layout_mode = other.layout_mode
+        self.flags = other.flags
     
     def is_wrapped(self) -> bool:
         return bool(self.flags & BoxFlag.WRAPPED)
@@ -351,6 +355,9 @@ class GroupObject:
         group_copy = GroupObject()
         group_copy.__dict__ = self.__dict__.copy()
         group_copy.widgets = [None, None]
+        group_copy.box_poses = {}
+        for port_mode in PortMode.in_out_both():
+            group_copy.box_poses[port_mode] = BoxPos(self.box_poses[port_mode])
         return group_copy
 
 

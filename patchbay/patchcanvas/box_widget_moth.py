@@ -773,10 +773,6 @@ class BoxWidgetMoth(QGraphicsItem):
             self.setPos(QPointF(*xy))
 
     def send_move_callback(self):
-        canvas_callback(CallbackAct.GROUP_MOVE, self._group_id,
-                        self._port_mode,
-                        *self.top_left())
-
         group = canvas.get_group(self._group_id)
         if group is None:
             _logger.warning(
@@ -784,6 +780,14 @@ class BoxWidgetMoth(QGraphicsItem):
                 f"Box has no group_id {self._group_id} in canvas")
             return
 
+        box_pos = group.box_poses[self._port_mode]
+        box_pos.pos = self.top_left()
+        box_pos.set_wrapped(self.is_wrapped())
+        box_pos.layout_mode = self._layout_mode
+
+        canvas_callback(
+            CallbackAct.GROUP_BOX_POS_CHANGED, self._group_id,
+            self._port_mode, box_pos)
         group.box_poses[self._port_mode].pos = self.top_left()
 
     def send_hide_callback(self):
