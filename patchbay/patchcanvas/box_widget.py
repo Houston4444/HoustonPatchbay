@@ -1,6 +1,6 @@
 
 import logging
-from typing import Iterator
+from typing import Iterator, Optional
 from PyQt5.QtCore import QRectF
 from PyQt5.QtGui import QPainterPath
 from PyQt5.QtWidgets import QGraphicsItem
@@ -435,7 +435,7 @@ class BoxWidget(BoxWidgetMoth):
         return tuple(title_lines)
 
     def _choose_box_layout(
-        self, ports_min_sizes: PortsMinSizes) -> BoxLayout:
+        self, ports_min_sizes: PortsMinSizes) -> tuple[BoxLayout, BoxLayout]:
         '''choose in how many lines the title should be splitted
         and if the box layout should be large or high.
         returns a dict with all required variables and values'''
@@ -531,7 +531,7 @@ class BoxWidget(BoxWidgetMoth):
         box_layouts = list[BoxLayout]()
         
         if self._current_port_mode in (PortMode.INPUT, PortMode.OUTPUT):
-            if layout_mode in (BoxLayoutMode.AUTO, BoxLayoutMode.LARGE):
+            # if layout_mode in (BoxLayoutMode.AUTO, BoxLayoutMode.LARGE):
                 for i in range(1, lines_choice_max + 1):
                     box_layouts.append(
                         BoxLayout(i, BoxLayoutMode.LARGE,
@@ -544,19 +544,19 @@ class BoxWidget(BoxWidgetMoth):
                                        TitleOn.SIDE_UNDER_ICON,
                                        all_title_templates[i]))
                 
-            if layout_mode in (BoxLayoutMode.AUTO, BoxLayoutMode.HIGH):
+            # if layout_mode in (BoxLayoutMode.AUTO, BoxLayoutMode.HIGH):
                 for i in range(1, lines_choice_max + 1):
                     box_layouts.append(
                         BoxLayout(i, BoxLayoutMode.HIGH,
                                    TitleOn.TOP, all_title_templates[i]))
         else:
-            if layout_mode in (BoxLayoutMode.AUTO, BoxLayoutMode.LARGE):
+            # if layout_mode in (BoxLayoutMode.AUTO, BoxLayoutMode.LARGE):
                 for i in range(1, lines_choice_max + 1):
                     box_layouts.append(
                         BoxLayout(i, BoxLayoutMode.LARGE,
                                    TitleOn.TOP, all_title_templates[i]))
 
-            if layout_mode in (BoxLayoutMode.AUTO, BoxLayoutMode.HIGH):
+            # if layout_mode in (BoxLayoutMode.AUTO, BoxLayoutMode.HIGH):
                 for i in range(1, lines_choice_max + 1):
                     box_layouts.append(
                         BoxLayout(i, BoxLayoutMode.HIGH,
@@ -564,9 +564,29 @@ class BoxWidget(BoxWidgetMoth):
 
         # sort areas and choose the first one (the littlest area)
         box_layouts.sort()
-        box_layout = box_layouts[0]
-        box_layout.set_choosed()
-        return box_layouts[0]
+        
+        high_layout, large_layout = None, None
+        
+        for layout in box_layouts:
+            if (high_layout is None
+                    and layout.layout_mode is BoxLayoutMode.HIGH):
+                high_layout = layout
+            elif (large_layout is None
+                    and layout.layout_mode is BoxLayoutMode.LARGE):
+                large_layout = layout
+
+        high_layout.set_choosed()
+        large_layout.set_choosed()
+            
+        if layout_mode is BoxLayoutMode.AUTO:
+            if high_layout is box_layouts[0]:
+                return high_layout, large_layout
+            return large_layout, high_layout
+        
+        if layout_mode is BoxLayoutMode.HIGH:
+            return high_layout, large_layout
+        
+        return large_layout, high_layout
 
     def _set_ports_y_positions(
             self, align_port_types: bool) -> dict[str, list[list[int]]]:
@@ -1217,8 +1237,9 @@ class BoxWidget(BoxWidgetMoth):
         ports_min_sizes = self._get_ports_min_sizes(align_port_types)
 
         if self._wrapping_state in (WrappingState.NORMAL, WrappingState.WRAPPED):
-            box_layout = self._choose_box_layout(ports_min_sizes)
+            box_layout, alter_layout = self._choose_box_layout(ports_min_sizes)
             self._layout = box_layout
+            self._alter_layout = alter_layout
             self._current_layout_mode = box_layout.layout_mode
             self._title_under_icon = bool(
                 box_layout.title_on is TitleOn.SIDE_UNDER_ICON)
@@ -1326,6 +1347,22 @@ class BoxWidget(BoxWidgetMoth):
 
         align_port_types = self._should_align_port_types()
         ports_min_sizes = self._get_ports_min_sizes(align_port_types)
-        box_layout = self._choose_box_layout(ports_min_sizes)
+        box_layout, alter_layout = self._choose_box_layout(ports_min_sizes)
         
         return QRectF(0.0, 0.0, box_layout.width, box_layout.height)
+    
+    def get_layout(self, layout_mode: Optional[BoxLayoutMode] = None) -> BoxLayout:
+        if layout_mode is None:
+            return self._layout
+        
+        if layout_mode is BoxLayoutMode.LARGE:
+            if self._current_layout_mode is BoxLayoutMode.LARGE:
+                return self._layout
+            return self._alter_layout
+        
+        if layout_mode is BoxLayoutMode.HIGH:
+            if self._current_layout_mode is BoxLayoutMode.HIGH:
+                return self._layout
+            return self._alter_layout
+        
+        return self._layout

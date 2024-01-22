@@ -6,7 +6,7 @@ from PyQt5.QtCore import pyqtSlot, Qt, QSize, QPointF, QRect, QRectF
 
 from .ui.view_selector import Ui_Form
 
-from .patchcanvas import patchcanvas
+from .patchcanvas import patchcanvas, arranger
 
 if TYPE_CHECKING:
     from patchbay_manager import PatchbayManager
@@ -133,7 +133,6 @@ class ViewSelectorWidget(QWidget):
     
     @pyqtSlot()
     def _before_show_menu(self):
-        # self._act_clear_absents.setEnabled(self._are_there_absents())
         self._build_menu()
     
     def _are_there_absents(self) -> bool:
@@ -165,10 +164,10 @@ class ViewSelectorWidget(QWidget):
             _translate('views_menu', 'Remove'))
         act_remove.triggered.connect(self._remove)
         
-        self._act_clear_absents = self._menu.addAction(
+        act_clear_absents = self._menu.addAction(
             QIcon.fromTheme('edit-clear-all'),
             _translate('views_menu', 'Forget the positions of those absents'))
-        self._act_clear_absents.triggered.connect(self._clear_absents)
+        act_clear_absents.triggered.connect(self._clear_absents)
         
         change_num_menu = QMenu(
             _translate('views_menu', 'Change view number to...'), self._menu)
@@ -198,11 +197,18 @@ class ViewSelectorWidget(QWidget):
 
         self._menu.addMenu(change_num_menu)
         
-        act_arrange = self._menu.addAction(
-            QIcon.fromTheme('arrange'),
-            _translate('views_menu', 'Arrange'))
-        act_arrange.setIcon(QIcon.fromTheme('code-block'))
-        act_arrange.triggered.connect(self._arrange)
+        menu_arrange = QMenu(_translate('views_menu', 'Arrange'), self)
+        menu_arrange.setIcon(QIcon.fromTheme('code-block'))
+        
+        act_arrange_facing = menu_arrange.addAction(
+            _translate('views_menu', 'Two columns facing each other'))
+        act_arrange_facing.triggered.connect(self._arrange_facing)
+        
+        act_arrange_signal = menu_arrange.addAction(
+            _translate('views_menu', 'Follow the signal chain'))
+        act_arrange_signal.triggered.connect(self._arrange_follow_signal)
+
+        self._menu.addMenu(menu_arrange)
         
         self._menu.addSeparator()
         act_remove_others = self._menu.addAction(
@@ -220,7 +226,7 @@ class ViewSelectorWidget(QWidget):
             act_remove_others.setEnabled(False)
         
         if not self._are_there_absents():
-            self._act_clear_absents.setEnabled(False)
+            act_clear_absents.setEnabled(False)
     
     def _fill_combo(self):
         if self.mng is None:
@@ -347,8 +353,12 @@ class ViewSelectorWidget(QWidget):
             self.mng.change_view_number(new_num)
 
     @pyqtSlot()
-    def _arrange(self):
-        patchcanvas.arrange()
+    def _arrange_facing(self):
+        arranger.arrange_face_to_face()
+
+    @pyqtSlot()
+    def _arrange_follow_signal(self):
+        arranger.arrange_follow_signal()
 
     @pyqtSlot()
     def _remove_all_other_views(self):
