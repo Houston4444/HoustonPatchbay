@@ -384,16 +384,6 @@ class BoxWidgetMoth(QGraphicsItem):
                 self._wrapping_state = WrappingState.NORMAL
             else:
                 self._wrapping_state = WrappingState.WRAPPED
-        
-        if (self._has_side_title()
-                and self._current_port_mode is PortMode.INPUT
-                and not self in [mb.widget for mb in canvas.scene.move_boxes]):
-            # compensate x position in this case, 
-            # it would be strange that the box stays at its left position.
-            # this way, its right position stays on place.
-            self.setX(self._x_before_wrap
-                    + (self._x_after_wrap - self._x_before_wrap)
-                        * self._wrapping_ratio)
 
         self.update_positions(even_animated=True, prevent_overlap=False)
 
@@ -465,19 +455,20 @@ class BoxWidgetMoth(QGraphicsItem):
             self._wrapping_state = WrappingState.UNWRAPPING
 
         canvas.scene.add_box_to_animation_wrapping(self, yesno)
-        
-        self._x_before_wrap = self.x()
-        self._x_after_wrap = self._x_before_wrap
-        if self._has_side_title() and self._current_port_mode is PortMode.INPUT:
-            if yesno:
-                self._x_after_wrap = self._x_before_wrap + self._width - self._wrapped_width
-            else:
-                self._x_after_wrap = self._x_before_wrap + self._width - self._unwrapped_width
-        
+
+        if self._has_side_title() and self._current_port_mode is PortMode.OUTPUT:
+            if not self in [mb.widget for mb in canvas.scene.move_boxes]:
+                new_x = int(self.x())
+                if yesno:
+                    new_x += self._layout.full_width - self._layout.wrapped_width
+                else:
+                    new_x -= self._layout.full_width - self._layout.wrapped_width
+
+                canvas.scene.add_box_to_animation(self, new_x, int(self.y()))
+
         if not prevent_overlap:
             return
 
-        x_diff = self._x_after_wrap - self._x_before_wrap
         hws = canvas.theme.hardware_rack_width
         
         if yesno:
@@ -489,9 +480,9 @@ class BoxWidgetMoth(QGraphicsItem):
             canvas.scene.bring_neighbors_and_deplace_boxes(self, new_bounding_rect)
 
         else:
-            new_bounding_rect = QRectF(x_diff, 0, self._unwrapped_width, self._unwrapped_height)
+            new_bounding_rect = QRectF(0, 0, self._unwrapped_width, self._unwrapped_height)
             if self.is_hardware:
-                new_bounding_rect = QRectF(x_diff - hws, - hws , self._unwrapped_width + 2 * hws,
+                new_bounding_rect = QRectF(0 - hws, - hws , self._unwrapped_width + 2 * hws,
                                            self._unwrapped_height + 2 * hws)
             
             canvas.scene.deplace_boxes_from_repulsers(

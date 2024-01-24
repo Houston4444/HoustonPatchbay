@@ -482,3 +482,49 @@ class PatchScene(PatchSceneMoth):
         
         self.deplace_boxes_from_repulsers(
             repulser_boxes, wanted_direction=Direction.UP)
+        
+    def bring_neighbors_after_layout_change(
+            self, box_widget: BoxWidget, ex_rect: QRectF):
+        if not options.prevent_overlap:
+            return
+        
+        neighbors = [box_widget]
+        limit_top = box_widget.pos().y()
+        box_spacing = canvas.theme.box_spacing
+        
+        for neighbor in neighbors:
+            if neighbor is box_widget:
+                srect = ex_rect.translated(box_widget.pos())
+            else:
+                for moving_box in self.move_boxes:
+                    if (moving_box.widget is neighbor
+                            and not moving_box.final_rect.isNull()):
+                        srect = moving_box.final_rect
+                        srect.translate(moving_box.to_pt)
+                        break
+                else:
+                    srect = neighbor.after_wrap_rect()
+                    srect.translate(neighbor.pos())
+
+            for item in self.items(
+                    srect.adjusted(0, 0, 0,
+                                   box_spacing + 1)):
+                if item not in neighbors and isinstance(item, BoxWidget):
+                    nrect = item.after_wrap_rect().translated(item.pos())
+                    if nrect.top() >= limit_top:
+                        neighbors.append(item)
+        
+        neighbors.remove(box_widget)
+        
+        less_y = ex_rect.height() - box_widget.after_wrap_rect().height() 
+
+        repulser_boxes = list[BoxWidget]()
+
+        for neighbor in neighbors:
+            x, y = neighbor.top_left()           
+            self.add_box_to_animation(neighbor, x, int(y - less_y))
+            repulser_boxes.append(neighbor)
+        repulser_boxes.append(box_widget)
+        
+        self.deplace_boxes_from_repulsers(
+            repulser_boxes, wanted_direction=Direction.UP)

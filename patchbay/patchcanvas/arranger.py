@@ -95,16 +95,6 @@ class BoxArranger:
                 self.box_rect = self.box.boundingRect()
             else:
                 _logger.error(f'{self} says that group should be splitted')
-
-        # if self.port_mode in (PortMode.OUTPUT, PortMode.BOTH):
-        #     self.box = group.widgets[0]
-        # else:
-        #     self.box = group.widgets[1]
-        
-        # self.box_rect = self.box.boundingRect()
-        
-        # if self.box is None:
-        #     _logger.error(f"{self} did not found its box !")
     
     def is_owner(self, group_id: int, port_mode: PortMode):
         return bool(self.group_id == group_id

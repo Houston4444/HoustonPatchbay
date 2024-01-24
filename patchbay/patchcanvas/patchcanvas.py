@@ -909,8 +909,20 @@ def set_group_layout_mode(group_id: int, port_mode: PortMode,
         if (box is not None
                 and box.get_port_mode() is port_mode
                 and box._layout_mode is not layout_mode):
+            ex_rect = box.after_wrap_rect()
+            ex_width = ex_rect.width()
             box.set_layout_mode(layout_mode)
-            box.update_positions(prevent_overlap=prevent_overlap)
+            box.update_positions(prevent_overlap=False)
+            new_width = box.after_wrap_rect().width()
+            left, top = box.top_left()
+            if box.get_current_port_mode() is PortMode.OUTPUT:
+                box.set_top_left((int(left + ex_width - new_width), top))
+                box.repaint_lines()
+                box.send_move_callback()
+            canvas.scene.bring_neighbors_after_layout_change(
+                box, ex_rect)
+            if prevent_overlap:
+                canvas.scene.deplace_boxes_from_repulsers([box])
 
 # ------------------------------------------------------------------------
 
