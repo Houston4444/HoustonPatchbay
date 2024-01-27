@@ -435,8 +435,8 @@ class BoxWidgetMoth(QGraphicsItem):
                 WrappingState.WRAPPED, WrappingState.WRAPPING))
 
     def set_wrapped(self, yesno: bool, animate=True, prevent_overlap=True):
-        if yesno == bool(self._wrapping_state
-                         in (WrappingState.WRAPPED, WrappingState.WRAPPING)):
+        if yesno is self.is_wrapped():
+            # no wrap change, do nothing
             return
 
         if yesno:
@@ -456,15 +456,21 @@ class BoxWidgetMoth(QGraphicsItem):
 
         canvas.scene.add_box_to_animation_wrapping(self, yesno)
 
-        if self._has_side_title() and self._current_port_mode is PortMode.OUTPUT:
-            if not self in [mb.widget for mb in canvas.scene.move_boxes]:
-                new_x = int(self.x())
-                if yesno:
-                    new_x += self._layout.full_width - self._layout.wrapped_width
-                else:
-                    new_x -= self._layout.full_width - self._layout.wrapped_width
+        if (self._has_side_title()
+                and self._current_port_mode is PortMode.OUTPUT
+                and not self in [mb.widget for mb in canvas.scene.move_boxes]):
+            # for splitted output large box, we choose to keep the right
+            # position of the ports, this way, box may stay right aligned
+            # to others. 
+            new_x, new_y = self.top_left()
+            width_diff = (self._layout.full_width
+                          - self._layout.full_wrapped_width)
+            if yesno:
+                new_x += width_diff
+            else:
+                new_x -= width_diff
 
-                canvas.scene.add_box_to_animation(self, new_x, int(self.y()))
+            canvas.scene.add_box_to_animation(self, new_x, new_y)
 
         if not prevent_overlap:
             return
@@ -477,7 +483,7 @@ class BoxWidgetMoth(QGraphicsItem):
                 new_bounding_rect = QRectF(- hws, - hws, self._width + 2 * hws,
                                            self._wrapped_height + 2 * hws)
             
-            canvas.scene.bring_neighbors_and_deplace_boxes(self, new_bounding_rect)
+            canvas.scene.bring_neighbors_at_wrap(self, new_bounding_rect)
 
         else:
             new_bounding_rect = QRectF(0, 0, self._unwrapped_width, self._unwrapped_height)

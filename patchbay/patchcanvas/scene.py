@@ -19,7 +19,7 @@
 
 from dataclasses import dataclass
 from typing import Optional, Union
-from PyQt5.QtCore import (QRectF, QMarginsF, Qt)
+from PyQt5.QtCore import QRectF, QMarginsF, Qt, QPointF
 from PyQt5.QtWidgets import QGraphicsView
 
 from .init_values import (
@@ -442,23 +442,26 @@ class PatchScene(PatchSceneMoth):
                     self.deplace_boxes_from_repulsers([box])
         self._full_repulse_boxes.clear()
 
-    def bring_neighbors_and_deplace_boxes(
+    def bring_neighbors_at_wrap(
             self, box_widget: BoxWidget, new_scene_rect: QRectF):
         if not options.prevent_overlap:
             return
         
         neighbors = [box_widget]
-        limit_top = box_widget.pos().y()
+        limit_top = box_widget.top_left()[1]
         box_spacing = canvas.theme.box_spacing
         
         for neighbor in neighbors:
-            srect = neighbor.boundingRect()
+            srect = QRectF(
+                0.0, 0.0,
+                neighbor.boundingRect().width(),
+                neighbor.boundingRect().height())
             for moving_box in self.move_boxes:
                 if moving_box.widget is neighbor:
                     srect.translate(moving_box.to_pt)
                     break
             else:
-                srect.translate(neighbor.pos())
+                srect.translate(QPointF(*neighbor.top_left()))
 
             for item in self.items(
                     srect.adjusted(0, 0, 0,
@@ -491,10 +494,10 @@ class PatchScene(PatchSceneMoth):
         neighbors = [box_widget]
         limit_top = box_widget.pos().y()
         box_spacing = canvas.theme.box_spacing
-        
+
         for neighbor in neighbors:
             if neighbor is box_widget:
-                srect = ex_rect.translated(box_widget.pos())
+                srect = ex_rect
             else:
                 for moving_box in self.move_boxes:
                     if (moving_box.widget is neighbor
@@ -526,5 +529,9 @@ class PatchScene(PatchSceneMoth):
             repulser_boxes.append(neighbor)
         repulser_boxes.append(box_widget)
         
-        self.deplace_boxes_from_repulsers(
-            repulser_boxes, wanted_direction=Direction.UP)
+        if less_y >= 0.0:
+            self.deplace_boxes_from_repulsers(
+                repulser_boxes, wanted_direction=Direction.UP)
+        else:
+            self.deplace_boxes_from_repulsers(
+                repulser_boxes, wanted_direction=Direction.DOWN)

@@ -4,7 +4,7 @@ from typing import Callable, Optional
 from PyQt5.QtCore import QRectF
 
 
-from .init_values import BoxLayoutMode, BoxPos, PortMode, GroupObject, canvas, BoxType, Joining
+from .init_values import BoxLayoutMode, BoxPos, PortMode, GroupObject, canvas, BoxType, Joining, options
 from .utils import nearest_on_grid, next_left_on_grid, next_top_on_grid
 from .box_widget import BoxWidget
 from .patchcanvas import animate_before_join, move_group_boxes, repulse_all_boxes, split_group
@@ -586,7 +586,7 @@ def arrange_follow_signal():
     arranger.arrange_boxes()
 
 def arrange_face_to_face():
-    # split all groups
+    # first, split all groups
     while True:
         for group in canvas.group_list:
             if not group.splitted:
@@ -614,22 +614,24 @@ def arrange_face_to_face():
                 
             box_pos = box_poses[box.get_port_mode()]
             layout_mode = BoxLayoutMode.LARGE
-            wrapped = False
             
             high_layout = box.get_layout(BoxLayoutMode.HIGH)
-                
-            if high_layout.needed_height - high_layout.header_height >= 64:
+            large_layout = box.get_layout(BoxLayoutMode.LARGE)
+            
+            if (high_layout.full_wrapped_height
+                    < large_layout.full_wrapped_height):
                 layout_mode = BoxLayoutMode.HIGH
-                wrapped = True
-                
+
+            layout = box.get_layout(layout_mode=layout_mode)
+            wrapped = bool(layout.full_height > layout.full_wrapped_height)
+            
             box_pos.set_wrapped(wrapped)
             box_pos.layout_mode = layout_mode
             
             if box.get_port_mode() is PortMode.OUTPUT:
-                layout = box.get_layout(layout_mode=layout_mode)
                 if wrapped:
                     max_out_width = max(
-                        max_out_width, layout.wrapped_width)
+                        max_out_width, layout.full_wrapped_width)
                 else:
                     max_out_width = max(
                         max_out_width, layout.full_width)
@@ -664,8 +666,8 @@ def arrange_face_to_face():
 
             layout = box.get_layout(box_pos.layout_mode)
             if box_pos.is_wrapped():
-                width = layout.wrapped_width
-                height = layout.wrapped_height
+                width = layout.full_wrapped_width
+                height = layout.full_wrapped_height
             else:
                 width = layout.full_width
                 height = layout.full_height
@@ -681,7 +683,17 @@ def arrange_face_to_face():
                 last_in_y += height + canvas.theme.box_spacing
             
             box_pos.pos = (to_x, to_y)
-            
+    
+    last_out_y -= canvas.theme.box_spacing
+    last_in_y -= canvas.theme.box_spacing
+    
+    more_y = options.cell_height * (((last_out_y - last_in_y) // 2) // options.cell_height)
+
+    for group_id, box_poses in gp_box_poses.items():
+        box_pos = box_poses.get(PortMode.INPUT)
+        if box_pos is not None:
+            box_pos.pos = box_pos.pos[0], box_pos.pos[1] + more_y
+    
     for group_id, box_poses in gp_box_poses.items():
         move_group_boxes(group_id, box_poses, True)
     

@@ -909,7 +909,7 @@ def set_group_layout_mode(group_id: int, port_mode: PortMode,
         if (box is not None
                 and box.get_port_mode() is port_mode
                 and box._layout_mode is not layout_mode):
-            ex_rect = box.after_wrap_rect()
+            ex_rect = box.after_wrap_rect().translated(box.pos())
             ex_width = ex_rect.width()
             box.set_layout_mode(layout_mode)
             box.update_positions(prevent_overlap=False)

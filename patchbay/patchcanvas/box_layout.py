@@ -176,6 +176,9 @@ class BoxLayout:
             full_height = next_height_on_grid(self.hwr * 2 + needed_height)
             self.wrapped_height = full_height - 2 * self.hwr
         
+        self.full_wrapped_width = self.wrapped_width + 2 * self.hwr
+        self.full_wrapped_height = self.wrapped_height + 2 * self.hwr
+        
         self.exceeding_y_ins = 0.0
         self.exceeding_y_outs = 0.0
         self.exceeding_y_inouts = 0.0
