@@ -346,7 +346,7 @@ class CanvasArranger:
 
         return True
 
-    def define_all_box_columns(self, hardware_on_sides=False) -> bool:
+    def _define_all_box_columns(self, hardware_on_sides=False) -> bool:
         '''define the column possibilities for every BoxArranger
            return False in case of looping connections.'''
         self.ba_to_split = None
@@ -425,8 +425,14 @@ class CanvasArranger:
         return True
         
     def arrange_boxes(self, hardware_on_sides=True):
-        correct_leveling = False
-        while not correct_leveling:
+        '''Proceed to the arrangment of all present boxes
+           in the patchcanvas.
+           If 'hardware_on_sides' is True,
+           only hardware boxes will be located in the leftmost 
+           and the rightmost columns'''
+        # define all BoxArrangers columns
+        graph_is_ok = False
+        while not graph_is_ok:
             for box_arranger in self.box_arrangers:
                 box_arranger.reset()
                 
@@ -438,9 +444,13 @@ class CanvasArranger:
                     else:
                         box_arranger.col_right = -1
                         box_arranger.col_right_fixed = True
-            correct_leveling = self.define_all_box_columns(
+            graph_is_ok = self._define_all_box_columns(
                 hardware_on_sides=hardware_on_sides)
+            # if 'graph_is_ok' is False, it means that we need to split
+            # a box and restart analyze, 
+            # because there are looping connections.
         
+        # list groups to split, all others will be joined
         group_ids_to_split = set[int]()
         for ba in self.box_arrangers:
             if ba.port_mode is not PortMode.BOTH:
@@ -466,35 +476,42 @@ class CanvasArranger:
             else:
                 break
         
+        # learn the dimensions of the box for each BoxArranger
         for box_arranger in self.box_arrangers:
             box_arranger.set_box()
 
+        # calculate the number of needed columns
         number_of_columns = max(
             [ba.get_needed_columns() for ba in self.box_arrangers] + [3])
 
-        column_widths = dict[int, float]()
-        columns_pos = dict[int, float]()
         columns_bottoms = dict[int, float]()
-        last_pos = 0
-
         for column in range(1, number_of_columns + 1):
             columns_bottoms[column] = 0.0
 
         last_top, last_bottom = 0.0, 0.0
         direction = GoTo.NONE
-        previous_column: Optional[int] = None
         used_columns_in_line = set[int]()
 
+        # parse all networks to locate the boxes
         for ba_network in self.ba_networks:
             if len(ba_network) <= 1:
                 continue
 
-            previous_column = None
+            previous_column: Optional[int] = None
             direction = GoTo.NONE
 
             for ba in ba_network:
-                column = ba.get_column_with_nb(number_of_columns)
+                # this BoxArranger has connections.
+                # The network is ordered in a certain way,
+                # so a BoxArranger is connected to the previous and/or
+                # to the next of the network.
+                # So, we check the horizontal direction of the network, and decide
+                # to go to the next line if the horizontal direction changes
                 
+                # get the column num for this BoxArranger
+                column = ba.get_column_with_nb(number_of_columns)
+
+                # set the horizontal direction of the network parsing
                 if previous_column is not None and direction is GoTo.NONE:
                     if column > previous_column:
                         direction = GoTo.RIGHT
@@ -507,7 +524,7 @@ class CanvasArranger:
 
                 elif (previous_column is not None
                         and (direction is GoTo.RIGHT and column > previous_column)
-                             or (direction == GoTo.LEFT and column < previous_column)):
+                             or (direction is GoTo.LEFT and column < previous_column)):
                     y_pos = last_top
                 
                 else:
@@ -572,9 +589,12 @@ class CanvasArranger:
             ba.column = choosed_column
             ba.y_pos = bottom_min
 
-            columns_bottoms[ba.column] += (ba.box_rect.height()
-                                                + canvas.theme.box_spacing)
+            columns_bottoms[ba.column] += (
+                ba.box_rect.height() + canvas.theme.box_spacing)
 
+        column_widths = dict[int, float]()
+        columns_pos = dict[int, float]()
+        last_pos = 0
         max_hardware = 0
         max_middle = 0
 
