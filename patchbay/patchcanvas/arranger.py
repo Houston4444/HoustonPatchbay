@@ -595,26 +595,32 @@ def arrange_face_to_face():
         else:
             break
     
+    X_SPACING = 300
     max_out_width = 0
-    x_spacing = 300
     
     gp_box_poses = dict[int, dict[PortMode, BoxPos]]()
     
+    # analyze, and stock all box properties (layout and wrapped state)
+    # in gp_box_poses.
     for group in canvas.group_list:
         for box in group.widgets:
             if box is None or not box.isVisible():
                 continue
-            
+
+            # create the BoxPos object for the box
+            # and place it in gp_box_poses  
             box_poses = gp_box_poses.get(group.group_id)
             if box_poses is None:
                 box_poses = dict[PortMode, BoxPos]()
                 for port_mode in PortMode.in_out_both():
                     box_poses[port_mode] = BoxPos()
                 gp_box_poses[group.group_id] = box_poses
-                
+
             box_pos = box_poses[box.get_port_mode()]
+
+            # choose box layout mode with the littlest wrapped height
             layout_mode = BoxLayoutMode.LARGE
-            
+
             high_layout = box.get_layout(BoxLayoutMode.HIGH)
             large_layout = box.get_layout(BoxLayoutMode.LARGE)
             
@@ -622,12 +628,15 @@ def arrange_face_to_face():
                     < large_layout.full_wrapped_height):
                 layout_mode = BoxLayoutMode.HIGH
 
+            # wrap the box if wrapped height is littler than normal height
             layout = box.get_layout(layout_mode=layout_mode)
             wrapped = bool(layout.full_height > layout.full_wrapped_height)
             
+            # set box_pos properties
             box_pos.set_wrapped(wrapped)
             box_pos.layout_mode = layout_mode
             
+            # get the max width for all output boxes
             if box.get_port_mode() is PortMode.OUTPUT:
                 if wrapped:
                     max_out_width = max(
@@ -636,17 +645,20 @@ def arrange_face_to_face():
                     max_out_width = max(
                         max_out_width, layout.full_width)
     
+    # prepare global positions 
     out_most_left = next_left_on_grid(0)
     out_right = out_most_left + max_out_width
-    in_left = next_left_on_grid(out_right + x_spacing)
+    in_left = next_left_on_grid(out_right + X_SPACING)
     last_out_y = next_top_on_grid(0)
     last_in_y = last_out_y
     
+    # sort groups by id, to keep groups in id (apparition) order
     group_ids = list[int]()
     for group in canvas.group_list:
         group_ids.append(group.group_id)
     group_ids.sort()
     
+    # set box positions in all BoxPos objects in gp_box_poses
     for group_id in group_ids:
         group = canvas.get_group(group_id)
         if group is None:
@@ -684,17 +696,20 @@ def arrange_face_to_face():
             
             box_pos.pos = (to_x, to_y)
     
+    # estimate the needed compensation to try to align horizontally
+    # the outputs and the inputs
     last_out_y -= canvas.theme.box_spacing
     last_in_y -= canvas.theme.box_spacing
-    
-    more_y = options.cell_height * (((last_out_y - last_in_y) // 2) // options.cell_height)
+    more_y = (options.cell_height
+              * (((last_out_y - last_in_y) // 2)
+                 // options.cell_height))
 
+    # modify all positions of the inputs to try to align horizontally
     for group_id, box_poses in gp_box_poses.items():
         box_pos = box_poses.get(PortMode.INPUT)
         if box_pos is not None:
             box_pos.pos = box_pos.pos[0], box_pos.pos[1] + more_y
     
+    # Now, move all the boxes (and set them properties)
     for group_id, box_poses in gp_box_poses.items():
         move_group_boxes(group_id, box_poses, True)
-    
-    repulse_all_boxes(view_change=True)
