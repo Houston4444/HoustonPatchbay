@@ -39,18 +39,31 @@ class BoxArranger:
         self.port_mode = port_mode
         self.joining = False
 
+        # connected group ids will be stocked here
         self.conns_in_group_ids = set[int]()
         self.conns_out_group_ids = set[int]()
-        self.col_left = 2 # is mininum if not fixed
-        self.col_right = -2 # is maximum if not fixed
-        self.col_left_fixed = False
-        self.col_right_fixed = False
-        self.col_left_counted = False
-        self.col_right_counted = False
-        self.analyzed = False
         
+        # self.set_neighbours() function will fill theses attributes
+        # with connected group ids
         self.ins_connected_to = list[BoxArranger]()
         self.outs_connected_to = list[BoxArranger]()
+
+        # col_left is mininum column number,
+        # it must be a positiv integer and can only grow
+        # if col_left_fixed is True, col_left becomes the column number
+        self.col_left = 2 
+        self.col_left_fixed = False
+        self.col_left_counted = False
+
+        # col_right is maximum column number, starting from the end.
+        # it must be a negativ integer and can only decrease.
+        # if col_right_fixed is True, col_right becomes the column number
+        # in regard to the given number of columns        
+        self.col_right = -2
+        self.col_right_fixed = False
+        self.col_right_counted = False
+
+        self.analyzed = False
         
         # needed at positioning phase
         self.y_pos = 0.0
@@ -80,10 +93,10 @@ class BoxArranger:
         if group.splitted:
             if self.port_mode is PortMode.OUTPUT:
                 self.box = group.widgets[0]
-                self.box_rect = self.box.boundingRect()
+                self.box_rect = self.box.after_wrap_rect()
             elif self.port_mode is PortMode.INPUT:
                 self.box = group.widgets[1]
-                self.box_rect = self.box.boundingRect()
+                self.box_rect = self.box.after_wrap_rect()
             elif self.port_mode is PortMode.BOTH:
                 box = BoxWidget(group, PortMode.BOTH)
                 self.box_rect = box.get_dummy_rect()
@@ -92,7 +105,7 @@ class BoxArranger:
         else:
             if self.port_mode is PortMode.BOTH:
                 self.box = group.widgets[0]
-                self.box_rect = self.box.boundingRect()
+                self.box_rect = self.box.after_wrap_rect()
             else:
                 _logger.error(f'{self} says that group should be splitted')
     
@@ -156,15 +169,18 @@ class BoxArranger:
             ba.count_left(path)
         
         left_min = self.col_left
-        fixed = 0
+        fixed_ins_len = 0
 
         for ba in self.ins_connected_to:
             left_min = max(left_min, ba.col_left + 1)
             if ba.col_left_fixed:
-                fixed += 1
+                fixed_ins_len += 1
 
         self.col_left = left_min
-        if fixed and fixed == len(self.ins_connected_to):
+
+        if fixed_ins_len and fixed_ins_len == len(self.ins_connected_to):
+            # if all ins connected have col_left_fixed
+            # we can assume this BoxArranger has now col_left_fixed
             self.col_left_fixed = True
         
         self.col_left_counted = True
@@ -187,15 +203,17 @@ class BoxArranger:
             ba.count_right(path)
 
         right_min = self.col_right
-        fixed = 0
+        fixed_outs_len = 0
         
         for ba in self.outs_connected_to:
             right_min = min(right_min, ba.col_right - 1)
             if ba.col_right_fixed:
-                fixed += 1
+                fixed_outs_len += 1
         
         self.col_right = right_min
-        if fixed and fixed == len(self.outs_connected_to):
+        if fixed_outs_len and fixed_outs_len == len(self.outs_connected_to):
+            # if all outs connected have col_right_fixed
+            # we can assume this BoxArranger has now col_right_fixed
             self.col_right_fixed = True
 
         self.col_right_counted = True
@@ -237,14 +255,27 @@ class BoxArranger:
 
 class CanvasArranger:
     def __init__(self):
+        # Each box will have a BoxArranger stocked in self.box_arrangers
         self.box_arrangers = list[BoxArranger]()
+        
+        # A BoxArranger network (ba_network) is a list[BoxArranger]
+        # where there is a way to go from any of one to any other
+        # parsing the connections.
+        # all BoxArranger networks will be stocked in self.ba_networks
         self.ba_networks = list[list[BoxArranger]]()
+
+        # used only to sort BoxArranger lists
         self.sort_context = PortMode.BOTH
 
-        # is set only in case there are looping connections
-        # around this box arranger.
+        # self.ba_to_split is set only in case there are looping
+        # connections around this box arranger.
+        # Then we will have to restart the analyze
+        # saying this box is splitted.
         self.ba_to_split: BoxArranger = None
 
+        # in a first time, we know that we want the boxes with direct
+        # connections from output to its input (looping) splitted,
+        # and splitted hardware boxes.
         to_split_group_ids = set[int]()
 
         for conn in canvas.list_connections():
@@ -262,6 +293,8 @@ class CanvasArranger:
                 self.box_arrangers.append(
                     BoxArranger(self, group, PortMode.BOTH))
 
+        # fill in each BoxArranger the opposite BoxArrangers
+        # of its connections.
         for conn in canvas.list_connections():
             for box_arranger in self.box_arrangers:
                 if box_arranger.is_owner(conn.group_out_id, PortMode.OUTPUT):
@@ -272,6 +305,7 @@ class CanvasArranger:
         for box_arranger in self.box_arrangers:
             box_arranger.set_neighbours(self.box_arrangers)
         
+        # sort all BoxArranger lists in all BoxArrangers
         self.sort_context = PortMode.INPUT
         for box_arranger in self.box_arrangers:
             box_arranger.outs_connected_to.sort()
@@ -280,11 +314,16 @@ class CanvasArranger:
         for box_arranger in self.box_arrangers:
             box_arranger.ins_connected_to.sort()
 
-    def needs_to_split_a_box(self) -> bool:
+    def _needs_to_split_a_box(self) -> bool:
+        '''return True and operate the changes
+           if we need to split a box because of looping connections.'''
         if self.ba_to_split is None:
             return False
 
         group = canvas.get_group(self.ba_to_split.group_id)
+
+        # split the BoxArranger in two, creating one INPUT BoxArranger
+        # and setting this one to OUTPUT
         new_ba = BoxArranger(self, group, PortMode.INPUT)
         new_ba.ins_connected_to = self.ba_to_split.ins_connected_to
         
@@ -296,18 +335,25 @@ class CanvasArranger:
         self.ba_to_split.port_mode = PortMode.OUTPUT
         
         self.box_arrangers.append(new_ba)
+
+        # consider there is no more BoxArranger to split,
+        # analyze will be done again.
         self.ba_to_split = None
 
+        # reset the columns count for all BoxArrangers
         for ba in self.box_arrangers:
             ba.reset()
 
         return True
 
-    def count_column_boxes(self, hardware_on_sides=False) -> bool:
+    def define_all_box_columns(self, hardware_on_sides=False) -> bool:
+        '''define the column possibilities for every BoxArranger
+           return False in case of looping connections.'''
         self.ba_to_split = None
         self.ba_networks.clear()
         
         if hardware_on_sides:
+            # define networks starting from a hardware OUTPUT BoxArranger
             for box_arranger in self.box_arrangers:
                 if (box_arranger.col_left == 1
                         and box_arranger.col_left_fixed
@@ -315,11 +361,13 @@ class CanvasArranger:
                     ba_network = list[BoxArranger]()
                     box_arranger.parse_all(ba_network)
 
-                    if self.needs_to_split_a_box():
+                    if self._needs_to_split_a_box():
                         return False
 
                     self.ba_networks.append(ba_network)
 
+            # define undefined networks starting from 
+            # a hardware INPUT BoxArranger
             for box_arranger in self.box_arrangers:
                 if (box_arranger.col_right == -1
                         and box_arranger.col_right_fixed
@@ -327,11 +375,13 @@ class CanvasArranger:
                     ba_network = list[BoxArranger]()
                     box_arranger.parse_all(ba_network)
 
-                    if self.needs_to_split_a_box():
+                    if self._needs_to_split_a_box():
                         return False
 
                     self.ba_networks.append(ba_network)
 
+        # define all other networks, 
+        # or all networks if hardware_on_sides is False.
         for box_arranger in self.box_arrangers:
             if box_arranger.analyzed:
                 continue
@@ -339,26 +389,31 @@ class CanvasArranger:
             ba_network = list[BoxArranger]()
             box_arranger.parse_all(ba_network)
             
-            if self.needs_to_split_a_box():
+            if self._needs_to_split_a_box():
                 return False
             
             self.ba_networks.append(ba_network)
-                    
+        
+        # count the needed number of columns
         n_columns = max(
             [ba.get_needed_columns() for ba in self.box_arrangers] + [3])
         
+        # fix the column for BoxArranger when it needs as much columns
+        # as the number of columns
         for ba in self.box_arrangers:
             if ba.get_needed_columns() == n_columns:
                 ba.col_left_fixed = True
                 ba.col_right_fixed = True
 
+        # parse all BoxArrangers in all networks until all BoxArrangers
+        # have col_left_fixed or col_right_fixed
         for ba_network in self.ba_networks:
             while True:
                 for ba in ba_network:
                     ba.col_left_counted = False
                     ba.col_right_counted = False
                     ba.analyzed = False
-                    
+
                     if not (ba.col_left_fixed or ba.col_right_fixed):
                         ba.count_left()
                         ba.count_right()
@@ -383,7 +438,7 @@ class CanvasArranger:
                     else:
                         box_arranger.col_right = -1
                         box_arranger.col_right_fixed = True
-            correct_leveling = self.count_column_boxes(
+            correct_leveling = self.define_all_box_columns(
                 hardware_on_sides=hardware_on_sides)
         
         group_ids_to_split = set[int]()
