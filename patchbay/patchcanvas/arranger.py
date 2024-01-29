@@ -1,13 +1,21 @@
 from enum import IntEnum
 import logging
-from typing import Callable, Optional
+import math
+from typing import Optional
 from PyQt5.QtCore import QRectF
 
-
-from .init_values import BoxLayoutMode, BoxPos, PortMode, GroupObject, canvas, BoxType, Joining, options
+from .init_values import (
+    BoxLayoutMode,
+    BoxPos,
+    PortMode,
+    GroupObject,
+    canvas,
+    BoxType,
+    Joining,
+    options)
 from .utils import nearest_on_grid, next_left_on_grid, next_top_on_grid
 from .box_widget import BoxWidget
-from .patchcanvas import animate_before_join, move_group_boxes, repulse_all_boxes, split_group
+from .patchcanvas import animate_before_join, move_group_boxes, split_group
 
 _logger = logging.getLogger(__name__)
 
@@ -495,6 +503,8 @@ class CanvasArranger:
         # parse all networks to locate the boxes
         for ba_network in self.ba_networks:
             if len(ba_network) <= 1:
+                # a network with only one box cointains a box without connections
+                # we will treat it later.
                 continue
 
             previous_column: Optional[int] = None
@@ -517,7 +527,8 @@ class CanvasArranger:
                         direction = GoTo.RIGHT
                     elif column < previous_column:
                         direction = GoTo.LEFT
-            
+
+                # set the Y pos
                 if hardware_on_sides and column in (1, number_of_columns):
                     y_pos = columns_bottoms[column]
                     last_top = last_bottom
@@ -525,9 +536,11 @@ class CanvasArranger:
                 elif (previous_column is not None
                         and (direction is GoTo.RIGHT and column > previous_column)
                              or (direction is GoTo.LEFT and column < previous_column)):
+                    # no direction change, align top to the previous
                     y_pos = last_top
                 
                 else:
+                    # direction change, or first BoxArranger of the network
                     y_pos = last_bottom
                     for col, bottom in columns_bottoms.items():
                         if col in used_columns_in_line:
@@ -537,11 +550,13 @@ class CanvasArranger:
                     last_bottom = 0.0
                     direction = GoTo.NONE
 
+                # save column and y_pos in the BoxArranger
                 y_pos = max(y_pos, columns_bottoms[column])
 
                 ba.column = column
                 ba.y_pos = y_pos
 
+                # save needed vars for the next BoxArranger
                 used_columns_in_line.add(column)
 
                 if not hardware_on_sides or column not in (1, number_of_columns):
@@ -558,12 +573,13 @@ class CanvasArranger:
 
                 previous_column = column
 
+        # locate boxes without connections where there is some place ;)
         for ba_network in self.ba_networks:
             if len(ba_network) != 1:
                 continue
 
             ba = ba_network[0]
-            
+
             if ba.get_column_with_nb(number_of_columns) in (1, number_of_columns):
                 ba.column = ba.get_column_with_nb(number_of_columns)
                 ba.y_pos = columns_bottoms[ba.column]
@@ -593,14 +609,15 @@ class CanvasArranger:
                 ba.box_rect.height() + canvas.theme.box_spacing)
 
         column_widths = dict[int, float]()
-        columns_pos = dict[int, float]()
-        last_pos = 0
+        columns_lefts = dict[int, float]()
+        last_left = 0
         max_hardware = 0
         max_middle = 0
+        column_spacing = (
+            max(80, options.cell_width * math.ceil(80 / options.cell_width))
+            + canvas.theme.box_spacing)
 
-        for column in range(1, number_of_columns + 1):
-            column_widths[column] = 0.0
-
+        # set all columns widths
         for ba in self.box_arrangers:
             column_width = column_widths.get(ba.column)
             if column_width is None:
@@ -608,18 +625,25 @@ class CanvasArranger:
             column_widths[ba.column] = max(
                 ba.box_rect.width(), column_width)
 
+        # set all columns left pos
         for column in range(1, number_of_columns + 1):
-            columns_pos[column] = last_pos
-            
-            last_pos += column_widths[column] + 80
+            columns_lefts[column] = last_left
+            last_left += column_widths[column] + column_spacing
 
+        # set max_hardware and max_middle
+        # they will be used to align horizontally 
+        # the middle to the hardware 
         for column, bottom in columns_bottoms.items():
             if column in (1, number_of_columns):
                 max_hardware = max(max_hardware, bottom)
             else:
                 max_middle = max(max_middle, bottom)
 
+        # set x pos for each BoxArranger, and y compensation (see above)
+        # then, move the box.
         for ba in self.box_arrangers:
+            # set y_offset to align horizontally hardware contents
+            # to middle contents
             if not hardware_on_sides:
                 y_offset = 0
             elif ba.column in (1, number_of_columns):
@@ -627,20 +651,24 @@ class CanvasArranger:
             else:
                 y_offset = (max_hardware - max_middle) / 2
 
+            # set x_pos in regard to column left pos and box alignment
+            # in the column
             if ba.get_box_align() is BoxAlign.CENTER:
-                x_pos = (columns_pos[ba.column]
+                x_pos = (columns_lefts[ba.column]
                          + (column_widths[ba.column]
                             - ba.box_rect.width()) / 2)
             elif ba.get_box_align() is BoxAlign.RIGHT:
-                x_pos = (columns_pos[ba.column]
+                x_pos = (columns_lefts[ba.column]
                          + column_widths[ba.column]
                          - ba.box_rect.width())
             else:
-                x_pos = columns_pos[ba.column] 
+                x_pos = columns_lefts[ba.column] 
 
+            # choose a position on the grid
             xy = (int(x_pos), int(ba.y_pos - ba.box_rect.top() + y_offset))
             grid_xy = nearest_on_grid(xy)
 
+            # finally, move the box
             if ba.joining:
                 group = canvas.get_group(ba.group_id)
                 if group is not None:
@@ -655,12 +683,13 @@ class CanvasArranger:
                 canvas.scene.add_box_to_animation(ba.box, *grid_xy)
 
 
-
 def arrange_follow_signal():
     arranger = CanvasArranger()
     arranger.arrange_boxes()
 
 def arrange_face_to_face():
+    '''arrange all boxes, all boxes will be splitted and probably wrapped.
+       This looks like the old known QJackCtl Patchbay style'''
     # first, split all groups
     while True:
         for group in canvas.group_list:
