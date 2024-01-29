@@ -45,7 +45,8 @@ from .init_values import (
     MAX_PLUGIN_ID_ALLOWED,
     BoxType,
     Direction,
-    Zv)
+    Zv,
+    UnwrapButton)
 
 from .utils import canvas_callback, nearest_on_grid, nearest_on_grid_check_others
 from .box_widget_shadow import BoxWidgetShadow
@@ -61,11 +62,7 @@ from .box_hidder import BoxHidder
 _logger = logging.getLogger(__name__)
 
 
-class UnwrapButton(Enum):
-    NONE = 0
-    LEFT = 1
-    CENTER = 2
-    RIGHT = 3
+
 
 
 class WrappingState(Enum):
@@ -545,7 +542,7 @@ class BoxWidgetMoth(QGraphicsItem):
     def _has_side_title(self):
         return bool(
             self._current_port_mode is not PortMode.BOTH
-            and self._current_layout_mode == BoxLayoutMode.LARGE)
+            and self._current_layout_mode is BoxLayoutMode.LARGE)
 
     def wrap_unwrap_at_point(self, scene_pos: QPointF) -> bool:
         '''order a wrap or unwrap on the box if scene_pos is on the

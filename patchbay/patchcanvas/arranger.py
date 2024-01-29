@@ -4,18 +4,20 @@ import math
 from typing import Optional
 from PyQt5.QtCore import QRectF
 
+
 from .init_values import (
     BoxLayoutMode,
     BoxPos,
     PortMode,
     GroupObject,
+    UnwrapButton,
     canvas,
     BoxType,
-    Joining,
     options)
 from .utils import nearest_on_grid, next_left_on_grid, next_top_on_grid
 from .box_widget import BoxWidget
-from .patchcanvas import animate_before_join, move_group_boxes, split_group
+from .box_layout import BoxLayout
+from .patchcanvas import move_group_boxes, repulse_all_boxes, split_group
 
 _logger = logging.getLogger(__name__)
 
@@ -36,8 +38,11 @@ class BoxArranger:
     def __init__(self, arranger: 'CanvasArranger',
                  group: GroupObject, port_mode: PortMode):
         self.arranger = arranger
-        self.box: BoxWidget = None
         self.box_rect = QRectF()
+        self.high_layout: Optional[BoxLayout] = None
+        self.large_layout: Optional[BoxLayout] = None
+        self.layout: Optional[BoxLayout] = None
+        self.layout_mode = BoxLayoutMode.AUTO
         
         # we don't take the group here
         # because it can be splitted during the BoxArranger life
@@ -45,7 +50,6 @@ class BoxArranger:
         self.box_type = group.box_type
         self.group_name = group.group_name
         self.port_mode = port_mode
-        self.joining = False
 
         # connected group ids will be stocked here
         self.conns_in_group_ids = set[int]()
@@ -100,22 +104,36 @@ class BoxArranger:
         group = canvas.get_group(self.group_id)
         if group.splitted:
             if self.port_mode is PortMode.OUTPUT:
-                self.box = group.widgets[0]
-                self.box_rect = self.box.after_wrap_rect()
+                box = group.widgets[0]
+                self.box_rect = box.after_wrap_rect()
             elif self.port_mode is PortMode.INPUT:
-                self.box = group.widgets[1]
-                self.box_rect = self.box.after_wrap_rect()
+                box = group.widgets[1]
+                self.box_rect = box.after_wrap_rect()
             elif self.port_mode is PortMode.BOTH:
                 box = BoxWidget(group, PortMode.BOTH)
                 self.box_rect = box.get_dummy_rect()
                 canvas.scene.remove_box(box)
-                self.joining = True
         else:
             if self.port_mode is PortMode.BOTH:
-                self.box = group.widgets[0]
-                self.box_rect = self.box.after_wrap_rect()
+                box = group.widgets[0]
+                self.box_rect = box.after_wrap_rect()
             else:
-                _logger.error(f'{self} says that group should be splitted')
+                box = BoxWidget(group, self.port_mode)
+                self.box_rect = box.get_dummy_rect()
+                canvas.scene.remove_box(box)
+                
+        self.high_layout = box.get_layout(BoxLayoutMode.HIGH)
+        self.large_layout = box.get_layout(BoxLayoutMode.LARGE)
+        self.layout = min(self.high_layout, self.large_layout)
+    
+    def set_layout_mode(self, layout_mode: BoxLayoutMode):
+        self.layout_mode = layout_mode
+        if layout_mode is BoxLayoutMode.AUTO:
+            self.layout = min(self.high_layout, self.large_layout)
+        elif layout_mode is BoxLayoutMode.LARGE:
+            self.layout = self.large_layout
+        else:
+            self.layout = self.high_layout
     
     def is_owner(self, group_id: int, port_mode: PortMode):
         return bool(self.group_id == group_id
@@ -463,26 +481,6 @@ class CanvasArranger:
         for ba in self.box_arrangers:
             if ba.port_mode is not PortMode.BOTH:
                 group_ids_to_split.add(ba.group_id)
-
-        group_ids_join_done = set[int]()
-
-        # join or split groups we want to join or split
-        while True:
-            for group in canvas.group_list:
-                if group.splitted:
-                    if (group.box_type is not BoxType.HARDWARE
-                            and group.group_id not in group_ids_to_split
-                            and group.group_id not in group_ids_join_done):
-                        animate_before_join(group.group_id)
-                        group_ids_join_done.add(group.group_id)
-                        break
-                else:
-                    if (group.box_type is BoxType.HARDWARE
-                            or group.group_id in group_ids_to_split):
-                        split_group(group.group_id)
-                        break
-            else:
-                break
         
         # learn the dimensions of the box for each BoxArranger
         for box_arranger in self.box_arrangers:
@@ -491,6 +489,22 @@ class CanvasArranger:
         # calculate the number of needed columns
         number_of_columns = max(
             [ba.get_needed_columns() for ba in self.box_arrangers] + [3])
+
+        # define the columns widths with the larger box with Layout Mode HIGH
+        column_widths = dict[int, int]()
+        for ba in self.box_arrangers:
+            column = ba.get_column_with_nb(number_of_columns)
+            max_width = column_widths.get(column, 0)
+            column_widths[column] = max(ba.high_layout.full_width, max_width)
+
+        for ba in self.box_arrangers:
+            column = ba.get_column_with_nb(number_of_columns)
+            if ba.large_layout.full_width > column_widths[column]:
+                if ba.large_layout < ba.high_layout:
+                    ba.set_layout_mode(BoxLayoutMode.HIGH)
+            else:
+                if ba.high_layout < ba.large_layout:
+                    ba.set_layout_mode(BoxLayoutMode.LARGE)
 
         columns_bottoms = dict[int, float]()
         for column in range(1, number_of_columns + 1):
@@ -511,7 +525,6 @@ class CanvasArranger:
             direction = GoTo.NONE
 
             for ba in ba_network:
-                # this BoxArranger has connections.
                 # The network is ordered in a certain way,
                 # so a BoxArranger is connected to the previous and/or
                 # to the next of the network.
@@ -563,7 +576,7 @@ class CanvasArranger:
                     last_top = y_pos
 
                 bottom = (y_pos
-                          + ba.box_rect.height()
+                          + ba.layout.full_height
                           + canvas.theme.box_spacing)
                 
                 columns_bottoms[column] = bottom
@@ -583,7 +596,7 @@ class CanvasArranger:
             if ba.get_column_with_nb(number_of_columns) in (1, number_of_columns):
                 ba.column = ba.get_column_with_nb(number_of_columns)
                 ba.y_pos = columns_bottoms[ba.column]
-                columns_bottoms[ba.column] += (ba.box_rect.height()
+                columns_bottoms[ba.column] += (ba.layout.full_height
                                                + canvas.theme.box_spacing)
                 continue
             
@@ -606,7 +619,7 @@ class CanvasArranger:
             ba.y_pos = bottom_min
 
             columns_bottoms[ba.column] += (
-                ba.box_rect.height() + canvas.theme.box_spacing)
+                ba.layout.full_height + canvas.theme.box_spacing)
 
         column_widths = dict[int, float]()
         columns_lefts = dict[int, float]()
@@ -619,18 +632,16 @@ class CanvasArranger:
 
         # set all columns widths
         for ba in self.box_arrangers:
-            column_width = column_widths.get(ba.column)
-            if column_width is None:
-                column_width = 0.0
+            column_width = column_widths.get(ba.column, 0.0)
             column_widths[ba.column] = max(
-                ba.box_rect.width(), column_width)
+                ba.layout.full_width, column_width)
 
         # set all columns left pos
         for column in range(1, number_of_columns + 1):
             columns_lefts[column] = last_left
             last_left += column_widths[column] + column_spacing
 
-        # set max_hardware and max_middle
+        # set max_hardware and max_middle,
         # they will be used to align horizontally 
         # the middle to the hardware 
         for column, bottom in columns_bottoms.items():
@@ -638,6 +649,14 @@ class CanvasArranger:
                 max_hardware = max(max_hardware, bottom)
             else:
                 max_middle = max(max_middle, bottom)
+
+        # create all needed BoxPos in gp_box_poses
+        gp_box_poses = dict[int, dict[PortMode, BoxPos]]()
+        for group in canvas.group_list:
+            box_poses = dict[PortMode, BoxPos]()
+            for port_mode in PortMode.in_out_both():
+                box_poses[port_mode] = BoxPos()
+            gp_box_poses[group.group_id] = box_poses
 
         # set x pos for each BoxArranger, and y compensation (see above)
         # then, move the box.
@@ -656,11 +675,11 @@ class CanvasArranger:
             if ba.get_box_align() is BoxAlign.CENTER:
                 x_pos = (columns_lefts[ba.column]
                          + (column_widths[ba.column]
-                            - ba.box_rect.width()) / 2)
+                            - ba.layout.full_width) / 2)
             elif ba.get_box_align() is BoxAlign.RIGHT:
                 x_pos = (columns_lefts[ba.column]
                          + column_widths[ba.column]
-                         - ba.box_rect.width())
+                         - ba.layout.full_width)
             else:
                 x_pos = columns_lefts[ba.column] 
 
@@ -668,19 +687,14 @@ class CanvasArranger:
             xy = (int(x_pos), int(ba.y_pos - ba.box_rect.top() + y_offset))
             grid_xy = nearest_on_grid(xy)
 
-            # finally, move the box
-            if ba.joining:
-                group = canvas.get_group(ba.group_id)
-                if group is not None:
-                    group.box_poses[PortMode.BOTH].pos = grid_xy
-                    canvas.qobject.add_group_to_join(group.group_id)
-                    canvas.scene.add_box_to_animation(
-                        group.widgets[0], *grid_xy, joining=Joining.YES,
-                        joined_rect=ba.box_rect)
-                    canvas.scene.add_box_to_animation(
-                        group.widgets[1], *grid_xy, joining=Joining.YES)
-            else:    
-                canvas.scene.add_box_to_animation(ba.box, *grid_xy)
+            box_pos = gp_box_poses[ba.group_id][ba.port_mode]
+            box_pos.pos = grid_xy
+            box_pos.layout_mode = ba.layout_mode
+            box_pos.set_wrapped(ba.layout.get_wrap_triangle_pos() is not UnwrapButton.NONE)
+
+        for group_id, box_poses in gp_box_poses.items():
+            move_group_boxes(group_id, box_poses, group_id in group_ids_to_split)
+        # repulse_all_boxes(view_change=True)
 
 
 def arrange_follow_signal():

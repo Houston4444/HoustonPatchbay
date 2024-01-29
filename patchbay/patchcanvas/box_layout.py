@@ -3,7 +3,7 @@ from dataclasses import dataclass
 import logging
 from typing import TYPE_CHECKING
 
-from .init_values import PortMode, canvas, BoxLayoutMode, options
+from .init_values import PortMode, canvas, BoxLayoutMode, options, UnwrapButton
 from .utils import next_width_on_grid, next_height_on_grid
 
 if TYPE_CHECKING:
@@ -31,7 +31,9 @@ class PortsMinSizes:
     last_port_mode: PortMode
 
 
-class BoxLayout:
+class BoxPreLayout:
+    '''It is used to estimate the dimensions of a BoxWidget
+       depending on the BoxLayoutMode and on the title split and layout.'''
     @classmethod
     def init_from_box(
             cls, box: 'BoxWidget',
@@ -138,7 +140,7 @@ class BoxLayout:
         self.width = self.full_width - 2 * self.hwr
         self.height = self.full_height - 2 * self.hwr
 
-    def __lt__(self, other: 'BoxLayout') -> bool:
+    def __lt__(self, other: 'BoxPreLayout') -> bool:
         if self._n_cells != other._n_cells:
             return self._n_cells < other._n_cells
         
@@ -150,8 +152,20 @@ class BoxLayout:
         
         return self.title_on < other.title_on
 
-    def set_choosed(self):
+
+class BoxLayout(BoxPreLayout):
+    '''A choosed BoxPreLayout, with pre-calculate attributes'''
+    def __new__(cls, pre_layout: BoxPreLayout) -> 'BoxLayout':
+        pre_layout.__class__ = BoxLayout
+        return pre_layout
+
+    def __init__(self, pre_layout: BoxPreLayout):
         self.pms = PortsMinSizes(**self.pms.__dict__)
+        
+        self.ports_top_in = 0.0
+        self.ports_bottom_in = 0.0
+        self.ports_top_out = 0.0
+        self.ports_bottom_out = 0.0
         
         if (self.port_mode in (PortMode.INPUT, PortMode.OUTPUT)
                 and self.layout_mode is BoxLayoutMode.LARGE):
@@ -212,7 +226,7 @@ class BoxLayout:
                 self.height
                 - (2 * self.pen_width + self.header_height
                    + self.pms.last_inout_pos))
-            
+    
     def set_ports_top_bottom(
             self, ports_top_in: float, ports_bottom_in: float,
             ports_top_out: float, ports_bottom_out: float):
@@ -221,4 +235,33 @@ class BoxLayout:
         self.ports_top_out = ports_top_out
         self.ports_bottom_out = ports_bottom_out
             
-                    
+    def get_wrap_triangle_pos(self) -> UnwrapButton:
+        if (self.port_mode is not PortMode.BOTH
+                and self.layout_mode is BoxLayoutMode.LARGE):
+            if self.height - self.header_height >= 15:
+                if self.port_mode is PortMode.OUTPUT:
+                    return UnwrapButton.LEFT
+                return UnwrapButton.RIGHT
+
+        if self.height - self.header_height >= 64:
+            if (self.port_mode is PortMode.BOTH
+                    and self.layout_mode is BoxLayoutMode.HIGH):
+                if self.ports_bottom_in > self.ports_bottom_out:
+                    return UnwrapButton.RIGHT
+                return UnwrapButton.LEFT
+
+            elif self.port_mode is PortMode.INPUT:
+                return UnwrapButton.RIGHT
+            
+            elif self.port_mode is PortMode.OUTPUT:
+                return UnwrapButton.LEFT
+
+            y_side_space = self.ports_bottom_in - self.ports_bottom_out
+
+            if y_side_space < -10:
+                return UnwrapButton.LEFT
+            if y_side_space > 10:
+                return UnwrapButton.RIGHT
+            return UnwrapButton.CENTER
+            
+        return UnwrapButton.NONE

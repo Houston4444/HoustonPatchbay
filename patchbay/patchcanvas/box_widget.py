@@ -19,7 +19,7 @@ from .init_values import (
 
 from .utils import get_portgroup_name_from_ports_names
 from .box_widget_moth import BoxWidgetMoth, UnwrapButton, TitleLine, WrappingState
-from .box_layout import PortsMinSizes, TitleOn, BoxLayout
+from .box_layout import BoxLayout, PortsMinSizes, TitleOn, BoxPreLayout
 
 
 def list_port_types_and_subs() -> Iterator[tuple[PortType, PortSubType]]:
@@ -527,39 +527,39 @@ class BoxWidget(BoxWidgetMoth):
         # depending on BoxLayoutMode and number of lines for the box title.
 
         layout_mode = self._layout_mode
-        BoxLayout.init_from_box(self, ports_min_sizes)
-        box_layouts = list[BoxLayout]()
+        BoxPreLayout.init_from_box(self, ports_min_sizes)
+        box_layouts = list[BoxPreLayout]()
         
         if self._current_port_mode in (PortMode.INPUT, PortMode.OUTPUT):
             # if layout_mode in (BoxLayoutMode.AUTO, BoxLayoutMode.LARGE):
                 for i in range(1, lines_choice_max + 1):
                     box_layouts.append(
-                        BoxLayout(i, BoxLayoutMode.LARGE,
+                        BoxPreLayout(i, BoxLayoutMode.LARGE,
                                    TitleOn.SIDE, all_title_templates[i]))
                 
                 if self.has_top_icon():
                     for i in range(1, lines_choice_max + 1):
                         box_layouts.append(
-                            BoxLayout(i, BoxLayoutMode.LARGE,
+                            BoxPreLayout(i, BoxLayoutMode.LARGE,
                                        TitleOn.SIDE_UNDER_ICON,
                                        all_title_templates[i]))
                 
             # if layout_mode in (BoxLayoutMode.AUTO, BoxLayoutMode.HIGH):
                 for i in range(1, lines_choice_max + 1):
                     box_layouts.append(
-                        BoxLayout(i, BoxLayoutMode.HIGH,
+                        BoxPreLayout(i, BoxLayoutMode.HIGH,
                                    TitleOn.TOP, all_title_templates[i]))
         else:
             # if layout_mode in (BoxLayoutMode.AUTO, BoxLayoutMode.LARGE):
                 for i in range(1, lines_choice_max + 1):
                     box_layouts.append(
-                        BoxLayout(i, BoxLayoutMode.LARGE,
+                        BoxPreLayout(i, BoxLayoutMode.LARGE,
                                    TitleOn.TOP, all_title_templates[i]))
 
             # if layout_mode in (BoxLayoutMode.AUTO, BoxLayoutMode.HIGH):
                 for i in range(1, lines_choice_max + 1):
                     box_layouts.append(
-                        BoxLayout(i, BoxLayoutMode.HIGH,
+                        BoxPreLayout(i, BoxLayoutMode.HIGH,
                                    TitleOn.TOP, all_title_templates[i]))
 
         # sort areas and choose the first one (the littlest area)
@@ -575,9 +575,11 @@ class BoxWidget(BoxWidgetMoth):
                     and layout.layout_mode is BoxLayoutMode.LARGE):
                 large_layout = layout
 
-        high_layout.set_choosed()
-        large_layout.set_choosed()
-            
+        # high_layout.set_choosed()
+        # large_layout.set_choosed()
+        high_layout = BoxLayout(high_layout)
+        large_layout = BoxLayout(large_layout)
+        
         if layout_mode is BoxLayoutMode.AUTO:
             if high_layout is box_layouts[0]:
                 return high_layout, large_layout
@@ -1154,39 +1156,40 @@ class BoxWidget(BoxWidgetMoth):
             self._painter_path = painter_path
 
     def _get_wrap_triangle_pos(self) -> UnwrapButton:
-        if self._has_side_title():
-            if self._height - self._header_height >= 15.0:
-                if self._current_port_mode is PortMode.OUTPUT:
-                    return UnwrapButton.LEFT
-                else:
-                    return UnwrapButton.RIGHT
+        return self._layout.get_wrap_triangle_pos()     
+        # if self._has_side_title():
+        #     if self._height - self._header_height >= 15.0:
+        #         if self._current_port_mode is PortMode.OUTPUT:
+        #             return UnwrapButton.LEFT
+        #         else:
+        #             return UnwrapButton.RIGHT
 
-        last_in_pos = self._layout.ports_bottom_in
-        last_out_pos = self._layout.ports_bottom_out
+        # last_in_pos = self._layout.ports_bottom_in
+        # last_out_pos = self._layout.ports_bottom_out
 
-        if self._height - self._header_height >= 64.0:
-            if (self._current_port_mode is PortMode.BOTH
-                    and self._current_layout_mode is BoxLayoutMode.HIGH):
-                if last_in_pos > last_out_pos:
-                    return UnwrapButton.RIGHT
-                else:
-                    return UnwrapButton.LEFT
+        # if self._height - self._header_height >= 64.0:
+        #     if (self._current_port_mode is PortMode.BOTH
+        #             and self._current_layout_mode is BoxLayoutMode.HIGH):
+        #         if last_in_pos > last_out_pos:
+        #             return UnwrapButton.RIGHT
+        #         else:
+        #             return UnwrapButton.LEFT
 
-            elif self._current_port_mode is PortMode.INPUT:
-                return UnwrapButton.RIGHT
+        #     elif self._current_port_mode is PortMode.INPUT:
+        #         return UnwrapButton.RIGHT
             
-            elif self._current_port_mode is PortMode.OUTPUT:
-                return UnwrapButton.LEFT
+        #     elif self._current_port_mode is PortMode.OUTPUT:
+        #         return UnwrapButton.LEFT
 
-            y_side_space = last_in_pos - last_out_pos
+        #     y_side_space = last_in_pos - last_out_pos
 
-            if y_side_space < -10.0:
-                return UnwrapButton.LEFT
-            if y_side_space > 10.0:
-                return UnwrapButton.RIGHT
-            return UnwrapButton.CENTER
+        #     if y_side_space < -10.0:
+        #         return UnwrapButton.LEFT
+        #     if y_side_space > 10.0:
+        #         return UnwrapButton.RIGHT
+        #     return UnwrapButton.CENTER
             
-        return UnwrapButton.NONE
+        # return UnwrapButton.NONE
 
     def update_positions(self, even_animated=False, without_connections=False,
                          prevent_overlap=True, theme_change=False):
@@ -1255,8 +1258,6 @@ class BoxWidget(BoxWidgetMoth):
             if self._wrapping_state is WrappingState.NORMAL:
                 self._width = self._unwrapped_width
                 self._height = self._unwrapped_height
-                
-                
             else:
                 self._width = self._wrapped_width
                 self._height = self._wrapped_height
@@ -1347,9 +1348,9 @@ class BoxWidget(BoxWidgetMoth):
 
         align_port_types = self._should_align_port_types()
         ports_min_sizes = self._get_ports_min_sizes(align_port_types)
-        box_layout, alter_layout = self._choose_box_layout(ports_min_sizes)
+        self._layout, self._alter_layout = self._choose_box_layout(ports_min_sizes)
         
-        return QRectF(0.0, 0.0, box_layout.width, box_layout.height)
+        return QRectF(0.0, 0.0, self._layout.width, self._layout.height)
     
     def get_layout(self, layout_mode: Optional[BoxLayoutMode] = None) -> BoxLayout:
         if layout_mode is None:
