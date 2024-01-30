@@ -236,8 +236,6 @@ def clear():
         del item
 
     canvas.initiated = False
-    # canvas.scene.addItem(canvas.scene._grid)
-
     QTimer.singleShot(0, canvas.scene.update)
 
 # -------

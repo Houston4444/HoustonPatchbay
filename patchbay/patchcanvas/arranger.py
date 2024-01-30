@@ -304,6 +304,8 @@ class BoxArranger:
 
 class CanvasArranger:
     def __init__(self):
+        self._hardware_on_sides = False
+        
         # Each box will have a BoxArranger stocked in self.box_arrangers
         self.box_arrangers = list[BoxArranger]()
         
@@ -363,6 +365,16 @@ class CanvasArranger:
         for box_arranger in self.box_arrangers:
             box_arranger.ins_connected_to.sort()
 
+    def _hardware_left(self) -> int:
+        if self._hardware_on_sides:
+            return 1
+        return 2
+    
+    def _hardware_right(self) -> int:
+        if self._hardware_on_sides:
+            return -1
+        return -2
+
     def _needs_to_split_a_box(self) -> bool:
         '''return True and operate the changes
            if we need to split a box because of looping connections.'''
@@ -401,10 +413,12 @@ class CanvasArranger:
         self.ba_to_split = None
         self.ba_networks.clear()
         
-        if hardware_on_sides:
+        print('_define_all_box_columns')
+        
+        if True or hardware_on_sides:
             # define networks starting from a hardware OUTPUT BoxArranger
             for box_arranger in self.box_arrangers:
-                if (box_arranger.col_left == 1
+                if (box_arranger.col_left == self._hardware_left()
                         and box_arranger.col_left_fixed
                         and not box_arranger.analyzed):
                     ba_network = list[BoxArranger]()
@@ -418,7 +432,7 @@ class CanvasArranger:
             # define undefined networks starting from 
             # a hardware INPUT BoxArranger
             for box_arranger in self.box_arrangers:
-                if (box_arranger.col_right == -1
+                if (box_arranger.col_right == self._hardware_right()
                         and box_arranger.col_right_fixed
                         and not box_arranger.analyzed):
                     ba_network = list[BoxArranger]()
@@ -429,8 +443,7 @@ class CanvasArranger:
 
                     self.ba_networks.append(ba_network)
 
-        # define all other networks, 
-        # or all networks if hardware_on_sides is False.
+        # define all other networks.
         for box_arranger in self.box_arrangers:
             if box_arranger.analyzed:
                 continue
@@ -447,12 +460,15 @@ class CanvasArranger:
         n_columns = max(
             [ba.get_needed_columns() for ba in self.box_arrangers] + [3])
         
+        print('n_columns', n_columns)
+        
         # fix the column for BoxArranger when it needs as much columns
         # as the number of columns
         for ba in self.box_arrangers:
             if ba.get_needed_columns() == n_columns:
                 ba.col_left_fixed = True
                 ba.col_right_fixed = True
+                print('ok fixed for', ba)
 
         # parse all BoxArrangers in all networks until all BoxArrangers
         # have col_left_fixed or col_right_fixed
@@ -479,6 +495,8 @@ class CanvasArranger:
            If 'hardware_on_sides' is True,
            only hardware boxes will be located in the leftmost 
            and the rightmost columns'''
+        self._hardware_on_sides = hardware_on_sides
+           
         # define all BoxArrangers columns
         graph_is_ok = False
         while not graph_is_ok:
@@ -486,22 +504,16 @@ class CanvasArranger:
                 box_arranger.reset()
                 
                 if box_arranger.box_type is BoxType.HARDWARE:
-                # if (hardware_on_sides
-                #         and box_arranger.box_type is BoxType.HARDWARE):
                     if box_arranger.port_mode & PortMode.OUTPUT:
-                        if hardware_on_sides:
-                            box_arranger.col_left = 1
-                        else:
-                            box_arranger.col_left = 2
+                        box_arranger.col_left = self._hardware_left()
                         box_arranger.col_left_fixed = True
                     else:
-                        if hardware_on_sides:
-                            box_arranger.col_right = -2
-                        else:
-                            box_arranger.col_right = -1
+                        box_arranger.col_right = self._hardware_right()
                         box_arranger.col_right_fixed = True
+
             graph_is_ok = self._define_all_box_columns(
                 hardware_on_sides=hardware_on_sides)
+            print('graphh is okk', graph_is_ok)
             # if 'graph_is_ok' is False, it means that we need to split
             # a box and restart analyze, 
             # because there are looping connections.
