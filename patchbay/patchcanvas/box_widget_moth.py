@@ -212,7 +212,6 @@ class BoxWidgetMoth(QGraphicsItem):
         self._gui_visible = False
 
         self._layout_mode = group.box_poses[port_mode].layout_mode
-        self._current_layout_mode = BoxLayoutMode.LARGE
         self._title_under_icon = False
         self._painter_path = QPainterPath()
         self._painter_path_sel = QPainterPath()
@@ -540,9 +539,9 @@ class BoxWidgetMoth(QGraphicsItem):
                 port.hidden_conn_widget.update()
 
     def _has_side_title(self):
-        return bool(
-            self._current_port_mode is not PortMode.BOTH
-            and self._current_layout_mode is BoxLayoutMode.LARGE)
+        '''return True if the layout is LARGE without BOTH Ports.'''
+        return (self._current_port_mode is not PortMode.BOTH
+            and self.get_current_layout_mode() is BoxLayoutMode.LARGE)
 
     def wrap_unwrap_at_point(self, scene_pos: QPointF) -> bool:
         '''order a wrap or unwrap on the box if scene_pos is on the

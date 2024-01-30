@@ -1243,7 +1243,6 @@ class BoxWidget(BoxWidgetMoth):
             box_layout, alter_layout = self._choose_box_layout(ports_min_sizes)
             self._layout = box_layout
             self._alter_layout = alter_layout
-            self._current_layout_mode = box_layout.layout_mode
             self._title_under_icon = bool(
                 box_layout.title_on is TitleOn.SIDE_UNDER_ICON)
             self._title_lines = self._split_title(box_layout.n_lines)
@@ -1356,14 +1355,10 @@ class BoxWidget(BoxWidgetMoth):
         if layout_mode is None:
             return self._layout
         
-        if layout_mode is BoxLayoutMode.LARGE:
-            if self._current_layout_mode is BoxLayoutMode.LARGE:
-                return self._layout
-            return self._alter_layout
+        if layout_mode is BoxLayoutMode.AUTO:
+            return min(self._layout, self._alter_layout)
         
-        if layout_mode is BoxLayoutMode.HIGH:
-            if self._current_layout_mode is BoxLayoutMode.HIGH:
-                return self._layout
-            return self._alter_layout
+        if layout_mode is self._layout.layout_mode:
+            return self._layout
         
-        return self._layout
+        return self._alter_layout

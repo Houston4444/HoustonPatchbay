@@ -1533,9 +1533,9 @@ def get_box_true_layout(group_id: int, port_mode: PortMode) -> BoxLayoutMode:
         return BoxLayoutMode.AUTO
     
     if port_mode & PortMode.OUTPUT:
-        return group.widgets[0]._current_layout_mode
+        return group.widgets[0].get_current_layout_mode()
     
-    return group.widgets[1]._current_layout_mode
+    return group.widgets[1].get_current_layout_mode()
 
 @patchbay_api
 def get_number_of_boxes(group_id: int) -> int:

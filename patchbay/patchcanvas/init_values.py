@@ -671,6 +671,17 @@ class Canvas:
         except:
             pass
 
+    def sort_groups_by_id(self):
+        group_ids = sorted([g for g in self._groups_dict.keys()])
+
+        new_dict = dict[int, GroupObject]()
+        self.group_list.clear()
+        for group_id in group_ids:
+            self.group_list.append(self._groups_dict[group_id])
+            new_dict[group_id] = self._groups_dict[group_id]
+
+        self._groups_dict = new_dict        
+
     def get_group(self, group_id: int) -> GroupObject:
         return self._groups_dict.get(group_id)
     

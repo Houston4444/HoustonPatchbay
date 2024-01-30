@@ -38,6 +38,7 @@ class BoxArranger:
     def __init__(self, arranger: 'CanvasArranger',
                  group: GroupObject, port_mode: PortMode):
         self.arranger = arranger
+        self.box_pos = BoxPos()
         self.box_rect = QRectF()
         self.high_layout: Optional[BoxLayout] = None
         self.large_layout: Optional[BoxLayout] = None
@@ -134,6 +135,28 @@ class BoxArranger:
             self.layout = self.large_layout
         else:
             self.layout = self.high_layout
+    
+    def width(self) -> int:
+        layout = self.layout
+        if self.box_pos.layout_mode is BoxLayoutMode.LARGE:
+            layout = self.large_layout
+        elif self.box_pos.layout_mode is BoxLayoutMode.HIGH:
+            layout = self.high_layout
+            
+        if self.box_pos.is_wrapped():
+            return layout.full_wrapped_width
+        return layout.full_width
+    
+    def height(self) -> int:
+        layout = self.layout
+        if self.box_pos.layout_mode is BoxLayoutMode.LARGE:
+            layout = self.large_layout
+        elif self.box_pos.layout_mode is BoxLayoutMode.HIGH:
+            layout = self.high_layout
+            
+        if self.box_pos.is_wrapped():
+            return layout.full_wrapped_height
+        return layout.full_height
     
     def is_owner(self, group_id: int, port_mode: PortMode):
         return bool(self.group_id == group_id
@@ -462,13 +485,20 @@ class CanvasArranger:
             for box_arranger in self.box_arrangers:
                 box_arranger.reset()
                 
-                if (hardware_on_sides
-                        and box_arranger.box_type is BoxType.HARDWARE):
+                if box_arranger.box_type is BoxType.HARDWARE:
+                # if (hardware_on_sides
+                #         and box_arranger.box_type is BoxType.HARDWARE):
                     if box_arranger.port_mode & PortMode.OUTPUT:
-                        box_arranger.col_left = 1
+                        if hardware_on_sides:
+                            box_arranger.col_left = 1
+                        else:
+                            box_arranger.col_left = 2
                         box_arranger.col_left_fixed = True
                     else:
-                        box_arranger.col_right = -1
+                        if hardware_on_sides:
+                            box_arranger.col_right = -2
+                        else:
+                            box_arranger.col_right = -1
                         box_arranger.col_right_fixed = True
             graph_is_ok = self._define_all_box_columns(
                 hardware_on_sides=hardware_on_sides)
@@ -505,6 +535,9 @@ class CanvasArranger:
             else:
                 if ba.high_layout < ba.large_layout:
                     ba.set_layout_mode(BoxLayoutMode.LARGE)
+            
+            ba.box_pos.set_wrapped(
+                ba.layout.height > ba.layout.header_height + 150)
 
         columns_bottoms = dict[int, float]()
         for column in range(1, number_of_columns + 1):
@@ -576,7 +609,7 @@ class CanvasArranger:
                     last_top = y_pos
 
                 bottom = (y_pos
-                          + ba.layout.full_height
+                          + ba.height()
                           + canvas.theme.box_spacing)
                 
                 columns_bottoms[column] = bottom
@@ -596,7 +629,7 @@ class CanvasArranger:
             if ba.get_column_with_nb(number_of_columns) in (1, number_of_columns):
                 ba.column = ba.get_column_with_nb(number_of_columns)
                 ba.y_pos = columns_bottoms[ba.column]
-                columns_bottoms[ba.column] += (ba.layout.full_height
+                columns_bottoms[ba.column] += (ba.height()
                                                + canvas.theme.box_spacing)
                 continue
             
@@ -619,7 +652,7 @@ class CanvasArranger:
             ba.y_pos = bottom_min
 
             columns_bottoms[ba.column] += (
-                ba.layout.full_height + canvas.theme.box_spacing)
+                ba.height() + canvas.theme.box_spacing)
 
         column_widths = dict[int, float]()
         columns_lefts = dict[int, float]()
@@ -634,12 +667,12 @@ class CanvasArranger:
         for ba in self.box_arrangers:
             column_width = column_widths.get(ba.column, 0.0)
             column_widths[ba.column] = max(
-                ba.layout.full_width, column_width)
+                ba.width(), column_width)
 
         # set all columns left pos
         for column in range(1, number_of_columns + 1):
             columns_lefts[column] = last_left
-            last_left += column_widths[column] + column_spacing
+            last_left += column_widths.get(column, 0) + column_spacing
 
         # set max_hardware and max_middle,
         # they will be used to align horizontally 
@@ -655,7 +688,13 @@ class CanvasArranger:
         for group in canvas.group_list:
             box_poses = dict[PortMode, BoxPos]()
             for port_mode in PortMode.in_out_both():
-                box_poses[port_mode] = BoxPos()
+                for ba in self.box_arrangers:
+                    if ba.is_owner(group.group_id, port_mode):
+                        box_poses[port_mode] = ba.box_pos
+                        break
+                else:
+                   box_poses[port_mode] = BoxPos()
+        
             gp_box_poses[group.group_id] = box_poses
 
         # set x pos for each BoxArranger, and y compensation (see above)
@@ -675,22 +714,21 @@ class CanvasArranger:
             if ba.get_box_align() is BoxAlign.CENTER:
                 x_pos = (columns_lefts[ba.column]
                          + (column_widths[ba.column]
-                            - ba.layout.full_width) / 2)
+                            - ba.width()) / 2)
             elif ba.get_box_align() is BoxAlign.RIGHT:
                 x_pos = (columns_lefts[ba.column]
                          + column_widths[ba.column]
-                         - ba.layout.full_width)
+                         - ba.width())
             else:
                 x_pos = columns_lefts[ba.column] 
 
             # choose a position on the grid
-            xy = (int(x_pos), int(ba.y_pos - ba.box_rect.top() + y_offset))
+            xy = (int(x_pos), int(ba.y_pos + y_offset))
             grid_xy = nearest_on_grid(xy)
 
             box_pos = gp_box_poses[ba.group_id][ba.port_mode]
             box_pos.pos = grid_xy
             box_pos.layout_mode = ba.layout_mode
-            box_pos.set_wrapped(ba.layout.get_wrap_triangle_pos() is not UnwrapButton.NONE)
 
         for group_id, box_poses in gp_box_poses.items():
             move_group_boxes(group_id, box_poses, group_id in group_ids_to_split)
@@ -698,8 +736,9 @@ class CanvasArranger:
 
 
 def arrange_follow_signal():
+    canvas.sort_groups_by_id()
     arranger = CanvasArranger()
-    arranger.arrange_boxes()
+    arranger.arrange_boxes(hardware_on_sides=False)
 
 def arrange_face_to_face():
     '''arrange all boxes, all boxes will be splitted and probably wrapped.
@@ -712,6 +751,10 @@ def arrange_face_to_face():
                 break
         else:
             break
+    
+    # during split, groups are removed and recreated at the end of 
+    # canvas list. So we need to sort them.
+    canvas.sort_groups_by_id()
     
     X_SPACING = 300
     max_out_width = 0
@@ -769,20 +812,10 @@ def arrange_face_to_face():
     in_left = next_left_on_grid(out_right + X_SPACING)
     last_out_y = next_top_on_grid(0)
     last_in_y = last_out_y
-    
-    # sort groups by id, to keep groups in id (apparition) order
-    group_ids = list[int]()
-    for group in canvas.group_list:
-        group_ids.append(group.group_id)
-    group_ids.sort()
-    
+        
     # set box positions in all BoxPos objects in gp_box_poses
-    for group_id in group_ids:
-        group = canvas.get_group(group_id)
-        if group is None:
-            continue
-
-        box_poses = gp_box_poses.get(group_id)
+    for group in canvas.group_list:
+        box_poses = gp_box_poses.get(group.group_id)
         if box_poses is None:
             continue
 
@@ -816,8 +849,6 @@ def arrange_face_to_face():
     
     # estimate the needed compensation to try to align horizontally
     # the outputs and the inputs
-    last_out_y -= canvas.theme.box_spacing
-    last_in_y -= canvas.theme.box_spacing
     more_y = (options.cell_height
               * (((last_out_y - last_in_y) // 2)
                  // options.cell_height))
