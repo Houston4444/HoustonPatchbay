@@ -220,24 +220,7 @@ class BoxArranger:
         
         for ba in self.ins_connected_to:
             ba.count_left(path)
-        
-        left_min = self.col_left
-        fixed_ins_len = 0
-
-        for ba in self.ins_connected_to:
-            left_min = max(left_min, ba.col_left + 1)
-            # if ba.col_left_fixed:
-            #     fixed_ins_len += 1
-
-        self.col_left = left_min
-
-        # if fixed_ins_len and fixed_ins_len == len(self.ins_connected_to):
-        #     # if all ins connected have col_left_fixed
-        #     # we can assume this BoxArranger has now col_left_fixed
-        #     self.col_left_fixed = True
-        #     if self.arranger.n_columns:
-        #         self.col_right = self.col_left - self.arranger.n_columns - 1
-        #         self.col_right_fixed = True
+            self.col_left = max(self.col_left, ba.col_left + 1)        
         
         self.col_left_counted = True
     
@@ -257,23 +240,7 @@ class BoxArranger:
         
         for ba in self.outs_connected_to:
             ba.count_right(path)
-
-        right_min = self.col_right
-        fixed_outs_len = 0
-        
-        for ba in self.outs_connected_to:
-            right_min = min(right_min, ba.col_right - 1)
-            # if ba.col_right_fixed:
-            #     fixed_outs_len += 1
-        
-        self.col_right = right_min
-        # if fixed_outs_len and fixed_outs_len == len(self.outs_connected_to):
-        #     # if all outs connected have col_right_fixed
-        #     # we can assume this BoxArranger has now col_right_fixed
-        #     self.col_right_fixed = True
-        #     if self.arranger.n_columns:
-        #         self.col_left = self.col_right + self.arranger.n_columns + 1
-        #         self.col_left_fixed = True
+            self.col_right = min(self.col_right, ba.col_right - 1)
 
         self.col_right_counted = True
     
