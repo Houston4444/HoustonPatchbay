@@ -136,24 +136,28 @@ class BoxArranger:
         else:
             self.layout = self.high_layout
     
-    def width(self) -> int:
-        layout = self.layout
+    def _get_layout(self) -> Optional[BoxLayout]:
         if self.box_pos.layout_mode is BoxLayoutMode.LARGE:
-            layout = self.large_layout
-        elif self.box_pos.layout_mode is BoxLayoutMode.HIGH:
-            layout = self.high_layout
-            
+            return self.large_layout
+        if self.box_pos.layout_mode is BoxLayoutMode.HIGH:
+            return self.high_layout
+        
+        return self.layout
+    
+    def width(self) -> int:
+        layout = self._get_layout()        
+        if layout is None:
+            return 0
+        
         if self.box_pos.is_wrapped():
             return layout.full_wrapped_width
         return layout.full_width
     
     def height(self) -> int:
-        layout = self.layout
-        if self.box_pos.layout_mode is BoxLayoutMode.LARGE:
-            layout = self.large_layout
-        elif self.box_pos.layout_mode is BoxLayoutMode.HIGH:
-            layout = self.high_layout
-            
+        layout = self._get_layout()
+        if layout is None:
+            return 0
+        
         if self.box_pos.is_wrapped():
             return layout.full_wrapped_height
         return layout.full_height
@@ -222,15 +226,18 @@ class BoxArranger:
 
         for ba in self.ins_connected_to:
             left_min = max(left_min, ba.col_left + 1)
-            if ba.col_left_fixed:
-                fixed_ins_len += 1
+            # if ba.col_left_fixed:
+            #     fixed_ins_len += 1
 
         self.col_left = left_min
 
-        if fixed_ins_len and fixed_ins_len == len(self.ins_connected_to):
-            # if all ins connected have col_left_fixed
-            # we can assume this BoxArranger has now col_left_fixed
-            self.col_left_fixed = True
+        # if fixed_ins_len and fixed_ins_len == len(self.ins_connected_to):
+        #     # if all ins connected have col_left_fixed
+        #     # we can assume this BoxArranger has now col_left_fixed
+        #     self.col_left_fixed = True
+        #     if self.arranger.n_columns:
+        #         self.col_right = self.col_left - self.arranger.n_columns - 1
+        #         self.col_right_fixed = True
         
         self.col_left_counted = True
     
@@ -256,16 +263,49 @@ class BoxArranger:
         
         for ba in self.outs_connected_to:
             right_min = min(right_min, ba.col_right - 1)
-            if ba.col_right_fixed:
-                fixed_outs_len += 1
+            # if ba.col_right_fixed:
+            #     fixed_outs_len += 1
         
         self.col_right = right_min
-        if fixed_outs_len and fixed_outs_len == len(self.outs_connected_to):
-            # if all outs connected have col_right_fixed
-            # we can assume this BoxArranger has now col_right_fixed
-            self.col_right_fixed = True
+        # if fixed_outs_len and fixed_outs_len == len(self.outs_connected_to):
+        #     # if all outs connected have col_right_fixed
+        #     # we can assume this BoxArranger has now col_right_fixed
+        #     self.col_right_fixed = True
+        #     if self.arranger.n_columns:
+        #         self.col_left = self.col_right + self.arranger.n_columns + 1
+        #         self.col_left_fixed = True
 
         self.col_right_counted = True
+    
+    def bring_closer_from_fixed(self):
+        '''Once the number of columns is known, this function is used
+           to fix the column of this box near to a fixed box.'''
+        if self.col_left_fixed or self.col_right_fixed:
+            return
+
+        for ba in self.ins_connected_to:
+            self.col_left = max(self.col_left, ba.col_left + 1)
+            
+        for ba in self.outs_connected_to:
+            self.col_right = min(self.col_right, ba.col_right - 1)
+        
+        if self.col_left - self.col_right - 1 == self.arranger.n_columns:
+            self.col_left_fixed = True
+            self.col_right_fixed = True
+            return
+        
+        for ba in self.ins_connected_to:
+            if ba.col_left_fixed and ba.col_left + 1 == self.col_left:
+                self.col_left_fixed = True
+                self.col_right = self.col_left - self.arranger.n_columns - 1
+                self.col_right_fixed = True
+                return
+            
+        for ba in self.outs_connected_to:
+            if ba.col_right_fixed and ba.col_right - 1 == self.col_right:
+                self.col_right_fixed = True
+                self.col_left = self.col_right + self.arranger.n_columns + 1
+                self.col_left_fixed = True
     
     def get_needed_columns(self) -> int:
         return self.col_left - self.col_right - 1
@@ -305,6 +345,9 @@ class BoxArranger:
 class CanvasArranger:
     def __init__(self):
         self._hardware_on_sides = False
+        
+        # Before analyze, impossible to know the number of columns
+        self.n_columns = 0
         
         # Each box will have a BoxArranger stocked in self.box_arrangers
         self.box_arrangers = list[BoxArranger]()
@@ -407,41 +450,38 @@ class CanvasArranger:
 
         return True
 
-    def _define_all_box_columns(self, hardware_on_sides=False) -> bool:
+    def _define_all_box_columns(self) -> bool:
         '''define the column possibilities for every BoxArranger
            return False in case of looping connections.'''
         self.ba_to_split = None
-        self.ba_networks.clear()
-        
-        print('_define_all_box_columns')
-        
-        if True or hardware_on_sides:
-            # define networks starting from a hardware OUTPUT BoxArranger
-            for box_arranger in self.box_arrangers:
-                if (box_arranger.col_left == self._hardware_left()
-                        and box_arranger.col_left_fixed
-                        and not box_arranger.analyzed):
-                    ba_network = list[BoxArranger]()
-                    box_arranger.parse_all(ba_network)
+        self.ba_networks.clear()        
 
-                    if self._needs_to_split_a_box():
-                        return False
+        # define networks starting from a hardware OUTPUT BoxArranger
+        for box_arranger in self.box_arrangers:
+            if (box_arranger.col_left == self._hardware_left()
+                    and box_arranger.col_left_fixed
+                    and not box_arranger.analyzed):
+                ba_network = list[BoxArranger]()
+                box_arranger.parse_all(ba_network)
 
-                    self.ba_networks.append(ba_network)
+                if self._needs_to_split_a_box():
+                    return False
 
-            # define undefined networks starting from 
-            # a hardware INPUT BoxArranger
-            for box_arranger in self.box_arrangers:
-                if (box_arranger.col_right == self._hardware_right()
-                        and box_arranger.col_right_fixed
-                        and not box_arranger.analyzed):
-                    ba_network = list[BoxArranger]()
-                    box_arranger.parse_all(ba_network)
+                self.ba_networks.append(ba_network)
 
-                    if self._needs_to_split_a_box():
-                        return False
+        # define undefined networks starting from 
+        # a hardware INPUT BoxArranger
+        for box_arranger in self.box_arrangers:
+            if (box_arranger.col_right == self._hardware_right()
+                    and box_arranger.col_right_fixed
+                    and not box_arranger.analyzed):
+                ba_network = list[BoxArranger]()
+                box_arranger.parse_all(ba_network)
 
-                    self.ba_networks.append(ba_network)
+                if self._needs_to_split_a_box():
+                    return False
+
+                self.ba_networks.append(ba_network)
 
         # define all other networks.
         for box_arranger in self.box_arrangers:
@@ -457,32 +497,46 @@ class CanvasArranger:
             self.ba_networks.append(ba_network)
         
         # count the needed number of columns
-        n_columns = max(
+        self.n_columns = max(
             [ba.get_needed_columns() for ba in self.box_arrangers] + [3])
-        
-        print('n_columns', n_columns)
         
         # fix the column for BoxArranger when it needs as much columns
         # as the number of columns
         for ba in self.box_arrangers:
-            if ba.get_needed_columns() == n_columns:
+            if ba.get_needed_columns() == self.n_columns:
                 ba.col_left_fixed = True
                 ba.col_right_fixed = True
-                print('ok fixed for', ba)
-
-        # parse all BoxArrangers in all networks until all BoxArrangers
-        # have col_left_fixed or col_right_fixed
+            elif ba.col_left_fixed:
+                ba.col_right = ba.col_left - self.n_columns - 1
+                ba.col_right_fixed = True
+            elif ba.col_right_fixed:
+                ba.col_left = ba.col_right + self.n_columns + 1
+                ba.col_left_fixed = True
+        
+        # fix the column for all non fixed BoxArranger
         for ba_network in self.ba_networks:
-            while True:
-                for ba in ba_network:
-                    ba.col_left_counted = False
-                    ba.col_right_counted = False
-                    ba.analyzed = False
+            if len(ba_network) == 1:
+                continue
 
-                    if not (ba.col_left_fixed or ba.col_right_fixed):
-                        ba.count_left()
-                        ba.count_right()
-                        if ba.col_left_fixed or ba.col_right_fixed:
+            for ba in ba_network:
+                # now boxes with col_left_fixed also have col_right_fixed
+                if ba.col_left_fixed:
+                    break
+            else:
+                # this network has no fixed BoxArranger
+                # we need to fix arbitrary the first one
+                ba = ba_network[0]
+                ba.col_left_fixed = True
+                ba.col_right = ba.col_left - self.n_columns - 1
+                ba.col_right_fixed = True
+            
+            bas_need_fix = [ba for ba in ba_network if not ba.col_left_fixed]
+            while True:
+                for ba in bas_need_fix:
+                    if not ba.col_left_fixed:
+                        ba.bring_closer_from_fixed()
+                        if ba.col_left_fixed:
+                            bas_need_fix.remove(ba)
                             break
                 else:
                     break
@@ -511,9 +565,7 @@ class CanvasArranger:
                         box_arranger.col_right = self._hardware_right()
                         box_arranger.col_right_fixed = True
 
-            graph_is_ok = self._define_all_box_columns(
-                hardware_on_sides=hardware_on_sides)
-            print('graphh is okk', graph_is_ok)
+            graph_is_ok = self._define_all_box_columns()
             # if 'graph_is_ok' is False, it means that we need to split
             # a box and restart analyze, 
             # because there are looping connections.
@@ -545,8 +597,7 @@ class CanvasArranger:
                 if ba.large_layout < ba.high_layout:
                     ba.set_layout_mode(BoxLayoutMode.HIGH)
             else:
-                if ba.high_layout < ba.large_layout:
-                    ba.set_layout_mode(BoxLayoutMode.LARGE)
+                ba.set_layout_mode(BoxLayoutMode.AUTO)
             
             ba.box_pos.set_wrapped(
                 ba.layout.height > ba.layout.header_height + 150)
@@ -638,11 +689,13 @@ class CanvasArranger:
 
             ba = ba_network[0]
 
-            if ba.get_column_with_nb(number_of_columns) in (1, number_of_columns):
-                ba.column = ba.get_column_with_nb(number_of_columns)
+            if ba.box_type is BoxType.HARDWARE:
+                if ba.port_mode is PortMode.OUTPUT:
+                    ba.column = self._hardware_left()
+                else:
+                    ba.column = self._hardware_right() + self.n_columns + 1
                 ba.y_pos = columns_bottoms[ba.column]
-                columns_bottoms[ba.column] += (ba.height()
-                                               + canvas.theme.box_spacing)
+                columns_bottoms[ba.column] += ba.height() + canvas.theme.box_spacing
                 continue
             
             # This is an isolated box (without connections)
@@ -750,7 +803,7 @@ class CanvasArranger:
 def arrange_follow_signal():
     canvas.sort_groups_by_id()
     arranger = CanvasArranger()
-    arranger.arrange_boxes(hardware_on_sides=False)
+    arranger.arrange_boxes(hardware_on_sides=True)
 
 def arrange_face_to_face():
     '''arrange all boxes, all boxes will be splitted and probably wrapped.
