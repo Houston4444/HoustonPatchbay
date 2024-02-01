@@ -205,8 +205,13 @@ class ViewSelectorWidget(QWidget):
         act_arrange_facing.triggered.connect(self._arrange_facing)
         
         act_arrange_signal = menu_arrange.addAction(
-            _translate('views_menu', 'Follow the signal chain'))
+            _translate('views_menu', 'Follow the signal, keep hardware alone'))
         act_arrange_signal.triggered.connect(self._arrange_follow_signal)
+
+        act_arrange_signal_mixed_hw = menu_arrange.addAction(
+            _translate('views_menu', 'Follow the signal'))
+        act_arrange_signal_mixed_hw.triggered.connect(
+            self._arrange_follow_signal_mixed_hardware)
 
         self._menu.addMenu(menu_arrange)
         
@@ -359,6 +364,10 @@ class ViewSelectorWidget(QWidget):
     @pyqtSlot()
     def _arrange_follow_signal(self):
         arranger.arrange_follow_signal()
+
+    @pyqtSlot()
+    def _arrange_follow_signal_mixed_hardware(self):
+        arranger.arrange_follow_signal(hardware_on_sides=False)
 
     @pyqtSlot()
     def _remove_all_other_views(self):

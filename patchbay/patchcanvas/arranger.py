@@ -767,10 +767,10 @@ class CanvasArranger:
         # repulse_all_boxes(view_change=True)
 
 
-def arrange_follow_signal():
+def arrange_follow_signal(hardware_on_sides=True):
     canvas.sort_groups_by_id()
     arranger = CanvasArranger()
-    arranger.arrange_boxes(hardware_on_sides=True)
+    arranger.arrange_boxes(hardware_on_sides=hardware_on_sides)
 
 def arrange_face_to_face():
     '''arrange all boxes, all boxes will be splitted and probably wrapped.

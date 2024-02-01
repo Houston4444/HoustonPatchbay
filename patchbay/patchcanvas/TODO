@@ -38,11 +38,17 @@ RaySession/Patchance:
     gérer le viewwidget
 
 arranger signal chain:
-    espacement des collones fixe en fonction de la grille
-    choix du layout des boites:
-        évaluer la largeur mini de la colonne
-            choisir la plus grande largeur <= la largeur mini
-        mode emballé
     caller les inputs à gauche de la colonne
         les outputs à droite
     choisir les places des non-connectés en fonction de leurs dimensions
+
+contraintes de vue:
+    tout port_types_view vide refait l'arrangement
+
+    face to face:
+        déplacer deux boîtes ou plus pour déplacer toutes les boîtes du mode
+        déplacer une boîte ne fait que changer le Y
+        Toute nouvelle boîte apparait splittée (emballée) en dessous des autres
+
+    signal follow:
+        
