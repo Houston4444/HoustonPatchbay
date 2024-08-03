@@ -1,13 +1,15 @@
-from enum import IntEnum
 import logging
-from typing import Callable, Optional
+from enum import IntEnum
+from typing import Optional
+
 from PyQt5.QtCore import QRectF
 
-
-from .init_values import BoxLayoutMode, BoxPos, PortMode, GroupObject, canvas, BoxType, Joining
+from .init_values import (
+    BoxLayoutMode, BoxPos, PortMode, GroupObject, canvas, BoxType, Joining)
 from .utils import nearest_on_grid, next_left_on_grid, next_top_on_grid
 from .box_widget import BoxWidget
-from .patchcanvas import animate_before_join, move_group_boxes, repulse_all_boxes, split_group
+from .patchcanvas import (
+    animate_before_join, move_group_boxes, repulse_all_boxes, split_group)
 
 _logger = logging.getLogger(__name__)
 
@@ -95,16 +97,6 @@ class BoxArranger:
                 self.box_rect = self.box.boundingRect()
             else:
                 _logger.error(f'{self} says that group should be splitted')
-
-        # if self.port_mode in (PortMode.OUTPUT, PortMode.BOTH):
-        #     self.box = group.widgets[0]
-        # else:
-        #     self.box = group.widgets[1]
-        
-        # self.box_rect = self.box.boundingRect()
-        
-        # if self.box is None:
-        #     _logger.error(f"{self} did not found its box !")
     
     def is_owner(self, group_id: int, port_mode: PortMode):
         return bool(self.group_id == group_id
@@ -606,7 +598,7 @@ def arrange_face_to_face():
             break
     
     max_out_width = 0
-    x_spacing = 300
+    X_SPACING = 300
     
     gp_box_poses = dict[int, dict[PortMode, BoxPos]]()
     
@@ -627,7 +619,8 @@ def arrange_face_to_face():
             wrapped = False
             
             high_layout = box.get_layout(BoxLayoutMode.HIGH)
-                
+            
+            # decide if box should be wrapped with its height
             if high_layout.needed_height - high_layout.header_height >= 64:
                 layout_mode = BoxLayoutMode.HIGH
                 wrapped = True
@@ -646,7 +639,7 @@ def arrange_face_to_face():
     
     out_most_left = next_left_on_grid(0)
     out_right = out_most_left + max_out_width
-    in_left = next_left_on_grid(out_right + x_spacing)
+    in_left = next_left_on_grid(out_right + X_SPACING)
     last_out_y = next_top_on_grid(0)
     last_in_y = last_out_y
     
@@ -674,8 +667,8 @@ def arrange_face_to_face():
 
             layout = box.get_layout(box_pos.layout_mode)
             if box_pos.is_wrapped():
-                width = layout.wrapped_width
-                height = layout.wrapped_height
+                width = layout.full_wrapped_width
+                height = layout.full_wrapped_height
             else:
                 width = layout.full_width
                 height = layout.full_height

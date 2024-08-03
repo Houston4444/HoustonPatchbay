@@ -582,8 +582,8 @@ class BoxWidgetMoth(QGraphicsItem):
             trirect = QRectF(0, self._height - 16, 16, 16)
             
             if self._wrap_triangle_pos is UnwrapButton.CENTER:
-                center_width = (self._width + self._layout.pms.ins_width
-                                - self._layout.pms.outs_width) / 2.0
+                center_width = (self._width + self._layout._pms.ins_width
+                                - self._layout._pms.outs_width) / 2.0
                 
                 trirect = QRectF(center_width - 8.0, self._height - 16.0,
                                  16.0, 16.0)
@@ -1159,8 +1159,8 @@ class BoxWidgetMoth(QGraphicsItem):
         elif self._wrap_triangle_pos is UnwrapButton.CENTER:
             side = 7
             xpos = (self._width 
-                    + self._layout.pms.ins_width
-                    - self._layout.pms.outs_width) / 2 - side
+                    + self._layout._pms.ins_width
+                    - self._layout._pms.outs_width) / 2 - side
             
             ypos = self._height - tr_pen_width / 2.0
             triangle = QPolygonF()

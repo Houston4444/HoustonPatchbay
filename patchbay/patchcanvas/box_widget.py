@@ -435,10 +435,11 @@ class BoxWidget(BoxWidgetMoth):
         return tuple(title_lines)
 
     def _choose_box_layout(
-        self, ports_min_sizes: PortsMinSizes) -> tuple[BoxLayout, BoxLayout]:
+            self,
+            ports_min_sizes: PortsMinSizes) -> tuple[BoxLayout, BoxLayout]:
         '''choose in how many lines the title should be splitted
         and if the box layout should be large or high.
-        returns a dict with all required variables and values'''
+        Return the 2 best layout choices.'''
 
         box_theme = self.get_theme()
         font_size = box_theme.font().pixelSize()
@@ -531,36 +532,32 @@ class BoxWidget(BoxWidgetMoth):
         box_layouts = list[BoxLayout]()
         
         if self._current_port_mode in (PortMode.INPUT, PortMode.OUTPUT):
-            # if layout_mode in (BoxLayoutMode.AUTO, BoxLayoutMode.LARGE):
+            for i in range(1, lines_choice_max + 1):
+                box_layouts.append(
+                    BoxLayout(i, BoxLayoutMode.LARGE,
+                              TitleOn.SIDE, all_title_templates[i]))
+            
+            if self.has_top_icon():
                 for i in range(1, lines_choice_max + 1):
                     box_layouts.append(
                         BoxLayout(i, BoxLayoutMode.LARGE,
-                                   TitleOn.SIDE, all_title_templates[i]))
+                                  TitleOn.SIDE_UNDER_ICON,
+                                  all_title_templates[i]))
                 
-                if self.has_top_icon():
-                    for i in range(1, lines_choice_max + 1):
-                        box_layouts.append(
-                            BoxLayout(i, BoxLayoutMode.LARGE,
-                                       TitleOn.SIDE_UNDER_ICON,
-                                       all_title_templates[i]))
-                
-            # if layout_mode in (BoxLayoutMode.AUTO, BoxLayoutMode.HIGH):
-                for i in range(1, lines_choice_max + 1):
-                    box_layouts.append(
-                        BoxLayout(i, BoxLayoutMode.HIGH,
-                                   TitleOn.TOP, all_title_templates[i]))
+            for i in range(1, lines_choice_max + 1):
+                box_layouts.append(
+                    BoxLayout(i, BoxLayoutMode.HIGH,
+                              TitleOn.TOP, all_title_templates[i]))
         else:
-            # if layout_mode in (BoxLayoutMode.AUTO, BoxLayoutMode.LARGE):
-                for i in range(1, lines_choice_max + 1):
-                    box_layouts.append(
-                        BoxLayout(i, BoxLayoutMode.LARGE,
-                                   TitleOn.TOP, all_title_templates[i]))
+            for i in range(1, lines_choice_max + 1):
+                box_layouts.append(
+                    BoxLayout(i, BoxLayoutMode.LARGE,
+                              TitleOn.TOP, all_title_templates[i]))
 
-            # if layout_mode in (BoxLayoutMode.AUTO, BoxLayoutMode.HIGH):
-                for i in range(1, lines_choice_max + 1):
-                    box_layouts.append(
-                        BoxLayout(i, BoxLayoutMode.HIGH,
-                                   TitleOn.TOP, all_title_templates[i]))
+            for i in range(1, lines_choice_max + 1):
+                box_layouts.append(
+                    BoxLayout(i, BoxLayoutMode.HIGH,
+                              TitleOn.TOP, all_title_templates[i]))
 
         # sort areas and choose the first one (the littlest area)
         box_layouts.sort()
@@ -577,7 +574,7 @@ class BoxWidget(BoxWidgetMoth):
 
         high_layout.set_choosed()
         large_layout.set_choosed()
-            
+        
         if layout_mode is BoxLayoutMode.AUTO:
             if high_layout is box_layouts[0]:
                 return high_layout, large_layout
@@ -635,9 +632,9 @@ class BoxWidget(BoxWidgetMoth):
         exc_in = self._layout.exceeding_y_ins
         exc_out = self._layout.exceeding_y_outs
         exc_inout = self._layout.exceeding_y_inouts
-        n_types_in = self._layout.pms.n_in_type_and_subs
-        n_types_out = self._layout.pms.n_out_type_and_subs
-        n_types_inout = self._layout.pms.n_inout_type_and_subs
+        n_types_in = self._layout._pms.n_in_type_and_subs
+        n_types_out = self._layout._pms.n_out_type_and_subs
+        n_types_inout = self._layout._pms.n_inout_type_and_subs
         
         if one_column:
             new_pts = exc_inout / (1 + n_types_inout)
