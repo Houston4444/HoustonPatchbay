@@ -14,10 +14,8 @@ Passage à GroupedConns:
     set_connection_in_front:
         pour filter_groups: Attention à RaySession
 
-connections lines non selectionnées après join ou split
 
-Virer connection_lines de BoxWidget et PortWidget
-
+Peut-être revoir BoxLayout pour avoir une classe fiable après init from box
 Pot de pus du hardware rack à gérer
 animate hidding PortmOde.BOTH connections
 

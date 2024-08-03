@@ -1250,8 +1250,6 @@ def connect_ports(connection_id: int, group_out_id: int, port_out_id: int,
     connection.in_selected = False
     connection.out_selected = False
     canvas.add_connection(connection)
-    out_port_wg.add_connection_to_port(connection)
-    in_port_wg.add_connection_to_port(connection)
 
     GroupedLinesWidget.prepare_conn_changes(group_out_id, group_in_id)
     canvas.qobject.connect_update_timer.start()
@@ -1295,14 +1293,6 @@ def disconnect_ports(connection_id: int):
     if item1 is None or item2 is None:
         _logger.critical(f"{_logging_str} - port has no widget")
         return
-
-    # item1.parentItem().remove_line_from_box(connection)
-    # item2.parentItem().remove_line_from_box(connection)
-    item1.remove_connection_from_port(connection)
-    item2.remove_connection_from_port(connection)
-
-    # canvas.scene.removeItem(line)
-    # del line
 
     if canvas.loading_items:
         return

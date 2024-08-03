@@ -510,7 +510,6 @@ class BoxWidgetMoth(QGraphicsItem):
             else:
                 lines.setZValue(Zv.LINE.value)
 
-
     def semi_hide(self, yesno: bool):
         self._is_semi_hidden = yesno
         if yesno:
