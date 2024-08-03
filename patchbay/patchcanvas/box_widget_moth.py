@@ -134,8 +134,6 @@ class BoxWidgetMoth(QGraphicsItem):
         self._inline_image = None
         self._inline_scaling = 1.0
 
-        self._connection_lines = list[LineWidget]()
-
         self.is_hardware = bool(group.box_type is BoxType.HARDWARE)
         self._icon_name = group.icon_name
 
@@ -148,9 +146,6 @@ class BoxWidgetMoth(QGraphicsItem):
         else:
             self._wrapping_state = WrappingState.NORMAL
 
-        # if group.box_poses[port_mode].is_hidden():
-        #     self._box_hidder = BoxHidder(self)
-        # else:
         self.hidder_widget: Optional[BoxHidder] = None
 
         self._wrapping_ratio = 1.0
@@ -330,14 +325,6 @@ class BoxWidgetMoth(QGraphicsItem):
             new_widget.setVisible(False)
 
         return new_widget
-
-    def add_line_to_box(self, line: 'LineWidget'):
-        self._connection_lines.append(line)
-        self.reset_lines_z_value(self.isSelected())
-
-    def remove_line_from_box(self, line: 'LineWidget'):
-        if line in self._connection_lines:
-            self._connection_lines.remove(line)
 
     def check_item_pos(self):
         if canvas.size_rect.isNull():
