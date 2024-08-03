@@ -1159,10 +1159,10 @@ def add_portgroup(group_id: int, portgrp_id: int, port_mode: PortMode,
                     break
 
             elif i > 0:
-                _logger.critical(f"{_logging_str} - port ids are not consecutive")
+                _logger.error(f"{_logging_str} - port ids are not consecutive")
                 return
     else:
-        _logger.critical(f"{_logging_str} - not enought ports with port_id_list")
+        _logger.error(f"{_logging_str} - not enought ports with port_id_list")
         return
 
     # modify ports impacted by portgroup
@@ -1183,8 +1183,6 @@ def add_portgroup(group_id: int, portgrp_id: int, port_mode: PortMode,
             continue
 
         if box.get_port_mode() & port_mode:
-        # if (not box.is_splitted()
-        #         or box.get_splitted_mode() == port_mode):
             portgrp.widget = box.add_portgroup_from_group(portgrp)
 
             if not canvas.loading_items:
@@ -1209,7 +1207,7 @@ def remove_portgroup(group_id: int, portgrp_id: int):
                 portgrp.widget = None
             break
     else:
-        _logger.critical(f"{_logging_str} - Unable to find portgrp to remove")
+        _logger.error(f"{_logging_str} - Unable to find portgrp to remove")
         return
 
     canvas.remove_portgroup(portgrp)

@@ -893,7 +893,8 @@ class BoxWidget(BoxWidgetMoth):
             out_in_portgrp_x = (self._width - port_out_offset
                                 - max_port_in_pg_width)
 
-            portgrp.widget.set_ports_width(max_port_in_pg_width)
+            if portgrp.widget is not None:
+                portgrp.widget.set_ports_width(max_port_in_pg_width)
 
             for port in portgrp.ports:
                 if port.widget is not None:

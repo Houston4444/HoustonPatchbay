@@ -411,7 +411,7 @@ class PortgrpObject(ConnectableObject):
     port_id_list: list[int]
     widget: object
     if TYPE_CHECKING:
-        widget: PortgroupWidget
+        widget: Optional[PortgroupWidget]
 
     def __init__(self):
         self.ports = list[PortObject]()
