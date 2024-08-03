@@ -36,12 +36,8 @@ UI: mkdir_ui patchbay
 mkdir_ui:
 	@if ! [ -e patchbay/ui ];then mkdir -p patchbay/ui; fi
 
-patchbay: patchbay/ui/canvas_options.py \
-		patchbay/ui/canvas_port_info.py \
-		patchbay/ui/filter_frame.py \
-		patchbay/ui/patchbay_tools.py \
-		patchbay/ui/type_filter_frame.py \
-		patchbay/ui/view_selector.py
+patchbay: $(shell \
+	ls resources/ui/*.ui| sed 's|\.ui$$|.py|'| sed 's|^resources/|patchbay/|')
 
 patchbay/ui/%.py: resources/ui/%.ui
 	$(PYUIC) --import-from=.. $< -o $@

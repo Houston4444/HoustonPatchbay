@@ -47,7 +47,8 @@ from .init_values import (
     Direction,
     Zv)
 
-from .utils import canvas_callback, nearest_on_grid, nearest_on_grid_check_others
+from .utils import (
+    canvas_callback, nearest_on_grid, nearest_on_grid_check_others)
 from .box_widget_shadow import BoxWidgetShadow
 from .icon_widget import IconSvgWidget, IconPixmapWidget
 from .port_widget import PortWidget
