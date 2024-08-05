@@ -97,8 +97,6 @@ class Callbacker:
         if group is None:
             return
         
-        # group.current_position.hidden_sides = port_mode
-        
         self.mng.set_group_hidden_sides(group_id, port_mode)
 
     def _group_menu_call(self, group_id: int, port_mode: PortMode):

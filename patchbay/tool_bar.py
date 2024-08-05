@@ -160,6 +160,11 @@ class PatchbayToolBar(QToolBar):
         if self._tools_widget is None:
             return
         
+        if self._tools_widget._jack_agnostic:
+            self._tools_widget.ui.mainLayout.setDirection(
+                QBoxLayout.RightToLeft)
+            return
+        
         if self._canvas_width == 0 or self._jack_width == 0:
             self._canvas_width, self._jack_width = \
                 self._tools_widget.get_layout_widths()

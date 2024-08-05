@@ -42,6 +42,8 @@ class PatchbayToolsWidget(QWidget):
         
         self.ui.toolButtonPlayPause.setShortcut(QKeySequence(' '))
         
+        self._jack_agnostic = False
+        
         self._fw_clicked_last_time = 0
         self._fw_click_started_at = 0
         self._bw_clicked_last_time = 0
@@ -152,10 +154,27 @@ class PatchbayToolsWidget(QWidget):
         self.ui.frameTypeFilter.set_patchbay_manager(mng)
         self.ui.sliderZoom.set_patchbay_manager(mng)
         self.ui.viewSelector.set_patchbay_manager(mng)
+        self.ui.toolButtonHiddenBoxes.set_patchbay_manager(mng)
+        
     
     def get_layout_widths(self) -> tuple[int, int]:
         return (self.ui.horizontalLayoutCanvas.sizeHint().width(),
                 self.ui.horizontalLayoutJack.sizeHint().width())
+    
+    def set_jack_agnostic(self):
+        '''Use without any jack tool. Used by Patchichi.'''
+        self._jack_agnostic = True
+        self.change_tools_displayed(self._tools_displayed)
+    
+    def update_hiddens_indicator(self):
+        if self._patchbay_mng is None:
+            return
+        
+        cg = 0
+        for group in self._patchbay_mng.list_hidden_groups():
+            cg += 1
+            
+        self.ui.toolButtonHiddenBoxes.setText(str(cg))
     
     def refresh_transport(self, transport_pos: TransportPosition):
         self.ui.toolButtonPlayPause.setChecked(transport_pos.rolling)
@@ -266,6 +285,22 @@ class PatchbayToolsWidget(QWidget):
             bool(tools_displayed & ToolDisplayed.XRUNS))
         self.ui.progressBarDsp.setVisible(
             bool(tools_displayed & ToolDisplayed.DSP_LOAD))
+        
+        if self._jack_agnostic:
+            self.ui.toolButtonRewind.setVisible(False)
+            self.ui.labelTime.setVisible(False)
+            self.ui.toolButtonForward.setVisible(False)
+            self.ui.toolButtonPlayPause.setVisible(False)
+            self.ui.toolButtonStop.setVisible(False)
+            self.ui.labelTempo.setVisible(False)
+            self.ui.labelBuffer.setVisible(False)
+            self.ui.comboBoxBuffer.setVisible(False)
+            self.ui.labelSamplerate.setVisible(False)
+            self.ui.labelPipeSeparator.setVisible(False)
+            self.ui.labelLatency.setVisible(False)
+            self.ui.pushButtonXruns.setVisible(False)
+            self.ui.progressBarDsp.setVisible(False)
+            self.ui.labelJackNotStarted.setVisible(False)
     
     def _set_latency(self, buffer_size=None, samplerate=None):
         if buffer_size is None:

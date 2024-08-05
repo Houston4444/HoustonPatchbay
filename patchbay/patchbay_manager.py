@@ -6,7 +6,7 @@ from os import times
 from pathlib import Path
 from dataclasses import dataclass
 import time
-from typing import TYPE_CHECKING, Any, Callable, Optional, Union
+from typing import TYPE_CHECKING, Any, Callable, Iterator, Optional, Union
 
 from PyQt5.QtGui import QCursor, QGuiApplication
 from PyQt5.QtWidgets import QMainWindow, QMessageBox, QWidget
@@ -480,6 +480,12 @@ class PatchbayManager:
                 group.group_id, group.current_position.boxes,
                 group.current_position.is_splitted(), redraw=PortMode.BOTH)
             patchcanvas.repulse_from_group(group.group_id, PortMode.BOTH)
+
+    def list_hidden_groups(self) -> Iterator[Group]:
+        for group in self.groups:
+            if (group.current_position.hidden_port_modes()
+                    is not PortMode.NULL):
+                yield group
 
     def get_group_from_name(self, group_name: str) -> Union[Group, None]:
         return self._groups_by_name.get(group_name)

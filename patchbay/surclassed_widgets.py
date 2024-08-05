@@ -1,11 +1,11 @@
 from typing import TYPE_CHECKING
-from PyQt5.QtCore import Qt, pyqtSignal, pyqtSlot, QPoint, QSize
+from PyQt5.QtCore import Qt, pyqtSignal, pyqtSlot, QPoint, QSize, QTimer
 from PyQt5.QtGui import (
     QWheelEvent, QKeyEvent, QMouseEvent)
 from PyQt5.QtWidgets import (
     QApplication, QProgressBar, QSlider, QToolTip,
     QLineEdit, QLabel, QMenu, QAction, QCheckBox,
-    QComboBox)
+    QComboBox, QToolButton)
 
 
 from .base_elements import TransportViewMode, AliasingReason
@@ -292,4 +292,68 @@ class ViewsComboBox(QComboBox):
                 self.setCurrentIndex(self.count() - 1)
             else:
                 self.setCurrentIndex(0)        
+
+
+class HiddensIndicator(QToolButton):
+    def __init__(self, parent):
+        super().__init__(parent)
+        
+        self.mng: 'PatchbayManager' = None
+        
+        self._count = 0
+        self._is_blinking = False
+        self._blink_timer = QTimer()
+        self._blink_timer.setInterval(500)
+        self._blink_timer.timeout.connect(self._blink_timer_timeout)
+        
+        self._BLINK_TIMES = 4
+        self._blink_times_done = 0
+
+    def set_patchbay_manager(self, mng: 'PatchbayManager'):
+        self.mng = mng
+        self.mng.sg.view_changed.connect(self._view_changed)
+        
+    def set_count(self, count: int):
+        self._count = count
+        self.setText(str(count))
+        
+        if count == 0 and self._blink_timer.isActive():
+            self._blink_timer.stop()
+            self.setIconSize(QSize(16, 16))
+        
+    def add_one(self):
+        self._count += 1
+        self.setText(str(self._count))
+        if not self._blink_timer.isActive():
+            self._blink_timer.start()
+    
+    def _start_blink(self):
+        if self._blink_timer.isActive():
+            return
+        
+        self.setIconSize(QSize(24, 24))
+        self._blink_times_done = 1
+        self._blink_timer.start()
+    
+    @pyqtSlot()
+    def _blink_timer_timeout(self):
+        self._blink_times_done += 1
+        if self._blink_times_done % 2:
+            self.setIconSize(QSize(24, 24))
+        else:
+            self.setIconSize(QSize(16, 16))
+        
+        if self._blink_times_done == self._BLINK_TIMES:
+            self._blink_times_done = 0
+            self._blink_timer.stop()
+            
+    @pyqtSlot(int)
+    def _view_changed(self, view_num: int):
+        cg = 0
+        for group in self.mng.list_hidden_groups():
+            cg += 1
+        
+        self.set_count(cg)
+        if cg:
+            self._start_blink()
         
