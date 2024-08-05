@@ -153,6 +153,10 @@ class PatchbayToolsWidget(QWidget):
         self.ui.sliderZoom.set_patchbay_manager(mng)
         self.ui.viewSelector.set_patchbay_manager(mng)
     
+    def get_layout_widths(self) -> tuple[int, int]:
+        return (self.ui.horizontalLayoutCanvas.sizeHint().width(),
+                self.ui.horizontalLayoutJack.sizeHint().width())
+    
     def refresh_transport(self, transport_pos: TransportPosition):
         self.ui.toolButtonPlayPause.setChecked(transport_pos.rolling)
         

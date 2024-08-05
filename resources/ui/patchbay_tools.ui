@@ -34,7 +34,7 @@ background-color:  rgba(50%, 50%, 50%, 25%);
     <number>1</number>
    </property>
    <item>
-    <layout class="QHBoxLayout" name="horizontalLayout_3">
+    <layout class="QHBoxLayout" name="horizontalLayoutJack">
      <property name="spacing">
       <number>0</number>
      </property>
@@ -487,7 +487,7 @@ QPushButton:hover{border: 1 px solid grey;text-align:right}</string>
     </layout>
    </item>
    <item>
-    <layout class="QHBoxLayout" name="horizontalLayout_2">
+    <layout class="QHBoxLayout" name="horizontalLayoutCanvas">
      <property name="spacing">
       <number>0</number>
      </property>

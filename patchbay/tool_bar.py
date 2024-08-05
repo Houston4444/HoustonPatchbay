@@ -124,6 +124,9 @@ class PatchbayToolBar(QToolBar):
                         act.setEnabled(False)
             menu.addAction(act)
             
+            if key is ToolDisplayed.ZOOM_SLIDER:
+                menu.addSeparator()
+            
         return menu
 
     def mousePressEvent(self, event: QMouseEvent) -> None:
@@ -158,10 +161,8 @@ class PatchbayToolBar(QToolBar):
             return
         
         if self._canvas_width == 0 or self._jack_width == 0:
-            self._canvas_width = \
-                self._tools_widget.ui.horizontalLayout_2.sizeHint().width()
-            self._jack_width = \
-                self._tools_widget.ui.horizontalLayout_3.sizeHint().width()
+            self._canvas_width, self._jack_width = \
+                self._tools_widget.get_layout_widths()
         
         if self._non_patchbay_width == 0:
             if (self._tools_widget.ui.mainLayout.direction()
