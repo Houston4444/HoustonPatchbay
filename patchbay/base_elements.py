@@ -92,6 +92,7 @@ class TransportViewMode(IntEnum):
 
 
 class ToolDisplayed(IntFlag):
+    VIEWS_SELECTOR = auto()
     PORT_TYPES_VIEW = auto()
     TRANSPORT_CLOCK = auto()
     TRANSPORT_PLAY_STOP = auto()
@@ -102,7 +103,8 @@ class ToolDisplayed(IntFlag):
     LATENCY = auto()
     XRUNS = auto()
     DSP_LOAD = auto()
-    ALL = (PORT_TYPES_VIEW
+    ALL = (VIEWS_SELECTOR
+           | PORT_TYPES_VIEW
            | TRANSPORT_CLOCK
            | TRANSPORT_PLAY_STOP
            | TRANSPORT_TEMPO

@@ -151,6 +151,7 @@ class PatchbayToolsWidget(QWidget):
         self._patchbay_mng = mng
         self.ui.frameTypeFilter.set_patchbay_manager(mng)
         self.ui.sliderZoom.set_patchbay_manager(mng)
+        self.ui.viewSelector.set_patchbay_manager(mng)
     
     def refresh_transport(self, transport_pos: TransportPosition):
         self.ui.toolButtonPlayPause.setChecked(transport_pos.rolling)
@@ -227,6 +228,8 @@ class PatchbayToolsWidget(QWidget):
                 False, use_alsa_midi=self._patchbay_mng.alsa_midi_enabled)
             return
         
+        self.ui.viewSelector.setVisible(
+            bool(self._tools_displayed & ToolDisplayed.VIEWS_SELECTOR))
         self.ui.frameTypeFilter.setVisible(
             bool(self._tools_displayed & ToolDisplayed.PORT_TYPES_VIEW))
         self.ui.sliderZoom.setVisible(
@@ -370,5 +373,4 @@ class PatchbayToolsWidget(QWidget):
             self.ui.labelLatency.setVisible(False)
             self.ui.pushButtonXruns.setVisible(False)
             self.ui.progressBarDsp.setVisible(False)
-
 
