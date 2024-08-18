@@ -423,7 +423,7 @@ class PatchbayManager:
         patchcanvas.canvas.scene.resize_the_scene()
 
     def restore_group_hidden_sides(
-            self, group_id: int, scene_pos: tuple[int, int]):
+            self, group_id: int, scene_pos: tuple[int, int]=None):
         group = self.get_group_from_id(group_id)
         if group is None:
             return
@@ -433,9 +433,10 @@ class PatchbayManager:
         if hidden_port_mode is PortMode.NULL:
             return
 
-        for port_mode in PortMode.in_out_both():
-            if hidden_port_mode & port_mode:
-                gpos.boxes[port_mode].pos = scene_pos
+        if scene_pos is not None:
+            for port_mode in PortMode.in_out_both():
+                if hidden_port_mode & port_mode:
+                    gpos.boxes[port_mode].pos = scene_pos
 
         gpos.set_hidden_port_mode(PortMode.NULL)
         group.save_current_position()
@@ -639,7 +640,7 @@ class PatchbayManager:
                              is PortTypesViewFlag.NONE)
 
         if rm_all_before:
-            # there is no common port between previous and next view
+            # there is no common port type between previous and next view,
             # strategy is to remove fastly all contents from the patchcanvas.            
             for connection in self.connections:
                 connection.in_canvas = False

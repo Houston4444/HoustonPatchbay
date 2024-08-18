@@ -767,6 +767,9 @@ def move_group_boxes(
         box_poses: dict[PortMode, BoxPos],
         split: bool,
         redraw=PortMode.NULL):
+    '''Highly optimized function used at view change.
+    Only things that need to be redrawn are redrawn.
+    Any change in this function can easily create unwanted bugs ;)'''
     group = canvas.get_group(group_id)
     if group is None:
         return
@@ -799,7 +802,7 @@ def move_group_boxes(
         for box in group.widgets:
             if box is None or box.get_port_mode() is not port_mode:
                 continue
-            
+
             if box._layout_mode is not box_pos.layout_mode:
                 box.set_layout_mode(box_pos.layout_mode)
                 redraw |= port_mode
@@ -839,6 +842,7 @@ def move_group_boxes(
             xy = nearest_on_grid(box_pos.pos)
 
             if box.isVisible() and box_pos.is_hidden():
+                print('  Hidding Visible', box.get_port_mode().name)
                 GroupedLinesWidget.start_transparent(group_id, port_mode)
                 canvas.scene.add_box_to_animation_hidding(box)
             else:

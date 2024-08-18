@@ -525,8 +525,8 @@ QPushButton:hover{border: 1 px solid grey;text-align:right}</string>
         <string>0</string>
        </property>
        <property name="icon">
-        <iconset theme="view-hidden">
-         <normaloff>.</normaloff>.</iconset>
+        <iconset resource="../resources.qrc">
+         <normaloff>:/scalable/breeze-dark/hint.svg</normaloff>:/scalable/breeze-dark/hint.svg</iconset>
        </property>
        <property name="toolButtonStyle">
         <enum>Qt::ToolButtonTextBesideIcon</enum>

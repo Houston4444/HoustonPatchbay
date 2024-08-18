@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING
 from PyQt5.QtCore import Qt, pyqtSignal, pyqtSlot, QPoint, QSize, QTimer
 from PyQt5.QtGui import (
-    QWheelEvent, QKeyEvent, QMouseEvent)
+    QWheelEvent, QKeyEvent, QMouseEvent, QIcon, QPixmap)
 from PyQt5.QtWidgets import (
     QApplication, QProgressBar, QSlider, QToolTip,
     QLineEdit, QLabel, QMenu, QAction, QCheckBox,
@@ -9,6 +9,7 @@ from PyQt5.QtWidgets import (
 
 
 from .base_elements import TransportViewMode, AliasingReason
+from .patchcanvas import utils
 
 if TYPE_CHECKING:
     from .patchbay_manager import PatchbayManager
@@ -303,15 +304,28 @@ class HiddensIndicator(QToolButton):
         self._count = 0
         self._is_blinking = False
         self._blink_timer = QTimer()
-        self._blink_timer.setInterval(500)
+        self._blink_timer.setInterval(400)
         self._blink_timer.timeout.connect(self._blink_timer_timeout)
         
-        self._BLINK_TIMES = 4
+        self._BLINK_TIMES = 6
         self._blink_times_done = 0
+        
+        dark = '-dark' if self._is_dark() else ''
+
+        self._icon_normal = QIcon(QPixmap(f':scalable/breeze{dark}/hint.svg'))
+        self._icon_orange = QIcon(QPixmap(f':scalable/breeze{dark}/hint_orange.svg'))
+        
+        self.setIcon(self._icon_normal)
+        self._menu = QMenu()
+
+    def _is_dark(self) -> bool:
+        return self.palette().text().color().lightnessF() > 0.5
 
     def set_patchbay_manager(self, mng: 'PatchbayManager'):
         self.mng = mng
         self.mng.sg.view_changed.connect(self._view_changed)
+        self.mng.sg.port_types_view_changed.connect(
+            self._port_types_view_changed)
         
     def set_count(self, count: int):
         self._count = count
@@ -331,24 +345,11 @@ class HiddensIndicator(QToolButton):
         if self._blink_timer.isActive():
             return
         
-        self.setIconSize(QSize(24, 24))
+        self.setIcon(self._icon_orange)
         self._blink_times_done = 1
         self._blink_timer.start()
     
-    @pyqtSlot()
-    def _blink_timer_timeout(self):
-        self._blink_times_done += 1
-        if self._blink_times_done % 2:
-            self.setIconSize(QSize(24, 24))
-        else:
-            self.setIconSize(QSize(16, 16))
-        
-        if self._blink_times_done == self._BLINK_TIMES:
-            self._blink_times_done = 0
-            self._blink_timer.stop()
-            
-    @pyqtSlot(int)
-    def _view_changed(self, view_num: int):
+    def _check_count(self):
         cg = 0
         for group in self.mng.list_hidden_groups():
             cg += 1
@@ -356,4 +357,57 @@ class HiddensIndicator(QToolButton):
         self.set_count(cg)
         if cg:
             self._start_blink()
+    
+    @pyqtSlot()
+    def _blink_timer_timeout(self):
+        self._blink_times_done += 1
+        if self._blink_times_done % 2:
+            self.setIcon(self._icon_orange)
+        else:
+            self.setIcon(self._icon_normal)
+        
+        if self._blink_times_done == self._BLINK_TIMES:
+            self._blink_times_done = 0
+            self._blink_timer.stop()
+    
+    @pyqtSlot(int)
+    def _view_changed(self, view_num: int):
+        self._check_count()
+        
+    @pyqtSlot(int)
+    def _port_types_view_changed(self, port_types_flag: int):
+        self._check_count()
+    
+    def mousePressEvent(self, event: QMouseEvent) -> None:
+        super().mousePressEvent(event)
+        
+        self._menu.clear()
+        
+        dark = self._is_dark()
+        cg = 0
+        has_hiddens = False
+        
+        for group in self.mng.list_hidden_groups():
+            hidden_port_mode = group.current_position.hidden_port_modes()
+            if hidden_port_mode:
+                cg += 1
+
+                group_act = self._menu.addAction(group.cnv_name)
+                group_act.setIcon(utils.get_icon(
+                    group.cnv_box_type, group.cnv_icon_name,
+                    hidden_port_mode,
+                    dark=dark))
+                group_act.setData(group.group_id)
+                has_hiddens = True
+        
+        self.set_count(cg)
+
+        sel_act = self._menu.exec(
+            self.mapToGlobal(QPoint(0, self.height())))
+        
+        if sel_act is None:
+            return
+        
+        self.mng.restore_group_hidden_sides(sel_act.data())
+        
         

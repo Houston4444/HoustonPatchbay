@@ -109,7 +109,8 @@ class PatchbayToolBar(QToolBar):
                         _translate('tool_bar', 'DSP Load'))
         }
 
-    def _make_context_menu(self, context_actions: dict[ToolDisplayed, QAction]) -> QMenu:
+    def _make_context_menu(
+            self, context_actions: dict[ToolDisplayed, QAction]) -> QMenu:
         menu = QMenu()
         menu.addSection(_translate('tool_bar', 'Displayed tools'))
         
@@ -118,7 +119,8 @@ class PatchbayToolBar(QToolBar):
             act.setChecked(bool(self._displayed_widgets & key))
             if self._patchbay_mng is not None:
                 if not self._patchbay_mng.server_is_started:
-                    if key in (ToolDisplayed.PORT_TYPES_VIEW, ToolDisplayed.ZOOM_SLIDER):
+                    if key in (ToolDisplayed.PORT_TYPES_VIEW,
+                               ToolDisplayed.ZOOM_SLIDER):
                         act.setEnabled(self._patchbay_mng.alsa_midi_enabled)
                     else:
                         act.setEnabled(False)

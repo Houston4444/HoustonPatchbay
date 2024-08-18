@@ -182,6 +182,7 @@ class GroupPos:
 
     @staticmethod
     def from_serialized_dict(src: dict[str, Any]) -> 'GroupPos':
+        'returns a GroupPos from an old json file dict.'
         port_types_view = src.get('port_types_view')
         group_name = src.get('group_name')
         in_zone = src.get('in_zone')
@@ -254,6 +255,7 @@ class GroupPos:
     @staticmethod
     def from_new_dict(ptv: PortTypesViewFlag, group_name: str,
                       in_dict: dict) -> 'GroupPos':
+        'returns a new GroupPos from a new json file dict.'
         gpos = GroupPos()
         gpos.port_types_view = ptv
         gpos.group_name = group_name
@@ -312,7 +314,11 @@ class GroupPos:
                             layout_mode = BoxLayoutMode.HIGH
                         
                         gpos.boxes[port_mode].layout_mode = layout_mode
-        
+
+        if not gpos.is_splitted() and gpos.boxes[PortMode.BOTH].is_hidden():
+            for port_mode in PortMode.INPUT, PortMode.OUTPUT:
+                gpos.boxes[port_mode].set_hidden(True)
+
         return gpos
 
     def as_new_dict(self) -> dict:

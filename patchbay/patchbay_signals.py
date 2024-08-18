@@ -9,8 +9,15 @@ class SignalsObject(QObject):
     callback_sig = pyqtSignal(IntEnum, tuple)
     
     view_changed = pyqtSignal(int)
+    'emitted when the current view has changed [int]'
+    
     views_changed = pyqtSignal()
+    '''emitted when something related to views changed
+    (view added, renamed, removed...) []'''
+    
     port_types_view_changed = pyqtSignal(int)
+    'emitted when port types view filter changed the view [int]'
+    
     full_screen_toggle_wanted = pyqtSignal()
     filters_bar_toggle_wanted = pyqtSignal()
 
