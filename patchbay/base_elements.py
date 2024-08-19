@@ -72,6 +72,7 @@ class PortTypesViewFlag(IntFlag):
 class ViewData:
     name: str
     default_port_types_view: PortTypesViewFlag
+    is_white_list: bool
 
 
 @dataclass

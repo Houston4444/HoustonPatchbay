@@ -397,10 +397,10 @@ class HiddensIndicator(QToolButton):
         group = self.mng.get_group_from_id(group_id)
         if group is None:
             return
-        
+
         if group.current_position.hidden_port_modes() is PortMode.NULL:
             return
-        
+
         if (group.ins_ptv & self.mng.port_types_view
                 or group.outs_ptv & self.mng.port_types_view):
             self.add_one()
@@ -421,7 +421,6 @@ class HiddensIndicator(QToolButton):
         
         dark = self._is_dark()
         cg = 0
-        has_hiddens = False
         
         for group in self.mng.list_hidden_groups():
             hidden_port_mode = group.current_position.hidden_port_modes()
@@ -434,9 +433,25 @@ class HiddensIndicator(QToolButton):
                     hidden_port_mode,
                     dark=dark))
                 group_act.setData(group.group_id)
-                has_hiddens = True
         
         self.set_count(cg)
+
+        self._menu.addSeparator()
+
+        is_white_list = False
+        view_data = self.mng.views_datas.get(self.mng.view_number)
+        if view_data is not None:
+            is_white_list = view_data.is_white_list
+
+        white_list_act = QAction()
+        white_list_act.setText(
+            _translate('hiddens_indicator', 'Hide all new boxes'))
+        white_list_act.setData(-2)
+        white_list_act.setCheckable(True)
+        white_list_act.setChecked(is_white_list)
+        white_list_act.setIcon(QIcon.fromTheme('color-picker-white'))
+        
+        self._menu.addAction(white_list_act)
 
         sel_act = self._menu.exec(
             self.mapToGlobal(QPoint(0, self.height())))
@@ -444,6 +459,15 @@ class HiddensIndicator(QToolButton):
         if sel_act is None:
             return
         
-        self.mng.restore_group_hidden_sides(sel_act.data())
+        act_data = sel_act.data()
+        if act_data == -2:
+            if white_list_act.isChecked():
+                self.mng.clear_absents_in_view()
+            self.mng.views_datas[self.mng.view_number].is_white_list = \
+                white_list_act.isChecked()
+            return
+        
+        # act_data is now a group_id
+        self.mng.restore_group_hidden_sides(act_data)
         
         

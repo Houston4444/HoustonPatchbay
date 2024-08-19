@@ -543,23 +543,30 @@ class PatchbayManager:
         if gpos is not None:
             return gpos
 
+        is_white_list_view = self.views_datas[self.view_number].is_white_list
+
         # prevent move to a new position in case of port_types_view change
         # if there is no remembered position for this group in new view
-        group = self.get_group_from_name(group_name)
-        if group is not None:
-            # copy the group_position
-            gpos = group.current_position.copy()
-            gpos.port_types_view = self.port_types_view
-            gpos.has_sure_existence = False
-            ptv_view[group_name] = gpos
-            self.save_group_position(gpos)
-            return gpos
+        if not is_white_list_view:
+            group = self.get_group_from_name(group_name)
+            if group is not None:
+                # copy the group_position
+                gpos = group.current_position.copy()
+                gpos.port_types_view = self.port_types_view
+                gpos.has_sure_existence = False
+                ptv_view[group_name] = gpos
+                self.save_group_position(gpos)
+                return gpos
 
         # group position doesn't already exists, create one
         gpos = GroupPos()
         gpos.fully_set = False
         gpos.port_types_view = self.port_types_view
         gpos.group_name = group_name
+
+        if is_white_list_view:
+            gpos.set_hidden_port_mode(PortMode.BOTH)
+
         for port_mode, xy in get_new_group_positions().items():
             gpos.boxes[port_mode].pos = xy
 
@@ -771,7 +778,7 @@ class PatchbayManager:
         view_data = self.views_datas.get(self.view_number)
         if view_data is None:
             self.views_datas[self.view_number] = ViewData(
-                new_name, self.port_types_view)
+                new_name, self.port_types_view, False)
             return
 
         view_data.name = new_name
@@ -782,7 +789,7 @@ class PatchbayManager:
         view_data = self.views_datas.get(self.view_number)
         if view_data is None:
             self.views_datas[self.view_number] = ViewData(
-                '', self.port_types_view)
+                '', self.port_types_view, False)
         else:
             view_data.default_port_types_view = self.port_types_view
         
@@ -814,11 +821,9 @@ class PatchbayManager:
         for group in self.groups:
             valid_keys.add(group.current_position.group_name)
         
-        to_rm_keys = set[str]()
-        
-        work_dict = self.views[self.view_number][self.port_types_view]
-        
         for ptv, work_dict in self.views[self.view_number].items():
+            to_rm_keys = set[str]()
+
             for group_name in work_dict.keys():
                 if group_name not in valid_keys:
                     to_rm_keys.add(group_name)
@@ -861,7 +866,8 @@ class PatchbayManager:
 
     def write_view_data(
             self, view_number: int, name: Optional[str]=None,
-            port_types: Optional[PortTypesViewFlag]=None):
+            port_types: Optional[PortTypesViewFlag]=None,
+            white_list_view=False):
         view_data = self.views_datas.get(view_number)
         if view_data is None:
             if name is None:
@@ -869,7 +875,7 @@ class PatchbayManager:
             if port_types is None:
                 port_types = PortTypesViewFlag.ALL
 
-            view_data = ViewData(name, port_types)
+            view_data = ViewData(name, port_types, white_list_view)
             
             self.views_datas[view_number] = view_data
             self.sg.views_changed.emit()
@@ -880,6 +886,8 @@ class PatchbayManager:
             
         if port_types is not None:
             view_data.default_port_types_view = port_types
+        
+        view_data.is_white_list = white_list_view
         
         self.sg.views_changed.emit()
 
