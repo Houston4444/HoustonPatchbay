@@ -816,13 +816,13 @@ class PatchbayManager:
         self.sg.views_changed.emit()
     
     def clear_absents_in_view(self):
-        valid_keys = set[str]()
-        
-        for group in self.groups:
-            valid_keys.add(group.current_position.group_name)
-        
         for ptv, work_dict in self.views[self.view_number].items():
             to_rm_keys = set[str]()
+            valid_keys = set[str]()
+            
+            for group in self.groups:
+                if group.is_in_port_types_view(ptv):
+                    valid_keys.add(group.current_position.group_name)
 
             for group_name in work_dict.keys():
                 if group_name not in valid_keys:

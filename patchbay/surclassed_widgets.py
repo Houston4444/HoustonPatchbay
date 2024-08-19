@@ -401,8 +401,7 @@ class HiddensIndicator(QToolButton):
         if group.current_position.hidden_port_modes() is PortMode.NULL:
             return
 
-        if (group.ins_ptv & self.mng.port_types_view
-                or group.outs_ptv & self.mng.port_types_view):
+        if group.is_in_port_types_view(self.mng.port_types_view):
             self.add_one()
 
     @pyqtSlot(int)

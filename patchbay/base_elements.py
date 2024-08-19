@@ -161,12 +161,18 @@ class GroupPos:
     port_types_view: PortTypesViewFlag = PortTypesViewFlag.NONE
     group_name: str = ""
     flags: GroupPosFlag = GroupPosFlag.NONE
+    'contains now only splitted state.'
+    
     hidden_sides: PortMode = PortMode.NULL
     'will be removed when HoustonPatchbay will be updated in Patchance.'
     
     boxes: dict[PortMode, BoxPos]
     fully_set: bool = True
+    'If false, it will ask the program to choose the splitted state.'
+    
     has_sure_existence: bool = True
+    '''If false, this GroupPos may reffers to a group without ports
+    in its port_types_view.'''
     
     def __init__(self):
         self.boxes = dict[PortMode, BoxPos]()

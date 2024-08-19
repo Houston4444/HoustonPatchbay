@@ -78,6 +78,9 @@ class Group:
 
         return (0, 1)
 
+    def is_in_port_types_view(self, ptv: PortTypesViewFlag) -> bool:
+        return bool(self.outs_ptv & ptv or self.ins_ptv & ptv)
+
     def update_ports_in_canvas(self):
         for port in self.ports:
             port.rename_in_canvas()
