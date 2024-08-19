@@ -459,7 +459,7 @@ class PatchbayManager:
 
         self.sg.hidden_boxes_changed.emit()
 
-    def restore_all_group_hidden_sides(self):
+    def restore_all_group_hidden_sides(self, even_absents=True):
         self.optimize_operation(True)
 
         groups_to_restore = set[Group]()
@@ -486,6 +486,34 @@ class PatchbayManager:
                 group.current_position.is_splitted(), redraw=PortMode.BOTH)
             patchcanvas.repulse_from_group(group.group_id, PortMode.BOTH)
 
+        self.sg.hidden_boxes_changed.emit()
+
+    def hide_all_groups(self):
+        self.optimize_operation(True)
+        
+        groups_to_hide = set[Group]()
+        for group in self.groups:
+            if group.current_position.hidden_port_modes() is not PortMode.BOTH:
+                groups_to_hide.add(group)
+                group.current_position.set_hidden_port_mode(PortMode.BOTH)
+        
+        for conn in self.connections:
+            conn.remove_from_canvas()
+            
+        for group in groups_to_hide:
+            for portgroup in group.portgroups:
+                portgroup.remove_from_canvas()
+                
+            for port in group.ports:
+                port.remove_from_canvas()
+            
+        self.optimize_operation(False)
+        
+        for group in groups_to_hide:
+            patchcanvas.move_group_boxes(
+                group.group_id, group.current_position.boxes,
+                group.current_position.is_splitted(), redraw=PortMode.BOTH)
+        
         self.sg.hidden_boxes_changed.emit()
 
     def list_hidden_groups(self) -> Iterator[Group]:
@@ -1563,6 +1591,8 @@ class PatchbayManager:
                     view_item['name'] = view_data.name
                 view_item['default_port_types'] = \
                     view_data.default_port_types_view.to_config_str()
+                if view_data.is_white_list:
+                    view_item['is_white_list'] = True
                         
             for ptv, pt_dict in ptv_dict.items():
                 ptv_str = ptv.to_config_str()

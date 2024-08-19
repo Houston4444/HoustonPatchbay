@@ -420,9 +420,11 @@ class PatchScene(PatchSceneMoth):
     def full_repulse(self, view_change=False):
         if not options.prevent_overlap:
             return
-        
+
         self._full_repulse_boxes.clear()
+
         if view_change:
+            # in view change, all boxes are in self.move_boxes
             moving_boxes = [b for b in self.move_boxes
                             if (not b.final_rect.isNull()
                                 and b.widget.isVisible()
@@ -437,9 +439,11 @@ class PatchScene(PatchSceneMoth):
                 for to_rm_mb in to_rm_movboxes:
                     moving_boxes.remove(to_rm_mb)
         else:
-            for box in canvas.list_boxes():
+            for box in [b for b in canvas.list_boxes()
+                        if b.isVisible() and b not in self.hidding_boxes]:
                 if box not in self._full_repulse_boxes:
                     self.deplace_boxes_from_repulsers([box])
+
         self._full_repulse_boxes.clear()
 
     def bring_neighbors_and_deplace_boxes(
