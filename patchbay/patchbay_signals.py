@@ -13,10 +13,13 @@ class SignalsObject(QObject):
     
     views_changed = pyqtSignal()
     '''emitted when something related to views changed
-    (view added, renamed, removed...) []'''
+    (view added, renamed, removed...)'''
     
     port_types_view_changed = pyqtSignal(int)
     'emitted when port types view filter changed the view [int]'
+    
+    hidden_boxes_changed = pyqtSignal()
+    'emitted when list of hidden boxes has changed'
     
     full_screen_toggle_wanted = pyqtSignal()
     filters_bar_toggle_wanted = pyqtSignal()

@@ -842,7 +842,6 @@ def move_group_boxes(
             xy = nearest_on_grid(box_pos.pos)
 
             if box.isVisible() and box_pos.is_hidden():
-                print('  Hidding Visible', box.get_port_mode().name)
                 GroupedLinesWidget.start_transparent(group_id, port_mode)
                 canvas.scene.add_box_to_animation_hidding(box)
             else:

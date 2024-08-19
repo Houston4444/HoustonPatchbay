@@ -422,6 +422,8 @@ class PatchbayManager:
         patchcanvas.redraw_group(group_id)
         patchcanvas.canvas.scene.resize_the_scene()
 
+        self.sg.hidden_boxes_changed.emit()
+
     def restore_group_hidden_sides(
             self, group_id: int, scene_pos: tuple[int, int]=None):
         group = self.get_group_from_id(group_id)
@@ -455,6 +457,8 @@ class PatchbayManager:
             redraw=hidden_port_mode)
         patchcanvas.repulse_from_group(group.group_id, hidden_port_mode)
 
+        self.sg.hidden_boxes_changed.emit()
+
     def restore_all_group_hidden_sides(self):
         self.optimize_operation(True)
 
@@ -481,6 +485,8 @@ class PatchbayManager:
                 group.group_id, group.current_position.boxes,
                 group.current_position.is_splitted(), redraw=PortMode.BOTH)
             patchcanvas.repulse_from_group(group.group_id, PortMode.BOTH)
+
+        self.sg.hidden_boxes_changed.emit()
 
     def list_hidden_groups(self) -> Iterator[Group]:
         for group in self.groups:

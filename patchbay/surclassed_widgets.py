@@ -326,20 +326,17 @@ class HiddensIndicator(QToolButton):
         self.mng.sg.view_changed.connect(self._view_changed)
         self.mng.sg.port_types_view_changed.connect(
             self._port_types_view_changed)
+        self.mng.sg.hidden_boxes_changed.connect(
+            self._hidden_boxes_changed)
         
     def set_count(self, count: int):
         self._count = count
         self.setText(str(count))
         
-        if count == 0 and self._blink_timer.isActive():
-            self._blink_timer.stop()
-            self.setIconSize(QSize(16, 16))
-        
     def add_one(self):
         self._count += 1
         self.setText(str(self._count))
-        if not self._blink_timer.isActive():
-            self._blink_timer.start()
+        self._start_blink()
     
     def _start_blink(self):
         if self._blink_timer.isActive():
@@ -349,14 +346,22 @@ class HiddensIndicator(QToolButton):
         self._blink_times_done = 1
         self._blink_timer.start()
     
+    def _stop_blink(self):
+        self._blink_timer.stop()
+        self.setIcon(self._icon_normal)
+    
     def _check_count(self):
         cg = 0
         for group in self.mng.list_hidden_groups():
             cg += 1
-        
+
+        pv_count = self._count
         self.set_count(cg)
         if cg:
-            self._start_blink()
+            if cg > pv_count:
+                self._start_blink()
+        else:
+            self._stop_blink()
     
     @pyqtSlot()
     def _blink_timer_timeout(self):
@@ -376,6 +381,10 @@ class HiddensIndicator(QToolButton):
         
     @pyqtSlot(int)
     def _port_types_view_changed(self, port_types_flag: int):
+        self._check_count()
+    
+    @pyqtSlot()
+    def _hidden_boxes_changed(self):
         self._check_count()
     
     def mousePressEvent(self, event: QMouseEvent) -> None:

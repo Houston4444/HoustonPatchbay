@@ -153,22 +153,28 @@ class ToolDisplayed(IntFlag):
 
 
 class GroupPos:
+    '''Object assigned to a group in a specific view.
+    It contains its splited state, box positions,
+    wrapped and hidden states.'''
+    
     port_types_view: PortTypesViewFlag = PortTypesViewFlag.NONE
     group_name: str = ""
     flags: GroupPosFlag = GroupPosFlag.NONE
     hidden_sides: PortMode = PortMode.NULL
+    'will be removed when HoustonPatchbay will be updated in Patchance.'
+    
     boxes: dict[PortMode, BoxPos]
     fully_set: bool = True
     has_sure_existence: bool = True
     
     def __init__(self):
         self.boxes = dict[PortMode, BoxPos]()
-        
+
         for port_mode in PortMode.in_out_both():
             self.boxes[port_mode] = BoxPos()
     
     @staticmethod
-    def _is_point(value: Any) -> bool:
+    def is_point(value: Any) -> bool:
         if not isinstance(value, (list, tuple)):
             return False
         
@@ -213,19 +219,19 @@ class GroupPos:
             if port_mode is PortMode.INPUT:
                 if isinstance(in_zone, str):
                     gpos.boxes[port_mode].zone = in_zone
-                if GroupPos._is_point(in_xy):
+                if GroupPos.is_point(in_xy):
                     gpos.boxes[port_mode].pos = in_xy
                 wrapped = bool(gpos.flags & GroupPosFlag.WRAPPED_INPUT)
             elif port_mode is PortMode.OUTPUT:
                 if isinstance(out_zone, str):
                     gpos.boxes[port_mode].zone = out_zone
-                if GroupPos._is_point(out_xy):
+                if GroupPos.is_point(out_xy):
                     gpos.boxes[port_mode].pos = out_xy
                 wrapped = bool(gpos.flags & GroupPosFlag.WRAPPED_OUTPUT)
             else:
                 if isinstance(both_zone, str):
                     gpos.boxes[port_mode].zone = both_zone
-                if GroupPos._is_point(null_xy):
+                if GroupPos.is_point(null_xy):
                     gpos.boxes[port_mode].pos = null_xy
                 wrapped = bool(gpos.flags & (GroupPosFlag.WRAPPED_INPUT
                                              | GroupPosFlag.WRAPPED_OUTPUT)
@@ -255,7 +261,8 @@ class GroupPos:
     @staticmethod
     def from_new_dict(ptv: PortTypesViewFlag, group_name: str,
                       in_dict: dict) -> 'GroupPos':
-        'returns a new GroupPos from a new json file dict.'
+        'return a new GroupPos from a new json file dict.'
+
         gpos = GroupPos()
         gpos.port_types_view = ptv
         gpos.group_name = group_name
@@ -315,9 +322,9 @@ class GroupPos:
                         
                         gpos.boxes[port_mode].layout_mode = layout_mode
 
-        if not gpos.is_splitted() and gpos.boxes[PortMode.BOTH].is_hidden():
+        if not gpos.is_splitted():
             for port_mode in PortMode.INPUT, PortMode.OUTPUT:
-                gpos.boxes[port_mode].set_hidden(True)
+                gpos.boxes[port_mode].flags = gpos.boxes[PortMode.BOTH].flags
 
         return gpos
 
