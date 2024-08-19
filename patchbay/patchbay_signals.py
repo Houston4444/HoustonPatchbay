@@ -21,6 +21,17 @@ class SignalsObject(QObject):
     hidden_boxes_changed = pyqtSignal()
     'emitted when list of hidden boxes has changed'
     
+    group_added = pyqtSignal(int)
+    '''emitted when a group is added by a port.
+    Used only by hiddens indicator. [group_id]'''
+    
+    group_removed = pyqtSignal(int)
+    '''emitted when a group is removed
+    with the deletion of its last port. [group_id]'''
+    
+    all_groups_removed = pyqtSignal()
+    'emitted when all groups are removed.'
+
     full_screen_toggle_wanted = pyqtSignal()
     filters_bar_toggle_wanted = pyqtSignal()
 

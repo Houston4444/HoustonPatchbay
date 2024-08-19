@@ -48,7 +48,10 @@ class Group:
         self.cnv_icon_name = ''
         
         self.outs_ptv = PortTypesViewFlag.NONE
+        'PortTypesViewFlag containing present output port types'
+        
         self.ins_ptv = PortTypesViewFlag.NONE
+        'PortTypesViewFlag containing present input port types'
 
     def __repr__(self) -> str:
         return f"Group({self.name})"

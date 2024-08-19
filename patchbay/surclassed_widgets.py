@@ -8,7 +8,7 @@ from PyQt5.QtWidgets import (
     QComboBox, QToolButton)
 
 
-from .base_elements import TransportViewMode, AliasingReason
+from .base_elements import TransportViewMode, AliasingReason, PortMode
 from .patchcanvas import utils
 
 if TYPE_CHECKING:
@@ -328,6 +328,9 @@ class HiddensIndicator(QToolButton):
             self._port_types_view_changed)
         self.mng.sg.hidden_boxes_changed.connect(
             self._hidden_boxes_changed)
+        self.mng.sg.group_added.connect(self._group_added)
+        self.mng.sg.group_removed.connect(self._group_removed)
+        self.mng.sg.all_groups_removed.connect(self._all_groups_removed)
         
     def set_count(self, count: int):
         self._count = count
@@ -353,7 +356,9 @@ class HiddensIndicator(QToolButton):
     def _check_count(self):
         cg = 0
         for group in self.mng.list_hidden_groups():
-            cg += 1
+            if (group.ins_ptv & self.mng.port_types_view
+                    or group.outs_ptv & self.mng.port_types_view):
+                cg += 1
 
         pv_count = self._count
         self.set_count(cg)
@@ -386,6 +391,28 @@ class HiddensIndicator(QToolButton):
     @pyqtSlot()
     def _hidden_boxes_changed(self):
         self._check_count()
+    
+    @pyqtSlot(int)
+    def _group_added(self, group_id: int):
+        group = self.mng.get_group_from_id(group_id)
+        if group is None:
+            return
+        
+        if group.current_position.hidden_port_modes() is PortMode.NULL:
+            return
+        
+        if (group.ins_ptv & self.mng.port_types_view
+                or group.outs_ptv & self.mng.port_types_view):
+            self.add_one()
+
+    @pyqtSlot(int)
+    def _group_removed(self, group_id: int):
+        self._check_count()
+        
+    @pyqtSlot()
+    def _all_groups_removed(self):
+        self.set_count(0)
+        self._stop_blink()
     
     def mousePressEvent(self, event: QMouseEvent) -> None:
         super().mousePressEvent(event)

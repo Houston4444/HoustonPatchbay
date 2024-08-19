@@ -627,6 +627,8 @@ class PatchbayManager:
         self._next_port_id = 0
         self._next_portgroup_id = 1
         self._next_connection_id = 0
+        
+        self.sg.all_groups_removed.emit()
 
     def change_port_types_view(
             self, port_types_view: PortTypesViewFlag, force=False):
@@ -984,16 +986,16 @@ class PatchbayManager:
 
     @later_by_batch(draw_group=True)
     def add_port(self, name: str, port_type_int: int, flags: int, uuid: int) -> int:
-        ''' adds port and returns the group_id '''
+        '''adds port and returns the group_id'''
         port_type = PortType.NULL
 
-        if port_type_int == PortType.AUDIO_JACK:
+        if port_type_int == PortType.AUDIO_JACK.value:
             port_type = PortType.AUDIO_JACK
-        elif port_type_int == PortType.MIDI_JACK:
+        elif port_type_int == PortType.MIDI_JACK.value:
             port_type = PortType.MIDI_JACK
-        elif port_type_int == PortType.MIDI_ALSA:
+        elif port_type_int == PortType.MIDI_ALSA.value:
             port_type = PortType.MIDI_ALSA
-        elif port_type_int == PortType.VIDEO:
+        elif port_type_int == PortType.VIDEO.value:
             port_type = PortType.VIDEO
 
         port = Port(self, self._next_port_id, name, port_type, flags, uuid)
@@ -1043,6 +1045,8 @@ class PatchbayManager:
 
             self._next_group_id += 1
             self._add_group(group)
+            
+            group_is_new = True
 
         group.add_port(port)
         group.graceful_port(port)
@@ -1051,12 +1055,15 @@ class PatchbayManager:
         port.add_to_canvas()
         group.check_for_portgroup_on_last_port()
         group.check_for_display_name_on_last_port()
+
+        if group_is_new:
+            self.sg.group_added.emit(group.group_id)
         
         return group.group_id
 
     @later_by_batch(draw_group=True, clear_conns=True)
     def remove_port(self, name: str) -> Union[int, None]:
-        ''' removes a port from name and return its group_id '''
+        '''remove a port from name and return its group_id'''
         port = self.get_port_from_name(name)
         if port is None:
             return None
@@ -1079,6 +1086,7 @@ class PatchbayManager:
         if not group.ports:
             group.remove_from_canvas()
             self._remove_group(group)
+            self.sg.group_removed.emit(group.group_id)
             return None
         
         return group.group_id
