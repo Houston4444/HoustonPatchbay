@@ -80,21 +80,25 @@ class BoxArranger:
     def set_box(self):
         group = canvas.get_group(self.group_id)
         if group.splitted:
-            if self.port_mode is PortMode.OUTPUT:
-                self.box = group.widgets[0]
-                self.box_rect = self.box.boundingRect()
-            elif self.port_mode is PortMode.INPUT:
-                self.box = group.widgets[1]
-                self.box_rect = self.box.boundingRect()
-            elif self.port_mode is PortMode.BOTH:
+            if self.port_mode is PortMode.BOTH:
                 box = BoxWidget(group, PortMode.BOTH)
                 self.box_rect = box.get_dummy_rect()
                 canvas.scene.remove_box(box)
                 self.joining = True
+            else:
+                for box in group.widgets:
+                    if box.get_port_mode() is self.port_mode:
+                        self.box = box
+                        self.box_rect = self.box.boundingRect()
+
         else:
             if self.port_mode is PortMode.BOTH:
-                self.box = group.widgets[0]
-                self.box_rect = self.box.boundingRect()
+                for box in group.widgets:
+                    self.box = box
+                    self.box_rect = self.box.boundingRect()
+                    break
+                else:
+                    _logger.error(f"{self} unable to find parent box")
             else:
                 _logger.error(f'{self} says that group should be splitted')
     
@@ -573,14 +577,13 @@ class CanvasArranger:
                 if group is not None:
                     group.box_poses[PortMode.BOTH].pos = grid_xy
                     canvas.qobject.add_group_to_join(group.group_id)
-                    canvas.scene.add_box_to_animation(
-                        group.widgets[0], *grid_xy, joining=Joining.YES,
-                        joined_rect=ba.box_rect)
-                    canvas.scene.add_box_to_animation(
-                        group.widgets[1], *grid_xy, joining=Joining.YES)
+                    
+                    for box in group.widgets:   
+                        canvas.scene.add_box_to_animation(
+                            box, *grid_xy, joining=Joining.YES,
+                            joined_rect=ba.box_rect)
             else:    
                 canvas.scene.add_box_to_animation(ba.box, *grid_xy)
-
 
 
 def arrange_follow_signal():
@@ -604,7 +607,7 @@ def arrange_face_to_face():
     
     for group in canvas.group_list:
         for box in group.widgets:
-            if box is None or not box.isVisible():
+            if not box.isVisible():
                 continue
             
             box_poses = gp_box_poses.get(group.group_id)
@@ -658,7 +661,7 @@ def arrange_face_to_face():
             continue
 
         for box in group.widgets:
-            if box is None or not box.isVisible():
+            if not box.isVisible():
                 continue
 
             box_pos = box_poses.get(box.get_port_mode())

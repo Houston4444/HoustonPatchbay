@@ -289,11 +289,11 @@ class Joining(Enum):
 
 
 class CanvasItemType(IntEnum):
-    # this enum is still here if really needed
-    # but never really used.
-    # Prefer use isinstance(item, type) if possible
-    # because IDE will know easier with which class
-    # we are dealing.
+    '''this enum is still here if really needed
+    but never really used.
+    Prefer use isinstance(item, type) if possible
+    because IDE will know easier with which class
+    we are dealing.'''
     BOX = QGraphicsItem.UserType + 1
     ICON = QGraphicsItem.UserType + 2
     PORT = QGraphicsItem.UserType + 3
@@ -349,15 +349,16 @@ class GroupObject:
     gui_visible: bool
     widgets: list
     if TYPE_CHECKING:
-        widgets: list[Optional[BoxWidget]]
+        widgets: list[BoxWidget]
 
     def copy_no_widget(self) -> 'GroupObject':
         group_copy = GroupObject()
         group_copy.__dict__ = self.__dict__.copy()
-        group_copy.widgets = [None, None]
+        group_copy.widgets = []
         group_copy.box_poses = {}
         for port_mode in PortMode.in_out_both():
-            group_copy.box_poses[port_mode] = BoxPos(self.box_poses[port_mode])
+            group_copy.box_poses[port_mode] = \
+                BoxPos(self.box_poses[port_mode])
         return group_copy
 
 
