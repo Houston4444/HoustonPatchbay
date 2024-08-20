@@ -245,20 +245,6 @@ def clear():
 # -------
 
 @patchbay_api
-def set_initial_pos(x: int, y: int):
-    canvas.initial_pos.setX(x)
-    canvas.initial_pos.setY(y)
-
-@patchbay_api
-def set_canvas_size(x: int, y: int, width: int, height: int):
-    canvas.size_rect.setX(x)
-    canvas.size_rect.setY(y)
-    canvas.size_rect.setWidth(width)
-    canvas.size_rect.setHeight(height)
-    canvas.scene.update_limits()
-    canvas.scene.fix_scale_factor()
-
-@patchbay_api
 def set_loading_items(yesno: bool):
     '''while canvas is loading items (groups or ports, connections...)
     then, items will be added, but not redrawn.
@@ -347,62 +333,6 @@ def rename_group(group_id: int, new_group_name: str):
         box.set_group_name(new_group_name)
 
     QTimer.singleShot(0, canvas.scene.update)
-
-@patchbay_api
-def get_splitted_on_place_pos(group_id: int,) -> dict[PortMode, BoxPos]:
-    out_dict = {PortMode.INPUT: BoxPos(),
-                PortMode.OUTPUT: BoxPos(),
-                PortMode.BOTH: BoxPos()}
-    
-    group = canvas.get_group(group_id)
-    if group is None:
-        _logger.error(f"{_logging_str} - unable to find group")
-        return out_dict
-    
-    if group.splitted:
-        _logger.error(
-            f"{_logging_str} - group is already splitted")
-        return out_dict
-    
-    for box in group.widgets:
-        if box.get_port_mode() is PortMode.BOTH:
-            pos = box.pos()
-            rect = box.boundingRect()
-            out_dict[PortMode.INPUT].pos = (
-                int(pos.x() - rect.width() / 2), int(pos.y()))
-            out_dict[PortMode.OUTPUT].pos = (
-                int(pos.x() + rect.width() / 2), int(pos.y()))
-            if box.is_wrapped():
-                out_dict[PortMode.INPUT].set_wrapped(True)
-                out_dict[PortMode.OUTPUT].set_wrapped(True)
-            break
-    else:
-        _logger.error(
-            f"{_logging_str} - group has no widget box")
-    
-    return out_dict
-
-@patchbay_api
-def get_box_rect(group_id: int, port_mode: PortMode) -> QRectF:
-    group = canvas.get_group(group_id)
-    if group is None:
-        _logger.error(f"{_logging_str} - unable to find group")
-        return QRectF()
-    
-    if bool(port_mode is PortMode.BOTH) == group.splitted:
-        if port_mode is PortMode.BOTH:
-            box = BoxWidget(group, port_mode)
-            rectf = box.get_dummy_rect()
-            canvas.scene.removeItem(box)
-            del box
-            return rectf
-        return QRectF()
-    
-    for box in group.widgets:
-        if box.get_port_mode() is port_mode:
-            return box.sceneBoundingRect()
-
-    return QRectF()
 
 @patchbay_api
 def split_group(group_id: int, on_place=False, redraw=True):
