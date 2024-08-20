@@ -79,10 +79,10 @@ class PortType(IntFlag):
 
 
 class PortSubType(IntFlag):
-    ''' a2j ports are MIDI ports, we only specify a decoration for them.
-        CV ports are audio ports, but we prevent to connect an output CV port
-        to a regular audio port to avoid material destruction, CV ports also
-        look different, simply because this is absolutely not the same use.'''
+    '''a2j ports are MIDI ports, we only specify a decoration for them.
+    CV ports are audio ports, but we prevent to connect an output CV port
+    to a regular audio port to avoid material destruction, CV ports also
+    look different, simply because this is absolutely not the same use.'''
     REGULAR = 0x01
     CV = 0x02
     A2J = 0x04
