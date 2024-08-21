@@ -92,9 +92,7 @@ class PortSubType(IntFlag):
 class CallbackAct(IntEnum):
     GROUP_INFO = auto()           # group_id: int
     GROUP_RENAME = auto()         # group_id: int
-    GROUP_SPLIT = auto()          # group_id: int
     GROUP_SPLITTED = auto()       # group_id: int
-    GROUP_JOIN = auto()           # group_id: int
     GROUP_JOINED = auto()         # group_id: int
     GROUP_MOVE = auto()           # group_id: int, splitted_mode: PortMode, x: int, y: int
     GROUP_BOX_POS_CHANGED = auto()# group_id: int, port_mode: PortMode, box_pos: BoxPos
@@ -126,6 +124,7 @@ class CallbackAct(IntEnum):
     BG_DOUBLE_CLICK = auto()      # 
     CLIENT_SHOW_GUI = auto()      # group_id: int, visible: bool
     THEME_CHANGED = auto()        # theme_name: str
+    ANIMATION_FINISHED = auto()
 
 
 class BoxType(IntEnum):
@@ -629,7 +628,7 @@ class Canvas:
             self._groups_dict.pop(group.group_id)
         
         for widget in group.widgets:
-            if widget is not None and widget in self._all_boxes:
+            if widget in self._all_boxes:
                 self._all_boxes.remove(widget)
     
     def remove_port(self, port: PortObject):

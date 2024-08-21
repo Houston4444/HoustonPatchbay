@@ -38,25 +38,12 @@ class Callbacker:
     
     def _group_rename(self, group_id: int):
         pass
-    
-    def _group_split(self, group_id: int):        
-        group = self.mng.get_group_from_id(group_id)
-        if group is not None:
-            # group.split_in_canvas()
-            self.patchcanvas.split_group(
-                group_id, on_place=True)
-            # group.current_position.set_splitted(True)
-            # group.save_current_position()
 
     def _group_splitted(self, group_id: int):
         group = self.mng.get_group_from_id(group_id)
         if group is not None:
             group.current_position.set_splitted(True)
             group.save_current_position()
-
-    def _group_join(self, group_id: int, origin_box_mode=PortMode.NULL):
-        self.patchcanvas.animate_before_join(
-            group_id, origin_box_mode=origin_box_mode)
     
     def _group_joined(self, group_id: int):
         group = self.mng.get_group_from_id(group_id)
@@ -218,3 +205,6 @@ class Callbacker:
             self.mng.options_dialog.set_theme(theme_ref)
 
         patchcanvas.redraw_all_groups(theme_change=True)
+
+    def _animation_finished(self):
+        self.mng.animation_finished()

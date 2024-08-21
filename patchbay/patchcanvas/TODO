@@ -44,3 +44,18 @@ arranger signal chain:
     caller les inputs à gauche de la colonne
         les outputs à droite
     choisir les places des non-connectés en fonction de leurs dimensions
+
+animations et évènements:
+    Attention, fonctionne pas avec arranger,
+    l'arranger décide de split/join par exemple.
+    Pour chaque changement d'une boite:
+        * le manager rentre dans GroupPos le changement
+        * le manager transmet ses volontés au patchcanvas (qui lance l'anim)
+        * une fois l'anim terminée, le manager demande au patchcanvas
+            * de ré-évaluer les hidden sides
+            * (de split/join les groupes changés)
+    Après l'animation, manager check
+
+    join_group fait de la repulsion à la fin,
+        mais ça ne devrait pas se faire si animate_before_join est demandé
+        dans un chg de vue

@@ -423,9 +423,6 @@ class PatchSceneMoth(QGraphicsScene):
             # Animation is finished
             self._move_box_timer.stop()
             canvas.set_aliasing_reason(AliasingReason.ANIMATION, False)
-            
-            for box in self.hidding_boxes:
-                box.send_hide_callback()
             self.hidding_boxes.clear()
             self.restore_boxes.clear()
             GroupedLinesWidget.clear_transparent_starts()
@@ -438,10 +435,9 @@ class PatchSceneMoth(QGraphicsScene):
             self.wrapping_boxes.clear()
 
             for box in boxes:
-                if box is not None:
-                    if box.update_positions_pending:
-                        box.update_positions()
-                    box.send_move_callback()
+                if box.update_positions_pending:
+                    box.update_positions()
+                box.send_move_callback()
 
             canvas.qobject.move_boxes_finished.emit()
 
@@ -449,8 +445,8 @@ class PatchSceneMoth(QGraphicsScene):
             self, box_widget: BoxWidget, to_x: int, to_y: int,
             joining=Joining.NO_CHANGE, joined_rect=QRectF()):
         '''add a box to the move animation, to_x and to_y refer to the top left
-           of the box at the end of animation.
-           if joining is set to Joining.YES, joined_rect must be set'''
+        of the box at the end of animation.
+        if joining is set to Joining.YES, joined_rect must be set'''
 
         for moving_box in self.move_boxes:
             if moving_box.widget is box_widget:

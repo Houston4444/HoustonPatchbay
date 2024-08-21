@@ -242,6 +242,8 @@ class BoxArranger:
 
 
 class CanvasArranger:
+    'Arranger main class for "follow signal chain" action'
+
     def __init__(self):
         self.box_arrangers = list[BoxArranger]()
         self.ba_networks = list[list[BoxArranger]]()

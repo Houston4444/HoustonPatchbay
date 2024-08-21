@@ -2,7 +2,6 @@
 import json
 import logging
 import operator
-from os import times
 from pathlib import Path
 from dataclasses import dataclass
 import time
@@ -108,12 +107,12 @@ class PatchbayManager:
     use_graceful_names = True
     port_types_view = PortTypesViewFlag.ALL
     
-    # when True, items can be added to patchcanvas but they won't be drawn
     optimized_operation = False
+    "when True, items can be added to patchcanvas but they won't be drawn"
     
-    # when True, items are not added/removed from patchcanvas
-    # useful to win time at startup or refresh
     very_fast_operation = False
+    '''when True, items are not added/removed from patchcanvas
+    useful to win time at startup or refresh'''
 
     groups = list[Group]()
     connections = list[Connection]()
@@ -372,14 +371,68 @@ class PatchbayManager:
 
         return False
 
+    def animation_finished(self):
+        '''Executed after any patchcanvas animation, it cleans
+        in patchcanvas all boxes that should be hidden now.'''
+        
+        print('ANIMATION_FINISHED view', self.view_number)
+        
+        self.optimize_operation(True)
+        group_ids_redraw = list[int]()
+
+        start = time.time()
+
+        for group in self.groups:
+            if group.current_position.hidden_port_modes() is PortMode.NULL:
+                continue
+            hidden_port_mode = group.current_position.hidden_port_modes()
+            
+            if hidden_port_mode & PortMode.OUTPUT:
+                for conn in self.connections:
+                    if conn.port_out.group_id == group.group_id:
+                        conn.remove_from_canvas()
+            
+            if hidden_port_mode & PortMode.INPUT:
+                for conn in self.connections:
+                    if conn.port_in.group_id == group.group_id:
+                        conn.remove_from_canvas()
+            
+            for portgroup in group.portgroups:
+                if hidden_port_mode & portgroup.port_mode:
+                    portgroup.remove_from_canvas()
+                    
+            for port in group.ports:
+                if hidden_port_mode & port.mode():
+                    port.remove_from_canvas()
+            
+            if hidden_port_mode is PortMode.BOTH:
+                group.remove_from_canvas()
+            elif group.in_canvas:
+                group_ids_redraw.append(group.group_id)
+
+        bef_readd_conns = time.time()
+
+        for conn in self.connections:
+            conn.add_to_canvas()
+        
+        end = time.time()
+        print('Done in ', end - start, 'seconds', end - bef_readd_conns)
+        
+        self.optimize_operation(False)
+        for group_id in group_ids_redraw:
+            patchcanvas.redraw_group(group_id, prevent_overlap=False)
+        patchcanvas.canvas.scene.resize_the_scene()
+        self.sg.hidden_boxes_changed.emit()
+        
+        patchcanvas.prilo()
+
     def set_group_hidden_sides(self, group_id: int, port_mode: PortMode):
         group = self.get_group_from_id(group_id)
         if group is None:
             return
         
-        hidden_port_mode = (
+        group.current_position.set_hidden_port_mode(
             group.current_position.hidden_port_modes() | port_mode)
-        group.current_position.set_hidden_port_mode(hidden_port_mode)
         group.save_current_position()
 
         self.optimize_operation(True)
@@ -571,7 +624,10 @@ class PatchbayManager:
         if gpos is not None:
             return gpos
 
-        is_white_list_view = self.views_datas[self.view_number].is_white_list
+        is_white_list_view = False
+        view_data = self.views_datas.get(self.view_number)
+        if view_data is not None:
+            is_white_list_view = view_data.is_white_list
 
         # prevent move to a new position in case of port_types_view change
         # if there is no remembered position for this group in new view

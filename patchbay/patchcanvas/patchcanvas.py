@@ -135,25 +135,27 @@ class CanvasObject(QObject):
     def _aliasing_view_timer_finished(self):
         canvas.set_aliasing_reason(AliasingReason.VIEW_MOVE, False)
 
-    @pyqtSlot()
-    def _join_after_move(self):
-        for group_id, origin_box_mode in self._gps_to_join.items():
-            join_group(group_id, origin_box_mode)
-
-        if options.prevent_overlap:            
-            for group_id, origin_box_mode in self._gps_to_join.items():
-                group = canvas.get_group(group_id)
-                for box in group.widgets:
-                    canvas.scene.deplace_boxes_from_repulsers([box])
-                    break
-
-        self._gps_to_join.clear()
-        
     def start_aliasing_check(self, aliasing_reason: AliasingReason):
         self._aliasing_reason = aliasing_reason
         self._aliasing_timer_started_at = time.time()
         self._aliasing_move_timer.start()
-    
+
+    @pyqtSlot()
+    def _join_after_move(self):
+        for group_id, origin_box_mode in self._gps_to_join.items():
+            join_group(group_id)
+
+        # if options.prevent_overlap:            
+        #     for group_id, origin_box_mode in self._gps_to_join.items():
+        #         group = canvas.get_group(group_id)
+        #         for box in group.widgets:
+        #             canvas.scene.deplace_boxes_from_repulsers([box])
+        #             break
+
+        self._gps_to_join.clear()
+        
+        canvas.callback(CallbackAct.ANIMATION_FINISHED)
+
     def add_group_to_join(self, group_id: int, orig_port_mode=PortMode.NULL):
         self._gps_to_join[group_id] = orig_port_mode
     
@@ -252,6 +254,12 @@ def set_loading_items(yesno: bool):
     Think to set loading items at False and use redraw_all_groups
     or redraw_group once the long operation is finished'''
     canvas.loading_items = yesno
+
+@patchbay_api
+def prilo():
+    for box in canvas.list_boxes():
+        if not box.isVisible():
+            print('invisib', box)
 
 @patchbay_api
 def add_group(group_id: int, group_name: str, split: bool,
@@ -448,7 +456,7 @@ def split_group(group_id: int, on_place=False, redraw=True):
     QTimer.singleShot(0, canvas.scene.update)
 
 @patchbay_api
-def join_group(group_id: int, origin_box_mode=PortMode.NULL):
+def join_group(group_id: int):
     # Step 1 - Store all Item data
     group = canvas.get_group(group_id)
     if group is None:
@@ -459,20 +467,9 @@ def join_group(group_id: int, origin_box_mode=PortMode.NULL):
         _logger.error(f"{_logging_str} - group is not splitted")
         return
 
-    orig_rect = QRectF()
     wrap = True
-
     for box in group.widgets:
         wrap = wrap and box.is_wrapped()
-        if box.get_port_mode() is origin_box_mode:
-            orig_rect = box.sceneBoundingRect()
-
-    tmp_box = BoxWidget(group, PortMode.BOTH)
-    if group.handle_client_gui:
-        tmp_box.set_optional_gui_state(group.gui_visible)
-    tmp_rect = QRectF(tmp_box.get_dummy_rect())
-    canvas.scene.remove_box(tmp_box)
-    del tmp_box
 
     tmp_group = group.copy_no_widget()
 
@@ -497,16 +494,6 @@ def join_group(group_id: int, origin_box_mode=PortMode.NULL):
     remove_group(group_id)
 
     g = tmp_group
-    
-    if not orig_rect.isNull():
-        if origin_box_mode is PortMode.OUTPUT:
-            g.box_poses[PortMode.BOTH].pos = (
-                int(orig_rect.right() - tmp_rect.width()),
-                int(orig_rect.top()))
-
-        elif origin_box_mode is PortMode.INPUT:
-            g.box_poses[PortMode.BOTH].pos = (
-                int(orig_rect.left(), int(orig_rect.right())))
     
     # Step 3 - Re-create Item, now together
     add_group(group_id, g.group_name, False,
@@ -616,6 +603,20 @@ def redraw_group(group_id: int, ensure_visible=False, prevent_overlap=True):
             break
 
 @patchbay_api
+def redraw_groups(group_ids: list[int]):
+    for group_id in group_ids:
+        group = canvas.get_group(group_id)
+        if group is None:
+            _logger.error(
+                f"{_logging_str}, unable to find group {group_id} to redraw")
+            continue
+        
+        for box in group.widgets:
+            box.update_positions(prevent_overlap=False)
+            
+    canvas.scene.update()
+
+@patchbay_api
 def change_grid_width(grid_width: int):
     if grid_width <= 0:
         _logger.error(
@@ -655,13 +656,18 @@ def change_grid_widget_style(style: GridStyle):
     canvas.scene.update_grid_style()
 
 @patchbay_api
-def animate_before_join(group_id: int,
-                        origin_box_mode: PortMode=PortMode.NULL):
+def animate_before_join(
+        group_id: int, origin_box_mode: PortMode=PortMode.NULL,
+        prevent_overlap=False):
     group = canvas.get_group(group_id)
     if group is None:
         return
 
-    canvas.qobject.add_group_to_join(group.group_id, origin_box_mode)
+    if not group.splitted:
+        _logger.error(f'{_logging_str} - group is not splitted')
+        return
+
+    canvas.qobject.add_group_to_join(group.group_id, PortMode.NULL)
 
     if origin_box_mode is PortMode.OUTPUT:
         x, y = group.widgets[0].top_left()
@@ -669,10 +675,25 @@ def animate_before_join(group_id: int,
         x, y = group.widgets[1].top_left()
     else:
         x, y = group.box_poses[PortMode.BOTH].pos
+        
+    group.box_poses[PortMode.BOTH].pos = (x, y)
+
+    tmp_box = BoxWidget(group, PortMode.BOTH)
+    rect = QRectF(tmp_box.get_dummy_rect())
+    rect.translate(x, y)
+    canvas.scene.removeItem(tmp_box)
+    del tmp_box
 
     for box in group.widgets:
-        canvas.scene.add_box_to_animation(
-            box, x, y, joining=Joining.YES)
+        if box.get_port_mode() is PortMode.INPUT:
+            canvas.scene.add_box_to_animation(
+                box, x, y, joining=Joining.YES, joined_rect=rect)
+
+            if prevent_overlap:
+                canvas.scene.deplace_boxes_from_repulsers([box]) 
+        else:
+            canvas.scene.add_box_to_animation(
+                box, x, y, joining=Joining.YES)
 
 @patchbay_api
 def move_group_boxes(

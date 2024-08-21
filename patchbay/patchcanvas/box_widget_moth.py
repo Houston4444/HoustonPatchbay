@@ -207,8 +207,10 @@ class BoxWidgetMoth(QGraphicsItem):
 
         self._is_semi_hidden = False
         
-        self._can_handle_gui = False # used for optional-gui switch
-        self._gui_visible = False
+        self._can_handle_gui = group.handle_client_gui
+        'used for optional-gui switch (NSM)'
+        self._gui_visible = group.gui_visible
+        'NSM GUI visibility state'
 
         self._layout_mode = group.box_poses[port_mode].layout_mode
         self._current_layout_mode = BoxLayoutMode.LARGE
