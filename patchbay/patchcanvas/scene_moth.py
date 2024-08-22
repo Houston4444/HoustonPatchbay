@@ -165,6 +165,11 @@ class PatchSceneMoth(QGraphicsScene):
 
     def clear(self):
         # reimplement Qt function and fix missing rubberband after clear
+        self.move_boxes.clear()
+        self.wrapping_boxes.clear()
+        self.hidding_boxes.clear()
+        self.restore_boxes.clear()
+        
         QGraphicsScene.clear(self)
         self._rubberband = RubberbandRect(self)
         self._grid_widget = None
@@ -423,6 +428,8 @@ class PatchSceneMoth(QGraphicsScene):
             # Animation is finished
             self._move_box_timer.stop()
             canvas.set_aliasing_reason(AliasingReason.ANIMATION, False)
+            # for hidding_box in self.hidding_boxes:
+            #     hidding_box.send_hide_callback()
             self.hidding_boxes.clear()
             self.restore_boxes.clear()
             GroupedLinesWidget.clear_transparent_starts()

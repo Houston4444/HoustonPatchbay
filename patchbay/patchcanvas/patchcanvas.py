@@ -240,7 +240,6 @@ def clear():
         del item
 
     canvas.initiated = False
-    # canvas.scene.addItem(canvas.scene._grid)
 
     QTimer.singleShot(0, canvas.scene.update)
 
@@ -249,7 +248,7 @@ def clear():
 @patchbay_api
 def set_loading_items(yesno: bool):
     '''while canvas is loading items (groups or ports, connections...)
-    then, items will be added, but not redrawn.
+    items will be added, but not redrawn.
     This is an optimization that prevents a lot of redraws.
     Think to set loading items at False and use redraw_all_groups
     or redraw_group once the long operation is finished'''
@@ -260,6 +259,7 @@ def prilo():
     for box in canvas.list_boxes():
         if not box.isVisible():
             print('invisib', box)
+            # box.setVisible(True)
 
 @patchbay_api
 def add_group(group_id: int, group_name: str, split: bool,
@@ -361,67 +361,26 @@ def split_group(group_id: int, on_place=False, redraw=True):
         return
 
     box = group.widgets[0]
-    tmp_group = group.copy_no_widget()
-
-    ex_rect = QRectF(box.sceneBoundingRect())        
     wrap = box.is_wrapped()
+    ex_rect = QRectF(box.sceneBoundingRect())        
+    new_box = BoxWidget(group, PortMode.INPUT)
+    new_box.setPos(box.pos())
+    
+    for portgroup in canvas.list_portgroups(group_id):
+        if (portgroup.port_mode is PortMode.INPUT
+                and portgroup.widget is not None):
+            portgroup.widget.setParentItem(new_box)
+            
+    for port in canvas.list_ports(group_id):
+        if (port.port_mode is PortMode.INPUT
+                and port.widget is not None):
+            port.widget.setParentItem(new_box)
 
-    if box is not None:
-        pos = box.pos()
-        for port_mode in PortMode.INPUT, PortMode.OUTPUT:
-            box_pos = tmp_group.box_poses[port_mode]
-            box_pos.set_pos_from_pt(pos)
-            if on_place or not redraw:
-                box_pos.set_wrapped(wrap)
+    box.set_port_mode(PortMode.OUTPUT)
+    group.widgets.append(new_box)
+    canvas.add_box(new_box)
+    group.splitted = True
 
-    port_ids_with_hidden_conns = [
-        p.port_id for p in canvas.list_ports(group_id=group_id)
-        if p.hidden_conn_widget is not None]
-
-    portgrps_data = [pg.copy_no_widget() for pg 
-                     in canvas.list_portgroups(group_id=group_id)]
-    ports_data = [p.copy_no_widget() for p in canvas.list_ports(group_id=group_id)]
-
-    loading_items = canvas.loading_items
-    canvas.loading_items = True
-
-    # Step 2 - Remove Item and Children
-    for portgrp in portgrps_data:
-        if portgrp.group_id == group_id:
-            remove_portgroup(group_id, portgrp.portgrp_id)
-
-    for port in ports_data:
-        if port.group_id == group_id:
-            remove_port(group_id, port.port_id)
-
-    remove_group(group_id)
-
-    g = tmp_group
-
-    # Step 3 - Re-create Item, now split
-    add_group(group_id, g.group_name, True,
-              g.box_type, g.icon_name,
-              box_poses=g.box_poses)
-
-    if g.handle_client_gui:
-        set_optional_gui_state(group_id, g.gui_visible)
-
-    if g.plugin_id >= 0:
-        set_group_as_plugin(group_id, g.plugin_id, g.plugin_ui, g.plugin_inline)
-
-    for port in ports_data:
-        add_port(group_id, port.port_id, port.port_name, port.port_mode,
-                 port.port_type, port.port_subtype)
-
-    for portgrp in portgrps_data:
-        add_portgroup(group_id, portgrp.portgrp_id, portgrp.port_mode,
-                      portgrp.port_type, portgrp.port_subtype,
-                      portgrp.port_id_list)
-
-    for port_id in port_ids_with_hidden_conns:
-        port_has_hidden_connection(group_id, port_id, True)
-
-    canvas.loading_items = loading_items
     canvas.callback(CallbackAct.GROUP_SPLITTED, group_id)
     
     if not redraw:
@@ -429,13 +388,13 @@ def split_group(group_id: int, on_place=False, redraw=True):
     
     full_width = canvas.theme.box_spacing
     
-    for box in canvas.get_group(group_id).widgets:
+    for box in group.widgets:
         box.set_wrapped(wrap, animate=False)
         box.update_positions(even_animated=True, prevent_overlap=False)
         full_width += box.boundingRect().width()
                 
     if on_place:
-        for box in canvas.get_group(group_id).widgets:
+        for box in group.widgets:
             if box.get_current_port_mode() is PortMode.OUTPUT:
                 canvas.scene.add_box_to_animation(
                     box,
@@ -455,9 +414,9 @@ def split_group(group_id: int, on_place=False, redraw=True):
 
     QTimer.singleShot(0, canvas.scene.update)
 
+
 @patchbay_api
 def join_group(group_id: int):
-    # Step 1 - Store all Item data
     group = canvas.get_group(group_id)
     if group is None:
         _logger.error(f"{_logging_str} - unable to find groups to join")
@@ -471,59 +430,32 @@ def join_group(group_id: int):
     for box in group.widgets:
         wrap = wrap and box.is_wrapped()
 
-    tmp_group = group.copy_no_widget()
 
-    port_ids_with_hidden_conns = [
-        p.port_id for p in canvas.list_ports(group_id=group_id)
-        if p.hidden_conn_widget is not None]
+    eater, eaten = group.widgets
 
-    portgrps_data = [pg.copy_no_widget() for pg in
-                     canvas.list_portgroups(group_id=group_id)]
-    ports_data = [p.copy_no_widget()
-                  for p in canvas.list_ports(group_id=group_id)]
-
-    canvas.loading_items = True
-
-    # Step 2 - Remove Item and Children
-    for portgrp in portgrps_data:
-        remove_portgroup(group_id, portgrp.portgrp_id)
-
-    for port in ports_data:
-        remove_port(group_id, port.port_id)
-
-    remove_group(group_id)
-
-    g = tmp_group
+    for portgroup in canvas.list_portgroups(group_id=group_id):
+        if (portgroup.port_mode is eaten.get_port_mode()
+                and portgroup.widget is not None):
+            portgroup.widget.setParentItem(eater)
     
-    # Step 3 - Re-create Item, now together
-    add_group(group_id, g.group_name, False,
-              g.box_type, g.icon_name,
-              box_poses=g.box_poses)
+    for port in canvas.list_ports(group_id=group_id):
+        if (port.port_mode is eaten.get_port_mode()
+                and port.widget is not None):
+            port.widget.setParentItem(eater)
 
-    if g.handle_client_gui:
-        set_optional_gui_state(group_id, g.gui_visible)
+    eater.set_port_mode(PortMode.BOTH)
+    eaten.remove_icon_from_scene()
+    canvas.scene.remove_box(eaten)
+    group.widgets.remove(eaten)
+    canvas.remove_box(eaten)
+    group.splitted = False
+    del eaten
 
-    if g.plugin_id >= 0:
-        set_group_as_plugin(group_id, g.plugin_id, g.plugin_ui, g.plugin_inline)
-
-    for port in ports_data:
-        add_port(group_id, port.port_id, port.port_name, port.port_mode,
-                 port.port_type, port.port_subtype)
-
-    for portgrp in portgrps_data:
-        add_portgroup(group_id, portgrp.portgrp_id, portgrp.port_mode,
-                      portgrp.port_type, portgrp.port_subtype,
-                      portgrp.port_id_list)
-
-    for port_id in port_ids_with_hidden_conns:
-        port_has_hidden_connection(group_id, port_id, True)
-
-    for box in canvas.get_group(group_id).widgets:
-        box.send_move_callback()
-        box.set_wrapped(wrap, animate=False)
+    eater.send_move_callback()
+    eater.set_wrapped(wrap, animate=False)
 
     canvas.loading_items = False
-    redraw_group(group_id, prevent_overlap=False)
+    eater.update_positions(prevent_overlap=False)
     canvas.callback(CallbackAct.GROUP_JOINED, group_id)
 
     QTimer.singleShot(0, canvas.scene.update)
@@ -720,13 +652,6 @@ def move_group_boxes(
                     break
 
             split_group(group_id, redraw=False)
-            
-            group = canvas.get_group(group_id)
-            if group is None:
-                _logger.error(
-                    f'{_logging_str}, Failed to refind the group after split')
-                return
-
             splitted = True
             redraw |= PortMode.BOTH
         else:
@@ -1145,12 +1070,10 @@ def disconnect_ports(connection_id: int):
         return
     
     tmp_conn = connection.copy_no_widget()
-    # line = connection.widget
-    group_out_id = connection.group_out_id
-    group_in_id = connection.group_in_id
     canvas.remove_connection(connection)
     
-    GroupedLinesWidget.prepare_conn_changes(group_out_id, group_in_id)
+    GroupedLinesWidget.prepare_conn_changes(
+        tmp_conn.group_out_id, tmp_conn.group_in_id)
     canvas.qobject.connect_update_timer.start()
     canvas.qobject.connection_removed.emit(connection_id)
 
@@ -1158,17 +1081,12 @@ def disconnect_ports(connection_id: int):
     in_port = canvas.get_port(tmp_conn.group_in_id, tmp_conn.port_in_id)
     
     if out_port is None or in_port is None:
-        # canvas.scene.removeItem(line)
-        # del line
-    
         _logger.info(f"{_logging_str} - connection cleaned after its ports")
         return
-        
-    item1 = out_port.widget
-    item2 = in_port.widget
-    if item1 is None or item2 is None:
-        _logger.critical(f"{_logging_str} - port has no widget")
-        return
+
+    if out_port.widget is None or in_port.widget is None:
+        _logger.error(f"{_logging_str} - port has no widget")
+        return        
 
     if canvas.loading_items:
         return

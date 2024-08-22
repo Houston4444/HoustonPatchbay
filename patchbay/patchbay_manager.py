@@ -730,7 +730,7 @@ class PatchbayManager:
         self.port_types_view = port_types_view
         _logger.info(
             f"Change Port Types View: {ex_ptv.name} -> {port_types_view.name}")
-
+        print(f"Change Port Types View: {ex_ptv.name} -> {port_types_view.name}")
         # Prevent visual update at each canvas item creation
         # because we may create/remove a lot of ports here
         self.optimize_operation(True)

@@ -1254,7 +1254,6 @@ class BoxWidget(BoxWidgetMoth):
                 self._width = self._unwrapped_width
                 self._height = self._unwrapped_height
                 
-                
             else:
                 self._width = self._wrapped_width
                 self._height = self._wrapped_height

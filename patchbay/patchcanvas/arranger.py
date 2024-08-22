@@ -399,25 +399,16 @@ class CanvasArranger:
             if ba.port_mode is not PortMode.BOTH:
                 group_ids_to_split.add(ba.group_id)
 
-        group_ids_join_done = set[int]()
-
         # join or split groups we want to join or split
-        while True:
-            for group in canvas.group_list:
-                if group.splitted:
-                    if (group.box_type is not BoxType.HARDWARE
-                            and group.group_id not in group_ids_to_split
-                            and group.group_id not in group_ids_join_done):
-                        animate_before_join(group.group_id)
-                        group_ids_join_done.add(group.group_id)
-                        break
-                else:
-                    if (group.box_type is BoxType.HARDWARE
-                            or group.group_id in group_ids_to_split):
-                        split_group(group.group_id)
-                        break
+        for group in canvas.group_list:
+            if group.splitted:
+                if (group.box_type is not BoxType.HARDWARE
+                        and group.group_id not in group_ids_to_split):
+                    animate_before_join(group.group_id)
             else:
-                break
+                if (group.box_type is BoxType.HARDWARE
+                        or group.group_id in group_ids_to_split):
+                    split_group(group.group_id)
         
         for box_arranger in self.box_arrangers:
             box_arranger.set_box()

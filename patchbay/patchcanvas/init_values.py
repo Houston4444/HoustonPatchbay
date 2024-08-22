@@ -571,8 +571,14 @@ class Canvas:
         self.group_list.append(group)
         self._groups_dict[group.group_id] = group
         for widget in group.widgets:
-            if widget is not None:
-                self._all_boxes.append(widget)
+            self._all_boxes.append(widget)
+
+    def add_box(self, box: 'BoxWidget'):
+        self._all_boxes.append(box)
+        
+    def remove_box(self, box: 'BoxWidget'):
+        if box in self._all_boxes:
+            self._all_boxes.remove(box)
 
     def add_port(self, port: PortObject):
         self.port_list.append(port)
@@ -686,26 +692,32 @@ class Canvas:
     def list_boxes(self) -> list['BoxWidget']:
         return self._all_boxes
 
-    def list_ports(self, group_id=None) -> Iterator[PortObject]:
+    def list_ports(self, group_id: int=None) -> Iterator[PortObject]:
         if group_id is None:
             for port in self.port_list:
                 yield port
             return     
         
-        if group_id in self._ports_dict.keys():
-            for port in self._ports_dict[group_id].values():
-                yield port
+        work_dict = self._ports_dict.get(group_id)
+        if work_dict is None:
+            return
+        
+        for port in work_dict.values():
+            yield port
             
-    def list_portgroups(self, group_id=None) -> Iterator[PortgrpObject]:
+    def list_portgroups(self, group_id: int=None) -> Iterator[PortgrpObject]:
         if group_id is None:
             for portgrp in self.portgrp_list:
                 yield portgrp
             return     
         
-        if group_id in self._portgrps_dict.keys():
-            for portgrp in self._portgrps_dict[group_id].values():
-                yield portgrp
-                
+        work_dict = self._portgrps_dict.get(group_id)
+        if work_dict is None:
+            return
+        
+        for portgrp in work_dict.values():
+            yield portgrp
+
     def list_connections(
             self, *connectables: ConnectableObject,
             group_in_id=None, group_out_id=None,

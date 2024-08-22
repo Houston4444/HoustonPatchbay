@@ -127,7 +127,10 @@ class BoxWidgetMoth(QGraphicsItem):
 
         self._last_pos = QPointF()
         self._port_mode = port_mode
-        self._current_port_mode = PortMode.NULL # depends of present ports
+        'port modes  it can contain (OUTPUT, INPUT or BOTH)'
+
+        self._current_port_mode = PortMode.NULL
+        'depends on present ports'
 
         self._cursor_moving = False
         self._mouse_down = False
@@ -234,6 +237,16 @@ class BoxWidgetMoth(QGraphicsItem):
 
     def get_port_mode(self):
         return self._port_mode
+
+    def set_port_mode(self, port_mode: PortMode):
+        'Use it only at split/join !!!'
+        group = canvas.get_group(self._group_id)
+        if group is None:
+            _logger.error(
+                'set_port_mode impossible, it fails to find its group')
+        
+        self._port_mode = port_mode
+        self._layout_mode = group.box_poses[port_mode].layout_mode
 
     def get_current_port_mode(self):
         return self._current_port_mode
@@ -447,6 +460,7 @@ class BoxWidgetMoth(QGraphicsItem):
                 self._wrapping_state = WrappingState.WRAPPED
             else:
                 self._wrapping_state = WrappingState.NORMAL
+                self.hide_ports_for_wrap(False)
             return
 
         if yesno:
