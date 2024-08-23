@@ -698,6 +698,9 @@ class BoxWidgetMoth(QGraphicsItem):
             # So, here we avoid a RecursionError
             return
 
+        if canvas.scene.prevent_box_user_move:
+            return
+
         if self._mouse_down:
             if not self._cursor_moving:
                 # if box is moved by animation, animation could relocate

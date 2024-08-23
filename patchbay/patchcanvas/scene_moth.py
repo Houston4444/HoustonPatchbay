@@ -125,6 +125,10 @@ class PatchSceneMoth(QGraphicsScene):
         self._cursor_cut = None
         self._cursor_zoom_area = None
 
+        self.prevent_box_user_move = False
+        '''During view change, this attr must be set to True
+        to prevent user to take and move a box.'''
+        
         self.move_boxes = list[MovingBox]()
         self.wrapping_boxes = list[WrappingBox]()
         self.hidding_boxes = set[BoxWidget]()
@@ -436,6 +440,7 @@ class PatchSceneMoth(QGraphicsScene):
             # Animation is finished
             self._move_box_timer.stop()
             canvas.set_aliasing_reason(AliasingReason.ANIMATION, False)
+            self.prevent_box_user_move = False
             # for hidding_box in self.hidding_boxes:
             #     hidding_box.send_hide_callback()
             self.hidding_boxes.clear()
@@ -516,6 +521,12 @@ class PatchSceneMoth(QGraphicsScene):
             canvas.set_aliasing_reason(AliasingReason.ANIMATION, True)
 
     def remove_box_from_animation(self, box_widget: BoxWidget):
+        if self.prevent_box_user_move:
+            # should not happens.
+            # For now we can remove a box from animation only by moving box manually,
+            # and this is prevented by this attr in box_widget_moth
+            return
+
         for moving_box in self.move_boxes:
             if moving_box.widget is box_widget:
                 self.move_boxes.remove(moving_box)

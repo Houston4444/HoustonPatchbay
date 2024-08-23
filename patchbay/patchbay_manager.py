@@ -773,7 +773,7 @@ class PatchbayManager:
                 # are not the sames.
 
                 if new_hidden_modes is not hidden_modes:
-                    # During the animation, we need to see the ports we hide
+                    # During the animation, we need to see the ports we hide,
                     # so the hidden ports in the new view must be shown.
                     # But, if the ports are hidden in the two views,
                     # we won't show them.
@@ -825,11 +825,17 @@ class PatchbayManager:
 
         self.optimize_operation(False)
 
+        patchcanvas.canvas.scene.prevent_box_user_move = True
+
+        bef_gp_pos = time.time()
         for group, gpos_redraw in groups_and_pos.items():
             group.set_group_position(*gpos_redraw)
 
+        bef_repulse = time.time()
         patchcanvas.repulse_all_boxes(view_change=True)
+        end_repulse = time.time()
 
+        print('change ptv done', bef_repulse - bef_gp_pos, end_repulse - bef_repulse)
         self.sg.port_types_view_changed.emit(self.port_types_view)
 
     def new_view(self, view_number: Optional[int]=None):
@@ -888,6 +894,7 @@ class PatchbayManager:
         else:
             ptv = new_view_data.default_port_types_view
 
+        print('change VIEW', self.view_number)
         self.change_port_types_view(ptv, force=True)
         self.sg.view_changed.emit(view_number)
     
