@@ -537,9 +537,13 @@ class PatchSceneMoth(QGraphicsScene):
             self._move_box_timer.start()
 
     def add_box_to_animation_hidding(self, box_widget: BoxWidget):
-        if box_widget in self.restore_boxes:
-            self.restore_boxes.remove(box_widget)
+        self.restore_boxes.discard(box_widget)
         self.hidding_boxes.add(box_widget)
+        
+        for move_box in self.move_boxes:
+            if move_box.widget is box_widget:
+                move_box.final_rect = QRectF()
+                break
         
         if not self._move_box_timer.isActive():
             self._move_timer_start_at = time.time()
@@ -547,9 +551,14 @@ class PatchSceneMoth(QGraphicsScene):
             self._move_box_timer.start()
 
     def add_box_to_animation_restore(self, box_widget: BoxWidget):
-        if box_widget in self.hidding_boxes:
-            self.hidding_boxes.remove(box_widget)
+        self.hidding_boxes.discard(box_widget)
         self.restore_boxes.add(box_widget)
+        
+        for moving_box in self.move_boxes:
+            if moving_box.widget is box_widget:
+                moving_box.final_rect = \
+                    box_widget.after_wrap_rect().translated(moving_box.to_pt)
+                break
         
         if not self._move_box_timer.isActive():
             self._move_timer_start_at = time.time()
@@ -567,9 +576,8 @@ class PatchSceneMoth(QGraphicsScene):
                 self.wrapping_boxes.remove(wrapping_box)
                 break
         
-        for box_list in (self.hidding_boxes, self.restore_boxes):
-            if box_widget in box_list:
-                box_list.remove(box_widget) 
+        for box_set in (self.hidding_boxes, self.restore_boxes):
+            box_set.discard(box_widget) 
         
         self.removeItem(box_widget)
 

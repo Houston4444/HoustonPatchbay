@@ -265,14 +265,8 @@ class BoxWidgetMoth(QGraphicsItem):
             self.update()
 
     def remove_as_plugin(self):
-        #del self._inline_image
-        #self._inline_data = None
-        #self._inline_image = None
-        #self._inline_scaling = 1.0
-
         self._plugin_id = -1
         self._plugin_ui = False
-        #self._plugin_inline = self.INLINE_DISPLAY_DISABLED
 
     def set_as_plugin(self, plugin_id, has_ui, has_inline_display):
         if has_inline_display and not options.inline_displays:

@@ -550,15 +550,14 @@ class Canvas:
         self._conns_inout_dict.clear()
 
     def clear_all_2(self):
+        self.qobject.rm_all_groups_to_join()
         self.group_list.clear()
-        self._groups_dict.clear()
         self._groups_dict.clear()
         self._all_boxes.clear()
         self.port_list.clear()
         self._ports_dict.clear()
         self.portgrp_list.clear()
         self._portgrps_dict.clear()
-        self._ports_dict.clear()
         self.connection_list.clear()
         self._conns_dict.clear()
         self._conns_outin_dict.clear()
@@ -636,6 +635,8 @@ class Canvas:
         for widget in group.widgets:
             if widget in self._all_boxes:
                 self._all_boxes.remove(widget)
+                
+        self.qobject.rm_group_to_join(group.group_id)
     
     def remove_port(self, port: PortObject):
         if port in self.port_list:

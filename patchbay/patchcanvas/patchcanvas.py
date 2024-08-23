@@ -162,6 +162,9 @@ class CanvasObject(QObject):
     def rm_group_to_join(self, group_id: int):
         if group_id in self._gps_to_join.keys():
             self._gps_to_join.pop(group_id)
+            
+    def rm_all_groups_to_join(self):
+        self._gps_to_join.clear()
 
 
 @patchbay_api
@@ -365,6 +368,7 @@ def split_group(group_id: int, on_place=False, redraw=True):
     ex_rect = QRectF(box.sceneBoundingRect())        
     new_box = BoxWidget(group, PortMode.INPUT)
     new_box.setPos(box.pos())
+    new_box.set_wrapped(wrap, animate=False)
     
     for portgroup in canvas.list_portgroups(group_id):
         if (portgroup.port_mode is PortMode.INPUT
@@ -389,7 +393,6 @@ def split_group(group_id: int, on_place=False, redraw=True):
     full_width = canvas.theme.box_spacing
     
     for box in group.widgets:
-        box.set_wrapped(wrap, animate=False)
         box.update_positions(even_animated=True, prevent_overlap=False)
         full_width += box.boundingRect().width()
                 
@@ -400,7 +403,7 @@ def split_group(group_id: int, on_place=False, redraw=True):
                     box,
                     previous_left_on_grid(
                         int(ex_rect.right() + (full_width - ex_rect.width()) / 2
-                        - box.boundingRect().width())),
+                            - box.boundingRect().width())),
                     previous_top_on_grid(
                         int(ex_rect.y())))
             else:
@@ -462,8 +465,24 @@ def join_group(group_id: int):
 
 @patchbay_api
 def repulse_all_boxes(view_change=False):
+    if view_change:
+        for moving_box in canvas.scene.move_boxes:
+            # if moving_box.widget._group_name == 'Ardour' and moving_box.widget._port_mode is PortMode.INPUT:
+            #     print('befor repluse', moving_box.final_rect)
+            
+            if moving_box.widget._group_name == 'firewire pcm' and moving_box.widget._port_mode is PortMode.INPUT:
+                print('befor firewir', moving_box.final_rect, moving_box.widget in canvas.scene.hidding_boxes)
+    
     if options.prevent_overlap:
         canvas.scene.full_repulse(view_change=view_change)
+        
+    if view_change:
+        for moving_box in canvas.scene.move_boxes:
+            # if moving_box.widget._group_name == 'Ardour' and moving_box.widget._port_mode is PortMode.INPUT:
+            #     print('after repluse', moving_box.final_rect) 
+                
+            if moving_box.widget._group_name == 'firewire pcm' and moving_box.widget._port_mode is PortMode.INPUT:
+                print('after firewir', moving_box.final_rect, moving_box.widget in canvas.scene.hidding_boxes)               
 
 @patchbay_api
 def repulse_from_group(group_id: int, port_mode: PortMode):
@@ -726,11 +745,11 @@ def move_group_boxes(
                         joined_rect = joined_widget.get_dummy_rect()
                         canvas.scene.remove_box(joined_widget)
                         joined_rect.translate(QPointF(*both_pos))
-                        x, y = both_pos
-                        x = int(joined_rect.right() - box.boundingRect().width())
+                        # x, y = both_pos
+                        # x = int(joined_rect.right() - box.boundingRect().width())
                     
                         canvas.scene.add_box_to_animation(
-                            box, x, y,
+                            box, *both_pos,
                             joining=Joining.YES,
                             joined_rect=joined_rect)
                     else:

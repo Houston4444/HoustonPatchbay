@@ -1201,8 +1201,10 @@ class BoxWidget(BoxWidgetMoth):
         self.prepareGeometryChange()
         
         if (self._wrapping_state
-                not in (WrappingState.WRAPPING, WrappingState.UNWRAPPING)):
+                in (WrappingState.NORMAL, WrappingState.WRAPPED)
+                or even_animated):
             # update port/portgrp list if box is not in wrapping animation
+            # or forced with even_animated
             self._current_port_mode = PortMode.NULL
             self._port_list.clear()
             self._portgrp_list.clear()
@@ -1234,7 +1236,8 @@ class BoxWidget(BoxWidgetMoth):
         align_port_types = self._should_align_port_types()
         ports_min_sizes = self._get_ports_min_sizes(align_port_types)
 
-        if self._wrapping_state in (WrappingState.NORMAL, WrappingState.WRAPPED):
+        if (self._wrapping_state in (WrappingState.NORMAL, WrappingState.WRAPPED)
+                or even_animated):
             box_layout, alter_layout = self._choose_box_layout(ports_min_sizes)
             self._layout = box_layout
             self._alter_layout = alter_layout
@@ -1250,13 +1253,13 @@ class BoxWidget(BoxWidgetMoth):
             self._wrapped_width = box_layout.wrapped_width
             self._wrapped_height = box_layout.wrapped_height
             
-            if self._wrapping_state is WrappingState.NORMAL:
-                self._width = self._unwrapped_width
-                self._height = self._unwrapped_height
-                
-            else:
-                self._width = self._wrapped_width
-                self._height = self._wrapped_height
+        if self._wrapping_state is WrappingState.NORMAL:
+            self._width = self._unwrapped_width
+            self._height = self._unwrapped_height
+            
+        elif self._wrapping_state is WrappingState.WRAPPED:
+            self._width = self._wrapped_width
+            self._height = self._wrapped_height
 
         elif self._wrapping_state is WrappingState.WRAPPING:
             self._width = (self._unwrapped_width
