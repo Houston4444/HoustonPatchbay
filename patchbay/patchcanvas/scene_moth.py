@@ -129,7 +129,7 @@ class PatchSceneMoth(QGraphicsScene):
         self.wrapping_boxes = list[WrappingBox]()
         self.hidding_boxes = set[BoxWidget]()
         self.restore_boxes = set[BoxWidget]()
-        self._MOVE_DURATION = 0.300 # 300ms
+        self._MOVE_DURATION = 2.000 # 300ms
         self._MOVE_TIMER_INTERVAL = 20 # 20 ms step animation (50 Hz)
         self._move_timer_start_at = 0.0
         self._move_timer_last_time = 0.0
@@ -353,6 +353,14 @@ class PatchSceneMoth(QGraphicsScene):
     def list_boxes_at(self, rect: QRectF):
         return [item for item in self.items(rect) if isinstance(item, BoxWidget)]
 
+    def _start_move_timer(self):
+        if self._move_box_timer.isActive():
+            return
+
+        self._move_timer_start_at = time.time()
+        self._move_timer_last_time = self._move_timer_start_at
+        self._move_box_timer.start()
+
     def move_boxes_animation(self):
         # Animation is nice but not the priority.
         # Do not ensure all steps are played
@@ -499,9 +507,8 @@ class PatchSceneMoth(QGraphicsScene):
 
         if not self._move_box_timer.isActive():
             moving_box.start_time = 0.0
-            self._move_timer_start_at = time.time()
-            self._move_timer_last_time = self._move_timer_start_at
-            self._move_box_timer.start()
+            
+        self._start_move_timer()
             
         if canvas.aliasing_reason:
             # if antialiasing is already prevented
@@ -531,10 +538,7 @@ class PatchSceneMoth(QGraphicsScene):
                     box_widget.after_wrap_rect().translated(moving_box.to_pt)
                 break
         
-        if not self._move_box_timer.isActive():
-            self._move_timer_start_at = time.time()
-            self._move_timer_last_time = self._move_timer_start_at
-            self._move_box_timer.start()
+        self._start_move_timer()
 
     def add_box_to_animation_hidding(self, box_widget: BoxWidget):
         self.restore_boxes.discard(box_widget)
@@ -545,10 +549,7 @@ class PatchSceneMoth(QGraphicsScene):
                 move_box.final_rect = QRectF()
                 break
         
-        if not self._move_box_timer.isActive():
-            self._move_timer_start_at = time.time()
-            self._move_timer_last_time = self._move_timer_start_at
-            self._move_box_timer.start()
+        self._start_move_timer()
 
     def add_box_to_animation_restore(self, box_widget: BoxWidget):
         self.hidding_boxes.discard(box_widget)
@@ -560,10 +561,7 @@ class PatchSceneMoth(QGraphicsScene):
                     box_widget.after_wrap_rect().translated(moving_box.to_pt)
                 break
         
-        if not self._move_box_timer.isActive():
-            self._move_timer_start_at = time.time()
-            self._move_timer_last_time = self._move_timer_start_at
-            self._move_box_timer.start()
+        self._start_move_timer()
 
     def remove_box(self, box_widget: BoxWidget):
         for move_box in self.move_boxes:
