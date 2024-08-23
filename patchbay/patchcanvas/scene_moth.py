@@ -23,6 +23,7 @@ import logging
 from math import floor
 import time
 from typing import Optional
+from enum import Enum, auto
 
 from PyQt5.QtCore import (
     QT_VERSION,
@@ -79,6 +80,14 @@ class RubberbandRect(QGraphicsRectItem):
         return CanvasItemType.RUBBERBAND
 
 
+class BoxAnim(Enum):
+    NONE = auto()
+    WRAPPING = auto()
+    UNWRAPPING = auto()
+    HIDDING = auto()
+    RESTORING = auto()
+
+
 class MovingBox:
     widget: BoxWidget
     from_pt: QPointF
@@ -86,6 +95,7 @@ class MovingBox:
     final_rect: QRectF
     start_time: float
     is_joining: bool
+    anim: BoxAnim
 
 
 class WrappingBox:
@@ -481,7 +491,8 @@ class PatchSceneMoth(QGraphicsScene):
             # box is not already moving, create a MovingBox instance
             moving_box = MovingBox()
             moving_box.widget = box_widget
-            moving_box.is_joining = True if joining is Joining.YES else False            
+            moving_box.is_joining = True if joining is Joining.YES else False
+            moving_box.anim = BoxAnim.NONE
             self.move_boxes.append(moving_box)
 
         moving_box.from_pt = QPoint(*box_widget.top_left())
@@ -504,6 +515,12 @@ class PatchSceneMoth(QGraphicsScene):
                 0.0, 0.0, aft_wrap_rect.width(), aft_wrap_rect.height())
             final_rect.translate(moving_box.to_pt)
             moving_box.final_rect = final_rect
+        
+        else:
+            # can not happens
+            # would means moving_box.is_joining and joining is JOINING.NO,
+            # It is prevented
+            moving_box.final_rect = joined_rect
 
         if joining is not Joining.NO_CHANGE:
             moving_box.is_joining = True if joining is Joining.YES else False
@@ -523,8 +540,9 @@ class PatchSceneMoth(QGraphicsScene):
     def remove_box_from_animation(self, box_widget: BoxWidget):
         if self.prevent_box_user_move:
             # should not happens.
-            # For now we can remove a box from animation only by moving box manually,
-            # and this is prevented by this attr in box_widget_moth
+            # For now we can remove a box from animation
+            # only by moving box manually,
+            # and this is prevented by this attr in box_widget_moth.
             return
 
         for moving_box in self.move_boxes:
@@ -547,6 +565,7 @@ class PatchSceneMoth(QGraphicsScene):
             if moving_box.widget is box_widget:
                 moving_box.final_rect = \
                     box_widget.after_wrap_rect().translated(moving_box.to_pt)
+                moving_box.anim = BoxAnim.WRAPPING if wrap else BoxAnim.UNWRAPPING
                 break
         
         self._start_move_timer()
@@ -558,6 +577,7 @@ class PatchSceneMoth(QGraphicsScene):
         for move_box in self.move_boxes:
             if move_box.widget is box_widget:
                 move_box.final_rect = QRectF()
+                move_box.anim = BoxAnim.HIDDING
                 break
         
         self._start_move_timer()
@@ -570,6 +590,7 @@ class PatchSceneMoth(QGraphicsScene):
             if moving_box.widget is box_widget:
                 moving_box.final_rect = \
                     box_widget.after_wrap_rect().translated(moving_box.to_pt)
+                moving_box.anim = BoxAnim.RESTORING
                 break
         
         self._start_move_timer()

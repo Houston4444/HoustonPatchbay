@@ -59,3 +59,5 @@ animations et évènements:
     join_group fait de la repulsion à la fin,
         mais ça ne devrait pas se faire si animate_before_join est demandé
         dans un chg de vue
+
+Raccourci clavier changer de vue ne doit rien faire si c'est déjà la vue active.

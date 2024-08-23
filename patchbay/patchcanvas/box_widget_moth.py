@@ -468,9 +468,11 @@ class BoxWidgetMoth(QGraphicsItem):
         self._x_after_wrap = self._x_before_wrap
         if self._has_side_title() and self._current_port_mode is PortMode.INPUT:
             if yesno:
-                self._x_after_wrap = self._x_before_wrap + self._width - self._wrapped_width
+                self._x_after_wrap = \
+                    self._x_before_wrap + self._width - self._wrapped_width
             else:
-                self._x_after_wrap = self._x_before_wrap + self._width - self._unwrapped_width
+                self._x_after_wrap = \
+                    self._x_before_wrap + self._width - self._unwrapped_width
         
         if not prevent_overlap:
             return
@@ -484,22 +486,24 @@ class BoxWidgetMoth(QGraphicsItem):
                 new_bounding_rect = QRectF(- hws, - hws, self._width + 2 * hws,
                                            self._wrapped_height + 2 * hws)
             
-            canvas.scene.bring_neighbors_and_deplace_boxes(self, new_bounding_rect)
+            canvas.scene.bring_neighbors_and_deplace_boxes(
+                self, new_bounding_rect)
 
         else:
-            new_bounding_rect = QRectF(x_diff, 0, self._unwrapped_width, self._unwrapped_height)
+            new_bounding_rect = QRectF(
+                x_diff, 0, self._unwrapped_width, self._unwrapped_height)
             if self.is_hardware:
-                new_bounding_rect = QRectF(x_diff - hws, - hws , self._unwrapped_width + 2 * hws,
-                                           self._unwrapped_height + 2 * hws)
+                new_bounding_rect = QRectF(
+                    x_diff - hws, - hws , self._unwrapped_width + 2 * hws,
+                    self._unwrapped_height + 2 * hws)
             
             canvas.scene.deplace_boxes_from_repulsers(
-                [self],
-                wanted_direction=Direction.DOWN)
+                [self], wanted_direction=Direction.DOWN)
 
     def update_positions(self, even_animated=False, without_connections=False,
                          prevent_overlap=True, theme_change=False):
         # see box_widget.py
-        pass
+        ...
 
     def repaint_lines(self, forced=False, fast_move=False):
         if forced or self.pos() != self._last_pos:
