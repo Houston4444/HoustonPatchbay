@@ -98,11 +98,6 @@ class MovingBox:
     anim: BoxAnim
 
 
-class WrappingBox:
-    widget: BoxWidget
-    wrap: bool
-
-
 class PatchSceneMoth(QGraphicsScene):
     " This class is used for the scene. "
     " The child class in scene.py has all things to manage"
@@ -140,7 +135,6 @@ class PatchSceneMoth(QGraphicsScene):
         to prevent user to take and move a box.'''
         
         self.move_boxes = list[MovingBox]()
-        self.wrapping_boxes = list[WrappingBox]()
         self.hidding_boxes = set[BoxWidget]()
         self.restore_boxes = set[BoxWidget]()
         self._MOVE_DURATION = 0.300 # 300ms
@@ -180,7 +174,6 @@ class PatchSceneMoth(QGraphicsScene):
     def clear(self):
         # reimplement Qt function and fix missing rubberband after clear
         self.move_boxes.clear()
-        self.wrapping_boxes.clear()
         self.hidding_boxes.clear()
         self.restore_boxes.clear()
         
@@ -467,7 +460,6 @@ class PatchSceneMoth(QGraphicsScene):
             # then we can ask update_positions on widgets
             boxes = [mb.widget for mb in self.move_boxes if not mb.is_joining]
             self.move_boxes.clear()
-            self.wrapping_boxes.clear()
 
             for box in boxes:
                 if box.update_positions_pending:
@@ -555,17 +547,7 @@ class PatchSceneMoth(QGraphicsScene):
                 self.move_boxes.remove(moving_box)
                 break
 
-    def add_box_to_animation_wrapping(self, box_widget: BoxWidget, wrap: bool):
-        for wrapping_box in self.wrapping_boxes:
-            if wrapping_box.widget is box_widget:
-                wrapping_box.wrap = wrap
-                break
-        else:
-            wrapping_box = WrappingBox()
-            wrapping_box.widget = box_widget
-            wrapping_box.wrap = wrap
-            self.wrapping_boxes.append(wrapping_box)
-            
+    def add_box_to_animation_wrapping(self, box_widget: BoxWidget, wrap: bool):  
         for moving_box in self.move_boxes:
             if moving_box.widget is box_widget:
                 break
@@ -615,11 +597,6 @@ class PatchSceneMoth(QGraphicsScene):
         for move_box in self.move_boxes:
             if move_box.widget is box_widget:
                 self.move_boxes.remove(move_box)
-                break
-            
-        for wrapping_box in self.wrapping_boxes:
-            if wrapping_box.widget is box_widget:
-                self.wrapping_boxes.remove(wrapping_box)
                 break
         
         for box_set in (self.hidding_boxes, self.restore_boxes):
