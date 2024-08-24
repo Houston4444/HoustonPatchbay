@@ -143,7 +143,7 @@ class PatchSceneMoth(QGraphicsScene):
         self.wrapping_boxes = list[WrappingBox]()
         self.hidding_boxes = set[BoxWidget]()
         self.restore_boxes = set[BoxWidget]()
-        self._MOVE_DURATION = 2.000 # 300ms
+        self._MOVE_DURATION = 0.300 # 300ms
         self._MOVE_TIMER_INTERVAL = 20 # 20 ms step animation (50 Hz)
         self._move_timer_start_at = 0.0
         self._move_timer_last_time = 0.0
@@ -389,24 +389,29 @@ class PatchSceneMoth(QGraphicsScene):
         self._move_timer_last_time = move_time
 
         for moving_box in self.move_boxes:
-            if moving_box.widget is not None:
-                x = (moving_box.from_pt.x()
-                     + ((moving_box.to_pt.x() - moving_box.from_pt.x())
-                        * (ratio ** 0.6)))
-                
-                y = (moving_box.from_pt.y()
-                     + ((moving_box.to_pt.y() - moving_box.from_pt.y())
-                        * (ratio ** 0.6)))
+            x = (moving_box.from_pt.x()
+                    + ((moving_box.to_pt.x() - moving_box.from_pt.x())
+                    * (ratio ** 0.6)))
+            
+            y = (moving_box.from_pt.y()
+                    + ((moving_box.to_pt.y() - moving_box.from_pt.y())
+                    * (ratio ** 0.6)))
 
-                moving_box.widget.set_top_left((x, y))
-                moving_box.widget.repaint_lines(fast_move=True)
+            moving_box.widget.set_top_left((x, y))
+            moving_box.widget.repaint_lines(fast_move=True)
 
-        for wrapping_box in self.wrapping_boxes:
-            if wrapping_box.widget is not None:
+            if moving_box.anim in (BoxAnim.WRAPPING, BoxAnim.UNWRAPPING):
                 if time_since_start >= self._MOVE_DURATION:
-                    wrapping_box.widget.animate_wrapping(1.00)
+                    moving_box.widget.animate_wrapping(1.00)
                 else:
-                    wrapping_box.widget.animate_wrapping(ratio)
+                    moving_box.widget.animate_wrapping(ratio)
+
+        # for wrapping_box in self.wrapping_boxes:
+        #     if wrapping_box.widget is not None:
+        #         if time_since_start >= self._MOVE_DURATION:
+        #             wrapping_box.widget.animate_wrapping(1.00)
+        #         else:
+        #             wrapping_box.widget.animate_wrapping(ratio)
         
         lines_widgets = set[GroupedLinesWidget]()
         for hidding_box in self.hidding_boxes:
@@ -563,10 +568,21 @@ class PatchSceneMoth(QGraphicsScene):
             
         for moving_box in self.move_boxes:
             if moving_box.widget is box_widget:
-                moving_box.final_rect = \
-                    box_widget.after_wrap_rect().translated(moving_box.to_pt)
-                moving_box.anim = BoxAnim.WRAPPING if wrap else BoxAnim.UNWRAPPING
                 break
+        else:
+            moving_box = MovingBox()
+            moving_box.widget = box_widget
+            moving_box.from_pt = QPoint(*box_widget.top_left())
+            moving_box.to_pt = QPoint(*box_widget.top_left())
+            moving_box.start_time = time.time() - self._move_timer_start_at
+            moving_box.is_joining = False
+            self.move_boxes.append(moving_box)
+        
+        aft_wrap_rect = box_widget.after_wrap_rect()
+        final_rect = QRectF(0.0, 0.0, aft_wrap_rect.width(), aft_wrap_rect.height())
+        moving_box.final_rect = \
+            final_rect.translated(moving_box.to_pt)
+        moving_box.anim = BoxAnim.WRAPPING if wrap else BoxAnim.UNWRAPPING
         
         self._start_move_timer()
 

@@ -465,24 +465,8 @@ def join_group(group_id: int):
 
 @patchbay_api
 def repulse_all_boxes(view_change=False):
-    if view_change:
-        for moving_box in canvas.scene.move_boxes:
-            # if moving_box.widget._group_name == 'Ardour' and moving_box.widget._port_mode is PortMode.INPUT:
-            #     print('befor repluse', moving_box.final_rect)
-            
-            if moving_box.widget._group_name == 'firewire pcm' and moving_box.widget._port_mode is PortMode.INPUT:
-                print('befor firewir', moving_box.final_rect, moving_box.widget in canvas.scene.hidding_boxes)
-    
     if options.prevent_overlap:
-        canvas.scene.full_repulse(view_change=view_change)
-        
-    if view_change:
-        for moving_box in canvas.scene.move_boxes:
-            # if moving_box.widget._group_name == 'Ardour' and moving_box.widget._port_mode is PortMode.INPUT:
-            #     print('after repluse', moving_box.final_rect) 
-                
-            if moving_box.widget._group_name == 'firewire pcm' and moving_box.widget._port_mode is PortMode.INPUT:
-                print('after firewir', moving_box.final_rect, moving_box.widget in canvas.scene.hidding_boxes)               
+        canvas.scene.full_repulse(view_change=view_change)      
 
 @patchbay_api
 def repulse_from_group(group_id: int, port_mode: PortMode):
@@ -761,16 +745,15 @@ def move_group_boxes(
                         box, *xy, joining=Joining.NO)
 
 @patchbay_api
-def wrap_group_box(group_id: int, port_mode: PortMode, yesno: bool,
-                   animate=True, prevent_overlap=True):
+def wrap_group_box(group_id: int, port_mode: PortMode, yesno: bool):
     group = canvas.get_group(group_id)
     if group is None:
         return
 
     for box in group.widgets:
         if box.get_port_mode() is port_mode:
-            box.set_wrapped(yesno, animate=animate,
-                            prevent_overlap=prevent_overlap)
+            box.set_wrapped(yesno, animate=True,
+                            prevent_overlap=True)
 
 @patchbay_api
 def set_group_layout_mode(group_id: int, port_mode: PortMode,

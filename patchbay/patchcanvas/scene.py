@@ -19,7 +19,7 @@
 
 from dataclasses import dataclass
 from typing import Optional, Union
-from PyQt5.QtCore import (QRectF, QMarginsF, Qt)
+from PyQt5.QtCore import QRectF, QMarginsF, QPoint, Qt
 from PyQt5.QtWidgets import QGraphicsView
 
 from .init_values import (
@@ -447,34 +447,37 @@ class PatchScene(PatchSceneMoth):
         self._full_repulse_boxes.clear()
 
     def bring_neighbors_and_deplace_boxes(
-            self, box_widget: BoxWidget, new_scene_rect: QRectF):
+            self, box_widget: BoxWidget, ex_rect: QRectF):
         if not options.prevent_overlap:
             return
         
         neighbors = [box_widget]
-        limit_top = box_widget.pos().y()
+        limit_top = ex_rect.top()
+        less_y = ex_rect.height() - box_widget.after_wrap_rect().height()
+        
         box_spacing = canvas.theme.box_spacing
         
         for neighbor in neighbors:
-            srect = neighbor.boundingRect()
-            for moving_box in self.move_boxes:
-                if moving_box.widget is neighbor:
-                    srect.translate(moving_box.to_pt)
-                    break
+            if neighbor is box_widget:
+                srect = ex_rect
             else:
-                srect.translate(neighbor.pos())
+                for moving_box in self.move_boxes:
+                    if moving_box.widget is neighbor:
+                        srect = moving_box.final_rect
+                        break
+                else:
+                    srect = neighbor.after_wrap_rect().translated(
+                        neighbor.pos())
 
             for item in self.items(
                     srect.adjusted(0, 0, 0,
                                    box_spacing + 1)):
                 if item not in neighbors and isinstance(item, BoxWidget):
-                    nrect = item.boundingRect().translated(item.pos())
+                    nrect = item.after_wrap_rect().translated(item.pos())                    
                     if nrect.top() >= limit_top:
                         neighbors.append(item)
         
         neighbors.remove(box_widget)
-        
-        less_y = box_widget.boundingRect().height() - new_scene_rect.height()
 
         repulser_boxes = list[BoxWidget]()
 

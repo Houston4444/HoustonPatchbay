@@ -366,7 +366,7 @@ class BoxWidgetMoth(QGraphicsItem):
         
     def animate_wrapping(self, ratio: float):
         # we expose wrapping ratio only for prettier animation
-        # say self._wrapping_ratio = ratio would also works fine        
+        # i.e. self._wrapping_ratio = ratio would also works fine        
         if self._wrapping_state is WrappingState.WRAPPING:
             self._wrapping_ratio = ratio ** 0.25
         elif self._wrapping_state is WrappingState.UNWRAPPING:
@@ -381,18 +381,8 @@ class BoxWidgetMoth(QGraphicsItem):
                 self._wrapping_state = WrappingState.NORMAL
             else:
                 self._wrapping_state = WrappingState.WRAPPED
-        
-        if (self._has_side_title()
-                and self._current_port_mode is PortMode.INPUT
-                and not self in [mb.widget for mb in canvas.scene.move_boxes]):
-            # compensate x position in this case, 
-            # it would be strange that the box stays at its left position.
-            # this way, its right position stays on place.
-            self.setX(self._x_before_wrap
-                    + (self._x_after_wrap - self._x_before_wrap)
-                        * self._wrapping_ratio)
 
-        self.update_positions(even_animated=True, prevent_overlap=False)
+        self.update_positions(wrap_anim=True, prevent_overlap=False)
 
     def animate_hidding(self, ratio: float):
         # ratio goes from 0.0 (hidden) to 1.0 (shown)
@@ -464,44 +454,35 @@ class BoxWidgetMoth(QGraphicsItem):
 
         canvas.scene.add_box_to_animation_wrapping(self, yesno)
         
-        self._x_before_wrap = self.x()
-        self._x_after_wrap = self._x_before_wrap
-        if self._has_side_title() and self._current_port_mode is PortMode.INPUT:
-            if yesno:
-                self._x_after_wrap = \
-                    self._x_before_wrap + self._width - self._wrapped_width
-            else:
-                self._x_after_wrap = \
-                    self._x_before_wrap + self._width - self._unwrapped_width
-        
         if not prevent_overlap:
             return
-
-        x_diff = self._x_after_wrap - self._x_before_wrap
-        hws = canvas.theme.hardware_rack_width
         
+        if self._has_side_title() and self._current_port_mode is PortMode.OUTPUT:
+            # keep ports at same right pos in this case.
+            x, y = self.top_left()
+
+            if yesno:
+                new_x = int(x + self._width - self._wrapped_width)
+            else:
+                new_x = int(x + self._width - self._unwrapped_width)
+            canvas.scene.add_box_to_animation(self, new_x, y)
+
         if yesno:
+            hws = canvas.theme.hardware_rack_width
             new_bounding_rect = QRectF(0, 0, self._width, self._wrapped_height)
             if self.is_hardware:
                 new_bounding_rect = QRectF(- hws, - hws, self._width + 2 * hws,
                                            self._wrapped_height + 2 * hws)
-            
             canvas.scene.bring_neighbors_and_deplace_boxes(
-                self, new_bounding_rect)
+                self, self.sceneBoundingRect())
 
         else:
-            new_bounding_rect = QRectF(
-                x_diff, 0, self._unwrapped_width, self._unwrapped_height)
-            if self.is_hardware:
-                new_bounding_rect = QRectF(
-                    x_diff - hws, - hws , self._unwrapped_width + 2 * hws,
-                    self._unwrapped_height + 2 * hws)
-            
             canvas.scene.deplace_boxes_from_repulsers(
                 [self], wanted_direction=Direction.DOWN)
 
     def update_positions(self, even_animated=False, without_connections=False,
-                         prevent_overlap=True, theme_change=False):
+                         prevent_overlap=True, theme_change=False,
+                         wrap_anim=False):
         # see box_widget.py
         ...
 

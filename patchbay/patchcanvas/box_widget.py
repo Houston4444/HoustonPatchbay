@@ -1187,11 +1187,12 @@ class BoxWidget(BoxWidgetMoth):
         return UnwrapButton.NONE
 
     def update_positions(self, even_animated=False, without_connections=False,
-                         prevent_overlap=True, theme_change=False):
+                         prevent_overlap=True, theme_change=False,
+                         wrap_anim=False):
         if canvas.loading_items:
             return
 
-        if (not even_animated
+        if (not (even_animated or wrap_anim)
                 and self in [b.widget for b in canvas.scene.move_boxes]):
             self.update_positions_pending = True
             # do not change box layout while box is moved by animation
