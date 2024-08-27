@@ -44,6 +44,7 @@ from PyQt5.QtWidgets import (
 # Imports (locals)
 from .init_values import (
     AliasingReason,
+    BoxHidding,
     CanvasItemType,
     GridStyle,
     Joining,
@@ -82,8 +83,6 @@ class RubberbandRect(QGraphicsRectItem):
 
 class BoxAnim(Enum):
     NONE = auto()
-    WRAPPING = auto()
-    UNWRAPPING = auto()
     HIDDING = auto()
     RESTORING = auto()
 
@@ -96,6 +95,7 @@ class MovingBox:
     start_time: float
     is_joining: bool
     anim: BoxAnim
+    is_wrapping: bool
 
 
 class PatchSceneMoth(QGraphicsScene):
@@ -137,7 +137,7 @@ class PatchSceneMoth(QGraphicsScene):
         self.move_boxes = list[MovingBox]()
         self.hidding_boxes = set[BoxWidget]()
         self.restore_boxes = set[BoxWidget]()
-        self._MOVE_DURATION = 0.300 # 300ms
+        self._MOVE_DURATION = 2.000 # 300ms
         self._MOVE_TIMER_INTERVAL = 20 # 20 ms step animation (50 Hz)
         self._move_timer_start_at = 0.0
         self._move_timer_last_time = 0.0
@@ -393,7 +393,7 @@ class PatchSceneMoth(QGraphicsScene):
             moving_box.widget.set_top_left((x, y))
             moving_box.widget.repaint_lines(fast_move=True)
 
-            if moving_box.anim in (BoxAnim.WRAPPING, BoxAnim.UNWRAPPING):
+            if moving_box.is_wrapping:
                 if time_since_start >= self._MOVE_DURATION:
                     moving_box.widget.animate_wrapping(1.00)
                 else:
@@ -405,42 +405,74 @@ class PatchSceneMoth(QGraphicsScene):
         #             wrapping_box.widget.animate_wrapping(1.00)
         #         else:
         #             wrapping_box.widget.animate_wrapping(ratio)
+        lws = set[GroupedLinesWidget]()
         
-        lines_widgets = set[GroupedLinesWidget]()
         for hidding_box in self.hidding_boxes:
             hidding_box.animate_hidding(ratio)
-            port_mode = hidding_box.get_port_mode()
-            if port_mode & PortMode.OUTPUT:
-                for lw in GroupedLinesWidget.widgets_for_box(
-                        hidding_box.get_group_id(), PortMode.OUTPUT):
-                    lw.add_hidding_port_mode(PortMode.OUTPUT)
-                    lines_widgets.add(lw)
-            if port_mode & PortMode.INPUT:
-                for lw in GroupedLinesWidget.widgets_for_box(
-                        hidding_box.get_group_id(), PortMode.INPUT):
-                    lw.add_hidding_port_mode(PortMode.INPUT)
-                    lines_widgets.add(lw)
-        
-        for lw in lines_widgets:
-            lw.animate_hidding(ratio)
-            
-        lines_widgets = set[GroupedLinesWidget]()
+            for lw in GroupedLinesWidget.widgets_for_box(
+                    hidding_box.get_group_id(), hidding_box.get_port_mode()):
+                lw.animate_hidding(ratio)
+                lws.add(lw)
+                
         for restore_box in self.restore_boxes:
-            restore_box.animate_hidding(1.0 - ratio)
-            port_mode = restore_box.get_port_mode()
-            if port_mode & PortMode.OUTPUT:
-                for lw in GroupedLinesWidget.widgets_for_box(
-                        restore_box.get_group_id(), PortMode.OUTPUT):
-                    lw.add_hidding_port_mode(PortMode.OUTPUT)
-                    lines_widgets.add(lw)
-            if port_mode & PortMode.INPUT:
-                for lw in GroupedLinesWidget.widgets_for_box(
-                        restore_box.get_group_id(), PortMode.INPUT):
-                    lw.add_hidding_port_mode(PortMode.INPUT)
-                    lines_widgets.add(lw)
+            restore_box.animate_hidding(1 - ratio)
+            if restore_box in self.hidding_boxes:
+                continue
+            for lw in GroupedLinesWidget.widgets_for_box(
+                    restore_box.get_group_id(), restore_box.get_port_mode()):
+                if lw in lws:
+                    continue
+                lw.animate_hidding(ratio)
+            
         
-        for lw in lines_widgets:
-            lw.animate_hidding(1.0 - ratio)
+        # lines_widgets = set[GroupedLinesWidget]()
+        # for hidding_box in self.hidding_boxes:
+        #     hidding_box.animate_hidding(ratio)
+        #     port_mode = hidding_box.get_port_mode()
+        #     if port_mode & PortMode.OUTPUT:
+        #         for lw in GroupedLinesWidget.widgets_for_box(
+        #                 hidding_box.get_group_id(), PortMode.OUTPUT):
+        #             # lw.add_hidding_port_mode(PortMode.OUTPUT)
+        #             lw.set_output_hidding(BoxHidding.HIDDING)
+        #             lines_widgets.add(lw)
+        #     if port_mode & PortMode.INPUT:
+        #         for lw in GroupedLinesWidget.widgets_for_box(
+        #                 hidding_box.get_group_id(), PortMode.INPUT):
+        #             # lw.add_hidding_port_mode(PortMode.INPUT)
+        #             lw.set_input_hidding(BoxHidding.HIDDING)
+        #             lines_widgets.add(lw)
+        
+        # # for lw in lines_widgets:
+        # #     lw.animate_hidding(ratio)
+            
+        # rest_lines_widgets = set[GroupedLinesWidget]()
+        # for restore_box in self.restore_boxes:
+        #     restore_box.animate_hidding(1.0 - ratio)
+        #     port_mode = restore_box.get_port_mode()
+        #     if port_mode & PortMode.OUTPUT:
+        #         for lw in GroupedLinesWidget.widgets_for_box(
+        #                 restore_box.get_group_id(), PortMode.OUTPUT):
+        #             # lw.add_restore_port_mode(PortMode.OUTPUT)
+        #             lw.set_output_hidding(BoxHidding.RESTORING)
+        #             rest_lines_widgets.add(lw)
+        #     if port_mode & PortMode.INPUT:
+        #         for lw in GroupedLinesWidget.widgets_for_box(
+        #                 restore_box.get_group_id(), PortMode.INPUT):
+        #             # lw.add_restore_port_mode(PortMode.INPUT)
+        #             lw.set_input_hidding(BoxHidding.RESTORING)
+        #             rest_lines_widgets.add(lw)
+        
+        # for lw in lines_widgets:
+        #     lw.animate_hidding(ratio)
+            
+        # for lw in rest_lines_widgets:
+        #     if lw not in lines_widgets:
+        #         lw.animate_hidding(ratio)
+        # # for lw in rest_lines_widgets:
+        # #     if not lw in lines_widgets:
+        # #         lw.animate_hidding(1.0 - ratio)
+
+
 
         self.resize_the_scene()
 
@@ -453,7 +485,7 @@ class PatchSceneMoth(QGraphicsScene):
             #     hidding_box.send_hide_callback()
             self.hidding_boxes.clear()
             self.restore_boxes.clear()
-            GroupedLinesWidget.clear_transparent_starts()
+            GroupedLinesWidget.animation_finished()
 
             # box update positions is forbidden while widget is in self.move_boxes
             # So we copy the list before to clear it
@@ -475,6 +507,9 @@ class PatchSceneMoth(QGraphicsScene):
         of the box at the end of animation.
         if joining is set to Joining.YES, joined_rect must be set'''
 
+        if 'PulseAudio' in box_widget._group_name:
+            print('add_box anim', box_widget, to_x, to_y)
+
         for moving_box in self.move_boxes:
             if moving_box.widget is box_widget:
                 # box is already moving, check joining state and change it
@@ -490,6 +525,7 @@ class PatchSceneMoth(QGraphicsScene):
             moving_box.widget = box_widget
             moving_box.is_joining = True if joining is Joining.YES else False
             moving_box.anim = BoxAnim.NONE
+            moving_box.is_wrapping = False
             self.move_boxes.append(moving_box)
 
         moving_box.from_pt = QPoint(*box_widget.top_left())
@@ -558,17 +594,21 @@ class PatchSceneMoth(QGraphicsScene):
             moving_box.to_pt = QPoint(*box_widget.top_left())
             moving_box.start_time = time.time() - self._move_timer_start_at
             moving_box.is_joining = False
+            moving_box.anim = BoxAnim.NONE
             self.move_boxes.append(moving_box)
         
         aft_wrap_rect = box_widget.after_wrap_rect()
         final_rect = QRectF(0.0, 0.0, aft_wrap_rect.width(), aft_wrap_rect.height())
         moving_box.final_rect = \
             final_rect.translated(moving_box.to_pt)
-        moving_box.anim = BoxAnim.WRAPPING if wrap else BoxAnim.UNWRAPPING
+        moving_box.is_wrapping = True
         
         self._start_move_timer()
 
     def add_box_to_animation_hidding(self, box_widget: BoxWidget):
+        if 'PulseAudio' in box_widget._group_name:
+            print('add_box hidd', box_widget)
+        
         self.restore_boxes.discard(box_widget)
         self.hidding_boxes.add(box_widget)
         
@@ -578,19 +618,43 @@ class PatchSceneMoth(QGraphicsScene):
                 move_box.anim = BoxAnim.HIDDING
                 break
         
+        for port_mode in PortMode.OUTPUT, PortMode.INPUT:
+            if port_mode not in box_widget.get_port_mode():
+                continue
+            
+            for lw in GroupedLinesWidget.widgets_for_box(
+                    box_widget.get_group_id(), port_mode):
+                lw.set_mode_hidding(port_mode, BoxHidding.HIDDING)
+        
+        print('addto HIDDING', box_widget)
+        
         self._start_move_timer()
 
     def add_box_to_animation_restore(self, box_widget: BoxWidget):
+        if 'PulseAudio' in box_widget._group_name:
+            print('add_box rest', box_widget)
+        
         self.hidding_boxes.discard(box_widget)
         self.restore_boxes.add(box_widget)
         
         for moving_box in self.move_boxes:
             if moving_box.widget is box_widget:
+                moving_box.from_pt = moving_box.to_pt
                 moving_box.final_rect = \
                     box_widget.after_wrap_rect().translated(moving_box.to_pt)
                 moving_box.anim = BoxAnim.RESTORING
                 break
         
+        box_widget.animate_hidding(1.0)
+        
+        for port_mode in PortMode.OUTPUT, PortMode.INPUT:
+            if port_mode not in box_widget.get_port_mode():
+                continue
+            
+            for lw in GroupedLinesWidget.widgets_for_box(
+                    box_widget.get_group_id(), port_mode):
+                lw.set_mode_hidding(port_mode, BoxHidding.RESTORING)
+        print('addto RESTORE', box_widget)
         self._start_move_timer()
 
     def remove_box(self, box_widget: BoxWidget):

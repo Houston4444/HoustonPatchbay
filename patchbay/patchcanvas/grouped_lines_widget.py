@@ -26,6 +26,7 @@ from PyQt5.QtWidgets import QGraphicsPathItem
 
 from .init_values import (
     ConnectionThemeState,
+    BoxHidding,
     canvas,
     options,
     CanvasItemType,
@@ -37,18 +38,12 @@ from .init_values import (
 _groups_to_check = set[tuple[int, int]]()
 _all_lines_widgets = {}
 
-# for appear box animation,
-# we need that new lines start totally transparent,
-# we stock group_id in these two sets.
-_transparent_start_outs = set[int]()
-_transparent_start_ins = set[int]()
-
 
 if TYPE_CHECKING:
-    _all_lines_widgets = dict[
+    _all_lines_widgets: dict[
         tuple[int, int],
         dict[PortType, dict[ConnectionThemeState,
-                            'GroupedLinesWidget']]]()
+                            'GroupedLinesWidget']]]
 
 
 class GroupOutInsDict(dict):
@@ -101,21 +96,32 @@ class GroupedLinesWidget(QGraphicsPathItem):
             self.setZValue(Zv.SEL_LINE.value)
         else:
             self.setZValue(Zv.LINE.value)
+
+        self._box_hidding_out = BoxHidding.NONE
+        self._box_hidding_in = BoxHidding.NONE
+
+        for hbox in canvas.scene.hidding_boxes:
+            if hbox.get_group_id() is group_out_id:
+                self._box_hidding_out = BoxHidding.HIDDING
+            if hbox.get_group_id() is group_in_id:
+                self._box_hidding_in = BoxHidding.HIDDING
         
-        self._hidding_port_mode = PortMode.NULL
-        if group_out_id in _transparent_start_outs:
-            self._hidding_port_mode |= PortMode.OUTPUT
-        if group_in_id in _transparent_start_ins:
-            self._hidding_port_mode |= PortMode.INPUT
-        
-        if self._hidding_port_mode is not PortMode.NULL:
-            self.update_lines_pos(fast_move=True)
-            self.animate_hidding(1.0)
+        for rbox in canvas.scene.restore_boxes:
+            if rbox.get_group_id() is group_out_id:
+                self._box_hidding_out = BoxHidding.RESTORING
+            if rbox.get_group_id() is group_in_id:
+                self._box_hidding_in = BoxHidding.RESTORING
+
+        self.update_lines_pos(fast_move=True)
+        if (self._box_hidding_out is not BoxHidding.NONE
+                or self._box_hidding_in is not BoxHidding.NONE):
+            self.animate_hidding(0.0)
         else:
-            self.update_lines_pos()
+            self.update_line_gradient()
 
     @staticmethod
     def clear_all_widgets():
+        'does not remove widgets from scene, it has to be down elsewhere.'
         _all_lines_widgets.clear()
 
     @staticmethod
@@ -147,12 +153,12 @@ class GroupedLinesWidget(QGraphicsPathItem):
                 to_update_type = set()
                 to_update[conn.port_type] = to_update_type
             to_update_type.add(theme_state)
-            
+
             pt_dict = gp_dict.get(conn.port_type)
             if pt_dict is None:
                 pt_dict = {}
                 gp_dict[conn.port_type] = pt_dict
-                
+
             widget = pt_dict.get(theme_state)
             if widget is None:
                 pt_dict[theme_state] = GroupedLinesWidget(
@@ -173,7 +179,7 @@ class GroupedLinesWidget(QGraphicsPathItem):
                     pt_dict.clear()
                 continue
             
-            attrs_to_del = set()
+            attrs_to_del = set[ConnectionThemeState]()
             
             for theme_state, widget in pt_dict.items():
                 if theme_state not in to_update[port_type]:
@@ -224,16 +230,11 @@ class GroupedLinesWidget(QGraphicsPathItem):
                         widget.update_line_gradient()
 
     @staticmethod
-    def start_transparent(group_id: int, port_mode: PortMode):
-        if port_mode & PortMode.OUTPUT:
-            _transparent_start_outs.add(group_id)
-        if port_mode & PortMode.INPUT:
-            _transparent_start_ins.add(group_id)
-
-    @staticmethod
-    def clear_transparent_starts():
-        _transparent_start_ins.clear()
-        _transparent_start_outs.clear()
+    def animation_finished():
+        for pt_dict in _all_lines_widgets.values():
+            for tstate_dict in pt_dict.values():
+                for widget in tstate_dict.values():
+                    widget.set_mode_hidding(PortMode.BOTH, BoxHidding.NONE)
 
     def semi_hide(self, yesno: bool):
         self._semi_hidden = yesno
@@ -406,49 +407,93 @@ class GroupedLinesWidget(QGraphicsPathItem):
                              tha.base_width, Qt.SolidLine, Qt.FlatCap))
             
     def animate_hidding(self, ratio: float):
-        if self._hidding_port_mode is PortMode.NULL:
+        if (self._box_hidding_out is BoxHidding.NONE
+                and self._box_hidding_in is BoxHidding.NONE):
+            self.update_line_gradient()
             return
-        
+
         epsy = 0.001
         
-        if ratio <= 0.0:
+        if ratio < 0.0 or ratio > 1.0:
             # the appear box animation is finished
             # the lines have now to be drawn normally
             self._hidding_port_mode = PortMode.NULL
+            self._restore_port_mode = PortMode.NULL
+            self._box_hidding_out = BoxHidding.NONE
+            self._box_hidding_in = BoxHidding.NONE
             self.update_line_gradient()
             return
 
         ratio = max(min(ratio, 1.0 - epsy * 2), epsy * 2)
-
         gradient = QLinearGradient(self._group_out_x, self._group_out_mid_y,
                                    self._group_in_x, self._group_in_mid_y)
         transparent = QColor(0, 0, 0, 0)
         color_main = self._th_attribs.color_main
+        
+        # OUT       | IN        | TRANSPARENT STARTS ON | REVERSE
+        # ----------|-----------|-----------------------|--------            
+        # NONE      | NONE      | not here              |
+        # NONE      | HIDDING   | right                 | X
+        # NONE      | RESTORING | right                 |
+        # HIDDING   | NONE      | left                  | 
+        # HIDDING   | HIDDING   | middle                |
+        # HIDDING   | RESTORING | left (special)        |
+        # RESTORING | NONE      | left                  | X
+        # RESTORING | HIDDING   | right (special)       | X
+        # RESTORING | RESTORING | middle                | X
+        
+        if ((self._box_hidding_out is BoxHidding.NONE
+                    and self._box_hidding_in is BoxHidding.HIDDING)
+                or self._box_hidding_out is BoxHidding.RESTORING):
+            ratio = 1.0 - ratio
 
-        if self._hidding_port_mode is PortMode.INPUT:
+        if self._box_hidding_out is self._box_hidding_in:
+            # transparent starts in the middle
             gradient.setColorAt(0.0, color_main)
-            gradient.setColorAt(1.0 - ratio - epsy, color_main)
-            gradient.setColorAt(1.0 - ratio + epsy, transparent)
-            gradient.setColorAt(1.0, transparent)
+            gradient.setColorAt(0.5 - ratio * 0.5 - epsy, color_main)
+            gradient.setColorAt(0.5 - ratio * 0.5 + epsy, transparent)
+            gradient.setColorAt(0.5 + ratio * 0.5 - epsy, transparent)
+            gradient.setColorAt(0.5 + ratio * 0.5 + epsy, color_main)
+            gradient.setColorAt(1.0, color_main)
+        
+        elif (self._box_hidding_out is not BoxHidding.NONE
+                and self._box_hidding_in is not BoxHidding.NONE):
+            # transparent starts on the left
+            # line is full at 0.5
+            if 0.5 - epsy < ratio < 0.5 + epsy:
+                gradient.setColorAt(0.0, color_main)
+                gradient.setColorAt(1.0, color_main)
 
-        elif self._hidding_port_mode is PortMode.OUTPUT:
+            elif ratio < 0.5:
+                gradient.setColorAt(0.0, color_main)
+                gradient.setColorAt(ratio * 2.0 - epsy, color_main)
+                gradient.setColorAt(ratio * 2.0 + epsy, transparent)
+                gradient.setColorAt(1.0, transparent)
+            else:
+                gradient.setColorAt(0.0, transparent)
+                gradient.setColorAt(((ratio - 0.5) * 2) - epsy, transparent)
+                gradient.setColorAt(((ratio - 0.5) * 2) + epsy, color_main)
+                gradient.setColorAt(1.0, color_main)
+        
+        elif self._box_hidding_out is BoxHidding.NONE:
+            # transparent starts on the right
+            gradient.setColorAt(0.0, color_main)
+            gradient.setColorAt(ratio - epsy, color_main)
+            gradient.setColorAt(ratio + epsy, transparent)
+            gradient.setColorAt(1.0, transparent)
+            
+        else:
+            # transparent starts on the left
             gradient.setColorAt(0.0, transparent)
             gradient.setColorAt(ratio - epsy, transparent)
             gradient.setColorAt(ratio + epsy, color_main)
             gradient.setColorAt(1.0, color_main)
 
-        else:
-            gradient.setColorAt(0.0, transparent)
-            gradient.setColorAt(ratio * 0.5 - epsy, transparent)
-            gradient.setColorAt(ratio * 0.5 + epsy, color_main)
-            gradient.setColorAt((1.0 - ratio) * 0.5 - epsy, color_main)
-            gradient.setColorAt((1.0 - ratio) * 0.5 + epsy, transparent)
-            gradient.setColorAt(1.0, transparent)
-
         self.setPen(QPen(gradient, self._th_attribs.base_width,
                          Qt.SolidLine, Qt.FlatCap))
-
-    def add_hidding_port_mode(self, port_mode: PortMode):
-        self._hidding_port_mode |= port_mode
-        
     
+    def set_mode_hidding(self, port_mode: PortMode, box_hidding: BoxHidding):
+        if port_mode & PortMode.OUTPUT:
+            self._box_hidding_out = box_hidding
+        if port_mode & PortMode.INPUT:
+            self._box_hidding_in = box_hidding

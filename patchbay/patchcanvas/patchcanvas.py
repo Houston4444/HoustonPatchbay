@@ -21,6 +21,7 @@
 import logging
 from pathlib import Path
 import time
+from tkinter import N
 from typing import Callable
 from PyQt5.QtCore import (pyqtSlot, QObject, QPointF, QRectF,
                           QSettings, QTimer, pyqtSignal)
@@ -635,7 +636,8 @@ def move_group_boxes(
         group_id: int,
         box_poses: dict[PortMode, BoxPos],
         split: bool,
-        redraw=PortMode.NULL):
+        redraw=PortMode.NULL,
+        restore=PortMode.NULL):
     '''Highly optimized function used at view change.
     Only things that need to be redrawn are redrawn.
     Any change in this function can easily create unwanted bugs ;)'''
@@ -678,13 +680,13 @@ def move_group_boxes(
                 wanted_wrap = box_poses[PortMode.BOTH].is_wrapped()
             else:
                 wanted_wrap = box_pos.is_wrapped()
-                    
+            
             if box.is_wrapped() is not wanted_wrap:
                 # we need to update the box now, because the port_list
                 # of the box is not re-evaluted when we update positions
                 # during the wrap/unwrap animation.
                 box.update_positions(
-                    prevent_overlap=False, even_animated=True)
+                    even_animated=True, prevent_overlap=False)
                 box.set_wrapped(
                     wanted_wrap, prevent_overlap=False)
                 redraw &= ~port_mode
@@ -695,29 +697,31 @@ def move_group_boxes(
 
             if splitted and not orig_rect.isNull():
                 # the splitted boxes start with inputs aligned to the inputs
-                #  of the previous joined box, and same for the outputs.
+                # of the previous joined box, and same for the outputs.
                 if port_mode is PortMode.INPUT:
                     box.set_top_left((orig_rect.left(), orig_rect.top()))
                 elif port_mode is PortMode.OUTPUT:
                     box.set_top_left(
                         (orig_rect.right() - box.boundingRect().width(),
-                            orig_rect.top()))
+                         orig_rect.top()))
             
             xy = nearest_on_grid(box_pos.pos)
 
-            if box.isVisible() and box_pos.is_hidden():
-                GroupedLinesWidget.start_transparent(group_id, port_mode)
-                canvas.scene.add_box_to_animation_hidding(box)
+            if box_pos.is_hidden():
+                if box.isVisible():
+                    canvas.scene.add_box_to_animation_hidding(box)
+            
+            elif restore & port_mode:
+                if not join:
+                    box.set_top_left(xy)
+                    canvas.scene.add_box_to_animation(box, *xy)
+                box.animate_hidding(1.0)
+                canvas.scene.add_box_to_animation_restore(box)
+                    
             else:
                 if box.is_hidding_or_restore():
-                    if box.isVisible():
-                        box.set_top_left(xy)
-                        GroupedLinesWidget.start_transparent(group_id, port_mode)
-                        
-                        canvas.scene.add_box_to_animation_restore(box)
-                    else:
-                        canvas.scene.removeItem(box.hidder_widget)
-                        box.hidder_widget = None
+                    canvas.scene.removeItem(box.hidder_widget)
+                    box.hidder_widget = None
 
                 if join:
                     both_pos = nearest_on_grid(box_poses[PortMode.BOTH].pos)
@@ -729,8 +733,6 @@ def move_group_boxes(
                         joined_rect = joined_widget.get_dummy_rect()
                         canvas.scene.remove_box(joined_widget)
                         joined_rect.translate(QPointF(*both_pos))
-                        # x, y = both_pos
-                        # x = int(joined_rect.right() - box.boundingRect().width())
                     
                         canvas.scene.add_box_to_animation(
                             box, *both_pos,
@@ -1117,7 +1119,6 @@ def animate_after_restore_box(group_id: int, port_mode: PortMode):
     for box in group.widgets:
         if port_mode & box.get_port_mode():
             box.update_positions()
-            GroupedLinesWidget.start_transparent(group_id, port_mode)
             canvas.scene.add_box_to_animation_restore(box)
     
 # ----------------------------------------------------------------------------

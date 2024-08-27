@@ -385,15 +385,17 @@ class BoxWidgetMoth(QGraphicsItem):
         self.update_positions(wrap_anim=True, prevent_overlap=False)
 
     def animate_hidding(self, ratio: float):
-        # ratio goes from 0.0 (hidden) to 1.0 (shown)
+        'ratio goes from 0.0 (box shown) to 1.0 (box hidden)'
+        self.setVisible(self._current_port_mode is not PortMode.NULL
+                        and ratio < 1.0)
+        
         if ratio <= 0.0:
             if self.hidder_widget is not None:
                 canvas.scene.removeItem(self.hidder_widget)
                 self.hidder_widget = None
         
         elif ratio >= 1.0:
-            self.setVisible(False)
-        
+            ...
         else:
             if self.hidder_widget is None:
                 self.hidder_widget = BoxHidder(self)

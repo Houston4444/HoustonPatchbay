@@ -1,5 +1,5 @@
 import time
-from typing import TYPE_CHECKING, Union
+from typing import TYPE_CHECKING, Optional, Union
 
 
 from .base_elements import (
@@ -85,16 +85,19 @@ class Group:
         for port in self.ports:
             port.rename_in_canvas()
 
-    def add_to_canvas(self):
+    def add_to_canvas(self, gpos: Optional[GroupPos]=None):
         if self.in_canvas:
             return
 
         box_type, icon_name = self._get_box_type_and_icon()
 
-        gpos = self.current_position
-        do_split = gpos.is_splitted()
+        if gpos is None:
+            gpos = self.current_position
+        
+        splitted = gpos.is_splitted()
 
-        self.display_name = self.display_name.replace('.0/', '/').replace('_', ' ')
+        self.display_name = \
+            self.display_name.replace('.0/', '/').replace('_', ' ')
         
         display_name = self.name
         if self.manager.use_graceful_names:
@@ -105,7 +108,7 @@ class Group:
         self.cnv_icon_name = icon_name
         
         patchcanvas.add_group(
-            self.group_id, display_name, do_split,
+            self.group_id, display_name, splitted,
             box_type, icon_name, box_poses=gpos.boxes)
 
         self.in_canvas = True
@@ -313,7 +316,8 @@ class Group:
     def save_current_position(self):
         self.manager.save_group_position(self.current_position)
 
-    def set_group_position(self, group_position: GroupPos, redraw: PortMode):
+    def set_group_position(self, group_position: GroupPos, redraw: PortMode,
+                           restore: PortMode):
         self.current_position = group_position
 
         if not self.in_canvas:
@@ -323,7 +327,8 @@ class Group:
             self.group_id,
             self.current_position.boxes,
             split=self.current_position.is_splitted(),
-            redraw=redraw)
+            redraw=redraw,
+            restore=restore)
 
     def set_layout_mode(self, port_mode: PortMode, layout_mode: BoxLayoutMode):
         self.current_position.boxes[port_mode].layout_mode = layout_mode

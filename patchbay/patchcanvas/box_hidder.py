@@ -26,15 +26,10 @@ class BoxHidder(QGraphicsItem):
         return self.parentItem().boundingRect()
     
     def paint(self, painter: QPainter, option, widget):
-        # return super().paint(painter, option, widget)
         painter.save()
         orig_rect = self.parentItem().boundingRect()
-        # rect = QRectF(orig_rect)
-        # rect.setHeight(rect.height() * self._hide_ratio)
-        # rect.translate(0.0, self.parentItem().boundingRect().height() * (1 - self._hide_ratio))
 
         box_theme = self.parentItem().get_theme()
-        # radius = box_theme.border_radius()
         
         pen = box_theme.fill_pen()
         lh = pen.widthF() / 2.0
@@ -82,19 +77,10 @@ class BoxHidder(QGraphicsItem):
             bg_brush = QBrush()
             bg_brush.setTextureImage(canvas.theme.scene_background_image)
             painter.setBrush(bg_brush)
-            # if radius:
-            #     painter.drawRoundedRect(rect, radius, radius)
-            # else:
-            #     painter.drawRect(rect)
             painter.drawPolygon(polygon)
             
         painter.setPen(box_theme.fill_pen())
         painter.setBrush(canvas.theme.scene_background_color)
-        # if radius:
-        #     painter.drawRoundedRect(rect, radius, radius)
-        # else:
-        #     # painter.drawRect(rect)
-        #     painter.drawRect(rect)
         painter.drawPolygon(polygon)
         
         painter.restore()

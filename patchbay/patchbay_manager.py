@@ -405,6 +405,11 @@ class PatchbayManager:
                 if hidden_port_mode & port.mode():
                     port.remove_from_canvas()
             
+            if group.outs_ptv is PortTypesViewFlag.NONE:
+                hidden_port_mode |= PortMode.OUTPUT
+            if group.ins_ptv is PortTypesViewFlag.NONE:
+                hidden_port_mode |= PortMode.INPUT
+
             if hidden_port_mode is PortMode.BOTH:
                 group.remove_from_canvas()
             elif group.in_canvas:
@@ -757,7 +762,7 @@ class PatchbayManager:
             for connection in self.connections:
                 connection.remove_from_canvas()
 
-        groups_and_pos = dict[Group, tuple[GroupPos, PortMode]]()
+        groups_and_pos = dict[Group, tuple[GroupPos, PortMode, PortMode]]()
 
         for group in self.groups:
             new_gpos = self.get_group_position(group.name)
@@ -799,7 +804,11 @@ class PatchbayManager:
                         if port.mode() & redraw_mode:
                             port.remove_from_canvas()
                 
-                group.add_to_canvas()
+                if (new_gpos.is_splitted()
+                        is not group.current_position.is_splitted()):
+                    group.add_to_canvas(gpos=new_gpos)
+                else:
+                    group.add_to_canvas()
 
                 # only ports which should be hidden in previous and next
                 # view will be hidden (before to animate).
@@ -816,9 +825,16 @@ class PatchbayManager:
                     new_gpos.has_sure_existence = True
                     break
             else:
+                if 'PulseAudio' in group.name:
+                    print('rm pulse')
                 group.remove_from_canvas()
             
-            groups_and_pos[group] = (new_gpos, redraw_mode)
+            restore_mode = PortMode.NULL
+            for pmode in (PortMode.INPUT, PortMode.OUTPUT):
+                if (group.current_position.hidden_port_modes() & pmode
+                        and not new_gpos.hidden_port_modes() & pmode):
+                    restore_mode |= pmode
+            groups_and_pos[group] = (new_gpos, redraw_mode, restore_mode)
 
         for conn in self.connections:
             conn.add_to_canvas()

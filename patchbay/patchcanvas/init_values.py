@@ -149,18 +149,41 @@ class InlineDisplay(IntEnum):
     CACHED = 2
 
 
-# define the way ports are put in a box
 class BoxLayoutMode(IntEnum):
+    'Define the way ports are put in a box'
+
     AUTO = 0
+    '''Choose the layout between HIGH or LARGE
+    within the box area.'''
+    
     HIGH = 1
+    '''In the case there are only INPUT or only OUTPUT ports,
+    the title will be on top of the box.
+    In the case there are both INPUT and OUTPUT ports,
+    ports will be displayed from top to bottom, whatever they
+    are INPUT or OUTPUT.'''
+    
     LARGE = 2
+    '''In the case there are only INPUT or only OUTPUT ports,
+    the title will be on a side of the box.
+    In the case there are both INPUT and OUTPUT ports,
+    ports will be displayed in two columns, left for INPUT, 
+    right for OUTPUT.'''
 
 
 class BoxFlag(IntFlag):
     NONE = 0x00
     WRAPPED = auto()
     HIDDEN = auto()
+
+
+class BoxHidding(Enum):
+    'Enum used for animations where there are hidding or restoring boxes'
     
+    NONE = auto()
+    HIDDING = auto()
+    RESTORING = auto()
+
 
 class BoxPos:
     pos: tuple[int, int]
