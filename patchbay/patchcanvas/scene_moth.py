@@ -522,8 +522,6 @@ class PatchSceneMoth(QGraphicsScene):
     
         aft_wrap_rect = box_widget.after_wrap_rect()
         final_rect = QRectF(0.0, 0.0, aft_wrap_rect.width(), aft_wrap_rect.height())
-        if 'Hydrogen' in box_widget._group_name:
-            print('wrapp final rect', final_rect, final_rect.isNull(), aft_wrap_rect, aft_wrap_rect.isNull())
         moving_box.final_rect = \
             final_rect.translated(moving_box.to_pt)
         moving_box.is_wrapping = True
@@ -667,7 +665,6 @@ class PatchSceneMoth(QGraphicsScene):
         
         for widget in canvas.list_boxes():
             futur_rect |= widget.rect_needed_in_scene(futur=True)
-            print('bottotmm', futur_rect.bottom(), widget)
             
         if futur_rect is None or full_rect is None:
             return full_rect
@@ -681,11 +678,6 @@ class PatchSceneMoth(QGraphicsScene):
                     + futur_rect.top() * anim_ratio)
         rect.setBottom(full_rect.bottom() * (1.0 - anim_ratio)
                        + futur_rect.bottom() * anim_ratio)
-        
-        print('rapz', anim_ratio)
-        print('full', full_rect)
-        print('futu', futur_rect)
-        print('moye', rect)
         
         return rect
 
