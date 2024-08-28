@@ -138,8 +138,6 @@ class PatchSceneMoth(QGraphicsScene):
         to prevent user to take and move a box.'''
         
         self.move_boxes = list[MovingBox]()
-        self.hidding_boxes = set[BoxWidget]()
-        self.restore_boxes = set[BoxWidget]()
         self._MOVE_DURATION = 1.400 # 300ms
         self._MOVE_TIMER_INTERVAL = 20 # 20 ms step animation (50 Hz)
         self._move_timer_start_at = 0.0
@@ -177,8 +175,6 @@ class PatchSceneMoth(QGraphicsScene):
     def clear(self):
         # reimplement Qt function and fix missing rubberband after clear
         self.move_boxes.clear()
-        self.hidding_boxes.clear()
-        self.restore_boxes.clear()
         
         QGraphicsScene.clear(self)
         self._rubberband = RubberbandRect(self)
@@ -448,14 +444,13 @@ class PatchSceneMoth(QGraphicsScene):
             self.prevent_box_user_move = False
             # for hidding_box in self.hidding_boxes:
             #     hidding_box.send_hide_callback()
-            self.hidding_boxes.clear()
-            self.restore_boxes.clear()
             GroupedLinesWidget.animation_finished()
 
             # box update positions is forbidden while widget is in self.move_boxes
             # So we copy the list before to clear it
             # then we can ask update_positions on widgets
-            boxes = [mb.widget for mb in self.move_boxes if not mb.is_joining]
+            boxes = [mb.widget for mb in self.move_boxes
+                     if not (mb.is_joining or mb.hidding_state is BoxHidding.HIDDING)]
             self.move_boxes.clear()
 
             for box in boxes:
@@ -564,10 +559,7 @@ class PatchSceneMoth(QGraphicsScene):
         
         self._start_move_timer()
 
-    def add_box_to_animation_hidding(self, box_widget: BoxWidget):
-        self.restore_boxes.discard(box_widget)
-        self.hidding_boxes.add(box_widget)
-        
+    def add_box_to_animation_hidding(self, box_widget: BoxWidget):        
         for move_box in self.move_boxes:
             if move_box.widget is box_widget:
                 break
@@ -594,9 +586,6 @@ class PatchSceneMoth(QGraphicsScene):
     def add_box_to_animation_restore(self, box_widget: BoxWidget):
         if 'PulseAudio' in box_widget._group_name:
             print('add_box rest', box_widget)
-        
-        self.hidding_boxes.discard(box_widget)
-        self.restore_boxes.add(box_widget)
         
         for moving_box in self.move_boxes:
             if moving_box.widget is box_widget:
@@ -629,9 +618,6 @@ class PatchSceneMoth(QGraphicsScene):
             if move_box.widget is box_widget:
                 self.move_boxes.remove(move_box)
                 break
-        
-        for box_set in (self.hidding_boxes, self.restore_boxes):
-            box_set.discard(box_widget) 
         
         self.removeItem(box_widget)
 
