@@ -97,20 +97,44 @@ class GroupedLinesWidget(QGraphicsPathItem):
         else:
             self.setZValue(Zv.LINE.value)
 
+        # get box_out and box_in
+        group_out = canvas.get_group(group_out_id)
+        group_in = canvas.get_group(group_in_id)
+        if group_out is None or group_in is None:
+            return
+        
+        for box_out in group_out.widgets:
+            if PortMode.OUTPUT in box_out.get_port_mode():
+                break
+        else:
+            return
+        
+        for box_in in group_in.widgets:
+            if PortMode.INPUT in box_in.get_port_mode():
+                break
+        else:
+            return
+
         self._box_hidding_out = BoxHidding.NONE
         self._box_hidding_in = BoxHidding.NONE
-
-        for hbox in canvas.scene.hidding_boxes:
-            if hbox.get_group_id() is group_out_id:
-                self._box_hidding_out = BoxHidding.HIDDING
-            if hbox.get_group_id() is group_in_id:
-                self._box_hidding_in = BoxHidding.HIDDING
         
-        for rbox in canvas.scene.restore_boxes:
-            if rbox.get_group_id() is group_out_id:
-                self._box_hidding_out = BoxHidding.RESTORING
-            if rbox.get_group_id() is group_in_id:
-                self._box_hidding_in = BoxHidding.RESTORING
+        for move_box in canvas.scene.move_boxes:
+            if move_box.widget is box_out:
+                self._box_hidding_out = move_box.hidding_state
+            elif move_box.widget is box_in:
+                self._box_hidding_in = move_box.hidding_state
+
+        # for hbox in canvas.scene.hidding_boxes:
+        #     if hbox.get_group_id() is group_out_id:
+        #         self._box_hidding_out = BoxHidding.HIDDING
+        #     if hbox.get_group_id() is group_in_id:
+        #         self._box_hidding_in = BoxHidding.HIDDING
+        
+        # for rbox in canvas.scene.restore_boxes:
+        #     if rbox.get_group_id() is group_out_id:
+        #         self._box_hidding_out = BoxHidding.RESTORING
+        #     if rbox.get_group_id() is group_in_id:
+        #         self._box_hidding_in = BoxHidding.RESTORING
 
         self.update_lines_pos(fast_move=True)
         if (self._box_hidding_out is not BoxHidding.NONE

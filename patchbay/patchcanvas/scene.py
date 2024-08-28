@@ -23,6 +23,7 @@ from PyQt5.QtCore import QRectF, QMarginsF, QPoint, Qt
 from PyQt5.QtWidgets import QGraphicsView
 
 from .init_values import (
+    BoxHidding,
     canvas,
     options,
     PortMode,
@@ -427,8 +428,7 @@ class PatchScene(PatchSceneMoth):
             # in view change, all boxes are in self.move_boxes
             moving_boxes = [b for b in self.move_boxes
                             if (not b.final_rect.isNull()
-                                and b.widget.isVisible()
-                                and not b in self.hidding_boxes)]
+                                and b.widget.isVisible())]
 
             while moving_boxes:
                 self.deplace_boxes_from_repulsers(
@@ -440,7 +440,12 @@ class PatchScene(PatchSceneMoth):
                     moving_boxes.remove(to_rm_mb)
         else:
             for box in [b for b in canvas.list_boxes()
-                        if b.isVisible() and b not in self.hidding_boxes]:
+                        if b.isVisible()
+                        and b not in [
+                            mb.widget for mb in self.move_boxes
+                            if mb.hidding_state is not BoxHidding.HIDDING]]:
+            # for box in [b for b in canvas.list_boxes()
+            #             if b.isVisible() and b not in self.hidding_boxes]:
                 if box not in self._full_repulse_boxes:
                     self.deplace_boxes_from_repulsers([box])
 

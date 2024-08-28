@@ -32,6 +32,7 @@ from PyQt5.QtWidgets import QGraphicsItem, QApplication
 
 from .init_values import (
     AliasingReason,
+    BoxHidding,
     CanvasItemType,
     GroupObject,
     PortObject,
@@ -842,9 +843,6 @@ class BoxWidgetMoth(QGraphicsItem):
                     or not self.isVisible()):
                 return QRectF()
             
-            if self in canvas.scene.hidding_boxes:
-                return QRectF()
-            
             for move_box in canvas.scene.move_boxes:
                 if self is move_box.widget:
                     if move_box.final_rect.isNull():
@@ -858,16 +856,6 @@ class BoxWidgetMoth(QGraphicsItem):
                             QMarginsF(50.0, 20.0, 20.0, 20.0))
                     return move_box.final_rect.marginsAdded(
                         QMarginsF(50.0, 20.0, 50.0, 20.0))
-                    
-            if self in canvas.scene.restore_boxes:
-                if self._current_port_mode is PortMode.OUTPUT:
-                    return self.sceneBoundingRect().marginsAdded(
-                        QMarginsF(20.0, 20.0, 50.0, 20.0))
-                if self._current_port_mode is PortMode.INPUT:
-                    return self.sceneBoundingRect().marginsAdded(
-                        QMarginsF(50.0, 20.0, 20.0, 20.0))
-                return self.sceneBoundingRect().marginsAdded(
-                    QMarginsF(50.0, 20.0, 50.0, 20.0))
             
         if (self._current_port_mode is PortMode.NULL
                 or not self.isVisible()):
