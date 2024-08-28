@@ -1193,7 +1193,7 @@ class BoxWidget(BoxWidgetMoth):
             return
 
         if (not (even_animated or wrap_anim)
-                and self in [b.widget for b in canvas.scene.move_boxes]):
+                and self in canvas.scene.move_boxes):
             self.update_positions_pending = True
             # do not change box layout while box is moved by animation
             # update_positions will be called when animation is finished

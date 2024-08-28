@@ -137,7 +137,7 @@ class PatchSceneMoth(QGraphicsScene):
         '''During view change, this attr must be set to True
         to prevent user to take and move a box.'''
         
-        self.move_boxes = list[MovingBox]()
+        self.move_boxes = dict[BoxWidget, MovingBox]()
         self._MOVE_DURATION = 1.400 # 300ms
         self._MOVE_TIMER_INTERVAL = 20 # 20 ms step animation (50 Hz)
         self._move_timer_start_at = 0.0
@@ -382,7 +382,7 @@ class PatchSceneMoth(QGraphicsScene):
 
         lws = set[GroupedLinesWidget]()
 
-        for moving_box in self.move_boxes:
+        for box, moving_box in self.move_boxes.items():
             x = (moving_box.from_pt.x()
                     + ((moving_box.to_pt.x() - moving_box.from_pt.x())
                     * (ratio ** 0.6)))
@@ -391,49 +391,28 @@ class PatchSceneMoth(QGraphicsScene):
                     + ((moving_box.to_pt.y() - moving_box.from_pt.y())
                     * (ratio ** 0.6)))
 
-            moving_box.widget.set_top_left((x, y))
-            moving_box.widget.repaint_lines(fast_move=True)
+            box.set_top_left((x, y))
+            box.repaint_lines(fast_move=True)
 
             if moving_box.is_wrapping:
                 if time_since_start >= self._MOVE_DURATION:
-                    moving_box.widget.animate_wrapping(1.00)
+                    box.animate_wrapping(1.00)
                 else:
-                    moving_box.widget.animate_wrapping(ratio)
+                    box.animate_wrapping(ratio)
             
             if moving_box.hidding_state in (BoxHidding.HIDDING,
                                             BoxHidding.RESTORING):
                 if moving_box.hidding_state is BoxHidding.HIDDING:
-                    moving_box.widget.animate_hidding(ratio)
+                    box.animate_hidding(ratio)
                 else:
-                    moving_box.widget.animate_hidding(1.0 - ratio)
+                    box.animate_hidding(1.0 - ratio)
                     
                 for lw in GroupedLinesWidget.widgets_for_box(
-                        moving_box.widget.get_group_id(),
-                        moving_box.widget.get_port_mode()):
+                        box.get_group_id(),
+                        box.get_port_mode()):
                     if lw not in lws:
                         lw.animate_hidding(ratio)
                         lws.add(lw)
-                
-                
-
-        # animate hidding and restoring boxes, and their lines.
-        
-        # for hidding_box in self.hidding_boxes:
-        #     hidding_box.animate_hidding(ratio)
-        #     for lw in GroupedLinesWidget.widgets_for_box(
-        #             hidding_box.get_group_id(), hidding_box.get_port_mode()):
-        #         lw.animate_hidding(ratio)
-        #         lws.add(lw)
-                
-        # for restore_box in self.restore_boxes:
-        #     restore_box.animate_hidding(1 - ratio)
-        #     if restore_box in self.hidding_boxes:
-        #         continue
-        #     for lw in GroupedLinesWidget.widgets_for_box(
-        #             restore_box.get_group_id(), restore_box.get_port_mode()):
-        #         if lw in lws:
-        #             continue
-        #         lw.animate_hidding(ratio)
 
         self.resize_the_scene(ratio)
 
@@ -442,15 +421,14 @@ class PatchSceneMoth(QGraphicsScene):
             self._move_box_timer.stop()
             canvas.set_aliasing_reason(AliasingReason.ANIMATION, False)
             self.prevent_box_user_move = False
-            # for hidding_box in self.hidding_boxes:
-            #     hidding_box.send_hide_callback()
             GroupedLinesWidget.animation_finished()
 
             # box update positions is forbidden while widget is in self.move_boxes
             # So we copy the list before to clear it
             # then we can ask update_positions on widgets
-            boxes = [mb.widget for mb in self.move_boxes
+            boxes = [b for b, mb in self.move_boxes.items()
                      if not (mb.is_joining or mb.hidding_state is BoxHidding.HIDDING)]
+            
             self.move_boxes.clear()
 
             for box in boxes:
@@ -463,28 +441,23 @@ class PatchSceneMoth(QGraphicsScene):
     def add_box_to_animation(
             self, box_widget: BoxWidget, to_x: int, to_y: int,
             joining=Joining.NO_CHANGE, joined_rect=QRectF()):
-        '''add a box to the move animation, to_x and to_y refer to the top left
-        of the box at the end of animation.
+        '''add a box to the move animation, to_x and to_y refer
+        to the top left of the box at the end of animation.
         if joining is set to Joining.YES, joined_rect must be set'''
 
-        if 'PulseAudio' in box_widget._group_name:
-            print('add_box anim', box_widget, to_x, to_y)
-
-        for moving_box in self.move_boxes:
-            if moving_box.widget is box_widget:
-                # box is already moving, check joining state and change it
-                # if needed.
-                if moving_box.is_joining and joining is Joining.NO:
-                    moving_box.is_joining = False
-                    canvas.qobject.rm_group_to_join(
-                        moving_box.widget.get_group_id())
-                break
-        else:
+        moving_box = self.move_boxes.get(box_widget)
+        if moving_box is None:
             # box is not already moving, create a MovingBox instance
             moving_box = MovingBox(box_widget)
             if joining is Joining.YES:
                 moving_box.is_joining = True
-            self.move_boxes.append(moving_box)
+            self.move_boxes[box_widget] = moving_box
+        else:
+            # box is already moving, check joining state and change it
+            # if needed.
+            if moving_box.is_joining and joining is Joining.NO:
+                moving_box.is_joining = False
+                canvas.qobject.rm_group_to_join(box_widget.get_group_id())
 
         moving_box.from_pt = QPoint(*box_widget.top_left())
         moving_box.to_pt = QPoint(to_x, to_y)
@@ -536,18 +509,14 @@ class PatchSceneMoth(QGraphicsScene):
             # and this is prevented by this attr in box_widget_moth.
             return
 
-        for moving_box in self.move_boxes:
-            if moving_box.widget is box_widget:
-                self.move_boxes.remove(moving_box)
-                break
+        if box_widget in self.move_boxes:
+            self.move_boxes.pop(box_widget)
 
     def add_box_to_animation_wrapping(self, box_widget: BoxWidget, wrap: bool):  
-        for moving_box in self.move_boxes:
-            if moving_box.widget is box_widget:
-                break
-        else:
+        moving_box = self.move_boxes.get(box_widget)
+        if moving_box is None:
             moving_box = MovingBox(box_widget)
-            self.move_boxes.append(moving_box)
+            self.move_boxes[box_widget] = moving_box
         
         moving_box.start_time = time.time() - self._move_timer_start_at
     
@@ -559,17 +528,15 @@ class PatchSceneMoth(QGraphicsScene):
         
         self._start_move_timer()
 
-    def add_box_to_animation_hidding(self, box_widget: BoxWidget):        
-        for move_box in self.move_boxes:
-            if move_box.widget is box_widget:
-                break
-        else:
-            move_box = MovingBox(box_widget)
-            self.move_boxes.append(move_box)
-
-        move_box.start_time = time.time() - self._move_timer_start_at
-        move_box.final_rect = QRectF()
-        move_box.hidding_state = BoxHidding.HIDDING
+    def add_box_to_animation_hidding(self, box_widget: BoxWidget):
+        moving_box = self.move_boxes.get(box_widget)
+        if moving_box is None:
+            moving_box = MovingBox(box_widget)
+            self.move_boxes[box_widget] = moving_box
+        
+        moving_box.start_time = time.time() - self._move_timer_start_at
+        moving_box.final_rect = QRectF()
+        moving_box.hidding_state = BoxHidding.HIDDING
         
         for port_mode in PortMode.OUTPUT, PortMode.INPUT:
             if port_mode not in box_widget.get_port_mode():
@@ -579,20 +546,13 @@ class PatchSceneMoth(QGraphicsScene):
                     box_widget.get_group_id(), port_mode):
                 lw.set_mode_hidding(port_mode, BoxHidding.HIDDING)
         
-        print('addto HIDDING', box_widget)
-        
         self._start_move_timer()
 
     def add_box_to_animation_restore(self, box_widget: BoxWidget):
-        if 'PulseAudio' in box_widget._group_name:
-            print('add_box rest', box_widget)
-        
-        for moving_box in self.move_boxes:
-            if moving_box.widget is box_widget:
-                break
-        else:
+        moving_box = self.move_boxes.get(box_widget)
+        if moving_box is None:
             moving_box = MovingBox(box_widget)
-            self.move_boxes.append(moving_box)
+            self.move_boxes[box_widget] = moving_box
 
         moving_box.start_time = time.time() - self._move_timer_start_at
         moving_box.from_pt = moving_box.to_pt
@@ -610,14 +570,11 @@ class PatchSceneMoth(QGraphicsScene):
                     box_widget.get_group_id(), port_mode):
                 lw.set_mode_hidding(port_mode, BoxHidding.RESTORING)
 
-        print('addto RESTORE', box_widget)
         self._start_move_timer()
 
     def remove_box(self, box_widget: BoxWidget):
-        for move_box in self.move_boxes:
-            if move_box.widget is box_widget:
-                self.move_boxes.remove(move_box)
-                break
+        if box_widget in self.move_boxes:
+            self.move_boxes.pop(box_widget)
         
         self.removeItem(box_widget)
 

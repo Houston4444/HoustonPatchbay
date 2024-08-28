@@ -118,23 +118,13 @@ class GroupedLinesWidget(QGraphicsPathItem):
         self._box_hidding_out = BoxHidding.NONE
         self._box_hidding_in = BoxHidding.NONE
         
-        for move_box in canvas.scene.move_boxes:
-            if move_box.widget is box_out:
-                self._box_hidding_out = move_box.hidding_state
-            elif move_box.widget is box_in:
-                self._box_hidding_in = move_box.hidding_state
-
-        # for hbox in canvas.scene.hidding_boxes:
-        #     if hbox.get_group_id() is group_out_id:
-        #         self._box_hidding_out = BoxHidding.HIDDING
-        #     if hbox.get_group_id() is group_in_id:
-        #         self._box_hidding_in = BoxHidding.HIDDING
-        
-        # for rbox in canvas.scene.restore_boxes:
-        #     if rbox.get_group_id() is group_out_id:
-        #         self._box_hidding_out = BoxHidding.RESTORING
-        #     if rbox.get_group_id() is group_in_id:
-        #         self._box_hidding_in = BoxHidding.RESTORING
+        move_box_out = canvas.scene.move_boxes.get(box_out)
+        if move_box_out is not None:
+            self._box_hidding_out = move_box_out.hidding_state
+            
+        move_box_in = canvas.scene.move_boxes.get(box_in)
+        if move_box_in is not None:
+            self._box_hidding_in = move_box_in.hidding_state
 
         self.update_lines_pos(fast_move=True)
         if (self._box_hidding_out is not BoxHidding.NONE

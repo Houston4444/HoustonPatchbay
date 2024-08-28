@@ -216,17 +216,16 @@ class PatchScene(PatchSceneMoth):
                 srect = mov_repulsables[0].final_rect
             else:
                 # if box is already moving, consider its end position
-                for moving_box in self.move_boxes:
-                    if moving_box.widget is box:
-                        if moving_box.final_rect.isNull():
-                            # if this box is joining or hidding,
-                            # it will be removed soon
-                            # so, it has not to be a repulser.
-                            return
-                        srect = moving_box.final_rect
-                        break
-                else:
+                moving_box = self.move_boxes.get(box)
+                if moving_box is None:
                     srect = box.after_wrap_rect().translated(box.pos())
+                else:
+                    srect = moving_box.final_rect
+                    if srect.isNull():
+                        # if this box is joining or hidding,
+                        # it will be removed soon
+                        # so, it has not to be a repulser.
+                        continue
 
             repulser = BoxAndRect(srect, box)
             repulsers.append(repulser)
@@ -261,7 +260,7 @@ class PatchScene(PatchSceneMoth):
                     
                     if (widget in repulser_boxes
                             or widget in [b.item for b in to_move_boxes]
-                            or widget in [b.widget for b in self.move_boxes]):
+                            or widget in self.move_boxes):
                         continue
 
                     irect = widget.sceneBoundingRect()
@@ -273,13 +272,12 @@ class PatchScene(PatchSceneMoth):
                         items_to_move.append(BoxAndRect(irect, widget))
 
                 # search intersections in moving boxes
-                for moving_box in self.move_boxes:
-                    if (moving_box.widget in repulser_boxes
+                for widget, moving_box in self.move_boxes.items():
+                    if (widget in repulser_boxes
                             or moving_box.final_rect.isNull()
-                            or moving_box.widget in [b.item for b in to_move_boxes]):
+                            or widget in [b.item for b in to_move_boxes]):
                         continue
 
-                    widget = moving_box.widget
                     irect = moving_box.final_rect
                     
                     if rect_has_to_move_from(
@@ -381,7 +379,7 @@ class PatchScene(PatchSceneMoth):
                         continue
                     if (widget in [r.item for r in repulsers]
                             or widget in [b.item for b in to_move_boxes]
-                            or widget in [b.widget for b in self.move_boxes]):
+                            or widget in self.move_boxes):
                         continue
                     
                     mirect = widget.sceneBoundingRect()
@@ -392,9 +390,7 @@ class PatchScene(PatchSceneMoth):
                         adding_list.append(
                             ToMoveBox(directions, widget, mirect, repulser))                        
                 
-                for moving_box in self.move_boxes:
-                    mitem = moving_box.widget
-                    
+                for mitem, moving_box in self.move_boxes.items():                    
                     if (mitem in [r.item for r in repulsers]
                             or moving_box.final_rect.isNull()
                             or mitem in [b.item for b in to_move_boxes]):
@@ -426,9 +422,9 @@ class PatchScene(PatchSceneMoth):
 
         if view_change:
             # in view change, all boxes are in self.move_boxes
-            moving_boxes = [b for b in self.move_boxes
-                            if (not b.final_rect.isNull()
-                                and b.widget.isVisible())]
+            moving_boxes = [mb for b, mb in self.move_boxes.items()
+                            if (not mb.final_rect.isNull()
+                                and b.isVisible())]
 
             while moving_boxes:
                 self.deplace_boxes_from_repulsers(
@@ -438,14 +434,16 @@ class PatchScene(PatchSceneMoth):
                                   if mb.widget in self._full_repulse_boxes]
                 for to_rm_mb in to_rm_movboxes:
                     moving_boxes.remove(to_rm_mb)
-        else:
-            for box in [b for b in canvas.list_boxes()
-                        if b.isVisible()
-                        and b not in [
-                            mb.widget for mb in self.move_boxes
-                            if mb.hidding_state is not BoxHidding.HIDDING]]:
-            # for box in [b for b in canvas.list_boxes()
-            #             if b.isVisible() and b not in self.hidding_boxes]:
+        else:   
+            for box in canvas.list_boxes():
+                if not box.isVisible():
+                    continue
+                
+                moving_box = self.move_boxes.get(box)
+                if (moving_box is not None
+                        and moving_box.hidding_state is BoxHidding.HIDDING):
+                    continue
+
                 if box not in self._full_repulse_boxes:
                     self.deplace_boxes_from_repulsers([box])
 
@@ -466,13 +464,12 @@ class PatchScene(PatchSceneMoth):
             if neighbor is box_widget:
                 srect = ex_rect
             else:
-                for moving_box in self.move_boxes:
-                    if moving_box.widget is neighbor:
-                        srect = moving_box.final_rect
-                        break
-                else:
+                moving_box = self.move_boxes.get(neighbor)
+                if moving_box is None:
                     srect = neighbor.after_wrap_rect().translated(
                         neighbor.pos())
+                else:
+                    srect = moving_box.final_rect
 
             for item in self.items(
                     srect.adjusted(0, 0, 0,

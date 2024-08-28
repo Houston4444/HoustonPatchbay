@@ -843,19 +843,19 @@ class BoxWidgetMoth(QGraphicsItem):
                     or not self.isVisible()):
                 return QRectF()
             
-            for move_box in canvas.scene.move_boxes:
-                if self is move_box.widget:
-                    if move_box.final_rect.isNull():
-                        return move_box.final_rect
+            move_box = canvas.scene.move_boxes.get(self)
+            if move_box is not None:
+                if move_box.final_rect.isNull():
+                    return move_box.final_rect
 
-                    if self._current_port_mode is PortMode.OUTPUT:
-                        return move_box.final_rect.marginsAdded(
-                            QMarginsF(20.0, 20.0, 50.0, 20.0))
-                    if self._current_port_mode is PortMode.INPUT:
-                        return move_box.final_rect.marginsAdded(
-                            QMarginsF(50.0, 20.0, 20.0, 20.0))
+                if self._current_port_mode is PortMode.OUTPUT:
                     return move_box.final_rect.marginsAdded(
-                        QMarginsF(50.0, 20.0, 50.0, 20.0))
+                        QMarginsF(20.0, 20.0, 50.0, 20.0))
+                if self._current_port_mode is PortMode.INPUT:
+                    return move_box.final_rect.marginsAdded(
+                        QMarginsF(50.0, 20.0, 20.0, 20.0))
+                return move_box.final_rect.marginsAdded(
+                    QMarginsF(50.0, 20.0, 50.0, 20.0))
             
         if (self._current_port_mode is PortMode.NULL
                 or not self.isVisible()):
