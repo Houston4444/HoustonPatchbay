@@ -838,11 +838,11 @@ class BoxWidgetMoth(QGraphicsItem):
 
     def rect_needed_in_scene(self, futur=False) -> QRectF:
         '''return the rect that can change the scene size'''
+        if (self._current_port_mode is PortMode.NULL
+                or not self.isVisible()):
+            return QRectF()
+        
         if futur:
-            if (self._current_port_mode is PortMode.NULL
-                    or not self.isVisible()):
-                return QRectF()
-            
             move_box = canvas.scene.move_boxes.get(self)
             if move_box is not None:
                 if move_box.final_rect.isNull():
@@ -856,11 +856,6 @@ class BoxWidgetMoth(QGraphicsItem):
                         QMarginsF(50.0, 20.0, 20.0, 20.0))
                 return move_box.final_rect.marginsAdded(
                     QMarginsF(50.0, 20.0, 50.0, 20.0))
-            
-        if (self._current_port_mode is PortMode.NULL
-                or not self.isVisible()):
-                # or self.hidder_widget is not None):
-            return QRectF()
         
         # the scene size needs a little margin at top and bottom
         # of the box.

@@ -653,6 +653,9 @@ def move_group_boxes(
     splitted = False
     orig_rect = QRectF()
 
+    for port_mode, box_pos in box_poses.items():
+        group.box_poses[port_mode] = BoxPos(box_pos)
+
     if group.splitted != split:
         if split:
             for box in group.widgets:
@@ -667,8 +670,6 @@ def move_group_boxes(
             join = True
 
     for port_mode, box_pos, in box_poses.items():
-        group.box_poses[port_mode] = BoxPos(box_pos)
-        
         for box in group.widgets:
             if box.get_port_mode() is not port_mode:
                 continue
@@ -698,7 +699,7 @@ def move_group_boxes(
             if redraw & port_mode:
                 box.update_positions(
                     even_animated=True, prevent_overlap=False)
-
+            
             if splitted and not orig_rect.isNull():
                 # the splitted boxes start with inputs aligned to the inputs
                 # of the previous joined box, and same for the outputs.

@@ -138,7 +138,7 @@ class PatchSceneMoth(QGraphicsScene):
         to prevent user to take and move a box.'''
         
         self.move_boxes = dict[BoxWidget, MovingBox]()
-        self._MOVE_DURATION = 1.400 # 300ms
+        self._MOVE_DURATION = 0.300 # 300ms
         self._MOVE_TIMER_INTERVAL = 20 # 20 ms step animation (50 Hz)
         self._move_timer_start_at = 0.0
         self._move_timer_last_time = 0.0
@@ -522,6 +522,8 @@ class PatchSceneMoth(QGraphicsScene):
     
         aft_wrap_rect = box_widget.after_wrap_rect()
         final_rect = QRectF(0.0, 0.0, aft_wrap_rect.width(), aft_wrap_rect.height())
+        if 'Hydrogen' in box_widget._group_name:
+            print('wrapp final rect', final_rect, final_rect.isNull(), aft_wrap_rect, aft_wrap_rect.isNull())
         moving_box.final_rect = \
             final_rect.translated(moving_box.to_pt)
         moving_box.is_wrapping = True
@@ -644,15 +646,28 @@ class PatchSceneMoth(QGraphicsScene):
     def get_new_scene_rect(self, anim_ratio: Optional[float]=None) -> QRectF:
         full_rect = QRectF()
 
-        for widget in canvas.list_boxes():
-            full_rect |= widget.rect_needed_in_scene()
-
         if anim_ratio is None or anim_ratio >= 1.0:
+            for widget in canvas.list_boxes():
+                full_rect |= widget.rect_needed_in_scene()
+
             return full_rect
         
         futur_rect = QRectF()
+        
+        for widget in canvas.list_boxes():
+            move_box = self.move_boxes.get(widget)
+            if move_box is None:
+                full_rect |= widget.rect_needed_in_scene()
+            
+            else:
+                if move_box.hidding_state is BoxHidding.RESTORING:
+                    continue
+                
+                full_rect |= widget.rect_needed_in_scene()
+        
         for widget in canvas.list_boxes():
             futur_rect |= widget.rect_needed_in_scene(futur=True)
+            print('bottotmm', futur_rect.bottom(), widget)
             
         if futur_rect is None or full_rect is None:
             return full_rect
@@ -666,6 +681,12 @@ class PatchSceneMoth(QGraphicsScene):
                     + futur_rect.top() * anim_ratio)
         rect.setBottom(full_rect.bottom() * (1.0 - anim_ratio)
                        + futur_rect.bottom() * anim_ratio)
+        
+        print('rapz', anim_ratio)
+        print('full', full_rect)
+        print('futu', futur_rect)
+        print('moye', rect)
+        
         return rect
 
     def resize_the_scene(self, anim_ratio: Optional[float]=None):

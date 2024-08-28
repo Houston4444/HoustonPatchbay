@@ -1350,7 +1350,16 @@ class BoxWidget(BoxWidgetMoth):
         ports_min_sizes = self._get_ports_min_sizes(align_port_types)
         box_layout, alter_layout = self._choose_box_layout(ports_min_sizes)
         
-        return QRectF(0.0, 0.0, box_layout.width, box_layout.height)
+        if self.is_hardware:
+            hwr = float(canvas.theme.hardware_rack_width)
+        else:
+            hwr = 0.0
+
+        if self.is_wrapped():
+            return QRectF(-hwr, -hwr, box_layout.full_wrapped_width,
+                          box_layout.full_wrapped_height)
+        
+        return QRectF(-hwr, -hwr, box_layout.width, box_layout.height)
     
     def get_layout(self, layout_mode: Optional[BoxLayoutMode] = None) -> BoxLayout:
         if layout_mode is None:
