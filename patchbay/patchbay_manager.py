@@ -512,7 +512,7 @@ class PatchbayManager:
         self.optimize_operation(False)
         patchcanvas.move_group_boxes(
             group.group_id, gpos.boxes, gpos.is_splitted(),
-            redraw=hidden_port_mode)
+            redraw=hidden_port_mode, restore=hidden_port_mode)
         patchcanvas.repulse_from_group(group.group_id, hidden_port_mode)
 
         self.sg.hidden_boxes_changed.emit()

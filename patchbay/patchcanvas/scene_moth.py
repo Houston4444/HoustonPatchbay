@@ -137,7 +137,7 @@ class PatchSceneMoth(QGraphicsScene):
         self.move_boxes = list[MovingBox]()
         self.hidding_boxes = set[BoxWidget]()
         self.restore_boxes = set[BoxWidget]()
-        self._MOVE_DURATION = 2.000 # 300ms
+        self._MOVE_DURATION = 1.400 # 300ms
         self._MOVE_TIMER_INTERVAL = 20 # 20 ms step animation (50 Hz)
         self._move_timer_start_at = 0.0
         self._move_timer_last_time = 0.0
@@ -474,7 +474,7 @@ class PatchSceneMoth(QGraphicsScene):
 
 
 
-        self.resize_the_scene()
+        self.resize_the_scene(ratio)
 
         if time_since_start >= self._MOVE_DURATION:
             # Animation is finished
@@ -731,19 +731,38 @@ class PatchSceneMoth(QGraphicsScene):
         painter.drawRect(rect)
         painter.restore()
 
-    def get_new_scene_rect(self) -> QRectF:
+    def get_new_scene_rect(self, anim_ratio: Optional[float]=None) -> QRectF:
         full_rect = QRectF()
 
         for widget in canvas.list_boxes():
             full_rect |= widget.rect_needed_in_scene()
 
-        return full_rect
+        if anim_ratio is None or anim_ratio >= 1.0:
+            return full_rect
+        
+        futur_rect = QRectF()
+        for widget in canvas.list_boxes():
+            futur_rect |= widget.rect_needed_in_scene(futur=True)
+            
+        if futur_rect is None or full_rect is None:
+            return full_rect
+        
+        rect = QRectF(full_rect)
+        rect.setLeft(full_rect.left() * (1.0 - anim_ratio)
+                     + futur_rect.left() * anim_ratio)
+        rect.setRight(full_rect.right() * (1.0 - anim_ratio)
+                      + futur_rect.right() * anim_ratio)
+        rect.setTop(full_rect.top() * (1.0 - anim_ratio)
+                    + futur_rect.top() * anim_ratio)
+        rect.setBottom(full_rect.bottom() * (1.0 - anim_ratio)
+                       + futur_rect.bottom() * anim_ratio)
+        return rect
 
-    def resize_the_scene(self):
+    def resize_the_scene(self, anim_ratio: Optional[float]=None):
         if not options.elastic:
             return
 
-        scene_rect = self.get_new_scene_rect()
+        scene_rect = self.get_new_scene_rect(anim_ratio)
         
         if not scene_rect.isNull():
             self.resizing_scene = True

@@ -835,11 +835,43 @@ class BoxWidgetMoth(QGraphicsItem):
                           height + 2.0 * hws)
         return QRectF(0.0, 0.0, float(width), float(height))
 
-    def rect_needed_in_scene(self) -> QRectF:
+    def rect_needed_in_scene(self, futur=False) -> QRectF:
         '''return the rect that can change the scene size'''
+        if futur:
+            if (self._current_port_mode is PortMode.NULL
+                    or not self.isVisible()):
+                return QRectF()
+            
+            if self in canvas.scene.hidding_boxes:
+                return QRectF()
+            
+            for move_box in canvas.scene.move_boxes:
+                if self is move_box.widget:
+                    if move_box.final_rect.isNull():
+                        return move_box.final_rect
+
+                    if self._current_port_mode is PortMode.OUTPUT:
+                        return move_box.final_rect.marginsAdded(
+                            QMarginsF(20.0, 20.0, 50.0, 20.0))
+                    if self._current_port_mode is PortMode.INPUT:
+                        return move_box.final_rect.marginsAdded(
+                            QMarginsF(50.0, 20.0, 20.0, 20.0))
+                    return move_box.final_rect.marginsAdded(
+                        QMarginsF(50.0, 20.0, 50.0, 20.0))
+                    
+            if self in canvas.scene.restore_boxes:
+                if self._current_port_mode is PortMode.OUTPUT:
+                    return self.sceneBoundingRect().marginsAdded(
+                        QMarginsF(20.0, 20.0, 50.0, 20.0))
+                if self._current_port_mode is PortMode.INPUT:
+                    return self.sceneBoundingRect().marginsAdded(
+                        QMarginsF(50.0, 20.0, 20.0, 20.0))
+                return self.sceneBoundingRect().marginsAdded(
+                    QMarginsF(50.0, 20.0, 50.0, 20.0))
+            
         if (self._current_port_mode is PortMode.NULL
-                or not self.isVisible()
-                or self.hidder_widget is not None):
+                or not self.isVisible()):
+                # or self.hidder_widget is not None):
             return QRectF()
         
         # the scene size needs a little margin at top and bottom

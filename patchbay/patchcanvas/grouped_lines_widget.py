@@ -407,6 +407,9 @@ class GroupedLinesWidget(QGraphicsPathItem):
                              tha.base_width, Qt.SolidLine, Qt.FlatCap))
             
     def animate_hidding(self, ratio: float):
+        '''animate hidding or restoring of connections.
+        'ratio' goes from 0.0 (animation start) to 1.0 (animation end).'''
+        
         if (self._box_hidding_out is BoxHidding.NONE
                 and self._box_hidding_in is BoxHidding.NONE):
             self.update_line_gradient()
@@ -414,13 +417,17 @@ class GroupedLinesWidget(QGraphicsPathItem):
 
         epsy = 0.001
         
-        if ratio < 0.0 or ratio > 1.0:
-            # the appear box animation is finished
+        if ratio >= 1.0:
+            # Animation finished
+            
+            if (self._box_hidding_out is BoxHidding.HIDDING
+                    or self._box_hidding_in is BoxHidding.HIDDING):
+                # if one of the 2 boxes is hidding,
+                # the lines widget must be invisible at end of animation.
+                # Lines widget will be removed very soon.
+                return
+            
             # the lines have now to be drawn normally
-            self._hidding_port_mode = PortMode.NULL
-            self._restore_port_mode = PortMode.NULL
-            self._box_hidding_out = BoxHidding.NONE
-            self._box_hidding_in = BoxHidding.NONE
             self.update_line_gradient()
             return
 
