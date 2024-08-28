@@ -851,7 +851,8 @@ class PatchbayManager:
         patchcanvas.repulse_all_boxes(view_change=True)
         end_repulse = time.time()
 
-        print('change ptv done', bef_repulse - bef_gp_pos, end_repulse - bef_repulse)
+        print('change ptv done', len(groups_and_pos),
+              bef_repulse - bef_gp_pos, end_repulse - bef_repulse)
         self.sg.port_types_view_changed.emit(self.port_types_view)
 
     def new_view(self, view_number: Optional[int]=None):

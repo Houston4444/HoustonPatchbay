@@ -348,7 +348,13 @@ def rename_group(group_id: int, new_group_name: str):
 
 @patchbay_api
 def split_group(group_id: int, on_place=False, redraw=True):
-    # Step 1 - Store all Item data
+    '''Split inputs and outputs in two box widgets.
+
+    on_place: the new boxes will have a pos near from the existing one
+    
+    redraw: draw the box, quite long operation. Needed for 'on_place'
+    to be effective.'''
+
     group = canvas.get_group(group_id)
     if group is None:
         _logger.error(f"{_logging_str} - unable to find group to split")
@@ -418,7 +424,6 @@ def split_group(group_id: int, on_place=False, redraw=True):
 
     QTimer.singleShot(0, canvas.scene.update)
 
-
 @patchbay_api
 def join_group(group_id: int):
     group = canvas.get_group(group_id)
@@ -433,7 +438,6 @@ def join_group(group_id: int):
     wrap = True
     for box in group.widgets:
         wrap = wrap and box.is_wrapped()
-
 
     eater, eaten = group.widgets
 
