@@ -27,6 +27,8 @@ class FilterFrame(QFrame):
             self._set_semi_hide_opacity)
         self.ui.toolButtonCloseFilterBar.clicked.connect(
             self.hide)
+        self.ui.toolButtonHiddensIndicator.set_filter_text_callable(
+            self.ui.lineEditGroupFilter.text)
         
         self._n_selected = 0
         self._n_boxes = 0
@@ -59,6 +61,8 @@ class FilterFrame(QFrame):
             
         self.ui.toolButtonUp.setEnabled(self._n_boxes >= 2)
         self.ui.toolButtonDown.setEnabled(self._n_boxes >= 2)
+        
+        self.ui.toolButtonHiddensIndicator._check_count()
 
     def _text_changed(self, text: str):
         if text:

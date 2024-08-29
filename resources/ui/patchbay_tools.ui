@@ -518,9 +518,6 @@ QPushButton:hover{border: 1 px solid grey;text-align:right}</string>
          <height>32</height>
         </size>
        </property>
-       <property name="styleSheet">
-        <string notr="true">QToolButton{border:none}</string>
-       </property>
        <property name="text">
         <string>0</string>
        </property>

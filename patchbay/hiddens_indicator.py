@@ -1,7 +1,7 @@
 
-from typing import TYPE_CHECKING, Iterator
+from typing import TYPE_CHECKING, Callable, Iterator, Optional
 
-from PyQt5.QtCore import pyqtSlot, QTimer, QPoint
+from PyQt5.QtCore import pyqtSlot, QTimer, QPoint, Qt
 from PyQt5.QtGui import QIcon, QPixmap, QMouseEvent
 from PyQt5.QtWidgets import QToolButton, QMenu, QApplication, QAction
 
@@ -15,12 +15,19 @@ if TYPE_CHECKING:
 
 _translate = QApplication.translate
 
+WHITE_LIST = -2
+SHOW_ALL = -3
+HIDE_ALL = -4
+
 
 class HiddensIndicator(QToolButton):
     def __init__(self, parent):
         super().__init__(parent)
         
         self.mng: 'PatchbayManager' = None
+        self._get_filter_text: Optional[Callable[[], str]] = None
+        '''If this HiddensIndicator instance is used by filter frame,
+        it will only count hidden boxes matching with the filter text.'''
         
         self._count = 0
         self._is_blinking = False
@@ -37,7 +44,15 @@ class HiddensIndicator(QToolButton):
         self._icon_orange = QIcon(QPixmap(f':scalable/breeze{dark}/hint_orange.svg'))
         
         self.setIcon(self._icon_normal)
+        
+        # self.setPopupMode(QToolButton.InstantPopup)
+        # self.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)
+        # self.setStyleSheet('QToolButton{border: none} '
+        #                    'QToolButton::menu-indicator{image: url(none.jpg);}')
+        
         self._menu = QMenu()
+        self._menu.aboutToShow.connect(self._build_menu)
+        self.setMenu(self._menu)
 
     def _is_dark(self) -> bool:
         return self.palette().text().color().lightnessF() > 0.5
@@ -52,7 +67,10 @@ class HiddensIndicator(QToolButton):
         self.mng.sg.group_added.connect(self._group_added)
         self.mng.sg.group_removed.connect(self._group_removed)
         self.mng.sg.all_groups_removed.connect(self._all_groups_removed)
-        
+    
+    def set_filter_text_callable(self, callable: Callable[[], str]):
+        self._get_filter_text = callable
+    
     def set_count(self, count: int):
         self._count = count
         self.setText(str(count))
@@ -136,6 +154,10 @@ class HiddensIndicator(QToolButton):
         if self.mng is None:
             return
         
+        flt = ''
+        if self._get_filter_text is not None:
+            flt = self._get_filter_text()
+        
         for group in self.mng.groups:
             hpm = group.current_position.hidden_port_modes()
             if hpm is PortMode.NULL:
@@ -145,14 +167,22 @@ class HiddensIndicator(QToolButton):
                         and PortMode.OUTPUT in hpm)
                     or (group.ins_ptv & self.mng.port_types_view
                         and PortMode.INPUT in hpm)):
-                yield group
+                if flt:
+                    if (flt.lower() in group.name.lower()
+                            or flt.lower() in group.display_name.lower()):
+                        yield group
+                else:
+                    yield group
     
-    def mousePressEvent(self, event: QMouseEvent) -> None:
-        super().mousePressEvent(event)
+    @pyqtSlot()
+    def _build_menu(self):
+        print('yououy about to show', self._get_filter_text is None)
         if self.mng is None:
-            return        
-        
-        self._menu.clear()
+            return
+
+
+        menu = self.menu()
+        menu.clear()
         
         dark = self._is_dark()
         cg = 0
@@ -160,69 +190,84 @@ class HiddensIndicator(QToolButton):
         for group in self._list_hidden_groups():
             cg += 1
 
-            group_act = self._menu.addAction(group.cnv_name)
+            group_act = menu.addAction(group.cnv_name)
             group_act.setIcon(utils.get_icon(
                 group.cnv_box_type, group.cnv_icon_name,
                 group.current_position.hidden_port_modes(),
                 dark=dark))
             group_act.setData(group.group_id)
+            group_act.triggered.connect(self._menu_action_triggered)
         
         self.set_count(cg)
 
-        WHITE_LIST = -2
-        SHOW_ALL = -3
-        HIDE_ALL = -4
-
-        self._menu.addSeparator()
+        menu.addSeparator()
 
         is_white_list = False
         view_data = self.mng.views_datas.get(self.mng.view_number)
         if view_data is not None:
             is_white_list = view_data.is_white_list
 
-        white_list_act = QAction(self._menu)
+        white_list_act = QAction(menu)
         white_list_act.setText(
             _translate('hiddens_indicator', 'Hide all new boxes'))
         white_list_act.setData(WHITE_LIST)
         white_list_act.setCheckable(True)
         white_list_act.setChecked(is_white_list)
         white_list_act.setIcon(QIcon.fromTheme('color-picker-white'))
-        
-        self._menu.addAction(white_list_act)
+        menu.addAction(white_list_act)
 
-        self._menu.addSeparator()
+        menu.addSeparator()
         
-        show_all_act = QAction(self._menu)
+        show_all_act = QAction(menu)
         show_all_act.setText(
             _translate('hiddens_indicator', 'Display all boxes'))
         show_all_act.setIcon(QIcon.fromTheme('visibility'))
         show_all_act.setData(SHOW_ALL)
-        self._menu.addAction(show_all_act)
+        menu.addAction(show_all_act)
         
-        hide_all_act = QAction(self._menu)
+        hide_all_act = QAction(menu)
         hide_all_act.setText(
             _translate('hiddens_indicator', 'Hide all boxes'))
         hide_all_act.setIcon(QIcon.fromTheme('hint'))
         hide_all_act.setData(HIDE_ALL)
-        self._menu.addAction(hide_all_act)
-
-        sel_act = self._menu.exec(
-            self.mapToGlobal(QPoint(0, self.height())))
+        menu.addAction(hide_all_act)
         
-        if sel_act is None:
-            return
-        
-        act_data: int = sel_act.data()
+        for act in white_list_act, show_all_act, hide_all_act:
+            act.triggered.connect(self._menu_action_triggered)
 
+        if self._get_filter_text is not None:
+            # reverse actions order for indicator in the filter frame
+            acts = list[QAction]()
+            for act in menu.actions():
+                act.setParent(None)
+                acts.append(act)
+            acts.reverse()
+            
+            menu.clear()
+            for act in acts:
+                act.setParent(menu)
+                menu.addAction(act)
+
+    @pyqtSlot()
+    def _menu_action_triggered(self):
+        act: QAction = self.sender()
+        act_data: int = act.data()
+        
         if act_data == WHITE_LIST:
-            if white_list_act.isChecked():
+            if act.isChecked():
                 self.mng.clear_absents_in_view()
             self.mng.views_datas[self.mng.view_number].is_white_list = \
-                white_list_act.isChecked()
+                act.isChecked()
             return
         
         if act_data == SHOW_ALL:
-            self.mng.restore_all_group_hidden_sides(even_absents=is_white_list)
+            is_white_list = False
+            view_data = self.mng.views_datas.get(self.mng.view_number)
+            if view_data is not None:
+                is_white_list = view_data.is_white_list
+            
+            self.mng.restore_all_group_hidden_sides(
+                even_absents=is_white_list)
             return
         
         if act_data == HIDE_ALL:
@@ -231,5 +276,3 @@ class HiddensIndicator(QToolButton):
 
         # act_data is now a group_id
         self.mng.restore_group_hidden_sides(act_data)
-        
-        

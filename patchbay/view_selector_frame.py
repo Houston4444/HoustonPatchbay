@@ -1,12 +1,14 @@
 from typing import TYPE_CHECKING, Optional
 from math import ceil
-from PyQt5.QtWidgets import QWidget, QApplication, QMenu, QAbstractItemDelegate, QStyleOptionViewItem
-from PyQt5.QtGui import QIcon, QKeyEvent, QPen, QColor, QFont, QFontMetrics, QFontMetricsF
-from PyQt5.QtCore import pyqtSlot, Qt, QSize, QPointF, QRect, QRectF
+from PyQt5.QtWidgets import (
+    QWidget, QApplication, QMenu, QAbstractItemDelegate,
+    QStyleOptionViewItem)
+from PyQt5.QtGui import QIcon, QKeyEvent, QPen, QFont, QFontMetricsF
+from PyQt5.QtCore import pyqtSlot, Qt, QSize, QPointF, QRect
 
 from .ui.view_selector import Ui_Form
 
-from .patchcanvas import patchcanvas, arranger
+from .patchcanvas import arranger
 
 if TYPE_CHECKING:
     from patchbay_manager import PatchbayManager
@@ -17,6 +19,7 @@ _translate = QApplication.translate
 
 
 class ItemmDeleg(QAbstractItemDelegate):
+    '''Manage the menu appearance of the views selector combobox'''
     def __init__(self, parent: 'ViewsComboBox'):
         super().__init__(parent)
         self.mng: Optional['PatchbayManager'] = None
