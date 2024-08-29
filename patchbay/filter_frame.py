@@ -17,7 +17,7 @@ class FilterFrame(QFrame):
         self.ui.setupUi(self)
 
         self._settings = None
-        self.patchbay_manager = None
+        self.mng = None
         
         self.ui.lineEditGroupFilter.textEdited.connect(self._text_changed)
         self.ui.lineEditGroupFilter.up_down_pressed.connect(self._up_down_pressed)
@@ -37,14 +37,14 @@ class FilterFrame(QFrame):
             int(settings.value('Canvas/semi_hide_opacity', 0.24, type=float) * 100))
     
     def _filter_groups(self):
-        if self.patchbay_manager is None:
+        if self.mng is None:
             return
         
         filter_text = self.ui.lineEditGroupFilter.text()
         
         self.ui.labelBoxes.setText('')
         
-        self._n_boxes = self.patchbay_manager.filter_groups(
+        self._n_boxes = self.mng.filter_groups(
             filter_text, self._n_selected)
 
         if self._n_boxes:
@@ -93,10 +93,10 @@ class FilterFrame(QFrame):
             self._down_pressed()
     
     def _set_semi_hide_opacity(self, value:int):
-        if self.patchbay_manager is None:
+        if self.mng is None:
             return
 
-        self.patchbay_manager.set_semi_hide_opacity(float(value / 100))
+        self.mng.set_semi_hide_opacity(float(value / 100))
     
     def showEvent(self, event):
         self.ui.lineEditGroupFilter.setFocus()
@@ -127,11 +127,12 @@ class FilterFrame(QFrame):
             return
         self._filter_groups()
     
-    def set_patchbay_manager(self, patchbay_manager: 'PatchbayManager'):
-        self.patchbay_manager = patchbay_manager
-        self.patchbay_manager.sg.port_types_view_changed.connect(
+    def set_patchbay_manager(self, mng: 'PatchbayManager'):
+        self.mng = mng
+        self.mng.sg.port_types_view_changed.connect(
             self._port_types_view_changed)
-        self.ui.frameTypeFilter.set_patchbay_manager(patchbay_manager)
+        self.ui.frameTypeFilter.set_patchbay_manager(mng)
+        self.ui.toolButtonHiddensIndicator.set_patchbay_manager(mng)
     
     def set_filter_text(self, text: str):
         ''' used to find client boxes from client widget '''

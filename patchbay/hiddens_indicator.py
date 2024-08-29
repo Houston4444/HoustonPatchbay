@@ -149,6 +149,8 @@ class HiddensIndicator(QToolButton):
     
     def mousePressEvent(self, event: QMouseEvent) -> None:
         super().mousePressEvent(event)
+        if self.mng is None:
+            return        
         
         self._menu.clear()
         

@@ -147,6 +147,19 @@
     </widget>
    </item>
    <item>
+    <widget class="HiddensIndicator" name="toolButtonHiddensIndicator">
+     <property name="styleSheet">
+      <string notr="true">QToolButton{border:none}</string>
+     </property>
+     <property name="text">
+      <string>...</string>
+     </property>
+     <property name="toolButtonStyle">
+      <enum>Qt::ToolButtonTextBesideIcon</enum>
+     </property>
+    </widget>
+   </item>
+   <item>
     <widget class="TypeFilterFrame" name="frameTypeFilter">
      <property name="frameShape">
       <enum>QFrame::StyledPanel</enum>
@@ -230,6 +243,11 @@
    <extends>QFrame</extends>
    <header>..type_filter_frame</header>
    <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>HiddensIndicator</class>
+   <extends>QToolButton</extends>
+   <header>..hiddens_indicator</header>
   </customwidget>
  </customwidgets>
  <resources/>
