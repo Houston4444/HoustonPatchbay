@@ -597,7 +597,7 @@ QPushButton:hover{border: 1 px solid grey;text-align:right}</string>
   <customwidget>
    <class>HiddensIndicator</class>
    <extends>QToolButton</extends>
-   <header>..surclassed_widgets</header>
+   <header>..hiddens_indicator</header>
   </customwidget>
  </customwidgets>
  <resources>

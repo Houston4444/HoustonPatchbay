@@ -80,6 +80,7 @@ class FilterFrame(QFrame):
 
         self._filter_groups()
 
+    @pyqtSlot(int)
     def _up_down_pressed(self, key: int):
         if not self.ui.toolButtonUp.isEnabled():
             # could be toolButtonDown
