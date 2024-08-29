@@ -127,10 +127,16 @@ class FilterFrame(QFrame):
             return
         self._filter_groups()
     
+    @pyqtSlot()
+    def _animation_finished(self):
+        self._filter_groups()
+    
     def set_patchbay_manager(self, mng: 'PatchbayManager'):
         self.mng = mng
         self.mng.sg.port_types_view_changed.connect(
             self._port_types_view_changed)
+        self.mng.sg.animation_finished.connect(
+            self._animation_finished)
         self.ui.frameTypeFilter.set_patchbay_manager(mng)
         self.ui.toolButtonHiddensIndicator.set_patchbay_manager(mng)
     

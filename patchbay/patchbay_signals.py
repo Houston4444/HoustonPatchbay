@@ -21,6 +21,9 @@ class SignalsObject(QObject):
     hidden_boxes_changed = pyqtSignal()
     'emitted when list of hidden boxes has changed'
     
+    animation_finished = pyqtSignal()
+    'emitted when a canvas animation is finished'
+    
     group_added = pyqtSignal(int)
     '''emitted when a group is added by a port.
     Used only by hiddens indicator. [group_id]'''

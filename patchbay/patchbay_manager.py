@@ -428,6 +428,7 @@ class PatchbayManager:
             patchcanvas.redraw_group(group_id, prevent_overlap=False)
         patchcanvas.canvas.scene.resize_the_scene()
         self.sg.hidden_boxes_changed.emit()
+        self.sg.animation_finished.emit()
         
         patchcanvas.prilo()
 
@@ -1428,8 +1429,8 @@ class PatchbayManager:
         patchcanvas.redraw_all_groups()
 
     def filter_groups(self, text: str, n_select=0) -> int:
-        ''' semi hides groups not matching with text
-            and returns number of matching boxes '''
+        '''Semi hides groups not matching with text
+        and returns number of matching boxes.'''
         opac_grp_ids = set()
 
         for group in self.groups:
