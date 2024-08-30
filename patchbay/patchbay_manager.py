@@ -525,6 +525,7 @@ class PatchbayManager:
         for group in self.groups:
             if group.current_position.hidden_port_modes():
                 group.current_position.set_hidden_port_mode(PortMode.NULL)
+                group.add_to_canvas()
                 group.add_all_ports_to_canvas()
                 groups_to_restore.add(group)
 
