@@ -375,6 +375,14 @@ class PatchSceneMoth(QGraphicsScene):
         time_since_start = move_time - self._move_timer_start_at
         ratio = min(1.0, time_since_start / self._MOVE_DURATION)
         
+        if self._move_timer_last_time == self._move_timer_start_at:
+            # this is the first animation step
+            if time_since_start > 0.33 * self._MOVE_DURATION:
+                # this seems to be a big patch
+                # animation won't be pretty anyway
+                # let's finish it now.
+                ratio = 1.0
+        
         if (move_time - self._move_timer_last_time
                 > 0.002 * self._MOVE_TIMER_INTERVAL):
             canvas.set_aliasing_reason(AliasingReason.ANIMATION, True)
