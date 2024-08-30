@@ -24,8 +24,15 @@ MENU_MAX = 12
 
 
 class GroupList:
+    '''Used here to organize the hidden boxes menu
+    when there are a lot of hidden groups.
+    It tries to prevent to have very big menus.'''
+
     common: str
+    "the common prefix for all groups inside 'list'"
+    
     list: 'list[Union[Group, GroupList]]'
+    'contains the list of groups or group lists.'
     
     def __init__(self, common: str,
                  group_list: 'list[Union[Group, GroupList]]'):
@@ -105,6 +112,7 @@ def divide_group_list(group_list: GroupList) -> GroupList:
             new_groups.append(divide_group_list(group_or_list))
 
     # recursion done
+    # at this stage, list can now contains Group or GroupList objects
 
     # englobe directly items of childs containing less than MENU_MIN items
     new_groups_ = list[Union[Group, GroupList]]()
@@ -128,7 +136,7 @@ class HiddensIndicator(QToolButton):
         self._get_filter_text: Optional[Callable[[], str]] = None
         '''If this HiddensIndicator instance is used by filter frame,
         it will only count hidden boxes matching with the filter text.'''
-        
+
         self._count = 0
         self._is_blinking = False
         self._blink_timer = QTimer()
@@ -318,81 +326,6 @@ class HiddensIndicator(QToolButton):
                 dark=dark))
             group_act.setData(group.group_id)
             group_act.triggered.connect(self._menu_action_triggered)
-                    
-        
-        # for group_or_list in group_list.list:
-        #     if isinstance(group_or_list, Group):
-                
-        
-        # if n_groups > 12:
-        #     groups.sort(key=lambda x: x.name)
-        #     new_groups = list[Union[Group, list[Group]]]()
-        #     last_client = ''
-            
-        #     # first, try to group groups of the same NSM client
-        #     # only with their name
-            
-        #     for group in groups:
-        #         if '/' in group.name:
-        #             client = group.cnv_name.partition('/')[0]
-        #             if client == last_client:
-        #                 new_groups[-1].append(group)
-        #             else:
-        #                 last_client = client
-        #                 new_groups.append([group])
-        #         else:
-        #             new_groups.append(group)
-        #             last_client = ''
-            
-        #     if not TYPE_CHECKING:
-        #         # pylance does not understand this.
-        #         # if there is only one submenu,
-        #         # lets deploy it in the main menu.
-        #         if len(new_groups) == 1:
-        #             new_groups = new_groups[0]
-
-        #     if len(new_groups) > 12:
-        #         ...
-
-        #     for group_or_list in new_groups:
-        #         if isinstance(group_or_list, Group):
-        #             group = group_or_list
-        #             group_act = menu.addAction(group.cnv_name)
-        #             group_act.setIcon(utils.get_icon(
-        #                 group.cnv_box_type, group.cnv_icon_name,
-        #                 group.current_position.hidden_port_modes(),
-        #                 dark=dark))
-        #             group_act.setData(group.group_id)
-        #             group_act.triggered.connect(self._menu_action_triggered)
-        #         else:
-        #             client_menu = QMenu(menu)                    
-        #             for group in group_or_list:
-        #                 if group is group_or_list[0]:
-        #                     client_menu.setIcon(utils.get_icon(
-        #                         group.cnv_box_type, group.cnv_icon_name,
-        #                         group.current_position.hidden_port_modes(),
-        #                         dark=dark))
-        #                     client_menu.setTitle(group.cnv_name.partition('/')[0])
-                        
-        #                 group_act = client_menu.addAction(
-        #                     group.cnv_name.rpartition('/')[2])
-        #                 group_act.setIcon(utils.get_icon(
-        #                     group.cnv_box_type, group.cnv_icon_name,
-        #                     group.current_position.hidden_port_modes(),
-        #                     dark=dark))
-        #                 group_act.setData(group.group_id)
-        #                 group_act.triggered.connect(self._menu_action_triggered)
-        #             menu.addMenu(client_menu)
-                    
-        # else:
-        #     for group in groups:
-        #         group_act = menu.addAction(group.cnv_name)
-        #         group_act.setIcon(utils.get_icon(
-        #             group.cnv_box_type, group.cnv_icon_name,
-        #             group.current_position.hidden_port_modes(),
-        #             dark=dark))
-        #         group_act.setData(group.group_id)
-        #         group_act.triggered.connect(self._menu_action_triggered)
         
         self.set_count(len(groups))
 
