@@ -19,6 +19,9 @@ WHITE_LIST = -2
 SHOW_ALL = -3
 HIDE_ALL = -4
 
+MENU_MIN = 3
+MENU_MAX = 12
+
 
 class GroupList:
     common: str
@@ -54,9 +57,10 @@ def common_prefix(*strings: tuple[str]) -> str:
     return common
 
 def divide_group_list(group_list: GroupList) -> GroupList:
-    if len(group_list.list) <= 12:
+    if len(group_list.list) <= MENU_MAX:
         return group_list
 
+    # At this stage group_list.list only contains groups 
     groups = list[Union[Group, GroupList]]()
     common_str = group_list.common
     common_min = len(group_list.common)
@@ -64,10 +68,6 @@ def divide_group_list(group_list: GroupList) -> GroupList:
     for group in group_list.list:
         if len(common_str) == common_min:
             common_str = group.name
-            if group is group_list.list[-1]:
-                groups.append(group)
-                break
-
             groups.append(GroupList(common_str, [group]))
             continue
         
@@ -77,7 +77,7 @@ def divide_group_list(group_list: GroupList) -> GroupList:
             groups[-1].common = common_str
             groups[-1].list.append(group)
         else:
-            if len(groups[-1].list) < 3:
+            if len(groups[-1].list) < MENU_MIN:
                 # the last list is too short
                 # remove this list and add all groups directly
                 last_group_list = groups.pop(-1)
@@ -87,13 +87,15 @@ def divide_group_list(group_list: GroupList) -> GroupList:
             common_str = group.name
             groups.append(GroupList(common_str, [group]))
 
-    if len(groups[-1].list) < 3:
+    if len(groups[-1].list) < MENU_MIN:
         # the last list is too short
         # remove this list and add all groups directly
+        # (only for last group)
         last_group_list = groups.pop(-1)
         for gp in last_group_list.list:
             groups.append(gp)
 
+    # do recursion
     new_groups = list[Union[Group, GroupList]]()
 
     for group_or_list in groups:
@@ -102,7 +104,20 @@ def divide_group_list(group_list: GroupList) -> GroupList:
         else:
             new_groups.append(divide_group_list(group_or_list))
 
-    return GroupList(group_list.common, new_groups)
+    # recursion done
+
+    # englobe directly items of childs containing less than MENU_MIN items
+    new_groups_ = list[Union[Group, GroupList]]()
+
+    for group_or_list in new_groups:
+        if (isinstance(group_or_list, GroupList)
+                and len(group_or_list.list) < MENU_MIN):
+            for gp_or_list in group_or_list.list:
+                new_groups_.append(gp_or_list)
+        else:
+            new_groups_.append(group_or_list)
+                    
+    return GroupList(group_list.common, new_groups_)
 
 
 class HiddensIndicator(QToolButton):
