@@ -543,7 +543,8 @@ class PatchbayManager:
         for group in groups_to_restore:
             patchcanvas.move_group_boxes(
                 group.group_id, group.current_position.boxes,
-                group.current_position.is_splitted(), redraw=PortMode.BOTH)
+                group.current_position.is_splitted(), redraw=PortMode.BOTH,
+                restore=PortMode.BOTH)
             patchcanvas.repulse_from_group(group.group_id, PortMode.BOTH)
 
         self.sg.hidden_boxes_changed.emit()

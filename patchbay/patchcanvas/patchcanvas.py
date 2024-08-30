@@ -49,6 +49,7 @@ from .init_values import (
     BoxType,
     BoxFlag,
     BoxPos,
+    BoxHidding,
     Zv
 )
 
@@ -483,8 +484,11 @@ def repulse_from_group(group_id: int, port_mode: PortMode):
         return
     
     for box in group.widgets:
-        if (box.isVisible()
-                and box.get_port_mode() & port_mode):
+        if (box.get_port_mode() & port_mode
+                and (box.isVisible()
+                     or (box in canvas.scene.move_boxes
+                         and canvas.scene.move_boxes[box].hidding_state
+                            is BoxHidding.RESTORING))):
             canvas.scene.deplace_boxes_from_repulsers([box])
 
 @patchbay_api
