@@ -49,6 +49,9 @@ class FilterFrame(QFrame):
         self._n_boxes = self.mng.filter_groups(
             filter_text, self._n_selected)
 
+        self.ui.toolButtonHiddensIndicator._check_count()
+        hiddens_count = self.ui.toolButtonHiddensIndicator.get_count()
+
         if self._n_boxes:
             self.ui.lineEditGroupFilter.setStyleSheet('')
             
@@ -56,13 +59,16 @@ class FilterFrame(QFrame):
                 self.ui.labelBoxes.setText(
                     '%i / %i' % (self._n_selected, self._n_boxes))
         else:
-            self.ui.lineEditGroupFilter.setStyleSheet(
-                'QLineEdit{background-color:#800000}')
+            if hiddens_count:
+                self.ui.lineEditGroupFilter.setStyleSheet(
+                    'QLineEdit{background-color:#804000}')
+            else:
+                self.ui.lineEditGroupFilter.setStyleSheet(
+                    'QLineEdit{background-color:#800000}')
             
         self.ui.toolButtonUp.setEnabled(self._n_boxes >= 2)
         self.ui.toolButtonDown.setEnabled(self._n_boxes >= 2)
         
-        self.ui.toolButtonHiddensIndicator._check_count()
 
     def _text_changed(self, text: str):
         if text:

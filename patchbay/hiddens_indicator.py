@@ -1,5 +1,5 @@
 
-from typing import TYPE_CHECKING, Callable, Iterator, Optional
+from typing import TYPE_CHECKING, Callable, Iterator, Optional, Union
 
 from PyQt5.QtCore import pyqtSlot, QTimer, QPoint, Qt
 from PyQt5.QtGui import QIcon, QPixmap, QMouseEvent
@@ -18,6 +18,91 @@ _translate = QApplication.translate
 WHITE_LIST = -2
 SHOW_ALL = -3
 HIDE_ALL = -4
+
+
+class GroupList:
+    common: str
+    list: 'list[Union[Group, GroupList]]'
+    
+    def __init__(self, common: str,
+                 group_list: 'list[Union[Group, GroupList]]'):
+        self.common = common
+        self.list = group_list
+    
+    def __repr__(self) -> str:
+        return f'GroupList("{self.common}", {len(self.list)})'
+    
+    def walk(self) -> Iterator[tuple[list[str], Group]]:
+        for group_or_list in self.list:
+            if isinstance(group_or_list, Group):
+                yield [], group_or_list
+            else:
+                for common_paths, group in group_or_list.walk():
+                    yield [group_or_list.common] + common_paths, group
+
+
+def common_prefix(*strings: tuple[str]) -> str:
+    max_size = min([len(s) for s in strings])
+    common = ''
+    for i in range(max_size):
+        letter_set = set([s[i] for s in strings])
+        if len(letter_set) > 1:
+            return common
+        
+        common += letter_set.pop()
+        
+    return common
+
+def divide_group_list(group_list: GroupList) -> GroupList:
+    if len(group_list.list) <= 12:
+        return group_list
+
+    groups = list[Union[Group, GroupList]]()
+    common_str = group_list.common
+    common_min = len(group_list.common)
+    
+    for group in group_list.list:
+        if len(common_str) == common_min:
+            common_str = group.name
+            if group is group_list.list[-1]:
+                groups.append(group)
+                break
+
+            groups.append(GroupList(common_str, [group]))
+            continue
+        
+        common_str = common_prefix(common_str, group.name)
+        if len(common_str) > common_min:
+            # add this group to the last list
+            groups[-1].common = common_str
+            groups[-1].list.append(group)
+        else:
+            if len(groups[-1].list) < 3:
+                # the last list is too short
+                # remove this list and add all groups directly
+                last_group_list = groups.pop(-1)
+                for gp in last_group_list.list:
+                    groups.append(gp)
+            
+            common_str = group.name
+            groups.append(GroupList(common_str, [group]))
+
+    if len(groups[-1].list) < 3:
+        # the last list is too short
+        # remove this list and add all groups directly
+        last_group_list = groups.pop(-1)
+        for gp in last_group_list.list:
+            groups.append(gp)
+
+    new_groups = list[Union[Group, GroupList]]()
+
+    for group_or_list in groups:
+        if isinstance(group_or_list, Group):
+            new_groups.append(group_or_list)
+        else:
+            new_groups.append(divide_group_list(group_or_list))
+
+    return GroupList(group_list.common, new_groups)
 
 
 class HiddensIndicator(QToolButton):
@@ -45,11 +130,6 @@ class HiddensIndicator(QToolButton):
         
         self.setIcon(self._icon_normal)
         
-        # self.setPopupMode(QToolButton.InstantPopup)
-        # self.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)
-        # self.setStyleSheet('QToolButton{border: none} '
-        #                    'QToolButton::menu-indicator{image: url(none.jpg);}')
-        
         self._menu = QMenu()
         self._menu.aboutToShow.connect(self._build_menu)
         self.setMenu(self._menu)
@@ -74,7 +154,10 @@ class HiddensIndicator(QToolButton):
     def set_count(self, count: int):
         self._count = count
         self.setText(str(count))
-        
+    
+    def get_count(self) -> int:
+        return self._count
+    
     def add_one(self):
         self._count += 1
         self.setText(str(self._count))
@@ -93,17 +176,21 @@ class HiddensIndicator(QToolButton):
         self.setIcon(self._icon_normal)
     
     def _check_count(self):
-        cg = 0
-        for group in self._list_hidden_groups():
-            cg += 1
-
+        cg = len([g for g in self._list_hidden_groups()])
         pv_count = self._count
         self.set_count(cg)
-        if cg:
-            if cg > pv_count:
-                self._start_blink()
-        else:
+
+        if not cg:
             self._stop_blink()
+            return
+
+        if (self._get_filter_text is not None
+                and not self._get_filter_text()):
+            self._stop_blink()
+            return
+
+        if cg > pv_count:
+            self._start_blink()
     
     @pyqtSlot()
     def _blink_timer_timeout(self):
@@ -176,29 +263,123 @@ class HiddensIndicator(QToolButton):
     
     @pyqtSlot()
     def _build_menu(self):
-        print('yououy about to show', self._get_filter_text is None)
         if self.mng is None:
             return
-
 
         menu = self.menu()
         menu.clear()
         
-        dark = self._is_dark()
-        cg = 0
+        dark = self._is_dark()        
+        groups = [g for g in self._list_hidden_groups()]
+        n_groups = len(groups)
         
-        for group in self._list_hidden_groups():
-            cg += 1
-
-            group_act = menu.addAction(group.cnv_name)
+        groups.sort(key=lambda x: x.name)
+        group_list = divide_group_list(GroupList('', groups))
+        
+        menus_dict = dict[tuple[str], QMenu]()
+        menus_dict[()] = menu
+        
+        for paths, group in group_list.walk():
+            mnu = menus_dict.get(tuple(paths))
+            if mnu is None:
+                parent = None
+                tmp_paths = paths.copy()
+                while parent is None:
+                    tmp_paths = tmp_paths[:-1]
+                    parent = menus_dict.get(tuple(tmp_paths))
+                
+                while len(tmp_paths) < len(paths):
+                    tmp_paths.append(paths[len(tmp_paths)])
+                    mnu = QMenu(parent)
+                    mnu.setTitle(tmp_paths[-1])
+                    parent.addMenu(mnu)
+                    menus_dict[tuple(tmp_paths)] = mnu
+                    parent = mnu
+                    
+            group_act = mnu.addAction(group.cnv_name)
             group_act.setIcon(utils.get_icon(
                 group.cnv_box_type, group.cnv_icon_name,
                 group.current_position.hidden_port_modes(),
                 dark=dark))
             group_act.setData(group.group_id)
             group_act.triggered.connect(self._menu_action_triggered)
+                    
         
-        self.set_count(cg)
+        # for group_or_list in group_list.list:
+        #     if isinstance(group_or_list, Group):
+                
+        
+        # if n_groups > 12:
+        #     groups.sort(key=lambda x: x.name)
+        #     new_groups = list[Union[Group, list[Group]]]()
+        #     last_client = ''
+            
+        #     # first, try to group groups of the same NSM client
+        #     # only with their name
+            
+        #     for group in groups:
+        #         if '/' in group.name:
+        #             client = group.cnv_name.partition('/')[0]
+        #             if client == last_client:
+        #                 new_groups[-1].append(group)
+        #             else:
+        #                 last_client = client
+        #                 new_groups.append([group])
+        #         else:
+        #             new_groups.append(group)
+        #             last_client = ''
+            
+        #     if not TYPE_CHECKING:
+        #         # pylance does not understand this.
+        #         # if there is only one submenu,
+        #         # lets deploy it in the main menu.
+        #         if len(new_groups) == 1:
+        #             new_groups = new_groups[0]
+
+        #     if len(new_groups) > 12:
+        #         ...
+
+        #     for group_or_list in new_groups:
+        #         if isinstance(group_or_list, Group):
+        #             group = group_or_list
+        #             group_act = menu.addAction(group.cnv_name)
+        #             group_act.setIcon(utils.get_icon(
+        #                 group.cnv_box_type, group.cnv_icon_name,
+        #                 group.current_position.hidden_port_modes(),
+        #                 dark=dark))
+        #             group_act.setData(group.group_id)
+        #             group_act.triggered.connect(self._menu_action_triggered)
+        #         else:
+        #             client_menu = QMenu(menu)                    
+        #             for group in group_or_list:
+        #                 if group is group_or_list[0]:
+        #                     client_menu.setIcon(utils.get_icon(
+        #                         group.cnv_box_type, group.cnv_icon_name,
+        #                         group.current_position.hidden_port_modes(),
+        #                         dark=dark))
+        #                     client_menu.setTitle(group.cnv_name.partition('/')[0])
+                        
+        #                 group_act = client_menu.addAction(
+        #                     group.cnv_name.rpartition('/')[2])
+        #                 group_act.setIcon(utils.get_icon(
+        #                     group.cnv_box_type, group.cnv_icon_name,
+        #                     group.current_position.hidden_port_modes(),
+        #                     dark=dark))
+        #                 group_act.setData(group.group_id)
+        #                 group_act.triggered.connect(self._menu_action_triggered)
+        #             menu.addMenu(client_menu)
+                    
+        # else:
+        #     for group in groups:
+        #         group_act = menu.addAction(group.cnv_name)
+        #         group_act.setIcon(utils.get_icon(
+        #             group.cnv_box_type, group.cnv_icon_name,
+        #             group.current_position.hidden_port_modes(),
+        #             dark=dark))
+        #         group_act.setData(group.group_id)
+        #         group_act.triggered.connect(self._menu_action_triggered)
+        
+        self.set_count(len(groups))
 
         menu.addSeparator()
 
