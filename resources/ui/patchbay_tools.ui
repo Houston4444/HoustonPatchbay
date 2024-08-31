@@ -512,11 +512,24 @@ QPushButton:hover{border: 1 px solid grey;text-align:right}</string>
      </item>
      <item>
       <widget class="HiddensIndicator" name="toolButtonHiddenBoxes">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
        <property name="minimumSize">
         <size>
-         <width>32</width>
+         <width>64</width>
          <height>32</height>
         </size>
+       </property>
+       <property name="toolTip">
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Number of hidden boxes. Click here to restore a box.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+       </property>
+       <property name="styleSheet">
+        <string notr="true">QToolButton{border: none}
+QToolButton::menu-indicator{image: none}</string>
        </property>
        <property name="text">
         <string>0</string>
@@ -525,10 +538,26 @@ QPushButton:hover{border: 1 px solid grey;text-align:right}</string>
         <iconset resource="../resources.qrc">
          <normaloff>:/scalable/breeze-dark/hint.svg</normaloff>:/scalable/breeze-dark/hint.svg</iconset>
        </property>
+       <property name="popupMode">
+        <enum>QToolButton::InstantPopup</enum>
+       </property>
        <property name="toolButtonStyle">
         <enum>Qt::ToolButtonTextBesideIcon</enum>
        </property>
       </widget>
+     </item>
+     <item>
+      <spacer name="horizontalSpacer_10">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
      </item>
      <item>
       <widget class="TypeFilterFrame" name="frameTypeFilter">

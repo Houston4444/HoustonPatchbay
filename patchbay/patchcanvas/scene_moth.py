@@ -138,7 +138,7 @@ class PatchSceneMoth(QGraphicsScene):
         to prevent user to take and move a box.'''
         
         self.move_boxes = dict[BoxWidget, MovingBox]()
-        self._MOVE_DURATION = 2.000 # 300ms
+        self._MOVE_DURATION = 0.300 # 300ms
         self._MOVE_TIMER_INTERVAL = 20 # 20 ms step animation (50 Hz)
         self._move_timer_start_at = 0.0
         self._move_timer_last_time = 0.0

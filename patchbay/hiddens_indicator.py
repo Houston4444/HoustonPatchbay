@@ -1,8 +1,8 @@
 
 from typing import TYPE_CHECKING, Callable, Iterator, Optional, Union
 
-from PyQt5.QtCore import pyqtSlot, QTimer, QPoint, Qt
-from PyQt5.QtGui import QIcon, QPixmap, QMouseEvent
+from PyQt5.QtCore import pyqtSlot, QTimer
+from PyQt5.QtGui import QIcon, QPixmap
 from PyQt5.QtWidgets import QToolButton, QMenu, QApplication, QAction
 
 from .base_elements import PortMode
@@ -129,6 +129,10 @@ def divide_group_list(group_list: GroupList) -> GroupList:
 
 
 class HiddensIndicator(QToolButton):
+    '''Widget used to show the number of hidden boxes.
+    Exists in the tool bar, or in the filter bar (Ctrl+F),
+    with different behaviors.'''
+    
     def __init__(self, parent):
         super().__init__(parent)
         
