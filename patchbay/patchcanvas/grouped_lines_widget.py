@@ -86,7 +86,9 @@ class GroupedLinesWidget(QGraphicsPathItem):
         self._group_out_mid_y = 0.0
         self._group_in_mid_y = 0.0
 
-        self._semi_hidden = False        
+        self._semi_hidden = False
+        '''is True when the two connected ports are on semi-hidden boxes.
+        The lines opacity becomes lighter.'''
         
         self._th_attribs: _ThemeAttributes = None
         self._theme_state = theme_state
@@ -132,6 +134,9 @@ class GroupedLinesWidget(QGraphicsPathItem):
             self.animate_hidding(0.0)
         else:
             self.update_line_gradient()
+
+    def __repr__(self) -> str:
+        return f'GroupedLines ({self._group_out_id} -> {self._group_in_id})'
 
     @staticmethod
     def clear_all_widgets():
@@ -248,7 +253,7 @@ class GroupedLinesWidget(QGraphicsPathItem):
         for pt_dict in _all_lines_widgets.values():
             for tstate_dict in pt_dict.values():
                 for widget in tstate_dict.values():
-                    widget.set_mode_hidding(PortMode.BOTH, BoxHidding.NONE)
+                    widget.finish_animation()
 
     def semi_hide(self, yesno: bool):
         self._semi_hidden = yesno
@@ -370,6 +375,10 @@ class GroupedLinesWidget(QGraphicsPathItem):
         self._th_attribs = tha
 
     def update_line_gradient(self):
+        if (self._box_hidding_out is not BoxHidding.NONE
+                or self._box_hidding_in is not BoxHidding.NONE):
+            return
+        
         pos_top = self.boundingRect().top()
         pos_bot = self.boundingRect().bottom()
 
@@ -518,3 +527,16 @@ class GroupedLinesWidget(QGraphicsPathItem):
             self._box_hidding_out = box_hidding
         if port_mode & PortMode.INPUT:
             self._box_hidding_in = box_hidding
+            
+    def finish_animation(self):
+        '''Set attributes to ensure the next gradient will be correct
+        after animation.'''
+        
+        # keep BoxHidding.HIDDING if it is the case
+        # because, in this case, the connection will be removed, 
+        # we don't want to see it anymore.
+        if self._box_hidding_out is not BoxHidding.HIDDING:
+            self._box_hidding_out = BoxHidding.NONE
+        
+        if self._box_hidding_in is not BoxHidding.HIDDING:
+            self._box_hidding_in = BoxHidding.NONE
