@@ -210,6 +210,8 @@ class BoxWidgetMoth(QGraphicsItem):
             self.setAcceptHoverEvents(True)
 
         self._is_semi_hidden = False
+        '''is True when the group name does not match
+        with the filter bar text. The box opacity becomes lighter.'''
         
         self._can_handle_gui = group.handle_client_gui
         'used for optional-gui switch (NSM)'

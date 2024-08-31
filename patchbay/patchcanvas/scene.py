@@ -301,9 +301,6 @@ class PatchScene(PatchSceneMoth):
         for to_move_box in to_move_boxes:
             item, irect, repulser = \
                 to_move_box.item, to_move_box.rect, to_move_box.repulser
-            # item, repulser = to_move_box.item, to_move_box.repulser
-            
-            # irect = item.boundingRect().translated(item.pos())
 
             directions = to_move_box.directions.copy()
             new_direction = get_direction(repulser.rect, irect, directions)

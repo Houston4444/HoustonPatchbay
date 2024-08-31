@@ -138,7 +138,7 @@ class PatchSceneMoth(QGraphicsScene):
         to prevent user to take and move a box.'''
         
         self.move_boxes = dict[BoxWidget, MovingBox]()
-        self._MOVE_DURATION = 0.300 # 300ms
+        self._MOVE_DURATION = 2.000 # 300ms
         self._MOVE_TIMER_INTERVAL = 20 # 20 ms step animation (50 Hz)
         self._move_timer_start_at = 0.0
         self._move_timer_last_time = 0.0
@@ -370,7 +370,7 @@ class PatchSceneMoth(QGraphicsScene):
     def move_boxes_animation(self):
         # Animation is nice but not the priority.
         # Do not ensure all steps are played
-        # but just move the box where it has to go now
+        # but just move the box where it has to go now.
         move_time = time.time()
         time_since_start = move_time - self._move_timer_start_at
         ratio = min(1.0, time_since_start / self._MOVE_DURATION)
@@ -378,14 +378,19 @@ class PatchSceneMoth(QGraphicsScene):
         if self._move_timer_last_time == self._move_timer_start_at:
             # this is the first animation step
             if time_since_start > 0.33 * self._MOVE_DURATION:
-                # this seems to be a big patch
-                # animation won't be pretty anyway
+                # this seems to be a big patch,
+                # animation won't be pretty anyway,
                 # let's finish it now.
                 ratio = 1.0
-        
-        if (move_time - self._move_timer_last_time
-                > 0.002 * self._MOVE_TIMER_INTERVAL):
-            canvas.set_aliasing_reason(AliasingReason.ANIMATION, True)
+        else:
+            # this is not the first animation step.
+            # If the timer called this method two times too late,
+            # i.e. >40ms instead of 20ms after the previous step,
+            # anti-aliasing is de-activated for a smoother animation.
+            if (move_time - self._move_timer_last_time
+                    > 0.002 * self._MOVE_TIMER_INTERVAL):
+                canvas.set_aliasing_reason(AliasingReason.ANIMATION, True)
+
         self._move_timer_last_time = move_time
 
         lws = set[GroupedLinesWidget]()
