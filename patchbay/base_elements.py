@@ -94,6 +94,7 @@ class TransportViewMode(IntEnum):
 
 class ToolDisplayed(IntFlag):
     VIEWS_SELECTOR = auto()
+    HIDDENS_BOX = auto()
     PORT_TYPES_VIEW = auto()
     TRANSPORT_CLOCK = auto()
     TRANSPORT_PLAY_STOP = auto()
@@ -105,6 +106,7 @@ class ToolDisplayed(IntFlag):
     XRUNS = auto()
     DSP_LOAD = auto()
     ALL = (VIEWS_SELECTOR
+           | HIDDENS_BOX
            | PORT_TYPES_VIEW
            | TRANSPORT_CLOCK
            | TRANSPORT_PLAY_STOP
@@ -117,8 +119,8 @@ class ToolDisplayed(IntFlag):
            | DSP_LOAD)
     
     def to_save_string(self) -> str:
-        ''' returns a string containing all flags names
-            separated with pipe symbol.'''
+        '''return a string containing all flags names
+        separated with pipe symbol.'''
         all_strs = list[str]()
         
         for flag in ToolDisplayed:

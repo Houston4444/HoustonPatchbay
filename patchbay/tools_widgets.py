@@ -253,6 +253,8 @@ class PatchbayToolsWidget(QWidget):
         
         self.ui.viewSelector.setVisible(
             bool(self._tools_displayed & ToolDisplayed.VIEWS_SELECTOR))
+        self.ui.toolButtonHiddenBoxes.setVisible(
+                bool(self._tools_displayed & ToolDisplayed.HIDDENS_BOX))
         self.ui.frameTypeFilter.setVisible(
             bool(self._tools_displayed & ToolDisplayed.PORT_TYPES_VIEW))
         self.ui.sliderZoom.setVisible(

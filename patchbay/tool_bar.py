@@ -77,6 +77,9 @@ class PatchbayToolBar(QToolBar):
             ToolDisplayed.VIEWS_SELECTOR:
                 QAction(QIcon.fromTheme('view-multiple-objects'),
                         _translate('tool_bar', 'Views selector')),
+            ToolDisplayed.HIDDENS_BOX:
+                QAction(QIcon.fromTheme('hint'),
+                        _translate('tool_bar', 'Hidden boxes')),
             ToolDisplayed.PORT_TYPES_VIEW:
                 QAction(QIcon.fromTheme('view-filter'),
                         _translate('tool_bar', 'Type filter')),
