@@ -429,15 +429,15 @@ class PatchSceneMoth(QGraphicsScene):
 
         self.resize_the_scene(ratio)
 
-        if time_since_start >= self._MOVE_DURATION:
+        if ratio >= 1.0:
             # Animation is finished
             self._move_box_timer.stop()
             canvas.set_aliasing_reason(AliasingReason.ANIMATION, False)
             self.prevent_box_user_move = False
             GroupedLinesWidget.animation_finished()
 
-            # box update positions is forbidden while widget is in self.move_boxes
-            # So we copy the list before to clear it
+            # box update positions is forbidden while widget is in self.move_boxes,
+            # so we copy the list before to clear it,
             # then we can ask update_positions on widgets
             boxes = [b for b, mb in self.move_boxes.items()
                      if not (mb.is_joining or mb.hidding_state is BoxHidding.HIDDING)]
