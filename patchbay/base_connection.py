@@ -28,7 +28,8 @@ class Connection:
         port_in_type, port_in_subtype = self.port_in.full_type()
         return (port_out_type, port_out_subtype | port_in_subtype)
         
-    def shown_in_port_types_view(self, port_types_view: PortTypesViewFlag) -> bool:
+    def shown_in_port_types_view(
+            self, port_types_view: PortTypesViewFlag) -> bool:
         if self.port_out.type is PortType.MIDI_JACK:
             return bool(port_types_view & PortTypesViewFlag.MIDI)
         

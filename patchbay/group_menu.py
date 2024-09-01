@@ -30,13 +30,15 @@ class DisconnectMenu(QMenu):
         
         if self._port_mode & PortMode.OUTPUT:
             for conn in self._mng.connections:
-                if conn.port_out.group_id == self._group.group_id:
+                if (conn.port_out.group_id is self._group.group_id
+                        and conn.in_canvas):
                     in_groups.add(
                         self._mng.get_group_from_id(conn.port_in.group_id))
                     
         if self._port_mode & PortMode.INPUT:
             for conn in self._mng.connections:
-                if conn.port_in.group_id == self._group.group_id:
+                if (conn.port_in.group_id is self._group.group_id
+                        and conn.in_canvas):
                     out_groups.add(
                         self._mng.get_group_from_id(conn.port_out.group_id))
 
@@ -95,15 +97,17 @@ class DisconnectMenu(QMenu):
         
         if port_mode is PortMode.INPUT:
             for conn in self._mng.connections:
-                if (conn.port_out.group_id == self._group.group_id
-                        and conn.port_in.group_id == group.group_id):
+                if (conn.port_out.group_id is self._group.group_id
+                        and conn.port_in.group_id is group.group_id
+                        and conn.in_canvas):
                     canvas.callback(CallbackAct.PORTS_DISCONNECT,
                                     conn.connection_id)
                     
         elif port_mode is PortMode.OUTPUT:
             for conn in self._mng.connections:
-                if (conn.port_in.group_id == self._group.group_id
-                        and conn.port_out.group_id == group.group_id):
+                if (conn.port_in.group_id is self._group.group_id
+                        and conn.port_out.group_id is group.group_id
+                        and conn.in_canvas):
                     canvas.callback(CallbackAct.PORTS_DISCONNECT,
                                     conn.connection_id)
 
@@ -187,14 +191,14 @@ class GroupMenu(QMenu):
     def _disconnect_all(self):
         if self._port_mode & PortMode.OUTPUT:
             for conn in self._mng.connections:
-                if (conn.port_out.group_id == self._group.group_id
+                if (conn.port_out.group_id is self._group.group_id
                         and conn.in_canvas):
                     canvas.callback(
                         CallbackAct.PORTS_DISCONNECT, conn.connection_id)
                     
         if self._port_mode & PortMode.INPUT:
             for conn in self._mng.connections:
-                if (conn.port_in.group_id == self._group.group_id
+                if (conn.port_in.group_id is self._group.group_id
                         and conn.in_canvas):
                     canvas.callback(
                         CallbackAct.PORTS_DISCONNECT, conn.connection_id)

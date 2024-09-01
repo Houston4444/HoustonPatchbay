@@ -1,11 +1,10 @@
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 
 from .base_elements import (
     PortMode,
     PortType,
     PortSubType,
-    JackPortFlag,
-    GroupPos)
+    JackPortFlag)
 from .base_connection import Connection
 from .patchcanvas import patchcanvas
 
@@ -21,7 +20,9 @@ class Port:
     last_digit_to_add = ''
     in_canvas = False
     order = None
-    uuid = 0 # will contains the real JACK uuid
+    uuid = 0
+    'contains the real JACK uuid'
+    
     cnv_name = ''
 
     # given by JACK metadatas
@@ -94,7 +95,6 @@ class Port:
         self.rename_in_canvas()
 
     def add_to_canvas(self, ignore_gpos=False, hidden_sides=PortMode.NULL):
-    # def add_to_canvas(self, gpos: Optional[GroupPos]=None):
         if self.manager.very_fast_operation:
             return
         
@@ -120,11 +120,6 @@ class Port:
         else:
             if self.group.current_position.hidden_port_modes() & self.mode():
                 return
-        
-        # if gpos is None:
-        #     gpos = self.group.current_position
-        # if gpos.hidden_sides & self.mode():
-        #     return
 
         patchcanvas.add_port(
             self.group_id, self.port_id, cnv_name,
@@ -207,15 +202,12 @@ class Port:
             self.group_id, self.port_id,
             bool(self.conns_hidden_in_canvas))
 
-    def __lt__(self, other: 'Port'):
+    def __lt__(self, other: 'Port') -> bool:
         if self.type != other.type:
             return (self.type < other.type)
 
         if self.subtype is not other.subtype:
             return self.subtype < other.subtype
-
-        # if self.mode() != other.mode():
-        #     return (self.mode() < other.mode())
 
         if self.order is None and other.order is None:
             return self.port_id < other.port_id

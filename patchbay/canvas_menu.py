@@ -1,4 +1,5 @@
 
+import time
 from typing import TYPE_CHECKING
 from PyQt5.QtGui import QIcon, QDesktopServices
 from PyQt5.QtWidgets import QMenu, QApplication
@@ -48,7 +49,7 @@ class CanvasMenu(QMenu):
             self.selected_boxes_menu = QMenu(
                 _translate('patchbay', "Selected boxes"), self)
             self.action_new_white_view = self.selected_boxes_menu.addAction(
-                _translate('patchbay', "Put in a new excusive view"))
+                _translate('patchbay', "Put in a new exclusive view"))
             self.action_hide_selected = self.selected_boxes_menu.addAction(
                 _translate('patchbay', "Hide boxes"))
             self.action_hide_selected.triggered.connect(self._hide_selected_boxes)
