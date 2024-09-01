@@ -707,20 +707,10 @@ class PatchbayManager:
         patchcanvas.redraw_all_groups()
 
     def clear_all(self):
-        self.optimize_operation(True)
-        for connection in self.connections:
-            connection.remove_from_canvas()
-
-        for group in self.groups:
-            group.remove_all_ports()
-            group.remove_from_canvas()
-
-        self.optimize_operation(False)
-
+        patchcanvas.clear_all()
         self.connections.clear()
         self._clear_groups()
 
-        patchcanvas.clear()
 
         self._next_group_id = 0
         self._next_port_id = 0
