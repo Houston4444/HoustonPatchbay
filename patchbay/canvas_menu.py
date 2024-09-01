@@ -4,9 +4,10 @@ from PyQt5.QtGui import QIcon, QDesktopServices
 from PyQt5.QtWidgets import QMenu, QApplication
 from PyQt5.QtCore import QLocale, QUrl, pyqtSlot
 
+
 from . import patchcanvas
 from .patchcanvas import utils
-from .base_elements import PortType, PortTypesViewFlag
+from .base_elements import PortType, PortTypesViewFlag, PortMode
 from .views_menu import ViewsMenu
 
 if TYPE_CHECKING:
@@ -37,20 +38,37 @@ class CanvasMenu(QMenu):
         self.mng.sg.alsa_midi_enabled_changed.connect(
             self._alsa_midi_enabled)
 
+        self._selected_boxes = dict[int, PortMode]()
+        self._build()
+        
+    def _build(self):
+        self.clear()
+        
+        if self._selected_boxes:
+            self.selected_boxes_menu = QMenu(
+                _translate('patchbay', "Selected boxes"), self)
+            self.action_new_white_view = self.selected_boxes_menu.addAction(
+                _translate('patchbay', "Put in a new excusive view"))
+            self.action_hide_selected = self.selected_boxes_menu.addAction(
+                _translate('patchbay', "Hide boxes"))
+            self.action_hide_selected.triggered.connect(self._hide_selected_boxes)
+            self.addMenu(self.selected_boxes_menu)
+            self.addSeparator()
+
         self.action_fullscreen = self.addAction(
             _translate('patchbay', "Toggle Full Screen"))
         self.action_fullscreen.setIcon(QIcon.fromTheme('view-fullscreen'))
         self.action_fullscreen.triggered.connect(
-            patchbay_manager.sg.full_screen_toggle_wanted.emit)
+            self.mng.sg.full_screen_toggle_wanted.emit)
 
-        port_types_view = patchbay_manager.port_types_view & (
+        port_types_view = self.mng.port_types_view & (
             PortType.AUDIO_JACK | PortType.MIDI_JACK)
 
         self.action_find_box = self.addAction(
             _translate('patchbay', "Find a box...\tCtrl+F"))
         self.action_find_box.setIcon(QIcon.fromTheme('edit-find'))
         self.action_find_box.triggered.connect(
-            patchbay_manager.sg.filters_bar_toggle_wanted.emit)
+            self.mng.sg.filters_bar_toggle_wanted.emit)
 
         self.show_hiddens_menu = QMenu(
             _translate('patchbay', 'Show hidden boxes'), self)
@@ -58,7 +76,7 @@ class CanvasMenu(QMenu):
         self.show_hiddens_menu.aboutToShow.connect(self._list_hidden_groups)
         self.addMenu(self.show_hiddens_menu)
 
-        self.views_menu = ViewsMenu(self, patchbay_manager)
+        self.views_menu = ViewsMenu(self, self.mng)
         self.addMenu(self.views_menu)
 
         self.port_types_menu = QMenu(_translate('patchbay', 'Type filter'), self)
@@ -101,7 +119,7 @@ class CanvasMenu(QMenu):
 
         self.addMenu(self.port_types_menu)
 
-        self._alsa_midi_enabled(patchbay_manager.alsa_midi_enabled)
+        self._alsa_midi_enabled(self.mng.alsa_midi_enabled)
 
         self.zoom_menu = QMenu(_translate('patchbay', 'Zoom'), self)
         self.zoom_menu.setIcon(QIcon.fromTheme('zoom'))
@@ -135,7 +153,7 @@ class CanvasMenu(QMenu):
         self.action_refresh = self.addAction(
             _translate('patchbay', "Refresh the canvas\tCtrl+R"))
         self.action_refresh.setIcon(QIcon.fromTheme('view-refresh'))
-        self.action_refresh.triggered.connect(patchbay_manager.refresh)
+        self.action_refresh.triggered.connect(self.mng.refresh)
 
         self.action_manual = self.addAction(
             _translate('patchbay', "Patchbay manual"))
@@ -148,12 +166,23 @@ class CanvasMenu(QMenu):
             _translate('patchbay', "Canvas options"))
         self.action_options.setIcon(QIcon.fromTheme("configure"))
         self.action_options.triggered.connect(
-            patchbay_manager.show_options_dialog)
+            self.mng.show_options_dialog)
         
         self._scene_pos = (0, 0)
 
     def remember_scene_pos(self, x: float, y: float):
         self._scene_pos = (int(x), int(y))
+
+    def set_selected_boxes(self, selected_boxes: dict[int, PortMode]):
+        self._selected_boxes = selected_boxes
+        
+    def _hide_selected_boxes(self):
+        for group_id, port_mode in self._selected_boxes.items():
+            group = self.mng.get_group_from_id(group_id)
+            if group is None:
+                continue
+
+            group.hide(port_mode)
 
     def _port_types_view_changed(self, port_types_view: int):
         self.action_all_types.setChecked(
@@ -263,3 +292,7 @@ class CanvasMenu(QMenu):
 
         url = QUrl(f"file://{manual_dir}/{short_locale}/manual.html")
         QDesktopServices.openUrl(url)
+
+    def showEvent(self, event):
+        self._build()
+        super().showEvent(event)

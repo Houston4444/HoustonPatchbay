@@ -158,6 +158,11 @@ class PatchSceneMoth(QGraphicsScene):
 
         self.flying_connectable = None
 
+        self._selected_boxes = list[BoxWidget]()
+        '''Selected boxes saved here between mouse press event
+        and context menu callback. By default with Qt, all items are
+        unselected at right click elsewhere.'''
+
         self._grid_widget: Optional[GridWidget] = None
 
         self.sceneRectChanged.connect(self.update_grid_widget)
@@ -999,6 +1004,10 @@ class PatchSceneMoth(QGraphicsScene):
                     if isinstance(item, (ConnectableWidget, LineWidget)):
                         item.trigger_disconnect()
 
+        self._selected_boxes = [
+            b for b in self.selectedItems()
+            if isinstance(b, BoxWidget) and b.isVisible()]
+
         QGraphicsScene.mousePressEvent(self, event)
         canvas.menu_shown = False
 
@@ -1139,13 +1148,30 @@ class PatchSceneMoth(QGraphicsScene):
                 self._trigger_rubberband_scale()
                 return
 
+            for sel_box in self._selected_boxes:
+                sel_box.setSelected(True)
+
             event.accept()
             screen_pos = event.screenPos()
             scene_pos = event.scenePos()
+            
+            # in selected boxes, there can be two boxes of the same group
+            # here we concatenate sel_boxes with only one group_id
+            # with PortMode.BOTH in this case
+            sel_boxes = dict[int, PortMode]()
+            for box in self._selected_boxes:
+                group_id = box.get_group_id()
+                pmode = sel_boxes.get(group_id)
+                if pmode is None:
+                    sel_boxes[group_id] = box.get_port_mode()
+                else:
+                    sel_boxes[group_id] = box.get_port_mode() | pmode
+            
             canvas.callback(
                 CallbackAct.BG_RIGHT_CLICK,
                 screen_pos.x(), screen_pos.y(),
-                scene_pos.x(), scene_pos.y())
+                scene_pos.x(), scene_pos.y(),
+                sel_boxes)
             return
 
         QGraphicsScene.contextMenuEvent(self, event)

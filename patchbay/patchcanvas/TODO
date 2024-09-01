@@ -61,4 +61,4 @@ animations et évènements:
         dans un chg de vue
 
 Raccourci clavier changer de vue ne doit rien faire si c'est déjà la vue active.
-A cause du filter group, les lignes flashent à la fin de hidding.
+Changer de vue vers nouvelle vue -> aucune animation.

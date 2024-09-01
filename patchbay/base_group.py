@@ -196,6 +196,14 @@ class Group:
         
         patchcanvas.set_optional_gui_state(self.group_id, visible)
 
+    def hide(self, port_mode: PortMode):
+        '''Ask hide box to canvas.
+        It saves the GrouPos and do the hide animation.'''
+        self.current_position.set_hidden_port_mode(
+            self.current_position.hidden_port_modes() | port_mode)
+        patchcanvas.animate_before_hide_box(
+            self.group_id, port_mode)
+
     def remove_all_ports(self):
         if self.in_canvas:
             for portgroup in self.portgroups:
