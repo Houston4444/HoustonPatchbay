@@ -1,4 +1,5 @@
-from typing import TYPE_CHECKING
+import time
+from typing import TYPE_CHECKING, Callable
 from PyQt5.QtCore import QPoint
 from PyQt5.QtGui import QCursor
 
@@ -16,21 +17,26 @@ if TYPE_CHECKING:
 
 
 class Callbacker:
-    ''' manage actions coming from patchcanvas.
-        Each protected method implements the action to run
-        when the action happens. '''
+    '''manage actions coming from patchcanvas.
+    Each protected method implements the action to run
+    when the action happens.'''
     
     def __init__(self, manager: 'PatchbayManager'):
         self.mng = manager
         self.patchcanvas = patchcanvas
+
+        self._funcs = dict[Callable, CallbackAct]()
+        for cb_act in CallbackAct:
+            func_name = '_' + cb_act.name.lower()
+            if func_name in self.__dir__():
+                self._funcs[cb_act] = self.__getattribute__(func_name)
+
     
     def receive(self, action: CallbackAct, args: tuple):
-        ''' receives a callback from patchcanvas and execute
-            the function with action name in lowercase.'''
-        func_name = '_' + action.name.lower()
-        if func_name in self.__dir__():
-            self.__getattribute__(func_name)(*args)
-    
+        '''receives a callback from patchcanvas and execute
+        the function with action name in lowercase.'''
+        self._funcs[action](*args)
+        
     # ￬￬￬ functions connected to CallBackAct ￬￬￬
     
     def _group_info(self, group_id: int):
