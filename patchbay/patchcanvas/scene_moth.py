@@ -960,6 +960,9 @@ class PatchSceneMoth(QGraphicsScene):
             elif box.isVisible():
                 box.setSelected(True)
 
+        GroupedLinesWidget.reset_z_values_with_selection(
+            self.get_selected_boxes())
+
         self.selecting_boxes = False
 
     def mouseDoubleClickEvent(self, event):
@@ -1105,6 +1108,8 @@ class PatchSceneMoth(QGraphicsScene):
                         item_rect = item.sceneBoundingRect()
                         if self._rubberband.rect().contains(item_rect):
                             item.setSelected(True)
+                GroupedLinesWidget.reset_z_values_with_selection(
+                    self.get_selected_boxes())
                 self.selecting_boxes = False
 
             self._rubberband.hide()
@@ -1172,6 +1177,8 @@ class PatchSceneMoth(QGraphicsScene):
             self.selecting_boxes = True
             for sel_box in self._selected_boxes:
                 sel_box.setSelected(True)
+            GroupedLinesWidget.reset_z_values_with_selection(
+                self.get_selected_boxes())
             self.selecting_boxes = False
 
             event.accept()

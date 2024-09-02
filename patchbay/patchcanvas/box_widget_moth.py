@@ -503,14 +503,6 @@ class BoxWidgetMoth(QGraphicsItem):
 
         self._last_pos = self.pos()
 
-    def reset_lines_z_value(self, under: bool):
-        for lines in GroupedLinesWidget.widgets_for_box(
-                self._group_id, PortMode.BOTH):
-            if under:
-                lines.setZValue(Zv.SEL_BOX_LINE.value)
-            else:
-                lines.setZValue(Zv.LINE.value)
-
     def semi_hide(self, yesno: bool):
         self._is_semi_hidden = yesno
         if yesno:
@@ -600,19 +592,19 @@ class BoxWidgetMoth(QGraphicsItem):
             else:
                 self.setZValue(Zv.BOX.value)
             
-            if is_selected:
-                for lines in GroupedLinesWidget.widgets_for_box(
-                        self._group_id, PortMode.BOTH):
-                    lines.setZValue(Zv.SEL_BOX_LINE.value)
-            else:
-                for lines in GroupedLinesWidget.widgets_for_box(
-                        self._group_id, PortMode.BOTH):
-                    lines.setZValue(Zv.LINE.value)
-            
-            if is_selected and not canvas.scene.selecting_boxes:
-                canvas_callback(
-                    CallbackAct.GROUP_SELECTED, self._group_id,
-                    self._port_mode)
+            if not canvas.scene.selecting_boxes:
+                if is_selected:
+                    for lines in GroupedLinesWidget.widgets_for_box(
+                            self._group_id, self._port_mode):
+                        lines.setZValue(Zv.SEL_BOX_LINE.value)
+
+                    canvas_callback(
+                        CallbackAct.GROUP_SELECTED, self._group_id,
+                        self._port_mode)
+                else:
+                    for lines in GroupedLinesWidget.widgets_for_box(
+                            self._group_id, self._port_mode):
+                        lines.setZValue(Zv.LINE.value)
 
         return super().itemChange(change, value)
 

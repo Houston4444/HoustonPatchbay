@@ -34,6 +34,9 @@ from .init_values import (
     PortMode,
     Zv)
 
+if TYPE_CHECKING:
+    from .box_widget import BoxWidget
+
 
 _groups_to_check = set[tuple[int, int]]()
 _all_lines_widgets = {}
@@ -238,6 +241,27 @@ class GroupedLinesWidget(QGraphicsPathItem):
                 for widget in tstate_dict.values():
                     if widget._semi_hidden is not semi_hidden:
                         widget.semi_hide(semi_hidden)
+
+    @staticmethod
+    def reset_z_values_with_selection(selected_boxes: 'list[BoxWidget]'):
+        selected_outs = set()
+        selected_ins = set()
+        for box in selected_boxes:
+            if box.get_port_mode() & PortMode.OUTPUT:
+                selected_outs.add(box.get_group_id())
+            if box.get_port_mode() & PortMode.INPUT:
+                selected_ins.add(box.get_group_id())
+
+        for gp_dict, pt_dict in _all_lines_widgets.items():
+            gp_out_id, gp_in_id = gp_dict
+            if gp_out_id in selected_outs or gp_in_id in selected_ins:
+                for tstate_dict in pt_dict.values():
+                    for widget in tstate_dict.values():
+                        widget.setZValue(Zv.SEL_BOX_LINE.value)
+            else:
+                for tstate_dict in pt_dict.values():
+                    for widget in tstate_dict.values():
+                        widget.setZValue(Zv.LINE.value)
 
     @staticmethod
     def update_opacity():
