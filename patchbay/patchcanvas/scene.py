@@ -18,6 +18,7 @@
 # For a full copy of the GNU General Public License see the doc/GPL.txt file.
 
 from dataclasses import dataclass
+import time
 from typing import Optional, Union
 from PyQt5.QtCore import QRectF, QMarginsF, QPoint, Qt
 from PyQt5.QtWidgets import QGraphicsView
@@ -81,8 +82,9 @@ class PatchScene(PatchSceneMoth):
     def deplace_boxes_from_repulsers(self, repulser_boxes: list[BoxWidget],
                                      wanted_direction=Direction.NONE,
                                      mov_repulsables: Optional[list[MovingBox]]=None):
-        ''' This function change the place of boxes in order to have no box overlapping
-            other boxes.'''
+        '''Change the place of boxes in order to have no box overlapping
+        other boxes.'''
+
         def get_direction(fixed_rect: QRectF, moving_rect: QRectF,
                           parent_directions=list[Direction]()) -> Direction:
             if (moving_rect.top() <= fixed_rect.center().y() <= moving_rect.bottom()
@@ -114,8 +116,8 @@ class PatchScene(PatchSceneMoth):
                     fixed_port_mode: PortMode,
                     moving_port_mode: PortMode) -> QRectF:
             '''returns a QRectF to be placed at side of fixed_rect
-               where fixed_rect is an already determinated futur place
-               for a box'''
+            where fixed_rect is an already determinated futur place
+            for a box'''
                 
             if isinstance(fixed, BoxWidget):
                 fixed_rect = fixed.boundingRect().translated(fixed.pos())
@@ -178,7 +180,7 @@ class PatchScene(PatchSceneMoth):
                 repulser_rect: QRectF, rect: QRectF,
                 repulser_port_mode: PortMode, rect_port_mode: PortMode) -> bool:
             left_spacing = right_spacing = box_spacing
-            
+
             if (repulser_port_mode & PortMode.INPUT
                     or rect_port_mode & PortMode.OUTPUT):
                 left_spacing = box_spacing_hor
@@ -186,12 +188,17 @@ class PatchScene(PatchSceneMoth):
             if (repulser_port_mode & PortMode.OUTPUT
                     or rect_port_mode & PortMode.INPUT):
                 right_spacing = box_spacing_hor
-            
-            large_repulser_rect = repulser_rect.adjusted(
-                - left_spacing, - box_spacing,
-                right_spacing, box_spacing)
 
-            return rect.intersects(large_repulser_rect)
+            return rect.intersects(
+                repulser_rect.adjusted(
+                    - left_spacing, - box_spacing,
+                    right_spacing, box_spacing))
+
+        def rect_may_have_to_move_from(repulser_rect: QRectF, rect: QRectF) -> bool:
+            return rect.intersects(
+                repulser_rect.adjusted(
+                    - box_spacing_hor, - box_spacing,
+                    box_spacing_hor, box_spacing))
 
         # ---      ---       ---
         # --- function start ---
@@ -231,27 +238,29 @@ class PatchScene(PatchSceneMoth):
             repulsers.append(repulser)
             items_to_move = list[BoxAndRect]()
 
-            search_rect = srect.marginsAdded(
-                QMarginsF(canvas.theme.box_spacing_horizontal,
-                          canvas.theme.box_spacing, 
-                          canvas.theme.box_spacing_horizontal,
-                          canvas.theme.box_spacing))
-
             if mov_repulsables is not None:
                 for moving_box in mov_repulsables:
                     if (moving_box.widget in repulser_boxes
                             or moving_box.widget in [b.item for b in to_move_boxes]):
                         continue
-                    
-                    widget = moving_box.widget
-                    irect = moving_box.final_rect
-                    
+
+                    if not rect_may_have_to_move_from(
+                            repulser.rect, moving_box.final_rect):
+                        continue
+                        
                     if rect_has_to_move_from(
-                            repulser.rect, irect,
+                            repulser.rect, moving_box.final_rect,
                             repulser.item.get_current_port_mode(),
-                            widget.get_current_port_mode()):
-                        items_to_move.append(BoxAndRect(irect, widget))
+                            moving_box.widget.get_current_port_mode()):
+                        items_to_move.append(
+                            BoxAndRect(moving_box.final_rect, moving_box.widget))
             else:
+                search_rect = srect.marginsAdded(
+                QMarginsF(canvas.theme.box_spacing_horizontal,
+                          canvas.theme.box_spacing, 
+                          canvas.theme.box_spacing_horizontal,
+                          canvas.theme.box_spacing))
+                
                 # search intersections in non moving boxes
                 for widget in self.items(search_rect, Qt.IntersectsItemShape,
                                         Qt.AscendingOrder):
@@ -312,7 +321,7 @@ class PatchScene(PatchSceneMoth):
                                item.get_current_port_mode())
             
             active_repulsers = list[BoxAndRect]()
-            
+
             # while there is a repulser rect at new box position
             # move the future box position
             while True:
