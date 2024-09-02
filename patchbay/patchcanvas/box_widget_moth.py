@@ -600,9 +600,16 @@ class BoxWidgetMoth(QGraphicsItem):
             else:
                 self.setZValue(Zv.BOX.value)
             
-            self.reset_lines_z_value(is_selected)
-
             if is_selected:
+                for lines in GroupedLinesWidget.widgets_for_box(
+                        self._group_id, PortMode.BOTH):
+                    lines.setZValue(Zv.SEL_BOX_LINE.value)
+            else:
+                for lines in GroupedLinesWidget.widgets_for_box(
+                        self._group_id, PortMode.BOTH):
+                    lines.setZValue(Zv.LINE.value)
+            
+            if is_selected and not canvas.scene.selecting_boxes:
                 canvas_callback(
                     CallbackAct.GROUP_SELECTED, self._group_id,
                     self._port_mode)

@@ -99,6 +99,10 @@ class CallbackAct(IntEnum):
     GROUP_WRAP = auto()           # group_id: int, folded: bool
     GROUP_LAYOUT_CHANGE = auto()  # group_id: int, layout_mode: BoxLayoutMode, splitted_mode: PortMode
     GROUP_SELECTED = auto()       # group_id: int, splitted_mode: PortMode
+    '''group_id: int, splitted_mode: PortMode
+    
+    Not emitted in case of area multiple selection (optimization)'''
+    
     GROUP_HIDE_BOX = auto()       # group_id: int, port_mode: PortMode
     PORTGROUP_ADD = auto()        # group_id: int, port_mode: PortMode,
                                   #      port_type: PortType, port_ids: tuple[int]

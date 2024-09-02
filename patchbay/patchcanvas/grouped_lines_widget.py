@@ -215,13 +215,13 @@ class GroupedLinesWidget(QGraphicsPathItem):
     def widgets_for_box(
             group_id: int, port_mode: PortMode) -> Iterator['GroupedLinesWidget']:
         if port_mode is PortMode.OUTPUT:
-            gp_keys = [g for g in _all_lines_widgets if g[0] == group_id]
+            gp_keys = [g for g in _all_lines_widgets if g[0] is group_id]
         elif port_mode is PortMode.INPUT:
-            gp_keys = [g for g in _all_lines_widgets if g[1] == group_id]
+            gp_keys = [g for g in _all_lines_widgets if g[1] is group_id]
         elif port_mode is PortMode.BOTH:
             gp_keys = [g for g in _all_lines_widgets if group_id in g]
         else:
-            gp_keys = []
+            return
         
         for gp_key in gp_keys:
             for pt_dict in _all_lines_widgets[gp_key].values():
@@ -236,9 +236,8 @@ class GroupedLinesWidget(QGraphicsPathItem):
             
             for tstate_dict in pt_dict.values():
                 for widget in tstate_dict.values():
-                    widget.semi_hide(semi_hidden)
-                    widget.setZValue(
-                        Zv.OPAC_LINE.value if semi_hidden else Zv.LINE.value)
+                    if widget._semi_hidden is not semi_hidden:
+                        widget.semi_hide(semi_hidden)
 
     @staticmethod
     def update_opacity():
@@ -256,8 +255,16 @@ class GroupedLinesWidget(QGraphicsPathItem):
                     widget.finish_animation()
 
     def semi_hide(self, yesno: bool):
+        if self._semi_hidden is yesno:
+            return
+
         self._semi_hidden = yesno
         self.update_line_gradient()
+        
+        if yesno:
+            self.setZValue(Zv.OPAC_LINE.value)
+        else:
+            self.setZValue(Zv.LINE.value)
 
     def update_lines_pos(self, fast_move=False):
         paths = dict[tuple[float, float], QPainterPath]()

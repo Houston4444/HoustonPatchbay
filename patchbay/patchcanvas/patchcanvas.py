@@ -260,13 +260,6 @@ def set_loading_items(yesno: bool):
     canvas.loading_items = yesno
 
 @patchbay_api
-def prilo():
-    for box in canvas.list_boxes():
-        if not box.isVisible():
-            print('invisib', box)
-            # box.setVisible(True)
-
-@patchbay_api
 def add_group(group_id: int, group_name: str, split: bool,
               box_type=BoxType.APPLICATION, icon_name='',
               box_poses : dict[PortMode, BoxPos]={}):
@@ -1260,6 +1253,10 @@ def semi_hide_groups(group_ids: set[int]):
                 Zv.OPAC_BOX.value if semi_hidden else Zv.BOX.value)
     
     GroupedLinesWidget.groups_semi_hidden(group_ids)
+
+@patchbay_api
+def invert_boxes_selection():
+    canvas.scene.invert_boxes_selection()
 
 @patchbay_api
 def select_port(group_id: int, port_id: int):

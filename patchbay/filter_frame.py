@@ -68,7 +68,6 @@ class FilterFrame(QFrame):
             
         self.ui.toolButtonUp.setEnabled(self._n_boxes >= 2)
         self.ui.toolButtonDown.setEnabled(self._n_boxes >= 2)
-        
 
     def _text_changed(self, text: str):
         if text:
@@ -113,6 +112,7 @@ class FilterFrame(QFrame):
         self.ui.toolButtonDown.setEnabled(False)
         self.ui.toolButtonUp.setEnabled(False)
         self.ui.labelBoxes.setText('')
+        self._filter_groups()
         QFrame.showEvent(self, event)
         
     def hideEvent(self, event):
@@ -139,7 +139,8 @@ class FilterFrame(QFrame):
     
     @pyqtSlot()
     def _animation_finished(self):
-        self._filter_groups()
+        if self.isVisible():
+            self._filter_groups()
     
     def set_patchbay_manager(self, mng: 'PatchbayManager'):
         self.mng = mng

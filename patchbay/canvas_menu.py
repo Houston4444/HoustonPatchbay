@@ -52,7 +52,12 @@ class CanvasMenu(QMenu):
                 _translate('patchbay', "Put in a new exclusive view"))
             self.action_hide_selected = self.selected_boxes_menu.addAction(
                 _translate('patchbay', "Hide boxes"))
-            self.action_hide_selected.triggered.connect(self._hide_selected_boxes)
+            self.action_invert_selection = self.selected_boxes_menu.addAction(
+                _translate('patchbay', 'Invert selection'))
+            self.action_hide_selected.triggered.connect(
+                self._hide_selected_boxes)
+            self.action_invert_selection.triggered.connect(
+                self._invert_boxes_selection)
             self.addMenu(self.selected_boxes_menu)
             self.addSeparator()
 
@@ -176,7 +181,8 @@ class CanvasMenu(QMenu):
 
     def set_selected_boxes(self, selected_boxes: dict[int, PortMode]):
         self._selected_boxes = selected_boxes
-        
+    
+    @pyqtSlot()
     def _hide_selected_boxes(self):
         for group_id, port_mode in self._selected_boxes.items():
             group = self.mng.get_group_from_id(group_id)
@@ -184,6 +190,10 @@ class CanvasMenu(QMenu):
                 continue
 
             group.hide(port_mode)
+
+    @pyqtSlot()
+    def _invert_boxes_selection(self):
+        patchcanvas.invert_boxes_selection()
 
     def _port_types_view_changed(self, port_types_view: int):
         self.action_all_types.setChecked(

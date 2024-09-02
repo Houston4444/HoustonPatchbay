@@ -158,6 +158,12 @@ class PatchSceneMoth(QGraphicsScene):
 
         self.flying_connectable = None
 
+        self.selecting_boxes = False
+        '''While selecting multiple boxes, this could take a quite long time
+        if there are many box selected, because of itemChange
+        in BoxWidgetMoth. If this attribute is True, we can prevent a callback
+        action for each box.'''
+
         self._selected_boxes = list[BoxWidget]()
         '''Selected boxes saved here between mouse press event
         and context menu callback. By default with Qt, all items are
@@ -944,6 +950,18 @@ class PatchSceneMoth(QGraphicsScene):
 
         self.update()
 
+    def invert_boxes_selection(self):
+        selected_boxes = set(self.get_selected_boxes())
+        self.selecting_boxes = True
+
+        for box in canvas.list_boxes():
+            if box in selected_boxes:
+                box.setSelected(False)
+            elif box.isVisible():
+                box.setSelected(True)
+
+        self.selecting_boxes = False
+
     def mouseDoubleClickEvent(self, event):
         if event.button() == Qt.LeftButton and not canvas.menu_shown:
             # parse items under mouse to prevent CallbackAct.DOUBLE_CLICK
@@ -1081,15 +1099,18 @@ class PatchSceneMoth(QGraphicsScene):
                 self.fix_scale_factor()
 
             else:
+                self.selecting_boxes = True
                 for item in self.items():
                     if isinstance(item, BoxWidget):
                         item_rect = item.sceneBoundingRect()
                         if self._rubberband.rect().contains(item_rect):
                             item.setSelected(True)
+                self.selecting_boxes = False
 
             self._rubberband.hide()
             self._rubberband.setRect(0, 0, 0, 0)
             self._rubberband_selection = False
+            self.selecting_boxes = True
 
         else:
             for item in self.get_selected_boxes():
@@ -1148,8 +1169,10 @@ class PatchSceneMoth(QGraphicsScene):
                 self._trigger_rubberband_scale()
                 return
 
+            self.selecting_boxes = True
             for sel_box in self._selected_boxes:
                 sel_box.setSelected(True)
+            self.selecting_boxes = False
 
             event.accept()
             screen_pos = event.screenPos()
