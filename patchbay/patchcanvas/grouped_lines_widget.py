@@ -469,11 +469,9 @@ class GroupedLinesWidget(QGraphicsPathItem):
             self.update_line_gradient()
             return
 
-        epsy = 0.001
-        
         if ratio >= 1.0:
             # Animation finished
-            
+
             if (self._box_hidding_out is BoxHidding.HIDDING
                     or self._box_hidding_in is BoxHidding.HIDDING):
                 # if one of the 2 boxes is hidding,
@@ -481,10 +479,13 @@ class GroupedLinesWidget(QGraphicsPathItem):
                 # Lines widget will be removed very soon.
                 return
             
+            self._box_hidding_out = BoxHidding.NONE
+            self._box_hidding_in = BoxHidding.NONE
             # the lines have now to be drawn normally
             self.update_line_gradient()
             return
 
+        epsy = 0.001
         ratio = max(min(ratio, 1.0 - epsy * 2), epsy * 2)
         gradient = QLinearGradient(self._group_out_x, self._group_out_mid_y,
                                    self._group_in_x, self._group_in_mid_y)

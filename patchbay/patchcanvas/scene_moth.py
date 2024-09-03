@@ -583,9 +583,7 @@ class PatchSceneMoth(QGraphicsScene):
         moving_box.final_rect = \
             box_widget.after_wrap_rect().translated(moving_box.to_pt)
         moving_box.hidding_state = BoxHidding.RESTORING
-        
-        box_widget.animate_hidding(1.0)
-        
+                
         for port_mode in PortMode.OUTPUT, PortMode.INPUT:
             if port_mode not in box_widget.get_port_mode():
                 continue
@@ -1115,7 +1113,6 @@ class PatchSceneMoth(QGraphicsScene):
             self._rubberband.hide()
             self._rubberband.setRect(0, 0, 0, 0)
             self._rubberband_selection = False
-            self.selecting_boxes = True
 
         else:
             for item in self.get_selected_boxes():

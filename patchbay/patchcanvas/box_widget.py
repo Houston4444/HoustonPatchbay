@@ -1200,7 +1200,7 @@ class BoxWidget(BoxWidgetMoth):
             return
 
         self.prepareGeometryChange()
-        
+
         if (self._wrapping_state
                 in (WrappingState.NORMAL, WrappingState.WRAPPED)
                 or even_animated):

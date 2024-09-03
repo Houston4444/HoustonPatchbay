@@ -194,11 +194,10 @@ class PatchScene(PatchSceneMoth):
                     - left_spacing, - box_spacing,
                     right_spacing, box_spacing))
 
-        def rect_may_have_to_move_from(repulser_rect: QRectF, rect: QRectF) -> bool:
+        def rect_may_have_to_move_from(
+                repulser_rect: QRectF, rect: QRectF) -> bool:
             return rect.intersects(
-                repulser_rect.adjusted(
-                    - box_spacing_hor, - box_spacing,
-                    box_spacing_hor, box_spacing))
+                repulser_rect.marginsAdded(normal_margins))
 
         # ---      ---       ---
         # --- function start ---
@@ -212,6 +211,12 @@ class PatchScene(PatchSceneMoth):
         to_move_boxes = list[ToMoveBox]()
         repulsers = list[BoxAndRect]()
         wanted_directions = [wanted_direction]
+        
+        normal_margins = QMarginsF(
+            canvas.theme.box_spacing_horizontal,
+            canvas.theme.box_spacing, 
+            canvas.theme.box_spacing_horizontal,
+            canvas.theme.box_spacing)
         
         for box in repulser_boxes:
             self._full_repulse_boxes.add(box)
@@ -239,9 +244,8 @@ class PatchScene(PatchSceneMoth):
             items_to_move = list[BoxAndRect]()
 
             if mov_repulsables is not None:
-                for moving_box in mov_repulsables:
-                    if (moving_box.widget in repulser_boxes
-                            or moving_box.widget in [b.item for b in to_move_boxes]):
+                for moving_box in mov_repulsables[1:]:
+                    if moving_box.widget in [b.item for b in to_move_boxes]:
                         continue
 
                     if not rect_may_have_to_move_from(
@@ -420,39 +424,30 @@ class PatchScene(PatchSceneMoth):
             self.add_box_to_animation(
                 item, int(new_rect.left()), int(new_rect.top()))
 
-    def full_repulse(self, view_change=False):
+    def full_repulse(self):
         if not options.prevent_overlap:
             return
 
         self._full_repulse_boxes.clear()
 
-        if view_change:
-            # in view change, all boxes are in self.move_boxes
-            moving_boxes = [mb for b, mb in self.move_boxes.items()
-                            if (not mb.final_rect.isNull()
-                                and b.isVisible())]
+        for box in canvas.list_boxes():
+            if box.isVisible() and not box in self.move_boxes:
+                self.add_box_to_animation(box, *box.top_left())
 
-            while moving_boxes:
-                self.deplace_boxes_from_repulsers(
-                    [moving_boxes[0].widget],
-                    mov_repulsables=moving_boxes)
-                to_rm_movboxes = [mb for mb in moving_boxes
-                                  if mb.widget in self._full_repulse_boxes]
-                for to_rm_mb in to_rm_movboxes:
-                    moving_boxes.remove(to_rm_mb)
-        else:   
-            for box in canvas.list_boxes():
-                if not box.isVisible():
-                    continue
-                
-                moving_box = self.move_boxes.get(box)
-                if (moving_box is not None
-                        and moving_box.hidding_state is BoxHidding.HIDDING):
-                    continue
+        # in view change, all boxes are in self.move_boxes
+        moving_boxes = [mb for b, mb in self.move_boxes.items()
+                        if (not mb.final_rect.isNull()
+                            and b.isVisible())]
 
-                if box not in self._full_repulse_boxes:
-                    self.deplace_boxes_from_repulsers([box])
-
+        while moving_boxes:
+            self.deplace_boxes_from_repulsers(
+                [moving_boxes[0].widget],
+                mov_repulsables=moving_boxes)
+            to_rm_movboxes = [mb for mb in moving_boxes
+                                if mb.widget in self._full_repulse_boxes]
+            for to_rm_mb in to_rm_movboxes:
+                moving_boxes.remove(to_rm_mb)
+        
         self._full_repulse_boxes.clear()
 
     def bring_neighbors_and_deplace_boxes(

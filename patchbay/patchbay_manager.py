@@ -380,7 +380,6 @@ class PatchbayManager:
         self.optimize_operation(True)
         group_ids_redraw = list[int]()
 
-        start = time.time()
 
         for group in self.groups:
             if group.current_position.hidden_port_modes() is PortMode.NULL:
@@ -389,12 +388,12 @@ class PatchbayManager:
             
             if hidden_port_mode & PortMode.OUTPUT:
                 for conn in self.connections:
-                    if conn.port_out.group_id == group.group_id:
+                    if conn.port_out.group_id is group.group_id:
                         conn.remove_from_canvas()
             
             if hidden_port_mode & PortMode.INPUT:
                 for conn in self.connections:
-                    if conn.port_in.group_id == group.group_id:
+                    if conn.port_in.group_id is group.group_id:
                         conn.remove_from_canvas()
             
             for portgroup in group.portgroups:
@@ -420,17 +419,20 @@ class PatchbayManager:
         for conn in self.connections:
             conn.add_to_canvas()
         
-        end = time.time()
-        print('Done in ', end - start, 'seconds', end - bef_readd_conns)
         
         self.optimize_operation(False)
         for group_id in group_ids_redraw:
             patchcanvas.redraw_group(group_id, prevent_overlap=False)
         patchcanvas.canvas.scene.resize_the_scene()
-        self.sg.hidden_boxes_changed.emit()
-        self.sg.animation_finished.emit()
         
-        patchcanvas.prilo()
+        times_dict['aft resize scene'] = time.time()
+        self.sg.hidden_boxes_changed.emit()
+        times_dict['before filters'] = time.time()
+        self.sg.animation_finished.emit()
+        times_dict['finito'] = time.time()
+        
+        for key, value in times_dict.items():
+            print('kk', value, key)
 
     def set_group_hidden_sides(self, group_id: int, port_mode: PortMode):
         group = self.get_group_from_id(group_id)
@@ -457,7 +459,7 @@ class PatchbayManager:
                     port.remove_from_canvas()
                     
             for conn in self.connections:
-                if conn.port_out.group_id == group_id:
+                if conn.port_out.group_id is group_id:
                     conn.add_to_canvas()
                     
         if port_mode & PortMode.INPUT:
@@ -474,7 +476,7 @@ class PatchbayManager:
                     port.remove_from_canvas()
                     
             for conn in self.connections:
-                if conn.port_in.group_id == group_id:
+                if conn.port_in.group_id is group_id:
                     conn.add_to_canvas()
 
         self.optimize_operation(False)
@@ -841,7 +843,7 @@ class PatchbayManager:
             group.set_group_position(*gpos_redraw)
 
         bef_repulse = time.time()
-        patchcanvas.repulse_all_boxes(view_change=True)
+        patchcanvas.repulse_all_boxes()
         end_repulse = time.time()
 
         print('change ptv done', len(groups_and_pos),

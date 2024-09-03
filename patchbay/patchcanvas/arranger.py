@@ -684,4 +684,4 @@ def arrange_face_to_face():
     for group_id, box_poses in gp_box_poses.items():
         move_group_boxes(group_id, box_poses, True)
     
-    repulse_all_boxes(view_change=True)
+    repulse_all_boxes()

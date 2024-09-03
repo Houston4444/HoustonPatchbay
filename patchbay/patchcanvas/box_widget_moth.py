@@ -591,7 +591,7 @@ class BoxWidgetMoth(QGraphicsItem):
                 self.setZValue(Zv.SEL_BOX.value)
             else:
                 self.setZValue(Zv.BOX.value)
-            
+
             if not canvas.scene.selecting_boxes:
                 if is_selected:
                     for lines in GroupedLinesWidget.widgets_for_box(

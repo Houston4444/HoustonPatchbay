@@ -463,9 +463,9 @@ def join_group(group_id: int):
     QTimer.singleShot(0, canvas.scene.update)
 
 @patchbay_api
-def repulse_all_boxes(view_change=False):
+def repulse_all_boxes():
     if options.prevent_overlap:
-        canvas.scene.full_repulse(view_change=view_change)      
+        canvas.scene.full_repulse()      
 
 @patchbay_api
 def repulse_from_group(group_id: int, port_mode: PortMode):
@@ -717,7 +717,6 @@ def move_group_boxes(
                 if not join:
                     box.set_top_left(xy)
                     canvas.scene.add_box_to_animation(box, *xy)
-                box.animate_hidding(1.0)
                 canvas.scene.add_box_to_animation_restore(box)
                     
             else:
