@@ -191,6 +191,7 @@ class CanvasMenu(QMenu):
     @pyqtSlot()
     def _new_exclusive_view(self):
         self.mng.new_view(exclusive_with=self._selected_boxes)
+        patchcanvas.clear_selection()
     
     @pyqtSlot()
     def _hide_selected_boxes(self):

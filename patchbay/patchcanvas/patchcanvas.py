@@ -779,6 +779,10 @@ def set_group_layout_mode(group_id: int, port_mode: PortMode,
             box.set_layout_mode(layout_mode)
             box.update_positions(prevent_overlap=prevent_overlap)
 
+@patchbay_api
+def clear_selection():
+    canvas.scene.clear_selection()
+
 # ------------------------------------------------------------------------
 
 @patchbay_api

@@ -175,8 +175,11 @@ class PatchSceneMoth(QGraphicsScene):
         self.selecting_boxes = False
         '''While selecting multiple boxes, this could take a quite long time
         if there are many box selected, because of itemChange
-        in BoxWidgetMoth. If this attribute is True, we can prevent a callback
-        action for each box.'''
+        in BoxWidgetMoth. If this attribute is True, we can prevent
+        actions for each box.
+        
+        Should be never directly set,
+        use 'with SelectingBoxes(self):' instead.'''
 
         self._selected_boxes = list[BoxWidget]()
         '''Selected boxes saved here between mouse press event
@@ -205,6 +208,10 @@ class PatchSceneMoth(QGraphicsScene):
         self._rubberband = RubberbandRect(self)
         self._grid_widget = None
         self.update_theme()
+
+    def clear_selection(self):
+        with SelectingBoxes(self):
+            self.clearSelection()
 
     def set_anti_aliasing(self, yesno: bool):
         if self._view is not None:
