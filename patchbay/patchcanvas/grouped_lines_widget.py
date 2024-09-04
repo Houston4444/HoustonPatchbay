@@ -247,10 +247,10 @@ class GroupedLinesWidget(QGraphicsPathItem):
         selected_outs = set()
         selected_ins = set()
         for box in selected_boxes:
-            if box.get_port_mode() & PortMode.OUTPUT:
-                selected_outs.add(box.get_group_id())
-            if box.get_port_mode() & PortMode.INPUT:
-                selected_ins.add(box.get_group_id())
+            if box._port_mode & PortMode.OUTPUT:
+                selected_outs.add(box._group_id)
+            if box._port_mode & PortMode.INPUT:
+                selected_ins.add(box._group_id)
 
         for gp_dict, pt_dict in _all_lines_widgets.items():
             gp_out_id, gp_in_id = gp_dict

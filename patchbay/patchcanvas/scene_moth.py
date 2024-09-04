@@ -66,8 +66,8 @@ _logger = logging.getLogger(__name__)
 
 
 class RubberbandRect(QGraphicsRectItem):
-    " This class is used by rectangle selection when user "
-    " press mouse button and move to select boxes. "
+    '''This class is used by rectangle selection when user
+    press mouse button and move to select boxes.'''
     def __init__(self, scene: QGraphicsScene):
         QGraphicsRectItem.__init__(self, QRectF(0, 0, 0, 0))
 
@@ -99,7 +99,21 @@ class MovingBox:
         self.is_joining = False
         self.is_wrapping = False
         self.hidding_state = BoxHidding.NONE
+
+
+class SelectingBoxes:
+    '''Context for 'with' statment. Used when mutiple boxes are selected.'''
+    def __init__(self, scene: 'PatchSceneMoth'):
+        self.scene = scene
+    
+    def __enter__(self):
+        self.scene.selecting_boxes = True
         
+    def __exit__(self, *args, **kwargs):
+        GroupedLinesWidget.reset_z_values_with_selection(
+            self.scene.get_selected_boxes())
+        self.scene.selecting_boxes = False
+ 
 
 class PatchSceneMoth(QGraphicsScene):
     " This class is used for the scene. "
@@ -950,18 +964,19 @@ class PatchSceneMoth(QGraphicsScene):
 
     def invert_boxes_selection(self):
         selected_boxes = set(self.get_selected_boxes())
-        self.selecting_boxes = True
+        # self.selecting_boxes = True
 
-        for box in canvas.list_boxes():
-            if box in selected_boxes:
-                box.setSelected(False)
-            elif box.isVisible():
-                box.setSelected(True)
+        with SelectingBoxes(self):
+            for box in canvas.list_boxes():
+                if box in selected_boxes:
+                    box.setSelected(False)
+                elif box.isVisible():
+                    box.setSelected(True)
 
-        GroupedLinesWidget.reset_z_values_with_selection(
-            self.get_selected_boxes())
+            # GroupedLinesWidget.reset_z_values_with_selection(
+            #     self.get_selected_boxes())
 
-        self.selecting_boxes = False
+        # self.selecting_boxes = False
 
     def mouseDoubleClickEvent(self, event):
         if event.button() == Qt.LeftButton and not canvas.menu_shown:
@@ -1100,15 +1115,12 @@ class PatchSceneMoth(QGraphicsScene):
                 self.fix_scale_factor()
 
             else:
-                self.selecting_boxes = True
-                for item in self.items():
-                    if isinstance(item, BoxWidget):
-                        item_rect = item.sceneBoundingRect()
-                        if self._rubberband.rect().contains(item_rect):
-                            item.setSelected(True)
-                GroupedLinesWidget.reset_z_values_with_selection(
-                    self.get_selected_boxes())
-                self.selecting_boxes = False
+                with SelectingBoxes(self):
+                    for item in self.items():
+                        if isinstance(item, BoxWidget):
+                            item_rect = item.sceneBoundingRect()
+                            if self._rubberband.rect().contains(item_rect):
+                                item.setSelected(True)
 
             self._rubberband.hide()
             self._rubberband.setRect(0, 0, 0, 0)
@@ -1171,12 +1183,9 @@ class PatchSceneMoth(QGraphicsScene):
                 self._trigger_rubberband_scale()
                 return
 
-            self.selecting_boxes = True
-            for sel_box in self._selected_boxes:
-                sel_box.setSelected(True)
-            GroupedLinesWidget.reset_z_values_with_selection(
-                self.get_selected_boxes())
-            self.selecting_boxes = False
+            with SelectingBoxes(self):
+                for sel_box in self._selected_boxes:
+                    sel_box.setSelected(True)
 
             event.accept()
             screen_pos = event.screenPos()
