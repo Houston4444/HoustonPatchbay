@@ -424,7 +424,7 @@ class PatchbayManager:
         for group_id in group_ids_redraw:
             patchcanvas.redraw_group(group_id, prevent_overlap=False)
         patchcanvas.canvas.scene.resize_the_scene()
-        
+        times_dict = dict[str, float]()
         times_dict['aft resize scene'] = time.time()
         self.sg.hidden_boxes_changed.emit()
         times_dict['before filters'] = time.time()
@@ -850,7 +850,16 @@ class PatchbayManager:
               bef_repulse - bef_gp_pos, end_repulse - bef_repulse)
         self.sg.port_types_view_changed.emit(self.port_types_view)
 
-    def new_view(self, view_number: Optional[int]=None):
+    def new_view(self, view_number: Optional[int]=None,
+                 exclusive_with: Optional[dict[int, PortMode]]=None):
+        '''create a new view and switch directly to this view.
+        
+        If 'view_number' is not set, it will choose the first available
+        number.
+        
+        if 'exclusive_with' is set, all non matching boxes will be hidden,
+        and new view will be a white list view.'''
+
         if view_number is None:
             new_num = 1
             while True:
@@ -864,12 +873,27 @@ class PatchbayManager:
             new_num = view_number
 
         self.views[new_num] = {}
-        for ptv, gp_gpos in self.views[self.view_number].items():
-            if self.views[new_num].get(ptv) is None:
-                self.views[new_num][ptv] = {}
+        if exclusive_with is None:
+            for ptv, gp_gpos in self.views[self.view_number].items():
+                if self.views[new_num].get(ptv) is None:
+                    self.views[new_num][ptv] = {}
 
-            for group_name, gpos in gp_gpos.items():
-                self.views[new_num][ptv][group_name] = gpos.copy()
+                for group_name, gpos in gp_gpos.items():
+                    self.views[new_num][ptv][group_name] = gpos.copy()
+        else:
+            self.views_datas[new_num] = ViewData(
+                '', self.port_types_view, True)
+
+            v = self.views[self.view_number][self.port_types_view]
+            self.views[new_num][self.port_types_view] = new_v = {}
+
+            for group_id, port_mode in exclusive_with.items():
+                group = self.get_group_from_id(group_id)
+                if group is not None:
+                    new_v[group.name] = gpos = v[group.name].copy()
+                    for pmode, box_pos in gpos.boxes.items():
+                        if not port_mode & pmode:
+                            box_pos.set_hidden(True)
 
         self.sort_views_by_index()
         self.view_number = new_num
