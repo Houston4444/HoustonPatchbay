@@ -1,15 +1,14 @@
 
-import time
 from typing import TYPE_CHECKING
 from PyQt5.QtGui import QIcon, QDesktopServices
 from PyQt5.QtWidgets import QMenu, QApplication
 from PyQt5.QtCore import QLocale, QUrl, pyqtSlot
 
-
 from . import patchcanvas
 from .patchcanvas import utils
 from .base_elements import PortType, PortTypesViewFlag, PortMode
 from .views_menu import ViewsMenu
+from .selected_boxes_menu import SelectedBoxesMenu
 
 if TYPE_CHECKING:
     from .patchbay_manager import PatchbayManager
@@ -46,24 +45,9 @@ class CanvasMenu(QMenu):
         self.clear()
         
         if self._selected_boxes:
-            self.selected_boxes_menu = QMenu(
-                _translate('patchbay', "Selected boxes"), self)
-
-            self.action_new_white_view = self.selected_boxes_menu.addAction(
-                _translate('patchbay', "Put in a new exclusive view"))
-            self.action_new_white_view.triggered.connect(
-                self._new_exclusive_view)
-
-            self.action_hide_selected = self.selected_boxes_menu.addAction(
-                _translate('patchbay', "Hide boxes"))
-            self.action_hide_selected.triggered.connect(
-                self._hide_selected_boxes)
-
-            self.action_invert_selection = self.selected_boxes_menu.addAction(
-                _translate('patchbay', 'Invert selection'))
-            self.action_invert_selection.triggered.connect(
-                self._invert_boxes_selection)
-
+            self.selected_boxes_menu = SelectedBoxesMenu(self)
+            self.selected_boxes_menu.set_patchbay_manager(self.mng)
+            self.selected_boxes_menu.set_selected_boxes(self._selected_boxes)
             self.addMenu(self.selected_boxes_menu)
             self.addSeparator()
 
