@@ -90,6 +90,7 @@ class MovingBox:
     is_joining: bool
     is_wrapping: bool
     hidding_state: BoxHidding
+    needs_move: bool
     
     def __init__(self, widget: BoxWidget):
         self.widget = widget
@@ -100,6 +101,7 @@ class MovingBox:
         self.is_joining = False
         self.is_wrapping = False
         self.hidding_state = BoxHidding.NONE
+        self.needs_move = False
 
 
 class SelectingBoxes:
@@ -429,16 +431,17 @@ class PatchSceneMoth(QGraphicsScene):
         lws = set[GroupedLinesWidget]()
 
         for box, moving_box in self.move_boxes.items():
-            x = (moving_box.from_pt.x()
-                    + ((moving_box.to_pt.x() - moving_box.from_pt.x())
-                    * (ratio ** 0.6)))
-            
-            y = (moving_box.from_pt.y()
-                    + ((moving_box.to_pt.y() - moving_box.from_pt.y())
-                    * (ratio ** 0.6)))
+            if moving_box.needs_move:
+                x = (moving_box.from_pt.x()
+                        + ((moving_box.to_pt.x() - moving_box.from_pt.x())
+                        * (ratio ** 0.6)))
+                
+                y = (moving_box.from_pt.y()
+                        + ((moving_box.to_pt.y() - moving_box.from_pt.y())
+                        * (ratio ** 0.6)))
 
-            box.set_top_left((x, y))
-            box.repaint_lines(fast_move=True)
+                box.set_top_left((x, y))
+                box.repaint_lines(fast_move=True)
 
             if moving_box.is_wrapping:
                 if time_since_start >= self._MOVE_DURATION:
@@ -454,8 +457,7 @@ class PatchSceneMoth(QGraphicsScene):
                     box.animate_hidding(1.0 - ratio)
                     
                 for lw in GroupedLinesWidget.widgets_for_box(
-                        box.get_group_id(),
-                        box.get_port_mode()):
+                        box._group_id, box._port_mode):
                     if lw not in lws:
                         lw.animate_hidding(ratio)
                         lws.add(lw)
@@ -507,6 +509,7 @@ class PatchSceneMoth(QGraphicsScene):
 
         moving_box.from_pt = QPoint(*box_widget.top_left())
         moving_box.to_pt = QPoint(to_x, to_y)
+        moving_box.needs_move = bool(moving_box.from_pt != moving_box.to_pt)
         
         if joining is Joining.YES or not box_widget.isVisible():
             moving_box.final_rect = joined_rect
