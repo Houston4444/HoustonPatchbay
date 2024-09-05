@@ -33,7 +33,7 @@ from PyQt5.QtCore import (
     QPointF,
     QRectF,
     QTimer)
-from PyQt5.QtGui import QCursor, QPixmap, QPolygonF, QBrush, QPainter
+from PyQt5.QtGui import QCursor, QPixmap, QPolygonF, QBrush, QPainter, QTransform
 from PyQt5.QtWidgets import (
     QGraphicsRectItem,
     QGraphicsScene,
@@ -61,6 +61,7 @@ from .line_widget import LineWidget
 from .grouped_lines_widget import GroupedLinesWidget
 from .grid_widget import GridWidget
 from .scene_view import PatchGraphicsView
+from .utils import boxes_in_dict
 
 _logger = logging.getLogger(__name__)
 
@@ -971,7 +972,6 @@ class PatchSceneMoth(QGraphicsScene):
 
     def invert_boxes_selection(self):
         selected_boxes = set(self.get_selected_boxes())
-        # self.selecting_boxes = True
 
         with SelectingBoxes(self):
             for box in canvas.list_boxes():
@@ -979,11 +979,6 @@ class PatchSceneMoth(QGraphicsScene):
                     box.setSelected(False)
                 elif box.isVisible():
                     box.setSelected(True)
-
-            # GroupedLinesWidget.reset_z_values_with_selection(
-            #     self.get_selected_boxes())
-
-        # self.selecting_boxes = False
 
     def mouseDoubleClickEvent(self, event):
         if event.button() == Qt.LeftButton and not canvas.menu_shown:
@@ -1137,7 +1132,7 @@ class PatchSceneMoth(QGraphicsScene):
             for item in self.get_selected_boxes():
                 item.check_item_pos()
                 self.scene_group_moved.emit(
-                    item.get_group_id(), item.get_port_mode(),
+                    item._group_id, item._port_mode,
                     item.scenePos())
 
             if len(self.selectedItems()) > 1:
@@ -1198,23 +1193,11 @@ class PatchSceneMoth(QGraphicsScene):
             screen_pos = event.screenPos()
             scene_pos = event.scenePos()
             
-            # in selected boxes, there can be two boxes of the same group
-            # here we concatenate sel_boxes with only one group_id
-            # with PortMode.BOTH in this case
-            sel_boxes = dict[int, PortMode]()
-            for box in self._selected_boxes:
-                group_id = box.get_group_id()
-                pmode = sel_boxes.get(group_id)
-                if pmode is None:
-                    sel_boxes[group_id] = box.get_port_mode()
-                else:
-                    sel_boxes[group_id] = box.get_port_mode() | pmode
-            
             canvas.callback(
                 CallbackAct.BG_RIGHT_CLICK,
                 screen_pos.x(), screen_pos.y(),
                 scene_pos.x(), scene_pos.y(),
-                sel_boxes)
+                boxes_in_dict(self._selected_boxes))
             return
 
         QGraphicsScene.contextMenuEvent(self, event)

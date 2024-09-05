@@ -49,12 +49,12 @@ from .init_values import (
     Zv)
 
 from .utils import (
-    canvas_callback, nearest_on_grid, nearest_on_grid_check_others)
+    boxes_in_dict, canvas_callback,
+    nearest_on_grid, nearest_on_grid_check_others)
 from .box_widget_shadow import BoxWidgetShadow
 from .icon_widget import IconSvgWidget, IconPixmapWidget
 from .port_widget import PortWidget
 from .portgroup_widget import PortgroupWidget
-from .line_widget import LineWidget
 from .grouped_lines_widget import GroupedLinesWidget
 from .theme import BoxStyleAttributer
 from .box_layout import BoxLayout

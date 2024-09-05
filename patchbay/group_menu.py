@@ -3,8 +3,10 @@ from PyQt5.QtWidgets import QMenu, QApplication
 from PyQt5.QtCore import pyqtSlot
 from PyQt5.QtGui import QIcon, QPixmap
 
-from .base_elements import PortMode, GroupPosFlag, BoxLayoutMode
+
+from .base_elements import PortMode, BoxLayoutMode
 from .base_group import Group
+from .selected_boxes_menu import SelectedBoxesMenu
 from .patchcanvas import canvas, CallbackAct, patchcanvas, utils
 if TYPE_CHECKING:
     from .patchbay_manager import PatchbayManager
@@ -118,10 +120,12 @@ class GroupMenu(QMenu):
         self._mng = mng
         self._group = group
         self._port_mode = port_mode
-        
+    
+    def _build(self):
         dark = '-dark' if utils.is_dark_theme(self) else ''
         
-        self._disconnect_menu = DisconnectMenu(mng, group, port_mode)
+        self._disconnect_menu = DisconnectMenu(
+            self._mng, self._group, self._port_mode)
         self._disconnect_menu.setIcon(
             QIcon(QPixmap(':scalable/breeze%s/lines-disconnector' % dark)))
         
@@ -134,7 +138,7 @@ class GroupMenu(QMenu):
         self.addSeparator()
 
         current_port_mode = PortMode.NULL
-        for port in group.ports:
+        for port in self._group.ports:
             if port.in_canvas:
                 current_port_mode |= port.mode()
                 if current_port_mode is PortMode.BOTH:
@@ -170,7 +174,7 @@ class GroupMenu(QMenu):
             _translate('patchbay', 'Automatic layout'))
         auto_layout_act.setIcon(QIcon.fromTheme('auto-scale-x'))
         auto_layout_act.setVisible(
-            self._group.current_position.boxes[port_mode].layout_mode
+            self._group.current_position.boxes[self._port_mode].layout_mode
             is not BoxLayoutMode.AUTO)
         
         change_layout_act = self.addAction(
@@ -244,3 +248,7 @@ class GroupMenu(QMenu):
     @pyqtSlot()
     def _hide_box(self):
         self._group.hide(self._port_mode)
+
+    def showEvent(self, event) -> None:
+        self._build()
+        super().showEvent(event)

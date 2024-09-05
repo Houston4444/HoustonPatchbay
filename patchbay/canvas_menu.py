@@ -39,7 +39,6 @@ class CanvasMenu(QMenu):
             self._alsa_midi_enabled)
 
         self._selected_boxes = dict[int, PortMode]()
-        self._build()
         
     def _build(self):
         self.clear()
