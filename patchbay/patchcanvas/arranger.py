@@ -81,15 +81,30 @@ class BoxArranger:
         group = canvas.get_group(self.group_id)
         if group.splitted:
             if self.port_mode is PortMode.BOTH:
-                box = BoxWidget(group, PortMode.BOTH)
-                self.box_rect = box.get_dummy_rect()
-                canvas.scene.remove_box(box)
-                self.joining = True
+                if group.current_port_mode() is PortMode.BOTH:
+                    box = BoxWidget(group, PortMode.BOTH)
+                    self.box_rect = box.get_dummy_rect()
+                    canvas.scene.remove_box(box)
+                    self.joining = True
+                    
+                else:
+                    for box in group.widgets:
+                        if box._current_port_mode is group.current_port_mode():
+                            self.box = box
+                            self.box_rect = self.box.boundingRect()
+                            break
+                    else:
+                        _logger.error(
+                            f'Group {group.group_id} {group.group_name} '
+                            f'should have a box with '
+                            f'current port mode {group.current_port_mode()}')
+                
             else:
                 for box in group.widgets:
-                    if box.get_port_mode() is self.port_mode:
+                    if box._port_mode is self.port_mode:
                         self.box = box
                         self.box_rect = self.box.boundingRect()
+                        break
 
         else:
             if self.port_mode is PortMode.BOTH:
@@ -403,7 +418,8 @@ class CanvasArranger:
         for group in canvas.group_list:
             if group.splitted:
                 if (group.box_type is not BoxType.HARDWARE
-                        and group.group_id not in group_ids_to_split):
+                        and group.group_id not in group_ids_to_split
+                        and group.current_port_mode() is PortMode.BOTH):
                     animate_before_join(group.group_id)
             else:
                 if (group.box_type is BoxType.HARDWARE
@@ -571,10 +587,14 @@ class CanvasArranger:
                     group.box_poses[PortMode.BOTH].pos = grid_xy
                     canvas.qobject.add_group_to_join(group.group_id)
                     
-                    for box in group.widgets:   
-                        canvas.scene.add_box_to_animation(
-                            box, *grid_xy, joining=Joining.YES,
-                            joined_rect=ba.box_rect)
+                    for box in group.widgets:
+                        if box._port_mode is PortMode.OUTPUT:
+                            canvas.scene.add_box_to_animation(
+                                box, *grid_xy, joining=Joining.YES,
+                                joined_rect=ba.box_rect)
+                        else:
+                            canvas.scene.add_box_to_animation(
+                                box, *grid_xy, joining=Joining.YES)
             else:    
                 canvas.scene.add_box_to_animation(ba.box, *grid_xy)
 

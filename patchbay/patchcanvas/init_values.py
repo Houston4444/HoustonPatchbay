@@ -386,6 +386,12 @@ class GroupObject:
             group_copy.box_poses[port_mode] = \
                 BoxPos(self.box_poses[port_mode])
         return group_copy
+    
+    def current_port_mode(self) -> PortMode:
+        port_mode = PortMode.NULL
+        for box in self.widgets:
+            port_mode |= box._current_port_mode
+        return port_mode
 
 
 class ConnectableObject:

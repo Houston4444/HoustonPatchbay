@@ -1108,11 +1108,10 @@ def animate_before_hide_box(group_id: int, port_mode: PortMode):
     if group is None:
         _logger.info(f"{_logging_str} - failed to find group")
         return
-    
+
     for box in group.widgets:
-        if box.get_port_mode() is port_mode:
+        if port_mode & box._port_mode:
             canvas.scene.add_box_to_animation_hidding(box)
-            break
 
 @patchbay_api
 def animate_after_restore_box(group_id: int, port_mode: PortMode):

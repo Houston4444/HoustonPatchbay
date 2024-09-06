@@ -33,7 +33,7 @@ from PyQt5.QtCore import (
     QPointF,
     QRectF,
     QTimer)
-from PyQt5.QtGui import QCursor, QPixmap, QPolygonF, QBrush, QPainter, QTransform
+from PyQt5.QtGui import QCursor, QPixmap, QPolygonF, QBrush, QPainter
 from PyQt5.QtWidgets import (
     QGraphicsRectItem,
     QGraphicsScene,
