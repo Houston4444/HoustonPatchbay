@@ -467,6 +467,27 @@ class GroupPos:
         for port_mode in PortMode.in_out_both():
             self.boxes[port_mode].set_hidden(
                 bool(hidden_port_mode & port_mode))
+    
+    def needs_redraw(self, gpos: 'GroupPos') -> bool:
+        if self.is_splitted() is not gpos.is_splitted():
+            return True
+        
+        if self.hidden_port_modes() is not gpos.hidden_port_modes():
+            return True
+        
+        if self.is_splitted():
+            for port_mode in PortMode.OUTPUT, PortMode.INPUT:
+                if (self.boxes[port_mode].layout_mode
+                        is not gpos.boxes[port_mode].layout_mode):
+                    return True
+        
+        else:
+            if (self.boxes[PortMode.BOTH].layout_mode
+                    is not self.boxes[PortMode.BOTH].layout_mode):
+                return True
+        
+        return False
+                    
         
 
 class PortgroupMem:

@@ -733,8 +733,71 @@ class PatchbayManager:
         print(f"Change Port Types View: {ex_ptv.name} -> {port_types_view.name}")
         # Prevent visual update at each canvas item creation
         # because we may create/remove a lot of ports here
+        
         self.optimize_operation(True)
 
+        times_dict = dict[str, float]()
+
+        change_counter = 0
+        
+        times_dict['start'] = time.time()
+
+        if len(self.groups) > 30:
+            for group in self.groups:
+                in_outs_ptv = group.ins_ptv | group.outs_ptv
+                
+                if in_outs_ptv & port_types_view is not in_outs_ptv & ex_ptv:
+                    change_counter += 1
+                    continue
+
+                new_gpos = self.get_group_position(group.name)
+                if group.current_position.needs_redraw(new_gpos):
+                    change_counter += 1
+        
+        times_dict['after analyze'] = time.time()
+        
+        if change_counter > 30:
+            for connection in self.connections:
+                connection.in_canvas = False
+                        
+            for group in self.groups:
+                group.in_canvas = False
+                for portgroup in group.portgroups:
+                    portgroup.in_canvas = False
+                for port in group.ports:
+                    port.in_canvas = False
+            
+            times_dict['before clear all'] = time.time()
+                    
+            patchcanvas.clear_all()
+            
+            times_dict['after clear all'] = time.time()
+            
+            for group in self.groups:
+                group.current_position = self.get_group_position(group.name)
+                if (group.outs_ptv | group.ins_ptv) & self.port_types_view:
+                    group.add_to_canvas()
+                    
+                    group.add_all_ports_to_canvas()
+            
+            times_dict['after add groups'] = time.time()
+            
+            for connection in self.connections:
+                connection.add_to_canvas()
+            
+            times_dict['after conns'] = time.time()
+            
+            self.optimize_operation(False)
+            patchcanvas.redraw_all_groups()
+            
+            times_dict['after_redraw'] = time.time()
+            
+            for key, value in times_dict.items():
+                print('cc', value, key)
+            
+            self.sg.port_types_view_changed.emit(self.port_types_view)
+            return
+        
         rm_all_before = bool(ex_ptv & self.port_types_view
                              is PortTypesViewFlag.NONE)
 
@@ -820,8 +883,6 @@ class PatchbayManager:
                     new_gpos.has_sure_existence = True
                     break
             else:
-                if 'PulseAudio' in group.name:
-                    print('rm pulse')
                 group.remove_from_canvas()
             
             restore_mode = PortMode.NULL

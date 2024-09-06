@@ -144,17 +144,20 @@ class GroupMenu(QMenu):
                 if current_port_mode is PortMode.BOTH:
                     break
 
-        if current_port_mode is PortMode.BOTH:
-            if self._group.current_position.is_splitted():
-                join_act = self.addAction(
-                    _translate('patchbay', 'Join'))
-                join_act.setIcon(QIcon.fromTheme('join'))
-                join_act.triggered.connect(self._join)
-            else:
-                split_act = self.addAction(
-                    _translate('patchbay', 'Split'))
-                split_act.setIcon(QIcon.fromTheme('split'))
-                split_act.triggered.connect(self._split)
+        if self._group.current_position.is_splitted():
+            join_act = self.addAction(
+                _translate('patchbay', 'Join'))
+            join_act.setIcon(QIcon.fromTheme('join'))
+            join_act.triggered.connect(self._join)
+            if current_port_mode is not PortMode.BOTH:
+                join_act.setEnabled(False)
+        else:
+            split_act = self.addAction(
+                _translate('patchbay', 'Split'))
+            split_act.setIcon(QIcon.fromTheme('split'))
+            split_act.triggered.connect(self._split)
+            if current_port_mode is not PortMode.BOTH:
+                split_act.setEnabled(False)
 
         box_pos = self._group.current_position.boxes[self._port_mode]
         self._is_wrapped = box_pos.is_wrapped()
