@@ -102,6 +102,11 @@ class MovingBox:
         self.is_wrapping = False
         self.hidding_state = BoxHidding.NONE
         self.needs_move = False
+    
+    def is_usefull(self) -> bool:
+        if self.needs_move or self.is_wrapping:
+            return True        
+        return self.hidding_state is not BoxHidding.NONE
 
 
 class SelectingBoxes:
@@ -430,7 +435,12 @@ class PatchSceneMoth(QGraphicsScene):
 
         lws = set[GroupedLinesWidget]()
 
+        usefull = False
+
         for box, moving_box in self.move_boxes.items():
+            if not usefull:
+                usefull = moving_box.is_usefull()
+                            
             if moving_box.needs_move:
                 x = (moving_box.from_pt.x()
                         + ((moving_box.to_pt.x() - moving_box.from_pt.x())
@@ -444,10 +454,7 @@ class PatchSceneMoth(QGraphicsScene):
                 box.repaint_lines(fast_move=True)
 
             if moving_box.is_wrapping:
-                if time_since_start >= self._MOVE_DURATION:
-                    box.animate_wrapping(1.00)
-                else:
-                    box.animate_wrapping(ratio)
+                box.animate_wrapping(1.00)
             
             if moving_box.hidding_state in (BoxHidding.HIDDING,
                                             BoxHidding.RESTORING):
@@ -461,6 +468,10 @@ class PatchSceneMoth(QGraphicsScene):
                     if lw not in lws:
                         lw.animate_hidding(ratio)
                         lws.add(lw)
+
+        if not usefull:
+            # stop animation now if all moving boxes have no change to make
+            ratio = 1.0
 
         self.resize_the_scene(ratio)
 

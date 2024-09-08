@@ -655,7 +655,7 @@ def move_group_boxes(
     if group.splitted != split:
         if split:
             for box in group.widgets:
-                if box.get_port_mode() is PortMode.BOTH:
+                if box._port_mode is PortMode.BOTH:
                     orig_rect = QRectF(box.sceneBoundingRect())
                     break
 
@@ -713,10 +713,30 @@ def move_group_boxes(
                     canvas.scene.add_box_to_animation_hidding(box)
             
             elif restore & port_mode:
-                if not join:
+                if join:
+                    canvas.scene.add_box_to_animation_restore(box)
+
+                    both_pos = nearest_on_grid(box_poses[PortMode.BOTH].pos)
+                    
+                    if port_mode is PortMode.OUTPUT:
+                        canvas.qobject.add_group_to_join(group.group_id)
+                        joined_widget = BoxWidget(group, PortMode.BOTH)
+                        joined_rect = joined_widget.get_dummy_rect()
+                        canvas.scene.remove_box(joined_widget)
+                        joined_rect.translate(QPointF(*both_pos))
+
+                        canvas.scene.add_box_to_animation(
+                            box, *both_pos,
+                            joining=Joining.YES,
+                            joined_rect=joined_rect)
+                    else:
+                        canvas.scene.add_box_to_animation(
+                            box, *both_pos,
+                            joining=Joining.YES)
+                else:
                     box.set_top_left(xy)
                     canvas.scene.add_box_to_animation(box, *xy)
-                canvas.scene.add_box_to_animation_restore(box)
+                    canvas.scene.add_box_to_animation_restore(box)
                     
             else:
                 if box.is_hidding_or_restore():
