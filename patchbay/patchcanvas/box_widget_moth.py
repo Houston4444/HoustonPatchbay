@@ -389,26 +389,36 @@ class BoxWidgetMoth(QGraphicsItem):
 
     def animate_hidding(self, ratio: float):
         'ratio goes from 0.0 (box shown) to 1.0 (box hidden)'
-        self.setVisible(self._current_port_mode is not PortMode.NULL
-                        and ratio < 1.0)
-        
-        if ratio <= 0.0:
+        if ratio >= 1.0:
             if self.hidder_widget is not None:
                 canvas.scene.removeItem(self.hidder_widget)
                 self.hidder_widget = None
-        
-        elif ratio >= 1.0:
-            ...
+
+            self.setVisible(False)
+            self.setZValue(
+                Zv.SEL_BOX.value if self.isSelected() else Zv.BOX.value)
         else:
             if self.hidder_widget is None:
                 self.hidder_widget = BoxHidder(self)
             self.hidder_widget.set_hide_ratio(ratio)
         
-        # set Z value
-        zv = Zv.HIDDING_BOX
-        if ratio <= 0.0 or ratio >= 1.0:
-            zv = Zv.SEL_BOX if self.isSelected() else Zv.BOX
-        self.setZValue(zv.value)
+            self.setZValue(Zv.HIDDING_BOX.value)
+        
+    def animate_restoring(self, ratio: float):
+        'ratio goes from 0.0 (box hidden) to 1.0 (box shown)'
+        if ratio >= 1.0:
+            if self.hidder_widget is not None:
+                canvas.scene.removeItem(self.hidder_widget)
+                self.hidder_widget = None
+
+            self.setZValue(
+                Zv.SEL_BOX.value if self.isSelected() else Zv.BOX.value)
+            
+        else:
+            if self.hidder_widget is None:
+                self.hidder_widget = BoxHidder(self)
+            self.hidder_widget.set_hide_ratio(1.0 - ratio)
+            self.setZValue(Zv.HIDDING_BOX.value)
 
     def is_hidding_or_restore(self) -> bool:
         return self.hidder_widget is not None

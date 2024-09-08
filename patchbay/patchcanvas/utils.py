@@ -356,13 +356,17 @@ def connect_ports(group_id_1: int, port_id_1: int,
                         group_id_2, port_id_2,
                         group_id_1, port_id_1)
 
-def get_portgroup_connection_state(group_id_1: int, port_id_list_1: list[int],
-                                   group_id_2: int, port_id_list_2: list[int]) -> int:
-    # returns
-    # 0 if no connection
-    # 1 if connection is irregular
-    # 2 if connection is correct
+def get_portgroup_connection_state(
+        group_id_1: int, port_id_list_1: list[int],
+        group_id_2: int, port_id_list_2: list[int]) -> int:
+    '''return
+    
+    0 if no connection
 
+    1 if connection is irregular
+
+    2 if connection is correct
+    '''
     group_out_id = 0
     group_in_id = 0
     out_port_id_list = list[int]()

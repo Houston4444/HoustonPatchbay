@@ -21,7 +21,6 @@
 import logging
 from pathlib import Path
 import time
-from tkinter import N
 from typing import Callable
 from PyQt5.QtCore import (pyqtSlot, QObject, QPointF, QRectF,
                           QSettings, QTimer, pyqtSignal)
@@ -674,15 +673,15 @@ def move_group_boxes(
             if box._layout_mode is not box_pos.layout_mode:
                 box.set_layout_mode(box_pos.layout_mode)
                 redraw |= port_mode
-            
+
             if box.is_hidding_or_restore() and not box_pos.is_hidden():
                 redraw |= port_mode
-            
+
             if join:
                 wanted_wrap = box_poses[PortMode.BOTH].is_wrapped()
             else:
                 wanted_wrap = box_pos.is_wrapped()
-            
+
             if box.is_wrapped() is not wanted_wrap:
                 # we need to update the box now, because the port_list
                 # of the box is not re-evaluted when we update positions

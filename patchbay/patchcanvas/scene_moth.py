@@ -454,7 +454,7 @@ class PatchSceneMoth(QGraphicsScene):
                 if moving_box.hidding_state is BoxHidding.HIDDING:
                     box.animate_hidding(ratio)
                 else:
-                    box.animate_hidding(1.0 - ratio)
+                    box.animate_restoring(ratio)
                     
                 for lw in GroupedLinesWidget.widgets_for_box(
                         box._group_id, box._port_mode):
@@ -607,14 +607,17 @@ class PatchSceneMoth(QGraphicsScene):
         moving_box.from_pt = moving_box.to_pt
         moving_box.final_rect = \
             box_widget.after_wrap_rect().translated(moving_box.to_pt)
+
+        if moving_box.hidding_state is BoxHidding.NONE:
+            box_widget.animate_restoring(0.0)
         moving_box.hidding_state = BoxHidding.RESTORING
-                
+
         for port_mode in PortMode.OUTPUT, PortMode.INPUT:
-            if port_mode not in box_widget.get_port_mode():
+            if port_mode not in box_widget._port_mode:
                 continue
-            
+
             for lw in GroupedLinesWidget.widgets_for_box(
-                    box_widget.get_group_id(), port_mode):
+                    box_widget._group_id, port_mode):
                 lw.set_mode_hidding(port_mode, BoxHidding.RESTORING)
 
         self._start_move_timer()
