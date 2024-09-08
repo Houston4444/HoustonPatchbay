@@ -239,12 +239,12 @@ class BoxArranger:
         if self.port_mode is PortMode.INPUT:
             return BoxAlign.LEFT
         if self.outs_connected_to and self.ins_connected_to:
-            return BoxAlign.CENTER
+            return BoxAlign.LEFT
         if self.outs_connected_to:
             return BoxAlign.RIGHT
         if self.ins_connected_to:
             return BoxAlign.LEFT
-        return BoxAlign.CENTER
+        return BoxAlign.LEFT
 
     def reset(self):
         self.col_left = 2
@@ -435,7 +435,7 @@ class CanvasArranger:
         column_widths = dict[int, float]()
         columns_pos = dict[int, float]()
         columns_bottoms = dict[int, float]()
-        last_pos = 0
+        last_col_pos = next_left_on_grid(0)
 
         for column in range(1, number_of_columns + 1):
             columns_bottoms[column] = 0.0
@@ -549,9 +549,9 @@ class CanvasArranger:
                 ba.box_rect.width(), column_width)
 
         for column in range(1, number_of_columns + 1):
-            columns_pos[column] = last_pos
-            
-            last_pos += column_widths[column] + 80
+            columns_pos[column] = last_col_pos
+            last_col_pos = next_left_on_grid(
+                last_col_pos + int(column_widths[column]) + 80)
 
         for column, bottom in columns_bottoms.items():
             if column in (1, number_of_columns):
