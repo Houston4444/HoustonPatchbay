@@ -223,8 +223,9 @@ class TypeViewCheckBox(QCheckBox):
     
     def mousePressEvent(self, event: QMouseEvent) -> None:
         if event.button() in (Qt.LeftButton, Qt.RightButton):
-            alternate = bool(event.button() == Qt.RightButton
-                             or QApplication.keyboardModifiers() & Qt.ControlModifier)
+            alternate = bool(
+                event.button() == Qt.RightButton
+                or QApplication.keyboardModifiers() & Qt.ControlModifier)
             self.really_clicked.emit(alternate)
             return
     
