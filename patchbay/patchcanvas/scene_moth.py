@@ -105,7 +105,7 @@ class MovingBox:
     
     def is_usefull(self) -> bool:
         if self.needs_move or self.is_wrapping:
-            return True        
+            return True
         return self.hidding_state is not BoxHidding.NONE
 
 
@@ -454,7 +454,7 @@ class PatchSceneMoth(QGraphicsScene):
                 box.repaint_lines(fast_move=True)
 
             if moving_box.is_wrapping:
-                box.animate_wrapping(1.00)
+                box.animate_wrapping(ratio)
             
             if moving_box.hidding_state in (BoxHidding.HIDDING,
                                             BoxHidding.RESTORING):
