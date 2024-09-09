@@ -1,9 +1,8 @@
 from typing import TYPE_CHECKING
-from PyQt5.QtWidgets import QMenu, QApplication, QInputDialog, QLineEdit
-from PyQt5.QtGui import QIcon, QKeySequence
-from PyQt5.QtCore import pyqtSlot
 
-from .base_elements import PortTypesViewFlag
+from PyQt5.QtCore import pyqtSlot
+from PyQt5.QtGui import QIcon
+from PyQt5.QtWidgets import QMenu, QApplication, QInputDialog
 
 if TYPE_CHECKING:
     from patchbay_manager import PatchbayManager

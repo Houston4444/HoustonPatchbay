@@ -12,6 +12,7 @@ if TYPE_CHECKING:
     from .patchbay_manager import PatchbayManager
     from .base_group import Group
 
+
 class Port:
     display_name = ''
     group_id = -1

@@ -45,7 +45,8 @@ class DisconnectMenu(QMenu):
                         self._mng.get_group_from_id(conn.port_out.group_id))
 
         if not out_groups and not in_groups:
-            no_conn_act = self.addAction(_translate('patchbay', 'No connections'))
+            no_conn_act = self.addAction(
+                _translate('patchbay', 'No connections'))
             no_conn_act.setEnabled(False)
             return
 
@@ -120,7 +121,8 @@ class GroupMenu(QMenu):
         self._mng = mng
         self._group = group
         self._port_mode = port_mode
-    
+        self._build()
+
     def _build(self):
         dark = '-dark' if utils.is_dark_theme(self) else ''
         
@@ -251,7 +253,3 @@ class GroupMenu(QMenu):
     @pyqtSlot()
     def _hide_box(self):
         self._group.hide(self._port_mode)
-
-    def showEvent(self, event) -> None:
-        self._build()
-        super().showEvent(event)
