@@ -345,7 +345,6 @@ class ViewSelectorWidget(QWidget):
     
     @pyqtSlot()
     def _clear_absents(self):
-        index: int = self.ui.comboBoxView.currentData()
         if self.mng is not None:
             self.mng.clear_absents_in_view()
 

@@ -6,6 +6,7 @@ from PyQt5.QtCore import QLocale, QUrl, pyqtSlot
 
 from . import patchcanvas
 from .patchcanvas import utils
+from .patchcanvas import arranger
 from .base_elements import PortType, PortTypesViewFlag, PortMode
 from .views_menu import ViewsMenu
 from .selected_boxes_menu import SelectedBoxesMenu
@@ -71,6 +72,19 @@ class CanvasMenu(QMenu):
         self.show_hiddens_menu.setIcon(QIcon.fromTheme('show_table_row'))
         self.show_hiddens_menu.aboutToShow.connect(self._list_hidden_groups)
         self.addMenu(self.show_hiddens_menu)
+
+        menu_arrange = QMenu(_translate('views_menu', 'Arrange'), self)
+        menu_arrange.setIcon(QIcon.fromTheme('code-block'))
+        
+        act_arrange_facing = menu_arrange.addAction(
+            _translate('views_menu', 'Two columns facing each other'))
+        act_arrange_facing.triggered.connect(self._arrange_facing)
+        
+        act_arrange_signal = menu_arrange.addAction(
+            _translate('views_menu', 'Follow the signal chain'))
+        act_arrange_signal.triggered.connect(self._arrange_follow_signal)
+
+        self.addMenu(menu_arrange)
 
         self.views_menu = ViewsMenu(self, self.mng)
         self.addMenu(self.views_menu)
@@ -189,6 +203,14 @@ class CanvasMenu(QMenu):
     @pyqtSlot()
     def _invert_boxes_selection(self):
         patchcanvas.invert_boxes_selection()
+
+    @pyqtSlot()
+    def _arrange_facing(self):
+        arranger.arrange_face_to_face()
+
+    @pyqtSlot()
+    def _arrange_follow_signal(self):
+        arranger.arrange_follow_signal()
 
     def _port_types_view_changed(self, port_types_view: int):
         self.action_all_types.setChecked(
