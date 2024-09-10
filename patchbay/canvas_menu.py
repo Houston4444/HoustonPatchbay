@@ -40,6 +40,7 @@ class CanvasMenu(QMenu):
             self._alsa_midi_enabled)
 
         self._selected_boxes = dict[int, PortMode]()
+        self._scene_pos = (0, 0)
         self._build()
         
     def _build(self):
@@ -177,8 +178,6 @@ class CanvasMenu(QMenu):
         self.action_options.setIcon(QIcon.fromTheme("configure"))
         self.action_options.triggered.connect(
             self.mng.show_options_dialog)
-        
-        self._scene_pos = (0, 0)
 
     def remember_scene_pos(self, x: float, y: float):
         self._scene_pos = (int(x), int(y))
@@ -298,7 +297,7 @@ class CanvasMenu(QMenu):
     @pyqtSlot()
     def _show_hidden_group(self):
         group_id: int = self.sender().data()
-        
+        print('scenne pos', self._scene_pos)
         self.mng.restore_group_hidden_sides(group_id, self._scene_pos)
     
     @pyqtSlot()
