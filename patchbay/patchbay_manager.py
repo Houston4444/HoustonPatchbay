@@ -375,8 +375,6 @@ class PatchbayManager:
         '''Executed after any patchcanvas animation, it cleans
         in patchcanvas all boxes that should be hidden now.'''
         
-        print('ANIMATION_FINISHED view', self.view_number)
-        
         self.optimize_operation(True)
         group_ids_redraw = list[int]()
 
@@ -424,15 +422,8 @@ class PatchbayManager:
         for group_id in group_ids_redraw:
             patchcanvas.redraw_group(group_id, prevent_overlap=False)
         patchcanvas.canvas.scene.resize_the_scene()
-        times_dict = dict[str, float]()
-        times_dict['aft resize scene'] = time.time()
         self.sg.hidden_boxes_changed.emit()
-        times_dict['before filters'] = time.time()
         self.sg.animation_finished.emit()
-        times_dict['finito'] = time.time()
-        
-        for key, value in times_dict.items():
-            print('kk', value, key)
 
     def set_group_hidden_sides(self, group_id: int, port_mode: PortMode):
         group = self.get_group_from_id(group_id)
@@ -730,17 +721,12 @@ class PatchbayManager:
         self.port_types_view = port_types_view
         _logger.info(
             f"Change Port Types View: {ex_ptv.name} -> {port_types_view.name}")
-        print(f"Change Port Types View: {ex_ptv.name} -> {port_types_view.name}")
         # Prevent visual update at each canvas item creation
         # because we may create/remove a lot of ports here
         
         self.optimize_operation(True)
 
-        times_dict = dict[str, float]()
-
         change_counter = 0
-        
-        times_dict['start'] = time.time()
 
         if len(self.groups) > 30:
             for group in self.groups:
@@ -754,8 +740,6 @@ class PatchbayManager:
                 if group.current_position.needs_redraw(new_gpos):
                     change_counter += 1
         
-        times_dict['after analyze'] = time.time()
-        
         if change_counter > 30:
             for connection in self.connections:
                 connection.in_canvas = False
@@ -767,11 +751,7 @@ class PatchbayManager:
                 for port in group.ports:
                     port.in_canvas = False
             
-            times_dict['before clear all'] = time.time()
-                    
             patchcanvas.clear_all()
-            
-            times_dict['after clear all'] = time.time()
             
             for group in self.groups:
                 group.current_position = self.get_group_position(group.name)
@@ -780,20 +760,11 @@ class PatchbayManager:
                     
                     group.add_all_ports_to_canvas()
             
-            times_dict['after add groups'] = time.time()
-            
             for connection in self.connections:
                 connection.add_to_canvas()
             
-            times_dict['after conns'] = time.time()
-            
             self.optimize_operation(False)
             patchcanvas.redraw_all_groups()
-            
-            times_dict['after_redraw'] = time.time()
-            
-            for key, value in times_dict.items():
-                print('cc', value, key)
             
             self.sg.port_types_view_changed.emit(self.port_types_view)
             return
@@ -907,8 +878,6 @@ class PatchbayManager:
         patchcanvas.repulse_all_boxes()
         end_repulse = time.time()
 
-        print('change ptv done', len(groups_and_pos),
-              bef_repulse - bef_gp_pos, end_repulse - bef_repulse)
         self.sg.port_types_view_changed.emit(self.port_types_view)
 
     def new_view(self, view_number: Optional[int]=None,
@@ -991,7 +960,6 @@ class PatchbayManager:
         else:
             ptv = new_view_data.default_port_types_view
 
-        print('change VIEW', self.view_number)
         self.change_port_types_view(ptv, force=True)
         self.sg.view_changed.emit(view_number)
     
