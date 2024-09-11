@@ -49,7 +49,7 @@ from .init_values import (
     Zv)
 
 from .utils import (
-    boxes_in_dict, canvas_callback,
+    canvas_callback,
     nearest_on_grid, nearest_on_grid_check_others)
 from .box_widget_shadow import BoxWidgetShadow
 from .icon_widget import IconSvgWidget, IconPixmapWidget

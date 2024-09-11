@@ -161,7 +161,7 @@ class ViewsMenu(QMenu):
 
     @pyqtSlot()
     def _remove_view(self):
-        self.mng.remove_view()
+        self.mng.remove_view(self.mng.view_number)
     
     def showEvent(self, event) -> None:
         self._build()

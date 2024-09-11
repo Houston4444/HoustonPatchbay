@@ -996,12 +996,31 @@ class PatchbayManager:
         self.sg.view_changed.emit(view_number)
     
     def remove_view(self, view_number: int):
+        if len(self.views) <= 1:
+            _logger.error(
+                f"Will not remove view {view_number}, "
+                "to ensure there is at least one view.")
+            return
+
+        rm_current_view = bool(view_number is self.view_number)
+        
         if view_number in self.views.keys():
             self.views.pop(view_number)
         if view_number in self.views_datas.keys():
             self.views_datas.pop(view_number)
         self.sort_views_by_index()
         self.sg.views_changed.emit()
+
+        if rm_current_view:
+            switch_to_view = -1
+            for view_num in self.views.keys():
+                if view_num < view_number:
+                    switch_to_view = view_num
+                elif switch_to_view == -1:
+                    switch_to_view = view_num
+                    break
+            
+            self.change_view(switch_to_view)
     
     def clear_absents_in_view(self):
         for ptv, work_dict in self.views[self.view_number].items():
