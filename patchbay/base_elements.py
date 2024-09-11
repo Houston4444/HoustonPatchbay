@@ -3,8 +3,9 @@ from enum import IntFlag, IntEnum, auto
 from typing import Any
 
 from .patchcanvas import (
-    PortMode, PortType, 
-    BoxLayoutMode, BoxPos, BoxFlag)
+    PortMode, PortType, PortSubType,
+    BoxLayoutMode, BoxPos, BoxFlag, BoxType,
+    AliasingReason)
 
 
 # Port Flags as defined by JACK
