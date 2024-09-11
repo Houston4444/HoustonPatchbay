@@ -38,7 +38,8 @@ from PyQt5.QtWidgets import (
     QGraphicsRectItem,
     QGraphicsScene,
     QApplication,
-    QGraphicsItem)
+    QGraphicsItem,
+    QGraphicsView)
 
 # Imports (locals)
 from .init_values import (
