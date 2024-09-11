@@ -1,5 +1,5 @@
-from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QMouseEvent, QPainter, QTransform
+from PyQt5.QtCore import Qt, QPoint
+from PyQt5.QtGui import QMouseEvent, QWheelEvent, QPainter
 from PyQt5.QtWidgets import QApplication, QGraphicsView, QScrollBar
 
 from .init_values import AliasingReason, canvas
@@ -63,3 +63,18 @@ class PatchGraphicsView(QGraphicsView):
 
         self._panning = False
         self.setDragMode(QGraphicsView.NoDrag)
+        
+    def wheelEvent(self, ev: QWheelEvent) -> None:
+        if ev.modifiers() == Qt.ShiftModifier:
+            # lie to Qt saying to QGraphicsView and QGraphicsScene
+            # that keyboard modifier key is ALT
+            x, y = ev.angleDelta().x(), ev.angleDelta().y()
+            new_delta = QPoint(y, x)
+            new_event = QWheelEvent(
+                ev.posF(), ev.globalPosF(), ev.pixelDelta(), new_delta,
+                ev.buttons(), Qt.AltModifier, ev.phase(), ev.inverted(),
+                ev.source())
+            QGraphicsView.wheelEvent(self, new_event)
+            return
+
+        QGraphicsView.wheelEvent(self, ev)

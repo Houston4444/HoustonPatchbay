@@ -1064,7 +1064,11 @@ class PatchSceneMoth(QGraphicsScene):
         QGraphicsScene.mousePressEvent(self, event)
         canvas.menu_shown = False
 
-        if event.buttons() == Qt.LeftButton:
+        if (self._view.dragMode() != QGraphicsView.ScrollHandDrag
+                and event.buttons() == Qt.LeftButton):
+            # Middle click and move changes the view drag mode
+            # and fake a left button.
+            # we don't want navigation on borders in case of middle click.
             self._start_navigation_on_borders()
 
     def mouseMoveEvent(self, event):

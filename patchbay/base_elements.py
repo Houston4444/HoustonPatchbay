@@ -1,11 +1,10 @@
 from dataclasses import dataclass
 from enum import IntFlag, IntEnum, auto
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from .patchcanvas import (
-    patchcanvas, PortMode, PortType, BoxType,
-    BoxLayoutMode, PortSubType, BoxPos, BoxFlag,
-    AliasingReason)
+    PortMode, PortType, 
+    BoxLayoutMode, BoxPos, BoxFlag)
 
 
 # Port Flags as defined by JACK
