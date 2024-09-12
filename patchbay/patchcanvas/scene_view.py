@@ -40,11 +40,6 @@ class PatchGraphicsView(QGraphicsView):
         except:
             self._middle_button = Qt.MidButton
 
-    # def setTransform(self, matrix: QTransform):
-    #     self.transforming = True
-    #     super().setTransform(matrix)
-    #     self.transforming = False
-
     def mousePressEvent(self, event):
         if (event.button() == self._middle_button
                 and not QApplication.keyboardModifiers() & Qt.ControlModifier):
@@ -65,15 +60,17 @@ class PatchGraphicsView(QGraphicsView):
         self.setDragMode(QGraphicsView.NoDrag)
         
     def wheelEvent(self, ev: QWheelEvent) -> None:
-        if ev.modifiers() == Qt.ShiftModifier:
+        if (ev.modifiers() & Qt.KeyboardModifier.ShiftModifier
+                or (not ev.modifiers() & Qt.KeyboardModifier.AltModifier
+                    and not self.verticalScrollBar().isVisible())):
             # lie to Qt saying to QGraphicsView and QGraphicsScene
             # that keyboard modifier key is ALT
             x, y = ev.angleDelta().x(), ev.angleDelta().y()
             new_delta = QPoint(y, x)
             new_event = QWheelEvent(
                 ev.posF(), ev.globalPosF(), ev.pixelDelta(), new_delta,
-                ev.buttons(), Qt.AltModifier, ev.phase(), ev.inverted(),
-                ev.source())
+                ev.buttons(), Qt.KeyboardModifier.AltModifier,
+                ev.phase(), ev.inverted(), ev.source())
             QGraphicsView.wheelEvent(self, new_event)
             return
 
