@@ -583,7 +583,8 @@ class Canvas:
         self._conns_inout_dict.clear()
 
     def clear_all_2(self):
-        self.qobject.rm_all_groups_to_join()
+        if self.qobject is not None:
+            self.qobject.rm_all_groups_to_join()
         self.group_list.clear()
         self._groups_dict.clear()
         self._all_boxes.clear()
@@ -597,7 +598,9 @@ class Canvas:
         self._conns_inout_dict.clear()
         self.clipboard.clear()
         self.group_plugin_map.clear()
-        self.scene.clear()
+        
+        if self.scene is not None:
+            self.scene.clear()
 
     def add_group(self, group: GroupObject):
         self.group_list.append(group)
