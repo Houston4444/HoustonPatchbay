@@ -145,7 +145,6 @@ class GridWidget(QGraphicsPathItem):
         
         x = rect.left()
         x -= x % (cell_x * 2)
-        # x += cell_x / 2.0
         y = rect.top()
         y -= y % (cell_y * 2)
         
