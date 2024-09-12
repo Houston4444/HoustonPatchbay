@@ -62,3 +62,5 @@ animations et évènements:
 
 Raccourci clavier changer de vue ne doit rien faire si c'est déjà la vue active.
 
+spacers dans tools widget
+repère 0,0 ne pas afficher
