@@ -103,7 +103,8 @@ class GridWidget(QGraphicsPathItem):
         x_path.lineTo(QPointF(x, rect.bottom()))
 
         path.addPath(
-            x_multiply(x_path, 1 + math.floor((rect.right() - x) / cell_x), cell_x))
+            x_multiply(
+                x_path, 1 + math.floor((rect.right() - x) / cell_x), cell_x))
 
         y = rect.top()
         y -= y % cell_y
@@ -113,7 +114,10 @@ class GridWidget(QGraphicsPathItem):
         y_path.moveTo(QPointF(rect.left(), y))
         y_path.lineTo(QPointF(rect.right(), y))
         
-        path.addPath(y_multiply(y_path, 1 + math.floor((rect.bottom() - y) / cell_y), cell_y))
+        path.addPath(
+            y_multiply(
+                y_path, 1 + math.floor((rect.bottom() - y) / cell_y), cell_y))
+
         self.setPath(path)
         self.setPen(theme.fill_pen())
         self.setBrush(QBrush(Qt.NoBrush))
@@ -291,12 +295,14 @@ class GridWidget(QGraphicsPathItem):
                 if rect.bottom() > y_down:
                     if rect.bottom() > y_down + cell_y:
                         sec_rig_path.moveTo(x_right + cell_x / 2, y_down)
-                        sec_rig_path.lineTo(x_right + cell_x / 2, y_down + cell_y)
+                        sec_rig_path.lineTo(
+                            x_right + cell_x / 2, y_down + cell_y)
                         self.right_path.moveTo(right_pos, y_down + cell_y)
                         self.right_path.lineTo(right_pos, rect.bottom())
                     else:
                         sec_rig_path.moveTo(x_right + cell_x / 2, y_down)
-                        sec_rig_path.lineTo(x_right + cell_x / 2, rect.bottom())
+                        sec_rig_path.lineTo(
+                            x_right + cell_x / 2, rect.bottom())
                 
                 x_path.addPath(sec_rig_path)
                 
@@ -363,8 +369,8 @@ class GridWidget(QGraphicsPathItem):
             painter.setPen(pen)
             painter.drawPath(self.right_path)
         
-        pen = QPen(QColor(168, 120, 0), 1.0)
-        painter.setPen(pen)
-        painter.drawEllipse(self._pointt, 3.0, 3.0)
+        # pen = QPen(QColor(168, 120, 0), 1.0)
+        # painter.setPen(pen)
+        # painter.drawEllipse(self._pointt, 3.0, 3.0)
 
         painter.restore()
