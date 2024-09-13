@@ -641,6 +641,7 @@ class PatchbayManager:
                 gpos = group.current_position.copy()
                 gpos.port_types_view = self.port_types_view
                 gpos.has_sure_existence = False
+                gpos.set_hidden_port_mode(PortMode.NULL)
                 ptv_view[group_name] = gpos
                 self.save_group_position(gpos)
                 return gpos
