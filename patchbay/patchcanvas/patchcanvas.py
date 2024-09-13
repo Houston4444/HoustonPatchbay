@@ -73,10 +73,11 @@ _logger = logging.getLogger(__name__)
 _logging_str = ''
 
 # decorator
-def patchbay_api(func):
-    ''' decorator for API callable functions.
-        It makes debug logs and also a global logging string
-        usable directly in the functions'''
+def patchbay_api(func: Callable):
+    '''decorator for API callable functions.
+    It makes debug logs and also a global logging string
+    usable directly in the functions'''
+
     def wrapper(*args, **kwargs):
         args_strs = [str(arg) for arg in args]
         args_strs += [f"{k}={v}" for k, v in kwargs.items()]
