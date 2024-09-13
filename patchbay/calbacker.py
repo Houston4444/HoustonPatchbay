@@ -30,7 +30,6 @@ class Callbacker:
             func_name = '_' + cb_act.name.lower()
             if func_name in self.__dir__():
                 self._funcs[cb_act] = self.__getattribute__(func_name)
-
     
     def receive(self, action: CallbackAct, args: tuple):
         '''receives a callback from patchcanvas and execute
@@ -40,10 +39,10 @@ class Callbacker:
     # ￬￬￬ functions connected to CallBackAct ￬￬￬
     
     def _group_info(self, group_id: int):
-        pass
+        ...
     
     def _group_rename(self, group_id: int):
-        pass
+        ...
 
     def _group_splitted(self, group_id: int):
         group = self.mng.get_group_from_id(group_id)
@@ -84,6 +83,9 @@ class Callbacker:
         group = self.mng.get_group_from_id(group_id)
         if group is not None:
             group.set_layout_mode(port_mode, layout_mode)
+    
+    def _group_selected(self, group_id: int, port_mode: PortMode):
+        ...
     
     def _group_hide_box(self, group_id: int, port_mode: PortMode):
         group = self.mng.get_group_from_id(group_id)
@@ -156,14 +158,14 @@ class Callbacker:
         dialog.show()
 
     def _port_rename(self, group_id: int, port_id: int):
-        pass
+        ...
     
     def _ports_connect(self, group_out_id: int, port_out_id: int,
                        group_in_id: int, port_in_id: int):
-        pass
+        ...
 
     def _ports_disconnect(self, connection_id: int):
-        pass
+        ...
 
     def _port_menu_call(self, group_id: int, port_id: int, connect_only: bool,
                         x: int, y: int):
@@ -195,6 +197,27 @@ class Callbacker:
             menu = PoMenu(self.mng, portgroup)
         menu.exec(QPoint(x, y))
 
+    def _plugin_clone(self, plugin_id: int):
+        ...
+        
+    def _plugin_edit(self, plugin_id: int):
+        ...
+        
+    def _plugin_rename(self, plugin_id: int):
+        ...
+        
+    def _plugin_replace(self, plugin_id: int):
+        ...
+        
+    def _plugin_remove(self, plugin_id: int):
+        ...
+        
+    def _plugin_show_ui(self, plugin_id: int):
+        ...
+        
+    def _inline_display(self):
+        ...
+
     def _bg_right_click(
             self, x: int, y: int, scene_x: float, scene_y: float,
             selected_boxes: dict[int, PortMode]):
@@ -207,7 +230,7 @@ class Callbacker:
         self.mng.sg.full_screen_toggle_wanted.emit()
     
     def _client_show_gui(self, group_id: int, visible: int):
-        pass
+        ...
                     
     def _theme_changed(self, theme_ref: str):
         if self.mng.options_dialog is not None:
