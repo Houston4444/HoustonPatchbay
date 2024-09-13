@@ -253,6 +253,9 @@ class Direction(Enum):
     RIGHT = 2
     UP = 3
     DOWN = 4
+    
+    def __lt__(self, other: 'Direction'):
+        return self.value < other.value
 
 
 class ConnectionThemeState(Enum):
