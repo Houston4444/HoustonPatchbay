@@ -146,13 +146,6 @@ class CanvasObject(QObject):
         for group_id, origin_box_mode in self._gps_to_join.items():
             join_group(group_id)
 
-        # if options.prevent_overlap:            
-        #     for group_id, origin_box_mode in self._gps_to_join.items():
-        #         group = canvas.get_group(group_id)
-        #         for box in group.widgets:
-        #             canvas.scene.deplace_boxes_from_repulsers([box])
-        #             break
-
         self._gps_to_join.clear()
         
         canvas.callback(CallbackAct.ANIMATION_FINISHED)
@@ -211,43 +204,6 @@ def init(view: PatchGraphicsView, callback: Callable,
 
     canvas.scene.zoom_reset()    
     canvas.initiated = True
-
-@patchbay_api
-def clear():
-    if not canvas.initiated:
-        return
-    
-    group_list_ids = [g.group_id for g in canvas.group_list]
-    port_list_ids = [(p.group_id, p.port_id) for p in canvas.list_ports()]
-    connection_list_ids = [c.connection_id for c in canvas.list_connections()]
-
-    for idx in connection_list_ids:
-        disconnect_ports(idx)
-
-    for group_id, port_id in port_list_ids:
-        remove_port(group_id, port_id)
-
-    for idx in group_list_ids:
-        remove_group(idx)
-
-    canvas.clear_all()
-    canvas.group_plugin_map = {}
-
-    canvas.scene.clearSelection()
-
-    for item in canvas.scene.items():
-        if isinstance(item, (IconPixmapWidget, IconSvgWidget,
-                             RubberbandRect, GridWidget)):
-            continue
-
-        canvas.scene.removeItem(item)
-        del item
-
-    canvas.initiated = False
-
-    QTimer.singleShot(0, canvas.scene.update)
-
-# -------
 
 @patchbay_api
 def set_loading_items(yesno: bool):
@@ -1054,7 +1010,7 @@ def remove_portgroup(group_id: int, portgrp_id: int):
 @patchbay_api
 def clear_all():
     GroupedLinesWidget.clear_all_widgets()
-    canvas.clear_all_2()
+    canvas.clear_all()
 
 @patchbay_api
 def connect_ports(connection_id: int, group_out_id: int, port_out_id: int,

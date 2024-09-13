@@ -528,9 +528,6 @@ class Canvas:
         self.theme_manager = None
 
         self.group_list = list[GroupObject]()
-        self.port_list = list[PortObject]()
-        self.portgrp_list = list[PortgrpObject]()
-        self.connection_list = list[ConnectionObject]()
 
         self._groups_dict = dict[int, GroupObject]()
         self._all_boxes = []
@@ -571,28 +568,15 @@ class Canvas:
                  value2: int, value_str: str):
         # has to be redefined in patchcanvas.init()
         pass
-    
-    def clear_all(self):
-        self.port_list.clear()
-        self._ports_dict.clear()
-        self.portgrp_list.clear()
-        self._ports_dict.clear()
-        self.connection_list.clear()
-        self._conns_dict.clear()
-        self._conns_outin_dict.clear()
-        self._conns_inout_dict.clear()
 
-    def clear_all_2(self):
+    def clear_all(self):
         if self.qobject is not None:
             self.qobject.rm_all_groups_to_join()
         self.group_list.clear()
         self._groups_dict.clear()
         self._all_boxes.clear()
-        self.port_list.clear()
         self._ports_dict.clear()
-        self.portgrp_list.clear()
         self._portgrps_dict.clear()
-        self.connection_list.clear()
         self._conns_dict.clear()
         self._conns_outin_dict.clear()
         self._conns_inout_dict.clear()
@@ -616,8 +600,6 @@ class Canvas:
             self._all_boxes.remove(box)
 
     def add_port(self, port: PortObject):
-        self.port_list.append(port)
-
         gp_dict = self._ports_dict.get(port.group_id)
         if gp_dict is None:
             self._ports_dict[port.group_id] = {port.port_id: port}
@@ -625,8 +607,6 @@ class Canvas:
             self._ports_dict[port.group_id][port.port_id] = port
     
     def add_portgroup(self, portgrp: PortgrpObject):
-        self.portgrp_list.append(portgrp)
-
         gp_dict = self._portgrps_dict.get(portgrp.group_id)
         if gp_dict is None:
             self._portgrps_dict[portgrp.group_id] = {portgrp.portgrp_id: portgrp}
@@ -639,7 +619,6 @@ class Canvas:
                 port.portgrp = portgrp
     
     def add_connection(self, conn: ConnectionObject):
-        self.connection_list.append(conn)
         self._conns_dict[conn.connection_id] = conn
 
         gp_outin_out_dict = self._conns_outin_dict.get(conn.group_out_id)
@@ -675,17 +654,11 @@ class Canvas:
         self.qobject.rm_group_to_join(group.group_id)
     
     def remove_port(self, port: PortObject):
-        if port in self.port_list:
-            self.port_list.remove(port)
-        
         gp_dict = self._ports_dict.get(port.group_id)
         if gp_dict and port.port_id in gp_dict.keys():
             gp_dict.pop(port.port_id)
     
     def remove_portgroup(self, portgrp: PortgrpObject):
-        if portgrp in self.portgrp_list:
-            self.portgrp_list.remove(portgrp)
-        
         gp_dict = self._portgrps_dict.get(portgrp.group_id)
         if gp_dict and portgrp.portgrp_id in gp_dict.keys():
             gp_dict.pop(portgrp.portgrp_id)
@@ -695,9 +668,6 @@ class Canvas:
                 port.portgrp = None
     
     def remove_connection(self, conn: ConnectionObject):
-        if conn in self.connection_list:
-            self.connection_list.remove(conn)
-            
         try:
             self._conns_dict.pop(conn.connection_id)
             self._conns_outin_dict[conn.group_out_id][conn.group_in_id].pop(
@@ -729,12 +699,14 @@ class Canvas:
     def list_boxes(self) -> list['BoxWidget']:
         return self._all_boxes
 
-    def list_ports(self, group_id: int=None) -> Iterator[PortObject]:
+    def list_ports(
+            self, group_id: Optional[int]=None) -> Iterator[PortObject]:
         if group_id is None:
-            for port in self.port_list:
-                yield port
-            return     
-        
+            for work_dict in self._ports_dict.values():
+                for port in work_dict.values():
+                    yield port
+            return
+
         work_dict = self._ports_dict.get(group_id)
         if work_dict is None:
             return
@@ -742,11 +714,13 @@ class Canvas:
         for port in work_dict.values():
             yield port
             
-    def list_portgroups(self, group_id: int=None) -> Iterator[PortgrpObject]:
+    def list_portgroups(
+            self, group_id: Optional[int]=None) -> Iterator[PortgrpObject]:
         if group_id is None:
-            for portgrp in self.portgrp_list:
-                yield portgrp
-            return     
+            for work_dict in self._portgrps_dict.values():
+                for portgrp in work_dict.values():
+                    yield portgrp
+            return
         
         work_dict = self._portgrps_dict.get(group_id)
         if work_dict is None:
