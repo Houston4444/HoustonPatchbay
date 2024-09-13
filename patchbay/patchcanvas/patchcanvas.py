@@ -216,7 +216,7 @@ def set_loading_items(yesno: bool):
 
 @patchbay_api
 def add_group(group_id: int, group_name: str, split: bool,
-              box_type=BoxType.APPLICATION, icon_name='',
+              box_type: BoxType=BoxType.APPLICATION, icon_name='',
               box_poses : dict[PortMode, BoxPos]={}):
     if canvas.get_group(group_id) is not None:
         _logger.error(f"{_logging_str} - group already exists.")

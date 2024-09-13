@@ -35,6 +35,8 @@ class BoxArranger:
         
         # we don't take the group here
         # because it can be splitted during the BoxArranger life
+        # edit TODO: it is not true anymore
+        # we could take the group now.
         self.group_id = group.group_id
         self.box_type = group.box_type
         self.group_name = group.group_name

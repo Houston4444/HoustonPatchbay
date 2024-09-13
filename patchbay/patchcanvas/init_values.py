@@ -131,7 +131,7 @@ class CallbackAct(IntEnum):
     ANIMATION_FINISHED = auto()
 
 
-class BoxType(IntEnum):
+class BoxType(Enum):
     APPLICATION = 0
     HARDWARE = 1
     MONITOR = 2
@@ -365,7 +365,7 @@ class GroupObject:
     group_id: int
     group_name: str
     splitted: bool
-    box_type: int
+    box_type: BoxType
     icon_name: str
     box_poses: dict[PortMode, BoxPos]
     plugin_id: int
