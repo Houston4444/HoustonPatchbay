@@ -97,7 +97,7 @@ class CanvasObject(QObject):
 
     def __init__(self, parent=None):
         QObject.__init__(self, parent)
-        self._gps_to_join = dict[int, PortMode]()
+        self._gps_to_join = set[int]()
         self.move_boxes_finished.connect(self._join_after_move)
 
         self.connect_update_timer = QTimer()
@@ -143,19 +143,18 @@ class CanvasObject(QObject):
 
     @pyqtSlot()
     def _join_after_move(self):
-        for group_id, origin_box_mode in self._gps_to_join.items():
+        for group_id in self._gps_to_join:
             join_group(group_id)
 
         self._gps_to_join.clear()
         
         canvas.callback(CallbackAct.ANIMATION_FINISHED)
 
-    def add_group_to_join(self, group_id: int, orig_port_mode=PortMode.NULL):
-        self._gps_to_join[group_id] = orig_port_mode
+    def add_group_to_join(self, group_id: int):
+        self._gps_to_join.add(group_id)
     
     def rm_group_to_join(self, group_id: int):
-        if group_id in self._gps_to_join.keys():
-            self._gps_to_join.pop(group_id)
+        self._gps_to_join.discard(group_id)
             
     def rm_all_groups_to_join(self):
         self._gps_to_join.clear()
@@ -559,7 +558,7 @@ def animate_before_join(
         _logger.error(f'{_logging_str} - group is not splitted')
         return
 
-    canvas.qobject.add_group_to_join(group.group_id, PortMode.NULL)
+    canvas.qobject.add_group_to_join(group.group_id)
 
     if origin_box_mode is PortMode.OUTPUT:
         x, y = group.widgets[0].top_left()
