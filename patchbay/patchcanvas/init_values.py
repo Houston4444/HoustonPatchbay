@@ -247,7 +247,7 @@ class BoxPos:
 
     
 # For Repulsive boxes
-class Direction(IntEnum):
+class Direction(Enum):
     NONE = 0
     LEFT = 1
     RIGHT = 2
