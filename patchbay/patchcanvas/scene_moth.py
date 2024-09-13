@@ -1009,8 +1009,9 @@ class PatchSceneMoth(QGraphicsScene):
 
             for item in items:
                 if isinstance(item, ConnectableWidget):
-                    # start a flying connection with mouse button not pressed
-                    # here we just change the cursor and define the ConnectableWidget
+                    # start a flying connection with mouse button not pressed,
+                    # here we just change the cursor
+                    # and define the ConnectableWidget.
                     self.flying_connectable = item
                     self.set_cursor(QCursor(Qt.CrossCursor))
                     self._start_navigation_on_borders()
@@ -1036,9 +1037,13 @@ class PatchSceneMoth(QGraphicsScene):
                 self.flying_connectable.mousePressEvent(event)
                 return
 
-        ctrl_pressed = bool(QApplication.keyboardModifiers() & Qt.ControlModifier)
+        ctrl_pressed = bool(
+            QApplication.keyboardModifiers()
+            & Qt.KeyboardModifier.ControlModifier)
         alt_or_meta_pressed = bool(
-            QApplication.keyboardModifiers() & (Qt.AltModifier | Qt.MetaModifier))
+            QApplication.keyboardModifiers()
+            & (Qt.KeyboardModifier.AltModifier
+               | Qt.KeyboardModifier.MetaModifier))
         self._mouse_down_init = bool(
             (event.button() == Qt.LeftButton and not alt_or_meta_pressed)
             or (event.button() == Qt.RightButton and ctrl_pressed))
@@ -1046,17 +1051,24 @@ class PatchSceneMoth(QGraphicsScene):
         self._press_point = event.scenePos()
         self._mouse_rubberband = False
 
-        if event.button() == Qt.MidButton:
-            if ctrl_pressed:
-                self._mid_button_down = True
-                self._start_connection_cut()
+        # There is no more possibility to use trigger disconnect
+        # with Ctrl + Middle click
+        # because connection objects are now grouped.
+        # we keep the code here,
+        # it may be possible to re-implement it,
+        # if really wanted by some users.
 
-                pos = event.scenePos()
-                self._pointer_border.moveTo(floor(pos.x()), floor(pos.y()))
+        # if event.button() == Qt.MidButton:
+        #     if ctrl_pressed:
+        #         self._mid_button_down = True
+        #         self._start_connection_cut()
 
-                for item in self.items(self._pointer_border):
-                    if isinstance(item, (ConnectableWidget, LineWidget)):
-                        item.trigger_disconnect()
+        #         pos = event.scenePos()
+        #         self._pointer_border.moveTo(floor(pos.x()), floor(pos.y()))
+
+        #         for item in self.items(self._pointer_border):
+        #             if isinstance(item, (ConnectableWidget, LineWidget)):
+        #                 item.trigger_disconnect()
 
         self._selected_boxes = [
             b for b in self.selectedItems()
