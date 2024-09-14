@@ -374,11 +374,12 @@ class Group:
                 self.group_id, box_type, icon_name)
 
     def get_pretty_client(self) -> str:
-        for client_name in ('firewire_pcm', 'a2j',
-                            'Hydrogen', 'ardour', 'Ardour', 'Mixbus', 'mixbus',
-                            'Qtractor', 'SooperLooper', 'sooperlooper', 'Luppp',
-                            'seq64', 'calfjackhost', 'rakarrack-plus',
-                            'seq192', 'Non-Mixer', 'jack_mixer'):
+        for client_name in (
+                'firewire_pcm', 'a2j',
+                'Hydrogen', 'ardour', 'Ardour', 'Mixbus', 'mixbus',
+                'Qtractor', 'SooperLooper', 'sooperlooper', 'Luppp',
+                'seq64', 'calfjackhost', 'rakarrack-plus',
+                'seq192', 'Non-Mixer', 'Non-Mixer-XT', 'jack_mixer'):
             if self.name == client_name:
                 return client_name
 
@@ -513,7 +514,7 @@ class Group:
                 else:
                     display_name += ' ' + num
         
-        elif client_name == 'Non-Mixer':
+        elif client_name in ('Non-Mixer', 'Non-Mixer-XT'):
             display_name, num = split_end_digits(display_name)
             if num:
                 display_name = cut_end(display_name, '/in-', '/out-')
