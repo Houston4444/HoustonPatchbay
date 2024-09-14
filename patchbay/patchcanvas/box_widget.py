@@ -1187,8 +1187,25 @@ class BoxWidget(BoxWidgetMoth):
         return UnwrapButton.NONE
 
     def update_positions(self, even_animated=False, without_connections=False,
-                         prevent_overlap=True, theme_change=False,
+                         scene_checks=True, theme_change=False,
                          wrap_anim=False):
+        '''Redraw the box, may take some time (~ 10ms for a 30 ports box).
+        It checks the present ports and portgroups, and choose the box size.
+        
+        even_animated : if we need to update the box even
+        if the box is in animation.
+        
+        without_connections : optimization, if we redraw all groups, we can
+        redraw connections after having redrawn all boxes (2 times faster).
+            
+        scene_checks : if we redraw multiple boxes, we can resize the scene
+        and check box overlapping after having redrawn all boxes.
+            
+        theme_change : only when we change theme.
+        
+        wrap_anim : only while wrapping/unwrapping, does not check the
+        present ports, size is based on saved sizes.'''
+        
         if canvas.loading_items:
             return
 
@@ -1296,7 +1313,8 @@ class BoxWidget(BoxWidgetMoth):
         if (self._width != self._ex_width
                 or self._height != self._ex_height
                 or self.scenePos() != self._ex_scene_pos):
-            canvas.scene.resize_the_scene()
+            if scene_checks:
+                canvas.scene.resize_the_scene()
 
         self._ex_width = self._width
         self._ex_height = self._height
@@ -1306,7 +1324,7 @@ class BoxWidget(BoxWidgetMoth):
         if not without_connections:
             self.repaint_lines(forced=True)
 
-        if prevent_overlap:
+        if scene_checks:
             if (self._wrapping_state in (WrappingState.NORMAL,
                                          WrappingState.WRAPPED)
                     and self.isVisible()):

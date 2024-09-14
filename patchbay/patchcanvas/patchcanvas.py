@@ -349,7 +349,7 @@ def split_group(group_id: int, on_place=False, redraw=True):
     full_width = canvas.theme.box_spacing
     
     for box in group.widgets:
-        box.update_positions(even_animated=True, prevent_overlap=False)
+        box.update_positions(even_animated=True, scene_checks=False)
         full_width += box.boundingRect().width()
                 
     if on_place:
@@ -412,7 +412,7 @@ def join_group(group_id: int):
     eater.set_wrapped(wrap, animate=False)
 
     canvas.loading_items = False
-    eater.update_positions(prevent_overlap=False)
+    eater.update_positions(scene_checks=False)
     canvas.callback(CallbackAct.GROUP_JOINED, group_id)
 
     QTimer.singleShot(0, canvas.scene.update)
@@ -453,7 +453,7 @@ def redraw_all_groups(force_no_prevent_overlap=False, theme_change=False):
     for box in canvas.list_boxes():
         box.update_positions(
             without_connections=True,
-            prevent_overlap=False,
+            scene_checks=False,
             theme_change=theme_change)
 
     for group_out in canvas.group_list:
@@ -485,7 +485,7 @@ def redraw_group(group_id: int, ensure_visible=False, prevent_overlap=True):
         return
 
     for box in group.widgets:
-        box.update_positions(prevent_overlap=prevent_overlap)
+        box.update_positions(scene_checks=prevent_overlap)
 
     canvas.scene.update()
 
@@ -493,20 +493,6 @@ def redraw_group(group_id: int, ensure_visible=False, prevent_overlap=True):
         for box in group.widgets:
             canvas.scene.center_view_on(box)
             break
-
-@patchbay_api
-def redraw_groups(group_ids: list[int]):
-    for group_id in group_ids:
-        group = canvas.get_group(group_id)
-        if group is None:
-            _logger.error(
-                f"{_logging_str}, unable to find group {group_id} to redraw")
-            continue
-        
-        for box in group.widgets:
-            box.update_positions(prevent_overlap=False)
-            
-    canvas.scene.update()
 
 @patchbay_api
 def change_grid_width(grid_width: int):
@@ -643,14 +629,14 @@ def move_group_boxes(
                 # of the box is not re-evaluted when we update positions
                 # during the wrap/unwrap animation.
                 box.update_positions(
-                    even_animated=True, prevent_overlap=False)
+                    even_animated=True, scene_checks=False)
                 box.set_wrapped(
                     wanted_wrap, prevent_overlap=False)
                 redraw &= ~port_mode
 
             if redraw & port_mode:
                 box.update_positions(
-                    even_animated=True, prevent_overlap=False)
+                    even_animated=True, scene_checks=False)
             
             if splitted and not orig_rect.isNull():
                 # the splitted boxes start with inputs aligned to the inputs
@@ -690,6 +676,7 @@ def move_group_boxes(
                             box, *both_pos,
                             joining=Joining.YES)
                 else:
+                    
                     box.set_top_left(xy)
                     canvas.scene.add_box_to_animation(box, *xy)
                     canvas.scene.add_box_to_animation_restore(box)
@@ -752,7 +739,7 @@ def set_group_layout_mode(group_id: int, port_mode: PortMode,
         if (box.get_port_mode() is port_mode
                 and box._layout_mode is not layout_mode):
             box.set_layout_mode(layout_mode)
-            box.update_positions(prevent_overlap=prevent_overlap)
+            box.update_positions(scene_checks=prevent_overlap)
 
 @patchbay_api
 def clear_selection():

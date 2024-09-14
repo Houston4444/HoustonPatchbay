@@ -974,8 +974,10 @@ class BoxWidgetMoth(QGraphicsItem):
             if self._has_side_title():
                 if self._current_port_mode is PortMode.INPUT:
                     header_rect = QRectF(
-                        self._width - self._header_width - pen_width + 3.0, 3.0 + pen_width,
-                        self._header_width - 6.0, self._header_height -6.0)
+                        self._width - self._header_width - pen_width + 3.0,
+                        3.0 + pen_width,
+                        self._header_width - 6.0,
+                        self._header_height -6.0)
                 elif self._current_port_mode is PortMode.OUTPUT:
                     header_rect = QRectF(
                         3.0 + pen_width, 3.0 + pen_width,
@@ -1319,23 +1321,27 @@ class BoxWidgetMoth(QGraphicsItem):
             return
 
         inwidth  = self._width - self._width_in - self._width_out - 16
-        inheight = self._height - self._header_height - self.get_theme().port_spacing() - 3
-        scaling  = canvas.scene.get_scale_factor() * canvas.scene.get_device_pixel_ratio_f()
+        inheight = (self._height - self._header_height
+                    - self.get_theme().port_spacing() - 3)
+        scaling  = (canvas.scene.get_scale_factor()
+                    * canvas.scene.get_device_pixel_ratio_f())
 
         if (self._plugin_id >= 0
                 and self._plugin_id <= MAX_PLUGIN_ID_ALLOWED
                 and (self._plugin_inline is InlineDisplay.ENABLED
                      or self._inline_scaling != scaling)):
-            data = canvas.callback(CallbackAct.INLINE_DISPLAY, self._plugin_id,
-                                   int(inwidth*scaling), int(inheight*scaling))
+            data = canvas.callback(
+                CallbackAct.INLINE_DISPLAY, self._plugin_id,
+                int(inwidth*scaling), int(inheight*scaling))
+
             if data is None:
                 return
 
             # invalidate old image first
             del self._inline_image
 
-            self._inline_data = pack("%iB" % (data['height'] * data['stride']),
-                                     *data['data'])
+            self._inline_data = pack(
+                "%iB" % (data['height'] * data['stride']), *data['data'])
             self._inline_image = QImage(
                 voidptr(self._inline_data), data['width'], data['height'],
                 data['stride'], QImage.Format_ARGB32)
@@ -1355,7 +1361,8 @@ class BoxWidgetMoth(QGraphicsItem):
                    - swidth / 2)
         srcy = int(self._header_height + 1 + (inheight - sheight) / 2)
 
-        painter.drawImage(QRectF(srcx, srcy, swidth, sheight), self._inline_image)
+        painter.drawImage(
+            QRectF(srcx, srcy, swidth, sheight), self._inline_image)
     
     def get_theme(self, for_wrapper=False) -> BoxStyleAttributer:
         theme = canvas.theme.box

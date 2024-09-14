@@ -378,8 +378,7 @@ class PatchbayManager:
         in patchcanvas all boxes that should be hidden now.'''
         
         self.optimize_operation(True)
-        group_ids_redraw = list[int]()
-
+        group_ids_redraw = set[int]()
 
         for group in self.groups:
             if group.current_position.hidden_port_modes() is PortMode.NULL:
@@ -412,17 +411,15 @@ class PatchbayManager:
             if hidden_port_mode is PortMode.BOTH:
                 group.remove_from_canvas()
             elif group.in_canvas:
-                group_ids_redraw.append(group.group_id)
-
-        bef_readd_conns = time.time()
+                group_ids_redraw.add(group.group_id)
 
         for conn in self.connections:
             conn.add_to_canvas()
-        
-        
+
         self.optimize_operation(False)
         for group_id in group_ids_redraw:
             patchcanvas.redraw_group(group_id, prevent_overlap=False)
+
         patchcanvas.canvas.scene.resize_the_scene()
         self.sg.hidden_boxes_changed.emit()
         self.sg.animation_finished.emit()
