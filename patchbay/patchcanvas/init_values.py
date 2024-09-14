@@ -141,6 +141,9 @@ class BoxType(Enum):
     LADISH_ROOM = 6
     CLIENT = 7
     INTERNAL = 8
+    
+    def __lt__(self, other: 'BoxType'):
+        return self.value < other.value
 
 
 # inline display is not usable in RaySession or Patchance
