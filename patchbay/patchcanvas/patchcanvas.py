@@ -410,11 +410,9 @@ def join_group(group_id: int):
 
     eater.send_move_callback()
     eater.set_wrapped(wrap, animate=False)
-
-    canvas.loading_items = False
     eater.update_positions(scene_checks=False)
-    canvas.callback(CallbackAct.GROUP_JOINED, group_id)
 
+    canvas.callback(CallbackAct.GROUP_JOINED, group_id)
     QTimer.singleShot(0, canvas.scene.update)
 
 @patchbay_api
@@ -1074,18 +1072,6 @@ def animate_before_hide_box(group_id: int, port_mode: PortMode):
     for box in group.widgets:
         if port_mode & box._port_mode:
             canvas.scene.add_box_to_animation_hidding(box)
-
-@patchbay_api
-def animate_after_restore_box(group_id: int, port_mode: PortMode):
-    group = canvas.get_group(group_id)
-    if group is None:
-        _logger.info(f"{_logging_str} - failed to find group")
-        return
-
-    for box in group.widgets:
-        if port_mode & box.get_port_mode():
-            box.update_positions()
-            canvas.scene.add_box_to_animation_restore(box)
     
 # ----------------------------------------------------------------------------
 

@@ -612,7 +612,7 @@ class PatchbayManager:
         return group_name
 
     def set_group_as_nsm_client(self, group: Group):
-        pass
+        ...
 
     def get_group_position(self, group_name: str) -> GroupPos:
         ptv_view = self.views[self.view_number].get(self.port_types_view)

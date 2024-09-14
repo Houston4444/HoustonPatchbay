@@ -292,12 +292,15 @@ class BoxWidgetMoth(QGraphicsItem):
         if isinstance(self.top_icon, IconSvgWidget):
             self.remove_icon_from_scene()
 
-        if box_type is BoxType.HARDWARE and (not icon_name or icon_name == 'a2j'):
-            self.top_icon = IconSvgWidget(box_type, icon_name, self._port_mode, self)
+        if (box_type is BoxType.HARDWARE
+                and (not icon_name or icon_name == 'a2j')):
+            self.top_icon = IconSvgWidget(
+                box_type, icon_name, self._port_mode, self)
             return
 
         if self.top_icon is not None:
-            self.top_icon.set_icon(box_type, icon_name, self._current_port_mode)
+            self.top_icon.set_icon(
+                box_type, icon_name, self._current_port_mode)
         else:
             self.top_icon = IconPixmapWidget(box_type, icon_name, self)
 
@@ -385,7 +388,7 @@ class BoxWidgetMoth(QGraphicsItem):
             else:
                 self._wrapping_state = WrappingState.WRAPPED
 
-        self.update_positions(wrap_anim=True, prevent_overlap=False)
+        self.update_positions(wrap_anim=True, scene_checks=False)
 
     def animate_hidding(self, ratio: float):
         'ratio goes from 0.0 (box shown) to 1.0 (box hidden)'
@@ -496,7 +499,7 @@ class BoxWidgetMoth(QGraphicsItem):
                 [self], wanted_direction=Direction.DOWN)
 
     def update_positions(self, even_animated=False, without_connections=False,
-                         prevent_overlap=True, theme_change=False,
+                         scene_checks=True, theme_change=False,
                          wrap_anim=False):
         # see box_widget.py
         ...

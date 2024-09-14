@@ -37,7 +37,7 @@ class Group:
         self.in_canvas = False
         self.current_position = group_position
         self.uuid = 0
-        
+
         self.has_gui = False
         self.gui_visible = False
 
@@ -198,7 +198,7 @@ class Group:
 
     def hide(self, port_mode: PortMode):
         '''Ask hide box to canvas.
-        It saves the GrouPos and do the hide animation.'''
+        It saves the GroupPos and starts the hide animation.'''
         self.current_position.set_hidden_port_mode(
             self.current_position.hidden_port_modes() | port_mode)
         patchcanvas.animate_before_hide_box(
