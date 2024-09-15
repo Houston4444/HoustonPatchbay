@@ -61,7 +61,6 @@ class GridWidget(QGraphicsPathItem):
         self._scene = scene
         self.style = style
         self._rects = list[QRectF]()
-        self.orig_path = QPainterPath()
         self.setPath(QPainterPath(QPointF()))
         self.left_path: QPainterPath = None
         self.right_path: QPainterPath = None
@@ -133,41 +132,36 @@ class GridWidget(QGraphicsPathItem):
     def chess_board(self):
         theme = canvas.theme.grid.chessboard
         
-        cell_x = options.cell_width
-        cell_y = options.cell_height
-        cell_x = cell_x * math.ceil(theme.grid_min_width() / cell_x)
-        cell_y = cell_y * math.ceil(theme.grid_min_height() / cell_y)
+        cell_x = (options.cell_width
+                  * math.ceil(theme.grid_min_width() / options.cell_width))
+        cell_y = (options.cell_height
+                  * math.ceil(theme.grid_min_height() / options.cell_height))
         
         path = QPainterPath(QPointF(0.0, 0.0))
-        
-        
         rect = self._scene.sceneRect()
         
         x = rect.left()
         x -= x % (cell_x * 2)
-        y = rect.top()
-        y -= y % (cell_y * 2)
-        
         x += 2 * cell_x
+
+        y = rect.top()
+        y -= y % (cell_y * 2)        
         y += 2 * cell_y
-        
-        
+
         # make the normal pattern
         orig_path = QPainterPath()
         orig_path.moveTo(x + cell_x / 2, y)
         orig_path.lineTo(x + cell_x / 2, y + cell_y)
         orig_path.moveTo(x + cell_x * 1.5, y + cell_y)
         orig_path.lineTo(x + cell_x * 1.5, y + 2.0 * cell_y)
-        self.orig_path = orig_path
 
         total_x = math.floor((rect.right() - x) / (2 * cell_x)) 
         total_y = math.floor((rect.bottom() - y)/ (2 * cell_y))
 
+        y_path = orig_path
         y_path = y_multiply(orig_path, total_y, 2 * cell_y)
         y_down = y + total_y * 2 * cell_y
         x_right = x + total_x * 2 * cell_x
-
-        self._pointt = QPointF(0.0, 0.0)
         
         # construct top 
         if rect.top() < y:
@@ -356,15 +350,22 @@ class GridWidget(QGraphicsPathItem):
 
         painter.drawPath(self.path())
         
+        # for left and right paths, alpha channel is strangly too low
+        # after changing the pen width.
+        sides_color = self.pen().color() 
+        sides_color.setAlphaF(min(sides_color.alphaF() * 1.707, 1.0))
+        
         if self.left_path is not None:
             pen = QPen(self.pen())
             pen.setWidthF(self.left_path_width)
+            pen.setColor(sides_color)
             painter.setPen(pen)
             painter.drawPath(self.left_path)
         
         if self.right_path is not None:
             pen = QPen(self.pen())
             pen.setWidthF(self.right_path_width)
+            pen.setColor(sides_color)
             painter.setPen(pen)
             painter.drawPath(self.right_path)
         
