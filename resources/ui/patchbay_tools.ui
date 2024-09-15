@@ -39,6 +39,18 @@ background-color:  rgba(50%, 50%, 50%, 25%);
       <property name="spacing">
        <number>0</number>
       </property>
+      <property name="leftMargin">
+       <number>0</number>
+      </property>
+      <property name="topMargin">
+       <number>0</number>
+      </property>
+      <property name="rightMargin">
+       <number>0</number>
+      </property>
+      <property name="bottomMargin">
+       <number>0</number>
+      </property>
       <item>
        <spacer name="horizontalSpacer_5">
         <property name="orientation">
@@ -492,6 +504,18 @@ QPushButton:hover{border: 1 px solid grey;text-align:right}</string>
     <widget class="QFrame" name="frameCanvas">
      <layout class="QHBoxLayout" name="horizontalLayoutCanvas">
       <property name="spacing">
+       <number>0</number>
+      </property>
+      <property name="leftMargin">
+       <number>0</number>
+      </property>
+      <property name="topMargin">
+       <number>0</number>
+      </property>
+      <property name="rightMargin">
+       <number>0</number>
+      </property>
+      <property name="bottomMargin">
        <number>0</number>
       </property>
       <item>
