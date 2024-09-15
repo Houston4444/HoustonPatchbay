@@ -5,11 +5,12 @@ from PyQt5.QtWidgets import (
     QToolBar, QLabel, QMenu,
     QApplication, QAction, QWidget, QBoxLayout)
 from PyQt5.QtGui import QMouseEvent, QIcon, QResizeEvent
-from PyQt5.QtCore import Qt, QPoint, QTimer
+from PyQt5.QtCore import Qt, QPoint
 
 from .base_elements import ToolDisplayed
 from .patchbay_manager import PatchbayManager
 from .tools_widgets import PatchbayToolsWidget
+from .surclassed_widgets import ToolsWidgetFrame
 
 _translate = QApplication.translate
 
@@ -139,7 +140,9 @@ class PatchbayToolBar(QToolBar):
         super().mousePressEvent(event)
 
         if (event.button() != Qt.RightButton
-                or not isinstance(child_widget, (QLabel, PatchbayToolsWidget))):
+                or not isinstance(
+                    child_widget,
+                    (QLabel, PatchbayToolsWidget, ToolsWidgetFrame))):
             return
 
         context_actions = self._make_context_actions()

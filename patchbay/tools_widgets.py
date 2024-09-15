@@ -155,7 +155,6 @@ class PatchbayToolsWidget(QWidget):
         self.ui.sliderZoom.set_patchbay_manager(mng)
         self.ui.viewSelector.set_patchbay_manager(mng)
         self.ui.toolButtonHiddenBoxes.set_patchbay_manager(mng)
-        
     
     def get_layout_widths(self) -> tuple[int, int]:
         return (self.ui.horizontalLayoutCanvas.sizeHint().width(),

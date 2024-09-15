@@ -7,7 +7,7 @@ from PyQt5.QtGui import (
 from PyQt5.QtWidgets import (
     QApplication, QProgressBar, QSlider, QToolTip,
     QLineEdit, QLabel, QMenu, QAction, QCheckBox,
-    QComboBox)
+    QComboBox, QFrame)
 
 from .base_elements import TransportViewMode, AliasingReason
 
@@ -294,3 +294,8 @@ class ViewsComboBox(QComboBox):
                 self.setCurrentIndex(self.count() - 1)
             else:
                 self.setCurrentIndex(0)        
+
+
+class ToolsWidgetFrame(QFrame):
+    def __init__(self, parent):
+        super().__init__(parent)

@@ -34,7 +34,7 @@ background-color:  rgba(50%, 50%, 50%, 25%);
     <number>1</number>
    </property>
    <item>
-    <widget class="QFrame" name="frameJack">
+    <widget class="ToolsWidgetFrame" name="frameJack">
      <layout class="QHBoxLayout" name="horizontalLayoutJack">
       <property name="spacing">
        <number>0</number>
@@ -501,7 +501,7 @@ QPushButton:hover{border: 1 px solid grey;text-align:right}</string>
     </widget>
    </item>
    <item>
-    <widget class="QFrame" name="frameCanvas">
+    <widget class="ToolsWidgetFrame" name="frameCanvas">
      <layout class="QHBoxLayout" name="horizontalLayoutCanvas">
       <property name="spacing">
        <number>0</number>
@@ -671,6 +671,12 @@ QToolButton::menu-indicator{image: none}</string>
    <class>HiddensIndicator</class>
    <extends>QToolButton</extends>
    <header>..hiddens_indicator</header>
+  </customwidget>
+  <customwidget>
+   <class>ToolsWidgetFrame</class>
+   <extends>QFrame</extends>
+   <header>..surclassed_widgets</header>
+   <container>1</container>
   </customwidget>
  </customwidgets>
  <resources>
