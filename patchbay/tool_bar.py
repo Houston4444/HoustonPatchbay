@@ -165,6 +165,7 @@ class PatchbayToolBar(QToolBar):
         self._change_visibility()
         
     def _check_layout(self):
+        print('_check_layout')
         if self._tools_widget is None:
             return
         
@@ -195,15 +196,22 @@ class PatchbayToolBar(QToolBar):
             self._tools_widget.ui.mainLayout.setDirection(
                 QBoxLayout.RightToLeft)
         else:
+            print('top to bottom')
             self._tools_widget.ui.mainLayout.setDirection(
                 QBoxLayout.TopToBottom)
-    
+            print('direcc', self._tools_widget.ui.mainLayout.direction())
+
+        self.updateGeometry()
+        print('maikès tu bran', self.width(), self.height())
+        print('dkdk', self._canvas_width, self._jack_width, self._non_patchbay_width, self.width())
+
     def widgetForAction(
             self, action: QAction) -> Union[QWidget, 'PatchbayToolsWidget']:
         return super().widgetForAction(action)
     
     def resizeEvent(self, event: QResizeEvent):
         super().resizeEvent(event)
+        print('ressizze', self.width())
         self._check_layout()
         
         
