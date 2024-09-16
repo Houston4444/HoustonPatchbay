@@ -1,5 +1,6 @@
 
 import time
+from enum import Enum
 from typing import TYPE_CHECKING
 from PyQt5.QtCore import pyqtSignal, QTimer, pyqtSlot
 from PyQt5.QtGui import QPalette, QIcon, QColor, QKeySequence
@@ -21,6 +22,19 @@ def is_dark_theme(widget: QWidget) -> bool:
         > 128)
 
 
+class JackAgnostic(Enum):
+    'Enum used by Patchichi to set what is displayed'
+    
+    NONE = 0
+    'Not JACK agnostic, used by Patchance and RaySession'
+    
+    DUMMY = 1
+    'JACK agnostic in reality, but display all widgets'
+    
+    FULL = 2
+    'Hide all widgets related to JACK'
+
+
 class PatchbayToolsWidget(QWidget):
     buffer_size_change_order = pyqtSignal(int)
 
@@ -33,16 +47,18 @@ class PatchbayToolsWidget(QWidget):
         self.ui.toolButtonStop.clicked.connect(self._stop_clicked)
         self.ui.toolButtonRewind.clicked.connect(self._rewind_clicked)
         self.ui.toolButtonForward.clicked.connect(self._forward_clicked)
-        self.ui.labelTime.transport_view_changed.connect(self._transport_view_changed)
+        self.ui.labelTime.transport_view_changed.connect(
+            self._transport_view_changed)
         
         self._jack_running = True
         
         self._patchbay_mng: 'PatchbayManager' = None
-        self._last_transport_pos = TransportPosition(0, False, False, 0, 0, 0, 120.00)
+        self._last_transport_pos = TransportPosition(
+            0, False, False, 0, 0, 0, 120.00)
         
         self.ui.toolButtonPlayPause.setShortcut(QKeySequence(' '))
         
-        self._jack_agnostic = False
+        self._jack_agnostic = JackAgnostic.NONE
         
         self._fw_clicked_last_time = 0
         self._fw_click_started_at = 0
@@ -76,8 +92,10 @@ class PatchbayToolsWidget(QWidget):
             QPalette.Active, QPalette.Background).color()
         
         scheme = 'dark' if dark else 'light'
-        self._icon_play = QIcon(f':/transport/{scheme}/media-playback-start.svg')
-        self._icon_pause = QIcon(f':/transport/{scheme}/media-playback-pause.svg')
+        self._icon_play = QIcon(
+            f':/transport/{scheme}/media-playback-start.svg')
+        self._icon_pause = QIcon(
+            f':/transport/{scheme}/media-playback-pause.svg')
         
         self.ui.toolButtonRewind.setIcon(
             QIcon(f':/transport/{scheme}/media-seek-backward.svg'))
@@ -160,9 +178,9 @@ class PatchbayToolsWidget(QWidget):
         return (self.ui.horizontalLayoutCanvas.sizeHint().width(),
                 self.ui.horizontalLayoutJack.sizeHint().width())
     
-    def set_jack_agnostic(self):
+    def set_jack_agnostic(self, agnostic: JackAgnostic):
         '''Use without any jack tool. Used by Patchichi.'''
-        self._jack_agnostic = True
+        self._jack_agnostic = agnostic
         self.change_tools_displayed(self._tools_displayed)
     
     def update_hiddens_indicator(self):
@@ -287,22 +305,12 @@ class PatchbayToolsWidget(QWidget):
         self.ui.progressBarDsp.setVisible(
             bool(tools_displayed & ToolDisplayed.DSP_LOAD))
         
-        if self._jack_agnostic:
+        if self._jack_agnostic is JackAgnostic.FULL:
             self.ui.frameJack.setVisible(False)
-            # self.ui.toolButtonRewind.setVisible(False)
-            # self.ui.labelTime.setVisible(False)
-            # self.ui.toolButtonForward.setVisible(False)
-            # self.ui.toolButtonPlayPause.setVisible(False)
-            # self.ui.toolButtonStop.setVisible(False)
-            # self.ui.labelTempo.setVisible(False)
-            # self.ui.labelBuffer.setVisible(False)
-            # self.ui.comboBoxBuffer.setVisible(False)
-            # self.ui.labelSamplerate.setVisible(False)
-            # self.ui.labelPipeSeparator.setVisible(False)
-            # self.ui.labelLatency.setVisible(False)
-            # self.ui.pushButtonXruns.setVisible(False)
-            # self.ui.progressBarDsp.setVisible(False)
-            # self.ui.labelJackNotStarted.setVisible(False)
+            
+        elif self._jack_agnostic is JackAgnostic.DUMMY:
+            self.ui.labelJackNotStarted.setVisible(False)
+            self.ui.progressBarDsp.setValue(1)
     
     def _set_latency(self, buffer_size=None, samplerate=None):
         if buffer_size is None:

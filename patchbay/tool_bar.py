@@ -9,7 +9,7 @@ from PyQt5.QtCore import Qt, QPoint
 
 from .base_elements import ToolDisplayed
 from .patchbay_manager import PatchbayManager
-from .tools_widgets import PatchbayToolsWidget
+from .tools_widgets import JackAgnostic, PatchbayToolsWidget
 from .surclassed_widgets import ToolsWidgetFrame
 
 _translate = QApplication.translate
@@ -168,11 +168,11 @@ class PatchbayToolBar(QToolBar):
         if self._tools_widget is None:
             return
         
-        if self._tools_widget._jack_agnostic:
+        if self._tools_widget._jack_agnostic is JackAgnostic.FULL:
             self._tools_widget.ui.mainLayout.setDirection(
                 QBoxLayout.RightToLeft)
             return
-        
+
         if self._canvas_width == 0 or self._jack_width == 0:
             self._canvas_width, self._jack_width = \
                 self._tools_widget.get_layout_widths()
