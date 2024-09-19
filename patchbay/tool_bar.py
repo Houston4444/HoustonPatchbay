@@ -1,4 +1,5 @@
 
+from types import NoneType
 from typing import Union
 
 from PyQt5.QtWidgets import (
@@ -7,6 +8,9 @@ from PyQt5.QtWidgets import (
 from PyQt5.QtGui import QMouseEvent, QIcon, QResizeEvent
 from PyQt5.QtCore import Qt, QPoint
 
+from .bar_widget_canvas import BarWidgetCanvas
+from .bar_widget_jack import BarWidgetJack
+from .bar_widget_transport import BarWidgetTransport
 from .base_elements import ToolDisplayed
 from .patchbay_manager import PatchbayManager
 from .tools_widgets import JackAgnostic, PatchbayToolsWidget
@@ -14,17 +18,16 @@ from .surclassed_widgets import ToolsWidgetFrame
 
 _translate = QApplication.translate
 
+_displayed_widgets = (
+    ToolDisplayed.ZOOM_SLIDER
+    | ToolDisplayed.TRANSPORT_PLAY_STOP
+    | ToolDisplayed.BUFFER_SIZE
+    | ToolDisplayed.SAMPLERATE
+    | ToolDisplayed.XRUNS
+    | ToolDisplayed.DSP_LOAD)
+
 
 class PatchbayToolBar(QToolBar):
-    _jack_width: int
-    'width of the jack tools widgets (0 if not measured yet)'
-    
-    _canvas_width: int
-    'width of the canvas tools widgets (0 if not measured yet)'
-    
-    _non_patchbay_width: int
-    'width of the menu entries on top left (0 if not measured yet)'
-    
     def __init__(self, parent):
         super().__init__(parent)
         self.setContextMenuPolicy(Qt.PreventContextMenu)
@@ -37,41 +40,27 @@ class PatchbayToolBar(QToolBar):
             | ToolDisplayed.XRUNS
             | ToolDisplayed.DSP_LOAD)
         
-        self._patchbay_mng : PatchbayManager = None
+        self.mng : PatchbayManager = None
         self._tools_widget: PatchbayToolsWidget = None
-        
-        self._non_patchbay_width = 0
-        self._canvas_width = 0
-        self._jack_width = 0
     
     def set_patchbay_manager(self, patchbay_manager: PatchbayManager):
-        self._patchbay_mng = patchbay_manager
+        self.mng = patchbay_manager
         self._tools_widget = patchbay_manager._tools_widget
-        self._tools_widget.ui.mainLayout.setDirection(
-            QBoxLayout.TopToBottom)
-        patchbay_manager.change_tools_displayed(self._displayed_widgets)
+        # self._tools_widget.ui.mainLayout.setDirection(
+        #     QBoxLayout.TopToBottom)
+        patchbay_manager.change_tools_displayed(_displayed_widgets)
     
     def _change_visibility(self):
-        if self._patchbay_mng is not None:
-            # before to change the widgets visibility, 
-            # we set the display in two lines,
-            # else, the single line can be too long and all the patchbay tools
-            # are hidden.
-            self._tools_widget.ui.mainLayout.setDirection(
-                QBoxLayout.TopToBottom)
-            self._patchbay_mng.change_tools_displayed(self._displayed_widgets)
-
-        self._jack_width = 0
-        self._canvas_width = 0
-        
-        self._check_layout()
+        if self.mng is not None:
+            self.mng.change_tools_displayed(_displayed_widgets)
 
     def set_default_displayed_widgets(self, displayed_widgets: ToolDisplayed):
-        self._displayed_widgets = displayed_widgets
+        global _displayed_widgets
+        _displayed_widgets = displayed_widgets
         self._change_visibility()
         
     def get_displayed_widgets(self) -> ToolDisplayed:
-        return self._displayed_widgets
+        return _displayed_widgets
 
     def _make_context_actions(self) -> dict[ToolDisplayed, QAction]:
         return {
@@ -118,14 +107,19 @@ class PatchbayToolBar(QToolBar):
         menu = QMenu()
         menu.addSection(_translate('tool_bar', 'Displayed tools'))
         
+        global _displayed_widgets
+        if self.mng is not None:
+            _displayed_widgets = self.mng._tools_displayed
+        print('make context', _displayed_widgets.name)
+        
         for key, act in context_actions.items():
             act.setCheckable(True)
-            act.setChecked(bool(self._displayed_widgets & key))
-            if self._patchbay_mng is not None:
-                if not self._patchbay_mng.server_is_started:
+            act.setChecked(bool(_displayed_widgets & key))
+            if self.mng is not None:
+                if not self.mng.server_is_started:
                     if key in (ToolDisplayed.PORT_TYPES_VIEW,
                                ToolDisplayed.ZOOM_SLIDER):
-                        act.setEnabled(self._patchbay_mng.alsa_midi_enabled)
+                        act.setEnabled(self.mng.alsa_midi_enabled)
                     else:
                         act.setEnabled(False)
             menu.addAction(act)
@@ -139,10 +133,15 @@ class PatchbayToolBar(QToolBar):
         child_widget = self.childAt(event.pos())
         super().mousePressEvent(event)
 
+        if self.mng is None:
+            return
+
         if (event.button() != Qt.RightButton
                 or not isinstance(
                     child_widget,
-                    (QLabel, PatchbayToolsWidget, ToolsWidgetFrame))):
+                    (QLabel, BarWidgetCanvas,
+                     BarWidgetJack, BarWidgetTransport,
+                     NoneType))):
             return
 
         context_actions = self._make_context_actions()
@@ -155,53 +154,13 @@ class PatchbayToolBar(QToolBar):
         if selected_act is None:
             return
 
+        global _displayed_widgets
+
         for key, act in context_actions.items():
             if act is selected_act:
                 if act.isChecked():
-                    self._displayed_widgets |= key
+                    _displayed_widgets |= key
                 else:
-                    self._displayed_widgets &= ~key
+                    _displayed_widgets &= ~key
 
         self._change_visibility()
-        
-    def _check_layout(self):
-        if self._tools_widget is None:
-            return
-        
-        if self._tools_widget._jack_agnostic is JackAgnostic.FULL:
-            self._tools_widget.ui.mainLayout.setDirection(
-                QBoxLayout.RightToLeft)
-            return
-
-        if self._canvas_width == 0 or self._jack_width == 0:
-            self._canvas_width, self._jack_width = \
-                self._tools_widget.get_layout_widths()
-        
-        if self._non_patchbay_width == 0:
-            if (self._tools_widget.ui.mainLayout.direction()
-                    in (QBoxLayout.LeftToRight, QBoxLayout.RightToLeft)):
-                self._non_patchbay_width = (
-                    self.sizeHint().width()
-                    - self._canvas_width - self._jack_width)
-            else:
-                self._non_patchbay_width = (
-                    self.sizeHint().width()
-                    - max(self._canvas_width, self._jack_width))
-
-        large_width = (self._non_patchbay_width
-                       + self._canvas_width + self._jack_width)
-
-        if self.width() >= large_width:
-            self._tools_widget.ui.mainLayout.setDirection(
-                QBoxLayout.RightToLeft)
-        else:
-            self._tools_widget.ui.mainLayout.setDirection(
-                QBoxLayout.TopToBottom)
-
-    def widgetForAction(
-            self, action: QAction) -> Union[QWidget, 'PatchbayToolsWidget']:
-        return super().widgetForAction(action)
-    
-    def resizeEvent(self, event: QResizeEvent):
-        super().resizeEvent(event)
-        self._check_layout()        
