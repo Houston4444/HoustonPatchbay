@@ -35,8 +35,6 @@ class BarWidgetJack(QWidget):
         self._samplerate = 48000
         self._current_buffer_size = self.ui.comboBoxBuffer.currentData()
         self._xruns_counter = 0
-    def print_red(self):
-        print('redd visible', self.ui.labelJackNotStarted.isVisible(), self.ui.labelSamplerate.isVisible())
         
     def _set_latency(self, buffer_size=None, samplerate=None):
         if buffer_size is None:
@@ -142,8 +140,6 @@ class BarWidgetJack(QWidget):
             self.ui.labelLatency.setVisible(False)
             self.ui.pushButtonXruns.setVisible(False)
             self.ui.progressBarDsp.setVisible(False)
-            
-        print('red visible', yesno, self.ui.labelJackNotStarted.isVisible(), self.ui.labelSamplerate.isVisible())
             
     def change_tools_displayed(self, tools_displayed: ToolDisplayed):
         SR_AND_LT = ToolDisplayed.SAMPLERATE | ToolDisplayed.LATENCY

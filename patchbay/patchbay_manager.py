@@ -286,8 +286,6 @@ class PatchbayManager:
 
     def set_tools_widget(self, tools_widget: PatchbayToolsWidget):
         self._tools_widget = tools_widget
-        self._tools_widget.buffer_size_change_order.connect(
-            self.change_buffersize)
         self._tools_widget.set_patchbay_manager(self)
 
     def set_canvas_menu(self, canvas_menu: CanvasMenu):
