@@ -2,9 +2,10 @@
 from enum import Enum, IntEnum, auto
 import time
 from typing import TYPE_CHECKING
-from PyQt5.QtCore import pyqtSignal, QTimer, pyqtSlot
+from PyQt5.QtCore import pyqtSignal, QTimer, pyqtSlot, QPoint
 from PyQt5.QtGui import QPalette, QIcon, QColor, QKeySequence
-from PyQt5.QtWidgets import QWidget, QToolBar, QMainWindow
+from PyQt5.QtWidgets import (
+    QWidget, QToolBar, QMainWindow, QAction, QApplication, QMenu)
 
 from .bar_widget_jack import BarWidgetJack
 from .bar_widget_transport import BarWidgetTransport
@@ -16,6 +17,10 @@ from .base_elements import (
 
 if TYPE_CHECKING:
     from .patchbay_manager import PatchbayManager
+    from .tool_bar import PatchbayToolBar
+
+
+_translate = QApplication.translate
 
 
 def is_dark_theme(widget: QWidget) -> bool:
@@ -112,7 +117,7 @@ class PatchbayToolsWidget(QWidget):
         self._xruns_counter = 0
         
         self._tools_displayed = ToolDisplayed.ALL
-        self.tbars : tuple[QToolBar, QToolBar, QToolBar, QToolBar]= None
+        self.tbars : tuple[PatchbayToolBar, ...]= None
         self.tbar_widths = (0, 0, 0, 0)
         # # set theme
         # app_bg = self.ui.labelTempo.palette().brush(
@@ -199,6 +204,69 @@ class PatchbayToolsWidget(QWidget):
         self._canvas_wg: BarWidgetCanvas = None
         self._last_layout = ToolBarsLayout.MCTJ
 
+    @staticmethod
+    def _make_context_actions() -> dict[ToolDisplayed, QAction]:
+        return {
+            ToolDisplayed.VIEWS_SELECTOR:
+                QAction(QIcon.fromTheme('view-multiple-objects'),
+                        _translate('tool_bar', 'Views selector')),
+            ToolDisplayed.HIDDENS_BOX:
+                QAction(QIcon.fromTheme('hint'),
+                        _translate('tool_bar', 'Hidden boxes')),
+            ToolDisplayed.PORT_TYPES_VIEW:
+                QAction(QIcon.fromTheme('view-filter'),
+                        _translate('tool_bar', 'Type filter')),
+            ToolDisplayed.ZOOM_SLIDER:
+                QAction(QIcon.fromTheme('zoom-select'),
+                        _translate('tool_bar', 'Zoom slider')),
+            ToolDisplayed.TRANSPORT_CLOCK:
+                QAction(QIcon.fromTheme('clock'),
+                        _translate('tool_bar', 'Transport clock')),
+            ToolDisplayed.TRANSPORT_PLAY_STOP:
+                QAction(QIcon.fromTheme('media-playback-pause'),
+                        _translate('tool_bar', 'Transport Play/Stop')),
+            ToolDisplayed.TRANSPORT_TEMPO:
+                QAction(QIcon.fromTheme('folder-music-symbolic'),
+                        _translate('tool_bar', 'Transport Tempo')),
+            ToolDisplayed.BUFFER_SIZE:
+                QAction(QIcon.fromTheme('settings-configure'),
+                        _translate('tool_bar', 'Buffer size')),
+            ToolDisplayed.SAMPLERATE:
+                QAction(QIcon.fromTheme('filename-sample-rate'),
+                        _translate('tool_bar', 'Sample rate')),
+            ToolDisplayed.LATENCY:
+                QAction(QIcon.fromTheme('chronometer-lap'),
+                        _translate('tool_bar', 'Latency')),
+            ToolDisplayed.XRUNS:
+                QAction(QIcon.fromTheme('data-error'),
+                        _translate('tool_bar', 'Xruns')),
+            ToolDisplayed.DSP_LOAD:
+                QAction(QIcon.fromTheme('histogram-symbolic'),
+                        _translate('tool_bar', 'DSP Load'))
+        }
+
+    def _make_context_menu(
+            self, context_actions: dict[ToolDisplayed, QAction]) -> QMenu:
+        menu = QMenu()
+        menu.addSection(_translate('tool_bar', 'Displayed tools'))
+        
+        for key, act in context_actions.items():
+            act.setCheckable(True)
+            act.setChecked(bool(self._tools_displayed & key))
+            if self.mng is not None:
+                if not self.mng.server_is_started:
+                    if key in (ToolDisplayed.PORT_TYPES_VIEW,
+                               ToolDisplayed.ZOOM_SLIDER):
+                        act.setEnabled(self.mng.alsa_midi_enabled)
+                    else:
+                        act.setEnabled(False)
+            menu.addAction(act)
+            
+            if key is ToolDisplayed.ZOOM_SLIDER:
+                menu.addSeparator()
+            
+        return menu
+
     def set_patchbay_manager(self, mng: 'PatchbayManager'):
         self.mng = mng
         self.ui.frameTypeFilter.set_patchbay_manager(mng)
@@ -209,7 +277,7 @@ class PatchbayToolsWidget(QWidget):
         for toolbar in self.tbars[1:]:
             toolbar.set_patchbay_manager(mng)
     
-    def set_tool_bars(self, *tool_bars: QToolBar):
+    def set_tool_bars(self, *tool_bars: 'PatchbayToolBar'):
         self.tbars = tool_bars
 
         self._transport_wg = BarWidgetTransport(self.tbars[TBar.TRANSPORT])
@@ -219,10 +287,31 @@ class PatchbayToolsWidget(QWidget):
         self.tbars[TBar.TRANSPORT].addWidget(self._transport_wg)        
         self.tbars[TBar.JACK].addWidget(self._jack_wg)
         self.tbars[TBar.CANVAS].addWidget(self._canvas_wg)
+
+        for tbar in self.tbars:
+            tbar.menu_asked.connect(self._menu_asked)
         
         self.tbar_widths = tuple([tb.sizeHint().width() for tb in tool_bars])
-        print('set tool bars', self.tbar_widths)
-        self._jack_wg.print_red()
+    
+    @pyqtSlot(QPoint)
+    def _menu_asked(self, point: QPoint):
+        context_actions = self._make_context_actions()
+        menu = self._make_context_menu(context_actions)
+        
+        selected_act = menu.exec(point)
+        if selected_act is None:
+            return
+
+        for key, act in context_actions.items():
+            if act is selected_act:
+                if act.isChecked():
+                    self._tools_displayed |= key
+                else:
+                    self._tools_displayed &= ~key
+                    
+        self.change_tools_displayed(self._tools_displayed)
+
+        # self._change_visibility()
     
     def get_layout_widths(self) -> tuple[int, int]:
         return (self.ui.horizontalLayoutCanvas.sizeHint().width(),

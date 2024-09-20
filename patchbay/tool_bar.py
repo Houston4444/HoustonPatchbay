@@ -6,7 +6,7 @@ from PyQt5.QtWidgets import (
     QToolBar, QLabel, QMenu,
     QApplication, QAction, QWidget, QBoxLayout)
 from PyQt5.QtGui import QMouseEvent, QIcon, QResizeEvent
-from PyQt5.QtCore import Qt, QPoint
+from PyQt5.QtCore import Qt, QPoint, pyqtSignal
 
 from .bar_widget_canvas import BarWidgetCanvas
 from .bar_widget_jack import BarWidgetJack
@@ -28,6 +28,8 @@ _displayed_widgets = (
 
 
 class PatchbayToolBar(QToolBar):
+    menu_asked = pyqtSignal(QPoint)
+    
     def __init__(self, parent):
         super().__init__(parent)
         self.setContextMenuPolicy(Qt.PreventContextMenu)
@@ -110,7 +112,6 @@ class PatchbayToolBar(QToolBar):
         global _displayed_widgets
         if self.mng is not None:
             _displayed_widgets = self.mng._tools_displayed
-        print('make context', _displayed_widgets.name)
         
         for key, act in context_actions.items():
             act.setCheckable(True)
@@ -150,17 +151,20 @@ class PatchbayToolBar(QToolBar):
         # execute the menu, exit if no action
         point = event.screenPos().toPoint()
         point.setY(self.mapToGlobal(QPoint(0, self.height())).y())
-        selected_act = menu.exec(point)
-        if selected_act is None:
-            return
+        
+        self.menu_asked.emit(point)
+        
+        # selected_act = menu.exec(point)
+        # if selected_act is None:
+        #     return
 
-        global _displayed_widgets
+        # global _displayed_widgets
 
-        for key, act in context_actions.items():
-            if act is selected_act:
-                if act.isChecked():
-                    _displayed_widgets |= key
-                else:
-                    _displayed_widgets &= ~key
+        # for key, act in context_actions.items():
+        #     if act is selected_act:
+        #         if act.isChecked():
+        #             _displayed_widgets |= key
+        #         else:
+        #             _displayed_widgets &= ~key
 
-        self._change_visibility()
+        # self._change_visibility()
