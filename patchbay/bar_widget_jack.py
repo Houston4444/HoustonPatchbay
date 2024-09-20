@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING
+
 from PyQt5.QtCore import QTimer
 from PyQt5.QtWidgets import QWidget
-
 
 from .base_elements import ToolDisplayed
 
@@ -9,6 +9,7 @@ from .ui.jack_bar import Ui_Form as JackUiForm
 
 if TYPE_CHECKING:
     from patchbay_manager import PatchbayManager
+
 
 class BarWidgetJack(QWidget):
     def __init__(self, parent):

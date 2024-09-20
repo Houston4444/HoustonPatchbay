@@ -1,19 +1,16 @@
 
 from enum import Enum, IntEnum, auto
-import time
 from typing import TYPE_CHECKING
-from PyQt5.QtCore import pyqtSignal, QTimer, pyqtSlot, QPoint, QObject
-from PyQt5.QtGui import QPalette, QIcon, QColor, QKeySequence
+from PyQt5.QtCore import QTimer, pyqtSlot, QPoint, QObject
+from PyQt5.QtGui import QPalette, QIcon
 from PyQt5.QtWidgets import (
-    QWidget, QToolBar, QMainWindow, QAction, QApplication, QMenu)
+    QWidget, QMainWindow, QAction, QApplication, QMenu)
 
 from .bar_widget_jack import BarWidgetJack
 from .bar_widget_transport import BarWidgetTransport
 from .bar_widget_canvas import BarWidgetCanvas
 
-from .ui.patchbay_tools import Ui_Form as PatchbayToolsUiForm
-from .base_elements import (
-    ToolDisplayed, TransportPosition, TransportViewMode)
+from .base_elements import ToolDisplayed
 
 if TYPE_CHECKING:
     from .patchbay_manager import PatchbayManager

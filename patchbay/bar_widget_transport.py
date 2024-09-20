@@ -20,9 +20,6 @@ def is_dark_theme(widget: QWidget) -> bool:
             QPalette.Active, QPalette.WindowText).color().lightness()
         > 128)
 
-# TODO is_dark_theme shared
-# samplerate has to be set inside
-# probably mousePressEvent
 
 class BarWidgetTransport(QWidget):
     def __init__(self, parent):
@@ -37,7 +34,6 @@ class BarWidgetTransport(QWidget):
         self.ui.labelTime.transport_view_changed.connect(
             self._transport_view_changed)
         
-        self._jack_running = True
         self._samplerate = 48000
         
         self.mng: 'PatchbayManager' = None
@@ -184,7 +180,7 @@ class BarWidgetTransport(QWidget):
             
         elif (self.ui.labelTime.transport_view_mode
                 is TransportViewMode.FRAMES):
-            frame1 =  transport_pos.frame % 1000
+            frame1 = transport_pos.frame % 1000
             frame2 = int(transport_pos.frame / 1000) % 1000
             frame3 = int(transport_pos.frame / 1000000) % 1000
             
