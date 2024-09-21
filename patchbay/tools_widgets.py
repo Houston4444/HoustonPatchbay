@@ -10,7 +10,7 @@ from .bar_widget_jack import BarWidgetJack
 from .bar_widget_transport import BarWidgetTransport
 from .bar_widget_canvas import BarWidgetCanvas
 
-from .base_elements import ToolDisplayed
+from .base_elements import ToolDisplayed, TransportPosition
 
 if TYPE_CHECKING:
     from .patchbay_manager import PatchbayManager
@@ -193,7 +193,6 @@ class PatchbayToolsWidget(QObject):
         
         if self._jack_agnostic is JackAgnostic.FULL:
             if self._jack_wg is not None:
-                print('ben alors hide it')
                 self._jack_wg.setVisible(False)
             if self._transport_wg is not None:
                 self._transport_wg.setVisible(False)
@@ -240,6 +239,10 @@ class PatchbayToolsWidget(QObject):
     def change_buffersize(self, index: int):
         if self._jack_wg is not None:
             self._jack_wg.change_buffersize()
+
+    def refresh_transport(self, transport_pos: TransportPosition):
+        if self._transport_wg is not None:
+            self._transport_wg.refresh_transport(transport_pos)
 
     def set_jack_running(self, yesno: bool, use_alsa_midi=False):
         self._jack_running = yesno
