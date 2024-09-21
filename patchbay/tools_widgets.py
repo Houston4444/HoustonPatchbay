@@ -168,7 +168,6 @@ class PatchbayToolsWidget(QObject):
     def set_jack_agnostic(self, agnostic: JackAgnostic):
         '''Use without any jack tool. Used by Patchichi.'''
         self._jack_agnostic = agnostic
-        print('aporeff', agnostic, self._jack_running)
         self.change_tools_displayed(self._tools_displayed)
     
     def change_tools_displayed(self, tools_displayed: ToolDisplayed):        
