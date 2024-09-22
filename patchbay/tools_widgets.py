@@ -256,6 +256,12 @@ class PatchbayToolsWidget(QObject):
                 self._jack_wg.set_jack_running(False)
                 self._transport_wg.set_jack_running(False)
 
+    def _canvas_is_last_of_line(self, layout: str) -> bool:
+        for line in layout.split('_'):
+            if line.endswith('C'):
+                return True
+        return False
+
     def _get_toolbars_layout(self, width: int) -> str:
         tbar_widths = tuple([b.needed_width() for b in self.tbars])
         m, t, j, c = tbar_widths
@@ -321,26 +327,27 @@ class PatchbayToolsWidget(QObject):
             self.tbars[i].setVisible(True)
             
         # add/remove spacer at right of canvas bar widget
-        for line in self._last_layout.split('_'):
-            if line.endswith('C'):
-                if self._canvas_wg is not None:
-                    self._canvas_wg.set_at_end_of_line(True)
-                    break
-        else:
-            self._canvas_wg.set_at_end_of_line(False)
+        if self._canvas_wg is not None:
+            self._canvas_wg.set_at_end_of_line(
+                self._canvas_is_last_of_line(self._last_layout))
             
         QTimer.singleShot(0, self._arrange_tool_bars_later)
     
     @pyqtSlot()
     def _arrange_tool_bars_later(self):
-        if self._last_layout == 'MTCJ':
+        if self._last_layout in ('MTCJ', 'M_TCJ'):
             width = self._last_win_width
             tbar_widths = tuple([b.needed_width() for b in self.tbars])
             m, t, j, c = tbar_widths
-            diff = width - m - t - c - j
+            
+            if self._last_layout == 'MTCJ':
+                diff = width - m - t - c - j
+            else:
+                diff = width - t -c -j
+
             if diff > 0:
-                # self.tbars[TBar.TRANSPORT].set_min_width(t + diff // 2)
-                self.tbars[TBar.CANVAS].set_min_width(c + diff)
+                self.tbars[TBar.TRANSPORT].set_min_width(t + int(diff * 0.25))
+                self.tbars[TBar.CANVAS].set_min_width(c + int(diff * 0.75))
             else:
                 for tbar in self.tbars:
                     tbar.set_min_width(None)
