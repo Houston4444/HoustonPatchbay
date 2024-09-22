@@ -62,6 +62,8 @@ class PatchbayToolsWidget(QObject):
         self._transport_wg: BarWidgetTransport = None
         self._jack_wg: BarWidgetJack = None
         self._canvas_wg: BarWidgetCanvas = None
+        
+        self._last_win_width = 0
 
     @staticmethod
     def _make_context_actions() -> dict[ToolDisplayed, QAction]:
@@ -255,7 +257,7 @@ class PatchbayToolsWidget(QObject):
                 self._transport_wg.set_jack_running(False)
 
     def _get_toolbars_layout(self, width: int) -> str:
-        tbar_widths = tuple([b.sizeHint().width() for b in self.tbars])
+        tbar_widths = tuple([b.needed_width() for b in self.tbars])
         m, t, j, c = tbar_widths
         # Main, Transport, Jack, Canvas
         # '_' for toolbarBreak (new line)
@@ -290,8 +292,10 @@ class PatchbayToolsWidget(QObject):
         return 'M_J_T_C'
 
     def main_win_resize(self, main_win: QMainWindow):
-        layout = self._get_toolbars_layout(main_win.width())
+        self._last_win_width = main_win.width()
+        layout = self._get_toolbars_layout(self._last_win_width)
         if (layout == self._last_layout):
+            QTimer.singleShot(0, self._arrange_tool_bars_later)
             return
         
         self._last_layout = layout
@@ -315,4 +319,33 @@ class PatchbayToolsWidget(QObject):
                     and i in (TBar.JACK, TBar.TRANSPORT)):
                 continue
             self.tbars[i].setVisible(True)
+            
+        # add/remove spacer at right of canvas bar widget
+        for line in self._last_layout.split('_'):
+            if line.endswith('C'):
+                if self._canvas_wg is not None:
+                    self._canvas_wg.set_at_end_of_line(True)
+                    break
+        else:
+            self._canvas_wg.set_at_end_of_line(False)
+            
+        QTimer.singleShot(0, self._arrange_tool_bars_later)
+    
+    @pyqtSlot()
+    def _arrange_tool_bars_later(self):
+        if self._last_layout == 'MTCJ':
+            width = self._last_win_width
+            tbar_widths = tuple([b.needed_width() for b in self.tbars])
+            m, t, j, c = tbar_widths
+            diff = width - m - t - c - j
+            if diff > 0:
+                # self.tbars[TBar.TRANSPORT].set_min_width(t + diff // 2)
+                self.tbars[TBar.CANVAS].set_min_width(c + diff)
+            else:
+                for tbar in self.tbars:
+                    tbar.set_min_width(None)
+        else:
+            for tbar in self.tbars:
+                tbar.set_min_width(None)
+        
         

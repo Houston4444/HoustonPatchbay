@@ -31,3 +31,6 @@ class BarWidgetCanvas(QWidget):
         self.ui.sliderZoom.set_patchbay_manager(mng)
         self.ui.viewSelector.set_patchbay_manager(mng)
         self.ui.toolButtonHiddenBoxes.set_patchbay_manager(mng)
+        
+    def set_at_end_of_line(self, end_of_line: bool):
+        self.ui.widgetSpacerRight.setVisible(not end_of_line)
