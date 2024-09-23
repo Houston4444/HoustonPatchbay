@@ -183,7 +183,7 @@ class PatchbayToolsWidget(QObject):
         
         if self.tbars is None:
             return
-        
+
         if self._canvas_wg is not None:
             self._canvas_wg.change_tools_displayed(tools_displayed)
 
@@ -192,7 +192,7 @@ class PatchbayToolsWidget(QObject):
             
         if self._jack_wg is not None:
             self._jack_wg.change_tools_displayed(tools_displayed)
-        
+
         if self._jack_agnostic is JackAgnostic.FULL:
             if self._jack_wg is not None:
                 self._jack_wg.setVisible(False)
@@ -301,10 +301,17 @@ class PatchbayToolsWidget(QObject):
         self._last_win_width = main_win.width()
         layout = self._get_toolbars_layout(self._last_win_width)
         if (layout == self._last_layout):
-            QTimer.singleShot(0, self._arrange_tool_bars_later)
+            self._arrange_tool_bars()
             return
         
         self._last_layout = layout
+        
+        # add/remove spacer at right of canvas bar widget
+        if self._canvas_wg is not None:
+            self._canvas_wg.set_at_end_of_line(
+                self._canvas_is_last_of_line(self._last_layout))
+        
+        self._arrange_tool_bars()
         
         for toolbar in self.tbars:
             main_win.removeToolBar(toolbar)
@@ -325,16 +332,8 @@ class PatchbayToolsWidget(QObject):
                     and i in (TBar.JACK, TBar.TRANSPORT)):
                 continue
             self.tbars[i].setVisible(True)
-            
-        # add/remove spacer at right of canvas bar widget
-        if self._canvas_wg is not None:
-            self._canvas_wg.set_at_end_of_line(
-                self._canvas_is_last_of_line(self._last_layout))
-            
-        QTimer.singleShot(0, self._arrange_tool_bars_later)
-    
-    @pyqtSlot()
-    def _arrange_tool_bars_later(self):
+
+    def _arrange_tool_bars(self):
         if self._last_layout in ('MTCJ', 'M_TCJ'):
             width = self._last_win_width
             tbar_widths = tuple([b.needed_width() for b in self.tbars])
