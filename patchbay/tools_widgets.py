@@ -57,13 +57,14 @@ class PatchbayToolsWidget(QObject):
         
         self._tools_displayed = ToolDisplayed.ALL
         self.tbars : tuple[PatchbayToolBar, ...]= None
-        self._last_layout = 'MCTJ'
+        self._last_layout = ''
 
         self._transport_wg: BarWidgetTransport = None
         self._jack_wg: BarWidgetJack = None
         self._canvas_wg: BarWidgetCanvas = None
         
         self._last_win_width = 0
+        self._first_resize_done = False
 
     @staticmethod
     def _make_context_actions() -> dict[ToolDisplayed, QAction]:
@@ -313,6 +314,11 @@ class PatchbayToolsWidget(QObject):
         
         self._arrange_tool_bars()
         
+        visibles = [t.isVisible() for t in self.tbars]
+        if (self._first_resize_done
+                and visibles == [False, False, False, False]):
+            return
+
         for toolbar in self.tbars:
             main_win.removeToolBar(toolbar)
         
@@ -331,7 +337,10 @@ class PatchbayToolsWidget(QObject):
             if (self._jack_agnostic is JackAgnostic.FULL
                     and i in (TBar.JACK, TBar.TRANSPORT)):
                 continue
+
             self.tbars[i].setVisible(True)
+        
+        self._first_resize_done = True
 
     def _arrange_tool_bars(self):
         if self._last_layout in ('MTCJ', 'M_TCJ'):
