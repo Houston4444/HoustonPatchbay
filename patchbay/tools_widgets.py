@@ -1,7 +1,6 @@
-
-from enum import Enum, IntEnum, auto
+from enum import Enum, IntEnum
 from typing import TYPE_CHECKING
-from PyQt5.QtCore import QTimer, pyqtSlot, QPoint, QObject
+from PyQt5.QtCore import QTimer, pyqtSlot, QPoint, QObject, Qt
 from PyQt5.QtGui import QPalette, QIcon
 from PyQt5.QtWidgets import (
     QWidget, QMainWindow, QAction, QApplication, QMenu)
@@ -40,6 +39,12 @@ class JackAgnostic(Enum):
     'Hide all widgets related to JACK'
 
 
+class TextWithIcons(Enum):
+    NO = 0
+    AUTO = 1
+    YES = 2
+
+
 class TBar(IntEnum):
     MAIN = 0
     TRANSPORT = 1
@@ -58,12 +63,15 @@ class PatchbayToolsWidget(QObject):
         self._tools_displayed = ToolDisplayed.ALL
         self.tbars : tuple[PatchbayToolBar, ...]= None
         self._last_layout = ''
+        self._text_with_icons = TextWithIcons.AUTO
 
         self._transport_wg: BarWidgetTransport = None
         self._jack_wg: BarWidgetJack = None
         self._canvas_wg: BarWidgetCanvas = None
         
         self._last_win_width = 0
+        self._main_bar_little_width = 0
+        self._main_bar_large_width = 0
         self._first_resize_done = False
 
     @staticmethod
@@ -137,9 +145,23 @@ class PatchbayToolsWidget(QObject):
     def set_tool_bars(self, *tool_bars: 'PatchbayToolBar'):
         self.tbars = tool_bars
 
-        self._transport_wg = BarWidgetTransport(self.tbars[TBar.TRANSPORT])
-        self._jack_wg = BarWidgetJack(self.tbars[TBar.JACK])
-        self._canvas_wg = BarWidgetCanvas(self.tbars[TBar.CANVAS])
+        if self._transport_wg is None:
+            self._transport_wg = BarWidgetTransport(
+                self.tbars[TBar.TRANSPORT])
+        if self._jack_wg is None:
+            self._jack_wg = BarWidgetJack(self.tbars[TBar.JACK])
+        if self._canvas_wg is None:
+            self._canvas_wg = BarWidgetCanvas(self.tbars[TBar.CANVAS])
+
+        if self._text_with_icons is TextWithIcons.AUTO:
+            # evaluate main bar widths (with and without text beside icons)
+            main_bar = self.tbars[TBar.MAIN]
+            tool_button_style = main_bar.toolButtonStyle()
+            main_bar.setToolButtonStyle(Qt.ToolButtonIconOnly)
+            self._main_bar_little_width = main_bar.sizeHint().width()
+            main_bar.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)
+            self._main_bar_large_width = main_bar.sizeHint().width()
+            main_bar.setToolButtonStyle(tool_button_style)
 
         self.tbars[TBar.TRANSPORT].addWidget(self._transport_wg)        
         self.tbars[TBar.JACK].addWidget(self._jack_wg)
@@ -263,8 +285,14 @@ class PatchbayToolsWidget(QObject):
                 return True
         return False
 
-    def _get_toolbars_layout(self, width: int) -> str:
-        tbar_widths = tuple([b.needed_width() for b in self.tbars])
+    def _get_toolbars_layout(
+            self, width: int, text_icons=TextWithIcons.AUTO) -> str:
+        tbar_widths = [b.needed_width() for b in self.tbars]
+        if text_icons is TextWithIcons.NO:
+            tbar_widths[TBar.MAIN] = self._main_bar_little_width
+        elif text_icons is TextWithIcons.YES:
+            tbar_widths[TBar.MAIN] = self._main_bar_large_width
+        
         m, t, j, c = tbar_widths
         # Main, Transport, Jack, Canvas
         # '_' for toolbarBreak (new line)
@@ -288,7 +316,7 @@ class PatchbayToolsWidget(QObject):
             return 'MJ_T_C'
         
         if width >= c + t + j:
-            return 'M_CTJ'
+            return 'M_TCJ'
         
         if width >= t + j:
             return 'M_TJ_C'
@@ -300,7 +328,26 @@ class PatchbayToolsWidget(QObject):
 
     def main_win_resize(self, main_win: QMainWindow):
         self._last_win_width = main_win.width()
-        layout = self._get_toolbars_layout(self._last_win_width)
+        
+        if self._text_with_icons is not TextWithIcons.AUTO:
+            layout = self._get_toolbars_layout(self._last_win_width)
+            
+        else:
+            layout_little = self._get_toolbars_layout(
+                self._last_win_width, TextWithIcons.NO)
+            layout_large = self._get_toolbars_layout(
+                self._last_win_width, TextWithIcons.YES)
+            little_lines = len(layout_little.split('_'))
+            large_lines = len(layout_large.split('_'))
+            if little_lines < large_lines:
+                layout = layout_little
+                self.tbars[TBar.MAIN].setToolButtonStyle(
+                    Qt.ToolButtonIconOnly)
+            else:
+                layout = layout_large
+                self.tbars[TBar.MAIN].setToolButtonStyle(
+                    Qt.ToolButtonTextBesideIcon)
+
         if (layout == self._last_layout):
             self._arrange_tool_bars()
             return
