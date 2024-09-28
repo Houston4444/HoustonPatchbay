@@ -332,26 +332,24 @@ class PatchbayToolsWidget(QObject):
             return 'M_C'
         
         if width >= sum(tbar_widths):
-            return 'MTCJ'
+            return 'MCTJ'
 
         if width >= m + t + j:
-            if width >= t + c:
-                return 'MJ_TC'
             return 'MTJ_C'
         
         if width >= m + j:
             if width >= t + c:
-                return 'MJ_TC'
+                return 'MJ_CT'
             return 'MJ_T_C'
         
         if width >= c + t + j:
-            return 'M_TCJ'
+            return 'M_TJC'
         
         if width >= t + j:
             return 'M_TJ_C'
         
         if width >= t + c:
-            return 'M_J_TC'
+            return 'M_J_CT'
         
         return 'M_J_T_C'
 
@@ -439,22 +437,33 @@ class PatchbayToolsWidget(QObject):
         self._first_resize_done = True
 
     def _arrange_tool_bars(self):
-        if self._last_layout in ('MTCJ', 'M_TCJ'):
-            width = self._last_win_width
-            tbar_widths = tuple([b.needed_width() for b in self.tbars])
-            m, t, j, c = tbar_widths
-            
-            if self._last_layout == 'MTCJ':
-                diff = width - m - t - c - j
-            else:
-                diff = width - t -c -j
+        tbar_widths = [b.needed_width() for b in self.tbars]
+        m, t, j, c = tbar_widths
+
+        if self._last_layout in ('MCTJ', 'M_CTJ', 'MJ_CT'):            
+            diff = self._last_win_width - t - c
+            if self._last_layout in ('MCTJ', 'M_CTJ'):
+                diff -= j
+            if self._last_layout == 'MCTJ':
+                diff -= m
 
             if diff > 0:
-                self.tbars[TBar.TRANSPORT].set_min_width(t + int(diff * 0.25))
-                self.tbars[TBar.CANVAS].set_min_width(c + int(diff * 0.75))
+                self.tbars[TBar.CANVAS].set_min_width(c + int(diff * 1.0))
             else:
                 for tbar in self.tbars:
                     tbar.set_min_width(None)
+                    
+        elif self._last_layout in ('MTJ_C', 'M_TJ_C'):
+            diff = self._last_win_width - t - j
+            if self._last_layout == 'MTJ_C':
+                diff -= m
+            
+            if diff > 0:
+                self.tbars[TBar.TRANSPORT].set_min_width(t + diff)
+            else:
+                for tbar in self.tbars:
+                    tbar.set_min_width(None)
+
         else:
             for tbar in self.tbars:
                 tbar.set_min_width(None)
