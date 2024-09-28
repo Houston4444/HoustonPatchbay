@@ -142,7 +142,7 @@ class PatchbayToolsWidget(QObject):
             
             if key is ToolDisplayed.ZOOM_SLIDER:
                 menu.addSeparator()
-            
+        
         return menu
 
     def set_patchbay_manager(self, mng: 'PatchbayManager'):
@@ -203,9 +203,25 @@ class PatchbayToolsWidget(QObject):
         context_actions = self._make_context_actions()
         menu = self._make_context_menu(context_actions)
         
+        act_text_with_icons = QAction(
+            QIcon.fromTheme('format-text-direction-symbolic'),
+            _translate('tool_bar', 'Display text beside icons'))
+        act_text_with_icons.setCheckable(True)
+        act_text_with_icons.setChecked(
+            self._text_with_icons is TextWithIcons.YES)
+
+        menu.addSeparator()
+        menu.addAction(act_text_with_icons)
+        
         selected_act = menu.exec(point)
         if selected_act is None:
             return
+
+        if selected_act is act_text_with_icons:
+            if act_text_with_icons.isChecked():
+                self._text_with_icons = TextWithIcons.YES
+            else:
+                self._text_with_icons = TextWithIcons.NO
 
         for key, act in context_actions.items():
             if act is selected_act:
