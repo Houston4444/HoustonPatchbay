@@ -149,6 +149,10 @@ class PatchbayToolsWidget(QObject):
         self.mng = mng
         if self._canvas_wg is not None:
             self._canvas_wg.set_patchbay_manager(mng)
+        if self._transport_wg is not None:
+            self._transport_wg.set_patchbay_manager(mng)
+        if self._jack_wg is not None:
+            self._jack_wg.set_patchbay_manager(mng)
     
     def set_tool_bars(self, *tool_bars: 'PatchbayToolBar'):
         self.tbars = tool_bars
