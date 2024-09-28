@@ -6,6 +6,8 @@ from PyQt5.QtWidgets import QToolBar, QLabel
 from PyQt5.QtGui import QMouseEvent
 from PyQt5.QtCore import Qt, QPoint, pyqtSignal, QSize
 
+from .surclassed_widgets import SpacerWidget
+from .hiddens_indicator import HiddensIndicator
 from .bar_widget_canvas import BarWidgetCanvas
 from .bar_widget_jack import BarWidgetJack
 from .bar_widget_transport import BarWidgetTransport
@@ -31,7 +33,7 @@ class PatchbayToolBar(QToolBar):
                     child_widget,
                     (QLabel, BarWidgetCanvas,
                      BarWidgetJack, BarWidgetTransport,
-                     NoneType))):
+                     NoneType, SpacerWidget, HiddensIndicator))):
             return
         
         # execute the menu, exit if no action

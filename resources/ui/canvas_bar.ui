@@ -130,7 +130,7 @@ QToolButton::menu-indicator{image: none}</string>
     <widget class="ZoomSlider" name="sliderZoom"/>
    </item>
    <item>
-    <widget class="QWidget" name="widgetSpacerRight" native="true">
+    <widget class="SpacerWidget" name="widgetSpacerRight" native="true">
      <property name="sizePolicy">
       <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
        <horstretch>0</horstretch>
@@ -163,6 +163,12 @@ QToolButton::menu-indicator{image: none}</string>
    <class>HiddensIndicator</class>
    <extends>QToolButton</extends>
    <header>..hiddens_indicator</header>
+  </customwidget>
+  <customwidget>
+   <class>SpacerWidget</class>
+   <extends>QWidget</extends>
+   <header>..surclassed_widgets</header>
+   <container>1</container>
   </customwidget>
  </customwidgets>
  <resources>
