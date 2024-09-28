@@ -44,6 +44,14 @@ class TextWithIcons(Enum):
     AUTO = 1
     YES = 2
 
+    @classmethod    
+    def by_name(cls, name: str) -> 'TextWithIcons':
+        if name == 'NO':
+            return cls.NO
+        if name == 'YES':
+            return cls.YES
+        return cls.AUTO
+
 
 class TBar(IntEnum):
     MAIN = 0
@@ -153,7 +161,7 @@ class PatchbayToolsWidget(QObject):
         if self._canvas_wg is None:
             self._canvas_wg = BarWidgetCanvas(self.tbars[TBar.CANVAS])
 
-        if self._text_with_icons is TextWithIcons.AUTO:
+        if self._text_with_icons is not TextWithIcons.NO:
             # evaluate main bar widths (with and without text beside icons)
             main_bar = self.tbars[TBar.MAIN]
             tool_button_style = main_bar.toolButtonStyle()
@@ -171,6 +179,24 @@ class PatchbayToolsWidget(QObject):
             tbar.toggleViewAction().setEnabled(False)
             tbar.toggleViewAction().setVisible(False)
             tbar.menu_asked.connect(self._menu_asked)
+    
+    def change_text_with_icons(self, text_with_icons: TextWithIcons):
+        if text_with_icons is self._text_with_icons:
+            return
+        
+        self._text_with_icons = text_with_icons
+        if self.tbars is None:
+            return
+
+        main_bar = self.tbars[TBar.MAIN]
+        
+        main_bar.setToolButtonStyle(Qt.ToolButtonIconOnly)
+        self._main_bar_little_width = main_bar.sizeHint().width()
+        
+        main_bar.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)
+        self._main_bar_large_width = main_bar.sizeHint().width()
+        
+        self._resize_later()
     
     @pyqtSlot(QPoint)
     def _menu_asked(self, point: QPoint):
@@ -287,6 +313,9 @@ class PatchbayToolsWidget(QObject):
 
     def _get_toolbars_layout(
             self, width: int, text_icons=TextWithIcons.AUTO) -> str:
+        if self.tbars is None:
+            return ''
+        
         tbar_widths = [b.needed_width() for b in self.tbars]
         if text_icons is TextWithIcons.NO:
             tbar_widths[TBar.MAIN] = self._main_bar_little_width
@@ -327,12 +356,12 @@ class PatchbayToolsWidget(QObject):
         return 'M_J_T_C'
 
     def main_win_resize(self, main_win: QMainWindow):
+        if self.tbars is None:
+            return
+        
         self._last_win_width = main_win.width()
         
-        if self._text_with_icons is not TextWithIcons.AUTO:
-            layout = self._get_toolbars_layout(self._last_win_width)
-            
-        else:
+        if self._text_with_icons is TextWithIcons.AUTO:
             layout_little = self._get_toolbars_layout(
                 self._last_win_width, TextWithIcons.NO)
             layout_large = self._get_toolbars_layout(
@@ -345,8 +374,28 @@ class PatchbayToolsWidget(QObject):
                     Qt.ToolButtonIconOnly)
             else:
                 layout = layout_large
+                if self._main_bar_large_width < self._last_win_width:
+                    self.tbars[TBar.MAIN].setToolButtonStyle(
+                        Qt.ToolButtonTextBesideIcon)
+                else:
+                    self.tbars[TBar.MAIN].setToolButtonStyle(
+                        Qt.ToolButtonIconOnly)
+
+        elif self._text_with_icons is TextWithIcons.YES:
+            if (self._main_bar_large_width
+                    > self._last_win_width):
+                self.tbars[TBar.MAIN].setToolButtonStyle(
+                    Qt.ToolButtonIconOnly)
+            else:
                 self.tbars[TBar.MAIN].setToolButtonStyle(
                     Qt.ToolButtonTextBesideIcon)
+            layout = self._get_toolbars_layout(self._last_win_width)
+        
+        else:
+            self.tbars[TBar.MAIN].setToolButtonStyle(
+                Qt.ToolButtonIconOnly)
+            layout = self._get_toolbars_layout(self._last_win_width)
+            
 
         if (layout == self._last_layout):
             self._arrange_tool_bars()
