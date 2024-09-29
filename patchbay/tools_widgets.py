@@ -66,6 +66,9 @@ class PatchbayToolsWidget(QObject):
         self._jack_running = True
         
         self.mng: 'PatchbayManager' = None
+
+        self.no_text_with_icons_act = False
+
         self._jack_agnostic = JackAgnostic.NONE
         
         self._tools_displayed = ToolDisplayed.ALL
@@ -226,8 +229,9 @@ class PatchbayToolsWidget(QObject):
         act_text_with_icons.setChecked(
             self._text_with_icons is TextWithIcons.YES)
 
-        menu.addSeparator()
-        menu.addAction(act_text_with_icons)
+        if not self.no_text_with_icons_act:
+            menu.addSeparator()
+            menu.addAction(act_text_with_icons)
         
         selected_act = menu.exec(point)
         if selected_act is None:
