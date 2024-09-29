@@ -363,7 +363,12 @@ class HiddensIndicator(QToolButton):
             _translate('hiddens_indicator', 'Hide all boxes'))
         hide_all_act.setIcon(QIcon.fromTheme('hint'))
         hide_all_act.setData(HIDE_ALL)
-        menu.addAction(hide_all_act)
+        
+        # Do not add this action for the moment,
+        # even if it works.
+        # This action seems to not take sense because
+        # we can select boxes and put them in a new view 
+        # menu.addAction(hide_all_act)
         
         for act in white_list_act, show_all_act, hide_all_act:
             act.triggered.connect(self._menu_action_triggered)
