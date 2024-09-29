@@ -62,6 +62,19 @@
     </widget>
    </item>
    <item>
+    <widget class="TypeFilterFrame" name="frameTypeFilter">
+     <property name="styleSheet">
+      <string notr="true">QFrame{border:none}</string>
+     </property>
+     <property name="frameShape">
+      <enum>QFrame::StyledPanel</enum>
+     </property>
+     <property name="frameShadow">
+      <enum>QFrame::Raised</enum>
+     </property>
+    </widget>
+   </item>
+   <item>
     <widget class="HiddensIndicator" name="toolButtonHiddenBoxes">
      <property name="sizePolicy">
       <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
@@ -94,19 +107,6 @@ QToolButton::menu-indicator{image: none}</string>
      </property>
      <property name="toolButtonStyle">
       <enum>Qt::ToolButtonTextBesideIcon</enum>
-     </property>
-    </widget>
-   </item>
-   <item>
-    <widget class="TypeFilterFrame" name="frameTypeFilter">
-     <property name="styleSheet">
-      <string notr="true">QFrame{border:none}</string>
-     </property>
-     <property name="frameShape">
-      <enum>QFrame::StyledPanel</enum>
-     </property>
-     <property name="frameShadow">
-      <enum>QFrame::Raised</enum>
      </property>
     </widget>
    </item>
