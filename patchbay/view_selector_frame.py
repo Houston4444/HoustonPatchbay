@@ -1,10 +1,12 @@
 from typing import TYPE_CHECKING, Optional
 from math import ceil
+
 from PyQt5.QtWidgets import (
     QWidget, QApplication, QMenu, QAbstractItemDelegate,
     QStyleOptionViewItem)
-from PyQt5.QtGui import QIcon, QKeyEvent, QPen, QFont, QFontMetricsF
-from PyQt5.QtCore import pyqtSlot, Qt, QSize, QPointF, QRect
+from PyQt5.QtGui import (
+    QIcon, QKeyEvent, QPen, QFont, QFontMetricsF, QResizeEvent)
+from PyQt5.QtCore import pyqtSlot, Qt, QSize, QPointF, QRect, QModelIndex
 
 from .ui.view_selector import Ui_Form
 
@@ -20,6 +22,7 @@ _translate = QApplication.translate
 
 class ItemmDeleg(QAbstractItemDelegate):
     '''Manage the menu appearance of the views selector combobox'''
+
     def __init__(self, parent: 'ViewsComboBox'):
         super().__init__(parent)
         self.mng: Optional['PatchbayManager'] = None
@@ -31,16 +34,15 @@ class ItemmDeleg(QAbstractItemDelegate):
         self._height = int(font.pointSize() * 2.5)
         self._width = 500
     
-    def sizeHint(self, option: 'QStyleOptionViewItem', index: int) -> QSize:
-        size = QSize(self._width, self._height)
-        return size
+    def sizeHint(self, option: 'QStyleOptionViewItem',
+                 index: QModelIndex) -> QSize:
+        return QSize(self._width, self._height)
     
     def highlighted(self, index: int):
         self._highlighted_index = index
     
     def get_needed_width(self) -> int:
         font = QApplication.font()
-        # font = QFont()
         itafont = QFont()
         itafont.setItalic(True)
         needed_width = 0.0
@@ -90,11 +92,10 @@ class ItemmDeleg(QAbstractItemDelegate):
                   + 0.5 * (self._height - font.pointSize())
                   + row * self._height)
         text_pos = QPointF(6.0, text_y)
-        num_zone_x = self._parent.width() - 30.0
-        num_pos = QPointF(num_zone_x + 4.0, text_y)
+        num_pos = QPointF(0.0, text_y)
         
         view_name = self._parent.itemText(row)
-        view_num = self._parent.itemData(row)
+        view_num: int = self._parent.itemData(row)
 
         painter.setPen(QPen(text_brush, 1.0))
         painter.drawText(text_pos, view_name)
@@ -108,16 +109,20 @@ class ItemmDeleg(QAbstractItemDelegate):
 
         num_pos.setX(self._width - QFontMetricsF(font).width(num_text) - 4.0)
         painter.drawText(num_pos, num_text)
+        
         painter.restore()
     
 
 class ViewSelectorWidget(QWidget):
+    '''Widget containing tool button for menu
+    and combobox for view list'''
+    
     def __init__(self, parent=None):
         super().__init__(parent)
         self.ui = Ui_Form()
         self.ui.setupUi(self)
         self.mng: Optional[PatchbayManager] = None
-        
+
         self.ui.comboBoxView.currentIndexChanged.connect(self._change_view)
         self._filling_combo = False
         
@@ -263,7 +268,8 @@ class ViewSelectorWidget(QWidget):
                 self.ui.comboBoxView.setCurrentIndex(index)
             index += 1
         
-        needed_width = self.item_dellag.get_needed_width()
+        needed_width = max(
+            self.item_dellag.get_needed_width(), self.ui.comboBoxView.width())
         self.item_dellag.set_width(needed_width)
         self.ui.comboBoxView.view().setMinimumWidth(
             self.item_dellag.get_needed_width())
@@ -387,3 +393,10 @@ class ViewSelectorWidget(QWidget):
             return
 
         super().keyPressEvent(event)
+        
+    def resizeEvent(self, event: QResizeEvent):
+        super().resizeEvent(event)
+        
+        self.item_dellag.set_width(
+            max(self.item_dellag.get_needed_width(),
+                self.ui.comboBoxView.width() - 6))
