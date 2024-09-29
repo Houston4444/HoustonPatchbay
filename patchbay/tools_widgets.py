@@ -138,6 +138,18 @@ class PatchbayToolsWidget(QObject):
                         act.setEnabled(self.mng.alsa_midi_enabled)
                     else:
                         act.setEnabled(False)
+            
+            if self._jack_agnostic is JackAgnostic.FULL:
+                if key in (ToolDisplayed.TRANSPORT_CLOCK,
+                           ToolDisplayed.TRANSPORT_PLAY_STOP,
+                           ToolDisplayed.TRANSPORT_TEMPO,
+                           ToolDisplayed.BUFFER_SIZE,
+                           ToolDisplayed.SAMPLERATE,
+                           ToolDisplayed.LATENCY,
+                           ToolDisplayed.XRUNS,
+                           ToolDisplayed.DSP_LOAD):
+                    continue
+            
             menu.addAction(act)
             
             if key is ToolDisplayed.ZOOM_SLIDER:
