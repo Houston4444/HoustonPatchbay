@@ -1,5 +1,6 @@
 from enum import Enum, IntEnum, IntFlag, auto
 from typing import Iterator, Optional, Union, Any
+from dataclasses import dataclass
 
 from PyQt5.QtCore import QPoint, QPointF
 
@@ -565,3 +566,9 @@ class GroupPos:
                 return True
         
         return False
+    
+@dataclass
+class ViewData:
+    name: str
+    default_port_types_view: PortTypesViewFlag
+    is_white_list: bool

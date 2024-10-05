@@ -6,7 +6,8 @@ from .patchcanvas import (
     PortMode, PortType, PortSubType,
     BoxLayoutMode, BoxPos, BoxFlag, BoxType,
     AliasingReason)
-from .patchcanvas.base_enums import GroupPos, GroupPosFlag, PortTypesViewFlag
+from .patchcanvas.base_enums import (
+    GroupPos, GroupPosFlag, PortTypesViewFlag, ViewData)
 
 
 # Port Flags as defined by JACK
@@ -19,11 +20,7 @@ class JackPortFlag(IntFlag):
     IS_CONTROL_VOLTAGE = 0x100
             
 
-@dataclass
-class ViewData:
-    name: str
-    default_port_types_view: PortTypesViewFlag
-    is_white_list: bool
+
 
 
 @dataclass
