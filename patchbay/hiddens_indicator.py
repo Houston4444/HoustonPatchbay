@@ -367,7 +367,8 @@ class HiddensIndicator(QToolButton):
         # Do not add this action for the moment,
         # even if it works.
         # This action seems to not take sense because
-        # we can select boxes and put them in a new view 
+        # we can select boxes and put them in a new view
+
         # menu.addAction(hide_all_act)
         
         for act in white_list_act, show_all_act, hide_all_act:

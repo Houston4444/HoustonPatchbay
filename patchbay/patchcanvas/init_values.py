@@ -18,11 +18,14 @@
 # For a full copy of the GNU General Public License see the doc/GPL.txt file.
 
 from typing import TYPE_CHECKING, Iterator, Optional, Union
-from enum import Enum, Flag, IntEnum, IntFlag, auto
+from enum import Enum, Flag, IntEnum, auto
 import logging
 
 from PyQt5.QtCore import QPointF, QRectF, QSettings, QPoint
 from PyQt5.QtWidgets import QGraphicsItem
+
+from .base_enums import (
+    PortMode, PortType, PortSubType, BoxType, BoxFlag, BoxLayoutMode, BoxPos)
 
 if TYPE_CHECKING:
     # all these classes are not importable normally because
@@ -34,58 +37,13 @@ if TYPE_CHECKING:
     from .box_widget import BoxWidget
     from .port_widget import PortWidget
     from .portgroup_widget import PortgroupWidget
-    from .line_widget import LineWidget
     from .patchcanvas import CanvasObject
     from .hidden_conn_widget import HiddenConnWidget
-    from .grouped_lines_widget import GroupedLinesWidget
 
 _logger = logging.getLogger(__name__)
 
 # Maximum Id for a plugin, treated as invalid/zero if above this value
 MAX_PLUGIN_ID_ALLOWED = 0x7FF
-
-
-class PortMode(IntFlag):
-    NULL = 0x00
-    INPUT = 0x01
-    OUTPUT = 0x02
-    BOTH = INPUT | OUTPUT
-    
-    def opposite(self) -> 'PortMode':
-        if self is PortMode.INPUT:
-            return PortMode.OUTPUT
-        if self is PortMode.OUTPUT:
-            return PortMode.INPUT
-        if self is PortMode.BOTH:
-            return PortMode.NULL
-        if self is PortMode.NULL:
-            return PortMode.BOTH
-        return PortMode.NULL
-
-    @staticmethod
-    def in_out_both() -> Iterator['PortMode']:
-        yield PortMode.INPUT
-        yield PortMode.OUTPUT
-        yield PortMode.BOTH
-
-
-class PortType(IntFlag):
-    NULL = 0x00
-    AUDIO_JACK = 0x01
-    MIDI_JACK = 0x02
-    MIDI_ALSA = 0x04
-    VIDEO = 0x08
-    PARAMETER = 0x10
-
-
-class PortSubType(IntFlag):
-    '''a2j ports are MIDI ports, we only specify a decoration for them.
-    CV ports are audio ports, but we prevent to connect an output CV port
-    to a regular audio port to avoid material destruction, CV ports also
-    look different, simply because this is absolutely not the same use.'''
-    REGULAR = 0x01
-    CV = 0x02
-    A2J = 0x04
 
 
 # Callback Actions
@@ -131,21 +89,6 @@ class CallbackAct(IntEnum):
     ANIMATION_FINISHED = auto()
 
 
-class BoxType(Enum):
-    APPLICATION = 0
-    HARDWARE = 1
-    MONITOR = 2
-    DISTRHO = 3
-    FILE = 4
-    PLUGIN = 5
-    LADISH_ROOM = 6
-    CLIENT = 7
-    INTERNAL = 8
-    
-    def __lt__(self, other: 'BoxType'):
-        return self.value < other.value
-
-
 # inline display is not usable in RaySession or Patchance
 # but this patchcanvas module has been forked from Carla
 # and all about inline_display has been kept (we never know)
@@ -156,97 +99,12 @@ class InlineDisplay(IntEnum):
     CACHED = 2
 
 
-class BoxLayoutMode(IntEnum):
-    'Define the way ports are put in a box'
-
-    AUTO = 0
-    '''Choose the layout between HIGH or LARGE
-    within the box area.'''
-    
-    HIGH = 1
-    '''In the case there are only INPUT or only OUTPUT ports,
-    the title will be on top of the box.
-    In the case there are both INPUT and OUTPUT ports,
-    ports will be displayed from top to bottom, whatever they
-    are INPUT or OUTPUT.'''
-    
-    LARGE = 2
-    '''In the case there are only INPUT or only OUTPUT ports,
-    the title will be on a side of the box.
-    In the case there are both INPUT and OUTPUT ports,
-    ports will be displayed in two columns, left for INPUT, 
-    right for OUTPUT.'''
-
-
-class BoxFlag(IntFlag):
-    NONE = 0x00
-    WRAPPED = auto()
-    HIDDEN = auto()
-
-
 class BoxHidding(Enum):
     'Enum used for animations where there are hidding or restoring boxes'
     
     NONE = auto()
     HIDDING = auto()
     RESTORING = auto()
-
-
-class BoxPos:
-    pos: tuple[int, int]
-    zone: str = ''
-    layout_mode: BoxLayoutMode = BoxLayoutMode.AUTO
-    flags: BoxFlag = BoxFlag.NONE
-
-    def __init__(self, box_pos: Optional['BoxPos']=None) -> None:
-        if box_pos:
-            self.eat(box_pos)
-            return
-
-        self.pos = (0, 0)
-    
-    def __repr__(self) -> str:
-        return f"BoxPos({self.pos})"
-    
-    def _set_flag(self, flag: BoxFlag, yesno: bool):
-        if yesno:
-            self.flags |= flag
-        else:
-            self.flags &= ~flag
-    
-    def eat(self, other: 'BoxPos'):
-        # faster way I found to copy a tuple without
-        # linking to it.
-        # write self.pos = tuple(box_pos.pos) does not
-        # copy the tuple.
-        self.pos = tuple(list(other.pos))
-        self.zone = other.zone
-        self.layout_mode = other.layout_mode
-        self.flags = other.flags
-    
-    def is_wrapped(self) -> bool:
-        return bool(self.flags & BoxFlag.WRAPPED)
-    
-    def is_hidden(self) -> bool:
-        return bool(self.flags & BoxFlag.HIDDEN)
-
-    def set_wrapped(self, yesno: bool):
-        self._set_flag(BoxFlag.WRAPPED, yesno)
-            
-    def set_hidden(self, yesno: bool):
-        self._set_flag(BoxFlag.HIDDEN, yesno)
-
-    def to_point(self) -> QPoint:
-        return QPoint(*self.pos)
-    
-    def to_pointf(self) -> QPointF:
-        return QPointF(*self.pos)
-
-    def set_pos_from_pt(self, point: Union[QPoint, QPointF]):
-        self.pos = (int(point.x()), int(point.y()))
-
-    def copy(self) -> 'BoxPos':
-        return BoxPos(self)
 
     
 # For Repulsive boxes
