@@ -270,7 +270,8 @@ class GroupPos:
         return True
 
     @staticmethod
-    def from_serialized_dict(src: dict[str, Any]) -> 'GroupPos':
+    def from_serialized_dict(
+            src: dict[str, Any], version=(0, 14, 0)) -> 'GroupPos':
         'returns a GroupPos from an old json file dict.'
         port_types_view = src.get('port_types_view')
         group_name = src.get('group_name')
@@ -288,6 +289,13 @@ class GroupPos:
         
         if isinstance(port_types_view, int):
             gpos.port_types_view = PortTypesViewFlag(port_types_view)
+            if version < (0, 13, 0):
+                if port_types_view == 3:
+                    gpos.port_types_view = PortTypesViewFlag.ALL
+            elif version < (0, 14, 0):
+                if port_types_view == 15:
+                    gpos.port_types_view = PortTypesViewFlag.ALL
+                    
         if isinstance(group_name, str):
             gpos.group_name = group_name
         if isinstance(flags, int):
