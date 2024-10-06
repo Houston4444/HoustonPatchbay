@@ -1768,34 +1768,9 @@ class PatchbayManager:
         
         file_dict['portgroups'] = portgroups
         
-        final_str = from_json_to_str(file_dict)
-        
-        # json_str = json.dumps(file_dict, indent=2)
-
-        # final_str = ''
-        # comp_line = ''
-
-        # for line in json_str.splitlines():
-        #     if line.strip() == '"pos": [':
-        #         comp_line = line
-        #         continue
-            
-        #     if comp_line:
-        #         comp_line += line.strip()
-        #         if comp_line.endswith(','):
-        #             comp_line += ' '
-
-        #         if line.strip().startswith(']'):
-        #             final_str += comp_line
-        #             final_str += '\n'
-        #             comp_line = ''
-        #     else:
-        #         final_str += line
-        #         final_str += '\n'
-        
         try:
             with open(path, 'w') as f:
-                f.write(final_str)
+                f.write(from_json_to_str(file_dict))
             return True
         except Exception as e:
             _logger.error(f'Failed to save patchichi file: {str(e)}')
