@@ -201,6 +201,7 @@ class Group:
         It saves the GroupPos and starts the hide animation.'''
         self.current_position.set_hidden_port_mode(
             self.current_position.hidden_port_modes() | port_mode)
+        self.save_current_position()
         patchcanvas.animate_before_hide_box(
             self.group_id, port_mode)
 
