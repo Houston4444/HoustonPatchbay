@@ -1,11 +1,10 @@
 
-import json
 import logging
 import operator
 from pathlib import Path
 from dataclasses import dataclass
 import time
-from typing import TYPE_CHECKING, Any, Callable, Iterator, Optional, Union
+from typing import Any, Callable, Iterator, Optional, Union
 
 from PyQt5.QtGui import QCursor, QGuiApplication
 from PyQt5.QtWidgets import QMainWindow, QMessageBox, QWidget
@@ -14,7 +13,8 @@ from PyQt5.QtCore import QTimer, QSettings, QThread
 from .patchcanvas import patchcanvas, PortType, PortSubType, PortMode
 from .patchcanvas.utils import get_new_group_positions
 from .patchcanvas.scene_view import PatchGraphicsView
-from .patchcanvas.base_enums import PortTypesViewFlag, GroupPos, from_json_to_str
+from .patchcanvas.base_enums import (
+    PortTypesViewFlag, GroupPos, from_json_to_str)
 from .patchcanvas.init_values import (
     AliasingReason, CallbackAct, CanvasFeaturesObject,
     CanvasOptionsObject, GridStyle)
@@ -1766,7 +1766,36 @@ class PatchbayManager:
                         portgroups.append(pg_mem.as_serializable_dict())
                         break
         
-        file_dict['portgroups'] = portgroups
+        portgroups_dict = dict[str, dict[str, dict[str, dict]]]()
+        
+        for pg_mem in self.portgroups_memory:
+            group = self.get_group_from_name(pg_mem.group_name)
+            if group is None:
+                continue
+            
+            gp_dict = portgroups_dict.get(pg_mem.group_name)
+            if gp_dict is None:
+                gp_dict = portgroups_dict[pg_mem.group_name] = \
+                    dict[str, dict[str, dict]]()
+
+            ptype_name = pg_mem.port_type.name
+            ptype_dict = gp_dict.get(ptype_name)
+            if ptype_dict is None:
+                ptype_dict = gp_dict[ptype_name] =  dict[str, dict]()
+                
+            pmode_name = pg_mem.port_mode.name
+            pmode_list = ptype_dict.get(pmode_name)
+            if pmode_list is None:
+                pmode_list = ptype_dict[pmode_name] = list[dict[str, Any]]()
+            
+            for port_str in pg_mem.port_names:
+                for port in group.ports:
+                    if (port.short_name() == port_str
+                            and port.type is pg_mem.port_type
+                            and port.mode() is pg_mem.port_mode):
+                        pmode_list.append(pg_mem.as_serializable_dict())
+        
+        file_dict['portgroups'] = portgroups_dict
         
         try:
             with open(path, 'w') as f:
