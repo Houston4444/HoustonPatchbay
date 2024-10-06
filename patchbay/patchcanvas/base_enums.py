@@ -438,10 +438,12 @@ class GroupPos:
         return arg_list
     
     @staticmethod
-    def from_arg_list(arg_list: list[Union[str, int]]) -> 'GroupPos':
+    def from_arg_list(arg_tuple: tuple[Union[str, int], ...]) -> 'GroupPos':
+        arg_list = list(arg_tuple)
         gpos = GroupPos()
 
-        try:
+        if True:
+        # try:
             gpos.port_types_view = PortTypesViewFlag(arg_list.pop(0))
             gpos.group_name = arg_list.pop(0)
             gpos.flags = GroupPosFlag(arg_list.pop(0))
@@ -449,10 +451,12 @@ class GroupPos:
             for port_mode in PortMode.in_out_both():
                 gpos.boxes[port_mode].pos = (arg_list.pop(0), arg_list.pop(0))
                 gpos.boxes[port_mode].flags = BoxFlag(arg_list.pop(0))
-                gpos.boxes[port_mode].layout_mode = BoxLayoutMode(arg_list.pop(0))
-        except:
-            print('group pos from arg list failed !!!')
-            return gpos
+                gpos.boxes[port_mode].layout_mode = BoxLayoutMode(
+                    arg_list.pop(0))
+        # except:
+        #     print('group pos from arg list failed !!!')
+
+        return gpos
     
     @staticmethod
     def args_types() -> str:
