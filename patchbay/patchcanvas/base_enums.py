@@ -124,6 +124,9 @@ class PortTypesViewFlag(IntFlag):
     
     @staticmethod
     def from_config_str(input_str: str) -> 'PortTypesViewFlag':
+        if not isinstance(input_str, str):
+            return PortTypesViewFlag.NONE
+
         if input_str.upper() == 'ALL':
             return PortTypesViewFlag.ALL
 
