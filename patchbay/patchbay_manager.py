@@ -125,7 +125,8 @@ class PatchbayManager:
     views = dict[int, dict[PortTypesViewFlag, dict[str, GroupPos]]]()
     views_datas = dict[int, ViewData]()
     
-    portgroups_memory = list[PortgroupMem]()
+    portgroups_memory = dict[
+        PortType, dict[str, dict[PortMode, list[PortgroupMem]]]]()
     
     delayed_orders = list[DelayedOrder]()
 
@@ -658,17 +659,49 @@ class PatchbayManager:
         self.save_group_position(gpos)
         return gpos
 
+    def get_portgroup_mem_list(
+            self, group_name: str, port_type: PortType,
+            port_mode: PortMode) -> list[PortgroupMem]:
+        ptype_dict = self.portgroups_memory.get(port_type)
+        if ptype_dict is None:
+            return []
+
+        group_dict = ptype_dict.get(group_name)
+        if group_dict is None:
+            return []
+
+        pmode_list = group_dict.get(port_mode)
+        if pmode_list is None:
+            return []
+        return pmode_list
+
     def add_portgroup_memory(self, portgroup_mem: PortgroupMem):
-        remove_list = list[PortgroupMem]()
+        ptype_dict = self.portgroups_memory.get(portgroup_mem.port_type)
+        if ptype_dict is None:
+            ptype_dict = self.portgroups_memory[portgroup_mem.port_type] = \
+                dict[str, dict[PortMode, list[PortgroupMem]]]()
+                
+        group_dict = ptype_dict.get(portgroup_mem.group_name)
+        if group_dict is None:
+            group_dict = ptype_dict[portgroup_mem.group_name] = \
+                dict[PortMode, list[PortgroupMem]]()
+        
+        pmode_list = group_dict.get(portgroup_mem.port_mode)
+        if pmode_list is None:
+            pmode_list = group_dict[portgroup_mem.port_mode] = \
+                list[PortgroupMem]()
 
-        for pg_mem in self.portgroups_memory:
-            if pg_mem.has_a_common_port_with(portgroup_mem):
-                remove_list.append(pg_mem)
-
+        remove_list = set[PortgroupMem]()
+        
+        for pg_mem in pmode_list:
+            for port_name in pg_mem.port_names:
+                if port_name in portgroup_mem.port_names:
+                    remove_list.add()
+        
         for pg_mem in remove_list:
-            self.portgroups_memory.remove(pg_mem)
+            pmode_list.remove(pg_mem)
 
-        self.portgroups_memory.append(portgroup_mem)
+        pmode_list.append(portgroup_mem)
         
         group = self.get_group_from_name(portgroup_mem.group_name)
         if group is not None:
@@ -1716,7 +1749,7 @@ class PatchbayManager:
             editor_text = self._export_port_list_to_patchichi()
 
         file_dict = dict[str, Any]()
-        file_dict['VERSION'] = (0, 2)       
+        file_dict['VERSION'] = (0, 3)       
         file_dict['editor_text'] = editor_text
         file_dict['connections'] = [
             (c.port_out.full_name, c.port_in.full_name)
@@ -1751,49 +1784,33 @@ class PatchbayManager:
             views.append(view_item)
 
         file_dict['views'] = views
-
-        portgroups = list[dict[str, Any]]()
-        for pg_mem in self.portgroups_memory:
-            group = self.get_group_from_name(pg_mem.group_name)
-            if group is None:
-                continue
-
-            for port_str in pg_mem.port_names:
-                for port in group.ports:
-                    if (port.short_name() == port_str
-                            and port.type == pg_mem.port_type
-                            and port.mode() == pg_mem.port_mode):
-                        portgroups.append(pg_mem.as_serializable_dict())
-                        break
         
         portgroups_dict = dict[str, dict[str, dict[str, dict]]]()
         
-        for pg_mem in self.portgroups_memory:
-            group = self.get_group_from_name(pg_mem.group_name)
-            if group is None:
-                continue
-            
-            gp_dict = portgroups_dict.get(pg_mem.group_name)
-            if gp_dict is None:
-                gp_dict = portgroups_dict[pg_mem.group_name] = \
-                    dict[str, dict[str, dict]]()
-
-            ptype_name = pg_mem.port_type.name
-            ptype_dict = gp_dict.get(ptype_name)
-            if ptype_dict is None:
-                ptype_dict = gp_dict[ptype_name] =  dict[str, dict]()
+        for port_type, ptype_dict in self.portgroups_memory.items():
+            portgroups_dict[port_type.name] = js_ptype_dict = {}
+            for gp_name, group_dict in ptype_dict.items():
+                js_ptype_dict[gp_name] = {}
+                group = self.get_group_from_name(gp_name)
+                if group is None:
+                    continue
                 
-            pmode_name = pg_mem.port_mode.name
-            pmode_list = ptype_dict.get(pmode_name)
-            if pmode_list is None:
-                pmode_list = ptype_dict[pmode_name] = list[dict[str, Any]]()
-            
-            for port_str in pg_mem.port_names:
-                for port in group.ports:
-                    if (port.short_name() == port_str
-                            and port.type is pg_mem.port_type
-                            and port.mode() is pg_mem.port_mode):
-                        pmode_list.append(pg_mem.as_serializable_dict())
+                for port_mode, pmode_list in group_dict.items():
+                    pg_list = js_ptype_dict[gp_name][port_mode.name] = []
+                    for pg_mem in pmode_list:
+                        one_port_found = False
+
+                        for port_str in pg_mem.port_names:
+                            for port in group.ports:
+                                if (port.type is port_type
+                                        and port.mode() is port_mode
+                                        and port.short_name() == port_str):
+                                    pg_list.append(pg_mem.as_new_dict())
+                                    one_port_found = True
+                                    break
+                            
+                            if one_port_found:
+                                break
         
         file_dict['portgroups'] = portgroups_dict
         

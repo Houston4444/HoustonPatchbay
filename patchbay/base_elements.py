@@ -149,5 +149,31 @@ class PortgroupMem:
             'above_metadatas': self.above_metadatas
         }
 
+    def as_new_dict(self) -> dict[str, Any]:
+        return {
+            'port_names': self.port_names,
+            'above_metadatas': self.above_metadatas
+        }
+    
+    @staticmethod
+    def from_new_dict(new_dict: dict[str, Any]) -> 'PortgroupMem':
+        pg_mem = PortgroupMem()
+        
+        port_names = new_dict.get('port_names')
+        if not isinstance(port_names, list):
+            return pg_mem
+        
+        for port_name in port_names:
+            if not isinstance(port_name, str):
+                return pg_mem
+        
+        for port_name in port_names:
+            pg_mem.port_names.append(port_name)
+        
+        above_metadatas = new_dict.get('above_metadatas', False)
+        if isinstance(above_metadatas, bool):
+            pg_mem.above_metadatas = above_metadatas
+        
+        return pg_mem
 
 

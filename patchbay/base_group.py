@@ -620,24 +620,23 @@ class Group:
             self.remove_from_canvas()
 
     def stereo_detection(self, port: Port) -> Union[Port, None]:
-        if port.type != PortType.AUDIO_JACK or port.subtype != PortSubType.REGULAR:
+        if (port.type is not PortType.AUDIO_JACK
+                or port.subtype is not PortSubType.REGULAR):
             return
 
         # find the last port with same type and mode in the group
         for other_port in reversed(self.ports):
-            if other_port == port:
+            if other_port is port:
                 continue
 
-            if (other_port.type == port.type
-                    and other_port.subtype == port.subtype
-                    and other_port.mode() == port.mode()
+            if (other_port.type is port.type
+                    and other_port.subtype is port.subtype
+                    and other_port.mode() is port.mode()
                     and not other_port.portgroup_id
                     and not other_port.prevent_stereo):
-                for portgroup_mem in self.manager.portgroups_memory:
-                    if (portgroup_mem.group_name == self.name
-                        and portgroup_mem.port_mode == other_port.mode()
-                        and portgroup_mem.port_type == other_port.type
-                        and other_port.short_name() in portgroup_mem.port_names):
+                for portgroup_mem in self.manager.get_portgroup_mem_list(
+                        self.name, port.type, port.mode()):
+                    if other_port.short_name() in portgroup_mem.port_names:
                         # other_port (left) is in a remembered portgroup
                         # prevent stereo detection
                         return
@@ -726,38 +725,46 @@ class Group:
 
         # check in the saved portgroups if we need to make a portgroup
         # or prevent stereo detection
-        for portgroup_mem in self.manager.portgroups_memory:
-            if (portgroup_mem.group_name == self.name
-                    and portgroup_mem.port_type == last_port.type
-                    and portgroup_mem.port_mode == last_port.mode()
-                    and last_port_name == portgroup_mem.port_names[-1]):
-                if (len(portgroup_mem.port_names) == 1
-                    or portgroup_mem.port_names.index(last_port_name) + 1
-                        != len(portgroup_mem.port_names)):
-                    return
+        for portgroup_mem in self.manager.get_portgroup_mem_list(
+                self.name, last_port.type, last_port.mode()):
+            if last_port_name != portgroup_mem.port_names[-1]:
+                continue
+            
+        #         if (len(portgroup_mem.port_names) == 1
+        #                 or)
+        
+        # for portgroup_mem in self.manager.portgroups_memory:
+        #     if (portgroup_mem.group_name == self.name
+        #             and portgroup_mem.port_type == last_port.type
+        #             and portgroup_mem.port_mode == last_port.mode()
+        #             and last_port_name == portgroup_mem.port_names[-1]):
+            if (len(portgroup_mem.port_names) == 1
+                or portgroup_mem.port_names.index(last_port_name) + 1
+                    != len(portgroup_mem.port_names)):
+                return
 
-                port_list = list[Port]()
+            port_list = list[Port]()
 
-                for port in self.ports:
-                    if (port.type == last_port.type
-                            and port.mode() == last_port.mode()):
-                        if (len(portgroup_mem.port_names) > len(port_list)
-                                and port.short_name()
-                                == portgroup_mem.port_names[len(port_list)]):
-                            port_list.append(port)
+            for port in self.ports:
+                if (port.type is last_port.type
+                        and port.mode() is last_port.mode()):
+                    if (len(portgroup_mem.port_names) > len(port_list)
+                            and port.short_name()
+                            == portgroup_mem.port_names[len(port_list)]):
+                        port_list.append(port)
 
-                            if len(port_list) == len(portgroup_mem.port_names):
-                                portgroup = self.manager.new_portgroup(
-                                    self.group_id, port.mode(), port_list)
-                                self.portgroups.append(portgroup)
-                                for port in port_list:
-                                    if not port.in_canvas:
-                                        break
-                                else:
-                                    portgroup.add_to_canvas()
+                        if len(port_list) == len(portgroup_mem.port_names):
+                            portgroup = self.manager.new_portgroup(
+                                self.group_id, port.mode(), port_list)
+                            self.portgroups.append(portgroup)
+                            for port in port_list:
+                                if not port.in_canvas:
+                                    break
+                            else:
+                                portgroup.add_to_canvas()
 
-                        elif port_list:
-                            return
+                    elif port_list:
+                        return
 
         # detect left audio port if it is a right one
         other_port = self.stereo_detection(last_port)
@@ -873,30 +880,36 @@ class Group:
             self.remove_portgroup(portgroup)
 
         # add missing portgroups aboving metadatas from portgroup memory
-        for portgroup_mem in self.manager.portgroups_memory:
-            if not portgroup_mem.above_metadatas:
+        for port_type in self.manager.portgroups_memory.keys():
+            ptype_dict = self.manager.portgroups_memory[port_type]
+            gp_dict = ptype_dict.get(self.name)
+            if gp_dict is None:
                 continue
 
-            if portgroup_mem.group_name != self.name:
-                continue
+            for port_mode in gp_dict.keys():
+                pg_mem_list = gp_dict[port_mode]
+                
+                for portgroup_mem in pg_mem_list:        
+                    if not portgroup_mem.above_metadatas:
+                        continue
 
-            founded_ports = list[Port]()
+                    founded_ports = list[Port]()
 
-            for port in self.ports:
-                if (not port.portgroup_id
-                        and port.type == portgroup_mem.port_type
-                        and port.mode() == portgroup_mem.port_mode
-                        and port.short_name()
-                            == portgroup_mem.port_names[len(founded_ports)]):
-                    founded_ports.append(port)
-                    if len(founded_ports) == len(portgroup_mem.port_names):
-                        new_portgroup = self.manager.new_portgroup(
-                            self.group_id, port.mode(), founded_ports)
-                        self.portgroups.append(new_portgroup)
-                        break
+                    for port in self.ports:
+                        if (not port.portgroup_id
+                                and port.type is port_type
+                                and port.mode() is port_mode
+                                and port.short_name()
+                                    == portgroup_mem.port_names[len(founded_ports)]):
+                            founded_ports.append(port)
+                            if len(founded_ports) == len(portgroup_mem.port_names):
+                                new_portgroup = self.manager.new_portgroup(
+                                    self.group_id, port.mode(), founded_ports)
+                                self.portgroups.append(new_portgroup)
+                                break
 
-                elif founded_ports:
-                    break
+                        elif founded_ports:
+                            break
 
         # detect and add portgroups given from metadatas
         portgroups_mdata = list[dict]() # list of dicts
@@ -930,30 +943,36 @@ class Group:
             self.portgroups.append(new_portgroup)
         
         # add missing portgroups from portgroup memory
-        for portgroup_mem in self.manager.portgroups_memory:
-            if portgroup_mem.above_metadatas:
+        for port_type in self.manager.portgroups_memory.keys():
+            ptype_dict = self.manager.portgroups_memory[port_type]
+            gp_dict = ptype_dict.get(self.name)
+            if gp_dict is None:
                 continue
 
-            if portgroup_mem.group_name != self.name:
-                continue
+            for port_mode in gp_dict.keys():
+                pg_mem_list = gp_dict[port_mode]
+                
+                for portgroup_mem in pg_mem_list:        
+                    if portgroup_mem.above_metadatas:
+                        continue
 
-            founded_ports = list[Port]()
+                    founded_ports = list[Port]()
 
-            for port in self.ports:
-                if (not port.portgroup_id
-                        and port.type == portgroup_mem.port_type
-                        and port.mode() == portgroup_mem.port_mode
-                        and port.short_name()
-                            == portgroup_mem.port_names[len(founded_ports)]):
-                    founded_ports.append(port)
-                    if len(founded_ports) == len(portgroup_mem.port_names):
-                        new_portgroup = self.manager.new_portgroup(
-                            self.group_id, port.mode(), founded_ports)
-                        self.portgroups.append(new_portgroup)
-                        break
+                    for port in self.ports:
+                        if (not port.portgroup_id
+                                and port.type is port_type
+                                and port.mode() is port_mode
+                                and port.short_name()
+                                    == portgroup_mem.port_names[len(founded_ports)]):
+                            founded_ports.append(port)
+                            if len(founded_ports) == len(portgroup_mem.port_names):
+                                new_portgroup = self.manager.new_portgroup(
+                                    self.group_id, port.mode(), founded_ports)
+                                self.portgroups.append(new_portgroup)
+                                break
 
-                elif founded_ports:
-                    break
+                        elif founded_ports:
+                            break
         
         if not self.manager.very_fast_operation:
             # ok for re-adding all items to canvas
