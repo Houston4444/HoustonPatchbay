@@ -3,11 +3,14 @@ from enum import Enum, IntEnum, IntFlag, auto
 from typing import Iterator, Optional, Union, Any
 from dataclasses import dataclass
 
-
 from PyQt5.QtCore import QPoint, QPointF
 
 
 def from_json_to_str(input_dict: dict[str, Any]) -> str:
+    '''for a canvas json dict ready to be saved,
+    return a str containing the json contents with a 2 chars indentation
+    and xy pos grouped on the same line.'''
+
     json_str = json.dumps(input_dict, indent=2)
 
     final_str = ''
@@ -75,6 +78,7 @@ class PortSubType(IntFlag):
     REGULAR = 0x01
     CV = 0x02
     A2J = 0x04
+
 
 class BoxType(Enum):
     APPLICATION = 0
@@ -610,7 +614,8 @@ class GroupPos:
                 return True
         
         return False
-    
+
+
 @dataclass
 class ViewData:
     name: str
