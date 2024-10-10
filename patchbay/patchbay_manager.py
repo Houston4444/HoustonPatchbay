@@ -1784,9 +1784,9 @@ class PatchbayManager:
             views.append(view_item)
 
         file_dict['views'] = views
-        
+
         portgroups_dict = dict[str, dict[str, dict[str, dict]]]()
-        
+
         for port_type, ptype_dict in self.portgroups_memory.items():
             portgroups_dict[port_type.name] = js_ptype_dict = {}
             for gp_name, group_dict in ptype_dict.items():
@@ -1794,7 +1794,7 @@ class PatchbayManager:
                 group = self.get_group_from_name(gp_name)
                 if group is None:
                     continue
-                
+
                 for port_mode, pmode_list in group_dict.items():
                     pg_list = js_ptype_dict[gp_name][port_mode.name] = []
                     for pg_mem in pmode_list:
@@ -1811,9 +1811,9 @@ class PatchbayManager:
                             
                             if one_port_found:
                                 break
-        
+
         file_dict['portgroups'] = portgroups_dict
-        
+
         try:
             with open(path, 'w') as f:
                 f.write(from_json_to_str(file_dict))
