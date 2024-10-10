@@ -57,7 +57,7 @@ class Group:
         return f"Group({self.name})"
 
     def port_pg_pos(self, port_id: int) -> tuple[int, int]:
-        '''returns the port portgroup position index and portgroup len'''
+        '''return the port portgroup position index and portgroup len'''
         portgroup_id = 0
 
         for port in self.ports:
