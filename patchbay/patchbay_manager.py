@@ -696,7 +696,7 @@ class PatchbayManager:
         for pg_mem in pmode_list:
             for port_name in pg_mem.port_names:
                 if port_name in portgroup_mem.port_names:
-                    remove_list.add()
+                    remove_list.add(pg_mem)
         
         for pg_mem in remove_list:
             pmode_list.remove(pg_mem)

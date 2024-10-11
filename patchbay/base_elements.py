@@ -7,7 +7,7 @@ from .patchcanvas import (
     BoxLayoutMode, BoxPos, BoxFlag, BoxType,
     AliasingReason)
 from .patchcanvas.base_enums import (
-    GroupPos, GroupPosFlag, PortTypesViewFlag, ViewData)
+    GroupPos, GroupPosFlag, PortTypesViewFlag, ViewData, PortgroupMem)
 
 
 # Port Flags as defined by JACK
@@ -103,77 +103,6 @@ class ToolDisplayed(IntFlag):
         return return_td
         
 
-class PortgroupMem:
-    group_name: str = ""
-    port_type: PortType = PortType.NULL
-    port_mode: PortMode = PortMode.NULL
-    port_names: list[str]
-    above_metadatas: bool = False
-    
-    def __init__(self):
-        self.port_names = list[str]()
 
-    @staticmethod
-    def from_serialized_dict(src: dict[str, Any]) -> 'PortgroupMem':
-        pg_mem = PortgroupMem()
-
-        try:
-            pg_mem.group_name = str(src['group_name'])
-            pg_mem.port_type = PortType(src['port_type'])
-            pg_mem.port_mode = PortMode(src['port_mode'])
-            pg_mem.port_names = [str(a) for a in src['port_names']]
-            pg_mem.above_metadatas = bool(src['above_metadatas'])
-        except:
-            pass
-
-        return pg_mem
-
-    def has_a_common_port_with(self, other: 'PortgroupMem') -> bool:
-        if (self.port_type is not other.port_type
-                or self.port_mode is not other.port_mode
-                or self.group_name != other.group_name):
-            return False
-        
-        for port_name in self.port_names:
-            if port_name in other.port_names:
-                return True
-        
-        return False
-    
-    def as_serializable_dict(self) -> dict[str, Any]:
-        return {
-            'group_name': self.group_name,
-            'port_type': self.port_type,
-            'port_mode': self.port_mode,
-            'port_names': self.port_names,
-            'above_metadatas': self.above_metadatas
-        }
-
-    def as_new_dict(self) -> dict[str, Any]:
-        return {
-            'port_names': self.port_names,
-            'above_metadatas': self.above_metadatas
-        }
-    
-    @staticmethod
-    def from_new_dict(new_dict: dict[str, Any]) -> 'PortgroupMem':
-        pg_mem = PortgroupMem()
-        
-        port_names = new_dict.get('port_names')
-        if not isinstance(port_names, list):
-            return pg_mem
-        
-        for port_name in port_names:
-            if not isinstance(port_name, str):
-                return pg_mem
-        
-        for port_name in port_names:
-            pg_mem.port_names.append(port_name)
-        
-        above_metadatas = new_dict.get('above_metadatas', False)
-        if isinstance(above_metadatas, bool):
-            pg_mem.above_metadatas = above_metadatas
-        
-        return pg_mem
 
 

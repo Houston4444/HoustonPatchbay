@@ -3,8 +3,6 @@ from enum import Enum, IntEnum, IntFlag, auto
 from typing import Iterator, Optional, Union, Any
 from dataclasses import dataclass
 
-from PyQt5.QtCore import QPoint, QPointF
-
 
 def from_json_to_str(input_dict: dict[str, Any]) -> str:
     '''for a canvas json dict ready to be saved,
@@ -36,6 +34,9 @@ def from_json_to_str(input_dict: dict[str, Any]) -> str:
             
     return final_str
 
+
+
+        
 
 class PortMode(IntFlag):
     NULL = 0x00
@@ -219,15 +220,6 @@ class BoxPos:
             
     def set_hidden(self, yesno: bool):
         self._set_flag(BoxFlag.HIDDEN, yesno)
-
-    def to_point(self) -> QPoint:
-        return QPoint(*self.pos)
-    
-    def to_pointf(self) -> QPointF:
-        return QPointF(*self.pos)
-
-    def set_pos_from_pt(self, point: Union[QPoint, QPointF]):
-        self.pos = (int(point.x()), int(point.y()))
 
     def copy(self) -> 'BoxPos':
         return BoxPos(self)
@@ -622,3 +614,181 @@ class ViewData:
     default_port_types_view: PortTypesViewFlag
     is_white_list: bool
     
+
+class PortgroupMem:
+    group_name: str = ""
+    port_type: PortType = PortType.NULL
+    port_mode: PortMode = PortMode.NULL
+    port_names: list[str]
+    above_metadatas: bool = False
+    
+    def __init__(self):
+        self.port_names = list[str]()
+
+    @staticmethod
+    def from_serialized_dict(src: dict[str, Any]) -> 'PortgroupMem':
+        pg_mem = PortgroupMem()
+
+        try:
+            pg_mem.group_name = str(src['group_name'])
+            pg_mem.port_type = PortType(src['port_type'])
+            pg_mem.port_mode = PortMode(src['port_mode'])
+            pg_mem.port_names = [str(a) for a in src['port_names']]
+            pg_mem.above_metadatas = bool(src['above_metadatas'])
+        except:
+            pass
+
+        return pg_mem
+
+    def has_a_common_port_with(self, other: 'PortgroupMem') -> bool:
+        if (self.port_type is not other.port_type
+                or self.port_mode is not other.port_mode
+                or self.group_name != other.group_name):
+            return False
+        
+        for port_name in self.port_names:
+            if port_name in other.port_names:
+                return True
+        
+        return False
+    
+    def as_serializable_dict(self) -> dict[str, Any]:
+        return {
+            'group_name': self.group_name,
+            'port_type': self.port_type,
+            'port_mode': self.port_mode,
+            'port_names': self.port_names,
+            'above_metadatas': self.above_metadatas
+        }
+
+    def as_new_dict(self) -> dict[str, Any]:
+        return {
+            'port_names': self.port_names,
+            'above_metadatas': self.above_metadatas
+        }
+    
+    @staticmethod
+    def from_new_dict(new_dict: dict[str, Any]) -> 'PortgroupMem':
+        pg_mem = PortgroupMem()
+        
+        port_names = new_dict.get('port_names')
+        if not isinstance(port_names, list):
+            return pg_mem
+        
+        for port_name in port_names:
+            if not isinstance(port_name, str):
+                return pg_mem
+        
+        for port_name in port_names:
+            pg_mem.port_names.append(port_name)
+        
+        above_metadatas = new_dict.get('above_metadatas', False)
+        if isinstance(above_metadatas, bool):
+            pg_mem.above_metadatas = above_metadatas
+        
+        return pg_mem
+
+
+def portgroups_mem_from_json(
+        portgroups: Union[list[dict], dict]) -> \
+            dict[PortType, dict[str, dict[PortMode, list[PortgroupMem]]]]:
+    '''Used to set PatchbayManager.portgroups_memory from
+    a json list or dict. This is a json list with old config files.'''
+    portgroups_memory = dict[
+        PortType, dict[str, dict[PortMode, list[PortgroupMem]]]]()
+    
+    if isinstance(portgroups, dict):
+        for ptype_str, ptype_dict in portgroups.items():
+            try:
+                port_type = PortType[ptype_str]
+                assert isinstance(ptype_dict, dict)
+            except:
+                continue
+
+            nw_ptype_dict = portgroups_memory[port_type] = \
+                dict[str, dict[PortMode, list[PortgroupMem]]]()
+            
+            for gp_name, gp_dict in ptype_dict.items():
+                if not isinstance(gp_dict, dict):
+                    continue
+                    
+                nw_gp_dict = nw_ptype_dict[gp_name] = \
+                    dict[PortMode, list[PortgroupMem]]()
+                
+                for pmode_str, pmode_list in gp_dict.items():
+                    try:
+                        port_mode = PortMode[pmode_str]
+                        assert isinstance(pmode_list, list)
+                    except:
+                        continue
+                    
+                    nw_pmode_list = nw_gp_dict[port_mode] = \
+                        list[PortgroupMem]()
+                    
+                    all_port_names = set[str]()
+                    
+                    for pg_mem_dict in pmode_list:
+                        if not isinstance(pg_mem_dict, dict):
+                            continue
+                        
+                        port_names = pg_mem_dict.get('port_names')
+                        if not isinstance(port_names, list):
+                            continue
+                        
+                        port_already_in_pg_mem = False
+                        for port_name in port_names:
+                            if port_name in all_port_names:
+                                port_already_in_pg_mem = True
+                                break
+                                
+                            if isinstance(port_name, str):
+                                all_port_names.add(port_name)
+                        
+                        if port_already_in_pg_mem:
+                            continue
+                        
+                        pg_mem = PortgroupMem.from_new_dict(pg_mem_dict)
+                        pg_mem.group_name = gp_name
+                        pg_mem.port_type = port_type
+                        pg_mem.port_mode = port_mode
+                        
+                        nw_pmode_list.append(pg_mem)
+                    
+    elif isinstance(portgroups, list): 
+        for pg_mem_dict in portgroups:
+            portgroups: list[dict]
+            pg_mem = PortgroupMem.from_serialized_dict(pg_mem_dict)
+            
+            ptype_dict = portgroups_memory.get(pg_mem.port_type)
+            if ptype_dict is None:
+                ptype_dict = portgroups_memory[pg_mem.port_type] = \
+                    dict[str, dict[PortMode, list[PortgroupMem]]]()
+            
+            gp_name_dict = ptype_dict.get(pg_mem.group_name)
+            if gp_name_dict is None:
+                gp_name_dict = ptype_dict[pg_mem.group_name] = \
+                    dict[PortMode, list[PortgroupMem]]()
+            
+            pmode_list = gp_name_dict.get(pg_mem.port_mode)
+            if pmode_list is None:
+                pmode_list = gp_name_dict[pg_mem.port_mode] = \
+                    list[PortgroupMem]()
+
+            all_port_names = set[str]()
+            for portgroup_mem in pmode_list:
+                for port_name in portgroup_mem.port_names:
+                    all_port_names.add(port_name)
+            
+            port_in_other_portgroup_mem = False
+
+            for port_name in pg_mem.port_names:
+                if port_name in all_port_names:
+                    port_in_other_portgroup_mem = True
+                    break
+            
+            if port_in_other_portgroup_mem:
+                continue
+            
+            pmode_list.append(pg_mem)
+    
+    return portgroups_memory
