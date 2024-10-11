@@ -2,6 +2,9 @@ import json
 from enum import Enum, IntEnum, IntFlag, auto
 from typing import Iterator, Optional, Union, Any
 from dataclasses import dataclass
+import logging
+
+_logger = logging.getLogger(__name__)
 
 
 def from_json_to_str(input_dict: dict[str, Any]) -> str:
@@ -478,8 +481,7 @@ class GroupPos:
         arg_list = list(arg_tuple)
         gpos = GroupPos()
 
-        if True:
-        # try:
+        try:
             gpos.port_types_view = PortTypesViewFlag(arg_list.pop(0))
             gpos.group_name = arg_list.pop(0)
             gpos.flags = GroupPosFlag(arg_list.pop(0))
@@ -489,8 +491,8 @@ class GroupPos:
                 gpos.boxes[port_mode].flags = BoxFlag(arg_list.pop(0))
                 gpos.boxes[port_mode].layout_mode = BoxLayoutMode(
                     arg_list.pop(0))
-        # except:
-        #     print('group pos from arg list failed !!!')
+        except:
+            print('group pos from arg list failed !!!')
 
         return gpos
     
@@ -685,6 +687,34 @@ class PortgroupMem:
         above_metadatas = new_dict.get('above_metadatas', False)
         if isinstance(above_metadatas, bool):
             pg_mem.above_metadatas = above_metadatas
+        
+        return pg_mem
+
+    def to_arg_list(self) -> list[Union[str, int]]:
+        arg_list = list[Union[str, int]]()
+        
+        return [self.group_name,
+                self.port_type.value,
+                self.port_mode.value,
+                int(self.above_metadatas),
+                ] + self.port_names
+    
+    @staticmethod
+    def from_arg_list(arg_tuple: tuple[Union[str, int], ...]) -> 'PortgroupMem':
+        arg_list = list(arg_tuple)
+        pg_mem = PortgroupMem()
+        
+        try:
+            pg_mem.group_name = arg_list.pop(0)
+            pg_mem.port_type = PortType(arg_list.pop(0))
+            pg_mem.port_mode = PortMode(arg_list.pop(0))
+            pg_mem.above_metadatas = bool(arg_list.pop(0))
+            for arg in arg_list:
+                assert isinstance(arg, str)
+                pg_mem.port_names.append(arg)
+        
+        except:
+            _logger.warning('Failed to convert OSC list to portgroup mem')
         
         return pg_mem
 
