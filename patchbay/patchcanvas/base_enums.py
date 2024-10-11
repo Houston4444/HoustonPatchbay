@@ -792,3 +792,22 @@ def portgroups_mem_from_json(
             pmode_list.append(pg_mem)
     
     return portgroups_memory
+
+def portgroups_memory_to_json(
+        portgroups_memory: \
+            dict[PortType, dict[str, dict[PortMode, list[PortgroupMem]]]]) -> \
+                dict[str, dict[str, dict[str, list[dict]]]]:
+    portgroups_dict = dict[str, dict[str, dict[str, dict]]]()
+
+    for port_type, ptype_dict in portgroups_memory.items():
+        portgroups_dict[port_type.name] = js_ptype_dict = {}
+        for gp_name, group_dict in ptype_dict.items():
+            js_ptype_dict[gp_name] = {}
+
+            for port_mode, pmode_list in group_dict.items():
+                pg_list = js_ptype_dict[gp_name][port_mode.name] = []
+                for pg_mem in pmode_list:
+                    pg_list.append(pg_mem.as_new_dict())
+
+    return portgroups_dict
+    
