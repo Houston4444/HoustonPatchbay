@@ -664,10 +664,10 @@ class PortgroupMem:
         }
 
     def as_new_dict(self) -> dict[str, Any]:
-        return {
-            'port_names': self.port_names,
-            'above_metadatas': self.above_metadatas
-        }
+        new_dict = {'port_names': self.port_names}
+        if self.above_metadatas:
+            new_dict['above_metadatas'] = self.above_metadatas
+        return new_dict
     
     @staticmethod
     def from_new_dict(new_dict: dict[str, Any]) -> 'PortgroupMem':
