@@ -1,7 +1,6 @@
 import json
 from enum import Enum, IntEnum, IntFlag, auto
 from typing import Iterator, Optional, Union, Any
-from dataclasses import dataclass
 import logging
 
 _logger = logging.getLogger(__name__)
@@ -664,11 +663,15 @@ class GroupPos:
         return False
 
 
-@dataclass
 class ViewData:
     name: str
     default_port_types_view: PortTypesViewFlag
     is_white_list: bool
+    
+    def __init__(self, default_ptv: PortTypesViewFlag):
+        self.name = ''
+        self.default_port_types_view = default_ptv
+        self.is_white_list = False
     
 
 class PortgroupMem:

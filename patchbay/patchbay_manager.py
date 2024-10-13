@@ -943,11 +943,10 @@ class PatchbayManager:
                 for group_name, gpos in gp_gpos.items():
                     self.views[new_num][ptv][group_name] = gpos.copy()
             
-            self.views_datas[new_num] = ViewData(
-                '', self.port_types_view, False)
+            self.views_datas[new_num] = ViewData(self.port_types_view)
         else:
-            self.views_datas[new_num] = ViewData(
-                '', self.port_types_view, True)
+            self.views_datas[new_num] = ViewData(self.port_types_view)
+            self.views_datas[new_num].is_white_list = True
 
             v = self.views[self.view_number][self.port_types_view]
             self.views[new_num][self.port_types_view] = new_v = {}
@@ -969,7 +968,7 @@ class PatchbayManager:
         view_data = self.views_datas.get(self.view_number)
         if view_data is None:
             self.views_datas[self.view_number] = ViewData(
-                new_name, self.port_types_view, False)
+                self.port_types_view)
             return
 
         view_data.name = new_name
@@ -980,7 +979,7 @@ class PatchbayManager:
         view_data = self.views_datas.get(self.view_number)
         if view_data is None:
             self.views_datas[self.view_number] = ViewData(
-                '', self.port_types_view, False)
+                self.port_types_view)
         else:
             view_data.default_port_types_view = self.port_types_view
         
@@ -1080,12 +1079,14 @@ class PatchbayManager:
             white_list_view=False):
         view_data = self.views_datas.get(view_number)
         if view_data is None:
-            if name is None:
-                name = ''
             if port_types is None:
                 port_types = PortTypesViewFlag.ALL
 
-            view_data = ViewData(name, port_types, white_list_view)
+            view_data = ViewData(port_types)
+            if name is not None:
+                view_data.name = name
+            if white_list_view:
+                view_data.is_white_list = True
             
             self.views_datas[view_number] = view_data
             self.set_views_changed()
