@@ -421,60 +421,57 @@ class GroupPos:
         gpos.port_types_view = ptv
         gpos.group_name = group_name
 
-        flags_str = in_dict.get('flags')
-        if isinstance(flags_str, str):
-            if flags_str.upper() == 'SPLITTED':
-                gpos.flags |= GroupPosFlag.SPLITTED
+        if (in_dict.get('OUTPUT') is not None
+                or in_dict.get('INPUT') is not None):
+            gpos.flags |= GroupPosFlag.SPLITTED
 
-        boxes_dict = in_dict.get('boxes')
-        if isinstance(boxes_dict, dict):
-            for port_mode_str, box_dict in boxes_dict.items():
-                if not (isinstance(port_mode_str, str)
-                        and isinstance(box_dict, dict)):
-                    continue
+        for port_mode_str, box_dict in in_dict.items():
+            if not (isinstance(port_mode_str, str)
+                    and isinstance(box_dict, dict)):
+                continue
 
-                port_mode = PortMode.NULL
-                for pmode_str in port_mode_str.split('|'):
-                    for p_mode in PortMode.INPUT, PortMode.OUTPUT:
-                        if p_mode.name == pmode_str.upper():
-                            port_mode |= p_mode
-                
-                gpos.boxes[port_mode] = BoxPos()
-                
-                for key, value in box_dict.items():
-                    if key == 'pos':
-                        if not (isinstance(value, list)
-                                and len(value) == 2
-                                and isinstance(value[0], int)
-                                and isinstance(value[1], int)):
-                            continue
-                        
-                        gpos.boxes[port_mode].pos = tuple(value)
+            port_mode = PortMode.NULL
+            for pmode_str in port_mode_str.split('|'):
+                for p_mode in PortMode.INPUT, PortMode.OUTPUT:
+                    if p_mode.name == pmode_str.upper():
+                        port_mode |= p_mode
+            
+            gpos.boxes[port_mode] = BoxPos()
+            
+            for key, value in box_dict.items():
+                if key == 'pos':
+                    if not (isinstance(value, list)
+                            and len(value) == 2
+                            and isinstance(value[0], int)
+                            and isinstance(value[1], int)):
+                        continue
                     
-                    elif key == 'flags':
-                        if not isinstance(value, str):
-                            continue
-                        
-                        flags_str_list = [v.upper() for v in value.split('|')]
-                        
-                        box_flags = BoxFlag.NONE
-                        for box_flag in BoxFlag:
-                            if box_flag.name in flags_str_list:
-                                box_flags |= box_flag
-                        
-                        gpos.boxes[port_mode].flags = box_flags
-                        
-                    elif key == 'layout_mode':
-                        if not isinstance(value, str):
-                            continue
-                        
-                        layout_mode = BoxLayoutMode.AUTO
-                        if value.upper() == 'LARGE':
-                            layout_mode = BoxLayoutMode.LARGE
-                        elif value.upper() == 'HIGH':
-                            layout_mode = BoxLayoutMode.HIGH
-                        
-                        gpos.boxes[port_mode].layout_mode = layout_mode
+                    gpos.boxes[port_mode].pos = tuple(value)
+                
+                elif key == 'flags':
+                    if not isinstance(value, str):
+                        continue
+                    
+                    flags_str_list = [v.upper() for v in value.split('|')]
+                    
+                    box_flags = BoxFlag.NONE
+                    for box_flag in BoxFlag:
+                        if box_flag.name in flags_str_list:
+                            box_flags |= box_flag
+                    
+                    gpos.boxes[port_mode].flags = box_flags
+                    
+                elif key == 'layout_mode':
+                    if not isinstance(value, str):
+                        continue
+                    
+                    layout_mode = BoxLayoutMode.AUTO
+                    if value.upper() == 'LARGE':
+                        layout_mode = BoxLayoutMode.LARGE
+                    elif value.upper() == 'HIGH':
+                        layout_mode = BoxLayoutMode.HIGH
+                    
+                    gpos.boxes[port_mode].layout_mode = layout_mode
 
         if not gpos.is_splitted():
             for port_mode in PortMode.INPUT, PortMode.OUTPUT:
@@ -483,13 +480,8 @@ class GroupPos:
         return gpos
 
     def as_new_dict(self) -> dict:
-        d = {}
-        
+        d = {}        
         splitted = bool(self.flags & GroupPosFlag.SPLITTED)
-        if splitted:
-            d['flags'] = GroupPosFlag.SPLITTED.name
-        
-        boxes_dict = dict[PortMode, dict]()
 
         for port_mode, box in self.boxes.items():
             if port_mode is PortMode.BOTH and splitted:
@@ -519,9 +511,7 @@ class GroupPos:
                 # TODO log
                 continue
             
-            boxes_dict['|'.join(port_mode_names)] = box_dict
-        
-        d['boxes'] = boxes_dict
+            d['|'.join(port_mode_names)] = box_dict
 
         return d
 
