@@ -901,15 +901,16 @@ class PatchbayManager:
 
         patchcanvas.canvas.scene.prevent_box_user_move = True
 
-        bef_gp_pos = time.time()
         for group, gpos_redraw in groups_and_pos.items():
             group.set_group_position(*gpos_redraw)
 
-        bef_repulse = time.time()
         patchcanvas.repulse_all_boxes()
-        end_repulse = time.time()
 
         self.sg.port_types_view_changed.emit(self.port_types_view)
+
+    def set_views_changed(self):
+        '''emit the "view_changed" signal. Can be Inherited to do other tasks'''
+        self.sg.views_changed.emit()
 
     def new_view(self, view_number: Optional[int]=None,
                  exclusive_with: Optional[dict[int, PortMode]]=None):
@@ -941,6 +942,9 @@ class PatchbayManager:
 
                 for group_name, gpos in gp_gpos.items():
                     self.views[new_num][ptv][group_name] = gpos.copy()
+            
+            self.views_datas[new_num] = ViewData(
+                '', self.port_types_view, False)
         else:
             self.views_datas[new_num] = ViewData(
                 '', self.port_types_view, True)
@@ -958,7 +962,7 @@ class PatchbayManager:
 
         self.sort_views_by_index()
         self.view_number = new_num
-        self.sg.views_changed.emit()
+        self.set_views_changed()
         self.change_port_types_view(self.port_types_view, force=True)
     
     def rename_current_view(self, new_name: str):
@@ -969,7 +973,7 @@ class PatchbayManager:
             return
 
         view_data.name = new_name
-        self.sg.views_changed.emit()
+        self.set_views_changed()
     
     def change_view(self, view_number: int):
         # save the port types view of the current view
@@ -1008,7 +1012,7 @@ class PatchbayManager:
         if view_number in self.views_datas.keys():
             self.views_datas.pop(view_number)
         self.sort_views_by_index()
-        self.sg.views_changed.emit()
+        self.set_views_changed()
 
         if rm_current_view:
             switch_to_view = -1
@@ -1044,7 +1048,7 @@ class PatchbayManager:
             self.views.pop(n)
             if n in self.views_datas.keys():
                 self.views_datas.pop(n)
-        self.sg.views_changed.emit()
+        self.set_views_changed()
     
     def change_view_number(self, new_num: int):
         if new_num == self.view_number:
@@ -1068,7 +1072,7 @@ class PatchbayManager:
             
         self.view_number = new_num
         self.sort_views_by_index()
-        self.sg.views_changed.emit()
+        self.set_views_changed()
 
     def write_view_data(
             self, view_number: int, name: Optional[str]=None,
@@ -1084,7 +1088,7 @@ class PatchbayManager:
             view_data = ViewData(name, port_types, white_list_view)
             
             self.views_datas[view_number] = view_data
-            self.sg.views_changed.emit()
+            self.set_views_changed()
             return
         
         if name is not None:
@@ -1095,7 +1099,7 @@ class PatchbayManager:
         
         view_data.is_white_list = white_list_view
         
-        self.sg.views_changed.emit()
+        self.set_views_changed()
 
     def get_view_name(self, view_number: int) -> str:
         if self.views.get(view_number) is None:

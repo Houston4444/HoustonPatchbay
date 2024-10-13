@@ -397,6 +397,7 @@ class HiddensIndicator(QToolButton):
                 self.mng.clear_absents_in_view()
             self.mng.views_datas[self.mng.view_number].is_white_list = \
                 act.isChecked()
+            self.mng.set_views_changed()
             return
         
         if act_data == SHOW_ALL:
