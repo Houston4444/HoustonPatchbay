@@ -899,12 +899,13 @@ class PatchbayManager:
 
         self.optimize_operation(False)
 
-        patchcanvas.canvas.scene.prevent_box_user_move = True
+        if groups_and_pos:
+            patchcanvas.canvas.scene.prevent_box_user_move = True
 
-        for group, gpos_redraw in groups_and_pos.items():
-            group.set_group_position(*gpos_redraw)
+            for group, gpos_redraw in groups_and_pos.items():
+                group.set_group_position(*gpos_redraw)
 
-        patchcanvas.repulse_all_boxes()
+            patchcanvas.repulse_all_boxes()
 
         self.sg.port_types_view_changed.emit(self.port_types_view)
 
