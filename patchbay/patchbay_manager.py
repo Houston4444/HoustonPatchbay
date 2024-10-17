@@ -1072,7 +1072,6 @@ class PatchbayManager:
             
         self.view_number = new_num
         self.sort_views_by_index()
-        # self.set_views_changed()
         self.sg.views_changed.emit()
 
     def write_view_data(
