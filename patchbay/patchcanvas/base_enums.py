@@ -552,69 +552,6 @@ class GroupPos:
     @staticmethod
     def args_types() -> str:
         return 'isiiiiiiiiiiiii'
-
-    def as_serializable_dict(self, minimal=False):
-        '''DEPRECATED, will be removed soon'''
-        
-        if not minimal:
-            return {'port_types_view': self.port_types_view.value,
-                    'group_name': self.group_name,
-                    # 'null_zone': self.null_zone,
-                    # 'in_zone': self.in_zone,
-                    # 'out_zone': self.out_zone,
-                    # 'null_xy': self.null_xy,
-                    # 'in_xy': self.in_xy,
-                    # 'out_xy': self.out_xy,
-                    'flags': self.flags,
-                    # 'layout_modes': self.layout_modes,
-                    'hidden_sides': self.hidden_sides.value}
-        
-        out_dict = {'port_types_view': self.port_types_view.value,
-                    'group_name': self.group_name}
-        
-        # if self.null_zone:
-        #     out_dict['null_zone'] = self.null_zone
-        # if self.in_zone:
-        #     out_dict['in_zone'] = self.in_zone
-        # if self.out_zone:
-        #     out_dict['out_zone'] = self.out_zone
-
-        # if self.null_xy != (0, 0):
-        #     out_dict['null_xy'] = self.null_xy
-        # if self.in_xy != (0, 0):
-        #     out_dict['in_xy'] = self.in_xy
-        # if self.out_xy != (0, 0):
-        #     out_dict['out_xy'] = self.out_xy
-
-        layout_modes = dict[int, int]()
-        flags = self.flags
-        flags &= ~GroupPosFlag.WRAPPED_INPUT
-        flags &= ~GroupPosFlag.WRAPPED_OUTPUT
-        
-        for port_mode, box_pos in self.boxes.items():
-            if box_pos.layout_mode is not BoxLayoutMode.AUTO:
-                layout_modes[port_mode.value] = box_pos.layout_mode.value
-
-            if box_pos.is_wrapped():
-                if port_mode & PortMode.OUTPUT:
-                    flags |= GroupPosFlag.WRAPPED_OUTPUT
-                if port_mode & PortMode.INPUT:
-                    flags |= GroupPosFlag.WRAPPED_INPUT
-                
-        if layout_modes:
-            out_dict['layout_modes'] = layout_modes
-        
-        if self.flags is not GroupPosFlag.NONE:
-            out_dict['flags'] = flags.value
-
-        if self.hidden_sides:
-            out_dict['hidden_sides'] = self.hidden_sides.value
-            
-        out_dict['null_xy'] = self.boxes[PortMode.BOTH].pos
-        out_dict['in_xy'] = self.boxes[PortMode.INPUT].pos
-        out_dict['out_xy'] = self.boxes[PortMode.OUTPUT].pos
-
-        return out_dict
     
     def is_splitted(self) -> bool:
         return bool(self.flags & GroupPosFlag.SPLITTED)
@@ -672,6 +609,7 @@ class ViewData:
         self.name = ''
         self.default_port_types_view = default_ptv
         self.is_white_list = False
+        self.ptvs = dict[PortTypesViewFlag, dict[str, GroupPos]]()
     
 
 class PortgroupMem:
@@ -898,3 +836,184 @@ def portgroups_memory_to_json(
 
     return portgroups_dict
     
+
+class ViewsDict(dict[int, ViewData]):
+    def eat_json_list(self, json_list: list):
+        if not isinstance(json_list, list):
+            return
+        
+        for view_dict in json_list:
+            if not isinstance(view_dict, dict):
+                continue
+            
+            index = view_dict.get('index')
+            if not isinstance(index, int):
+                continue
+            
+            name = view_dict.get('name')
+            default_ptv_str = view_dict.get('default_port_types')
+            is_white_list = view_dict.get('is_white_list')
+            
+            if not isinstance(default_ptv_str, str):
+                continue
+            
+            default_ptv = PortTypesViewFlag.from_config_str(default_ptv_str)
+            if default_ptv is PortTypesViewFlag.NONE:
+                continue
+            
+            view_data = self.get(index)
+            if view_data is None:
+                view_data = self[index] = ViewData(default_ptv)
+
+            if isinstance(name, str):
+                view_data.name = name
+                
+            if isinstance(is_white_list, bool):
+                view_data.is_white_list = bool
+                
+            for ptv_str, gp_dict in view_dict.items():
+                if not (isinstance(ptv_str, str)
+                        and isinstance(gp_dict, dict)):
+                    continue
+            
+                ptv = PortTypesViewFlag.from_config_str(ptv_str)
+                if ptv is PortTypesViewFlag.NONE:
+                    continue
+                
+                nw_ptv_dict = view_data.ptvs.get(ptv)
+                if nw_ptv_dict is None:
+                    nw_ptv_dict = view_data.ptvs[ptv] = dict[str, GroupPos]()
+                
+                for gp_name, gpos_dict in gp_dict.items():
+                    nw_ptv_dict[gp_name] = GroupPos.from_new_dict(
+                        ptv, gp_name, gpos_dict)
+                    
+    def to_json_list(self) -> list[dict[str, Any]]:
+        out_list = list[dict[str, Any]]()
+        
+        for index, view_data in self.items():
+            out_dict = {'index': index}
+
+            if view_data.name:
+                out_dict['name'] = view_data.name
+            if view_data.default_port_types_view:
+                out_dict['default_port_types'] = \
+                    view_data.default_port_types_view.name
+            if view_data.is_white_list:
+                out_dict['is_white_list'] = True
+            
+            for ptv, ptv_dict in view_data.ptvs.items():
+                js_ptv_dict = out_dict[ptv.name] = \
+                    dict[str, dict[str, dict]]()
+                for gp_name, gpos in ptv_dict.items():
+                    js_ptv_dict[gp_name] = gpos.as_new_dict()
+            
+            out_list.append(out_dict)
+
+        return out_list
+
+    def add_old_json_gpos(self, old_gpos_dict: dict, version: tuple[int]):
+        gpos = GroupPos.from_serialized_dict(old_gpos_dict, version)
+        
+        view_one = self.get(1)
+        if view_one is None:
+            view_one = self[1] = ViewData(PortTypesViewFlag.ALL)
+        
+        ptv_dict = view_one.ptvs.get(gpos.port_types_view)
+        if ptv_dict is None:
+            ptv_dict = view_one.ptvs[gpos.port_types_view] = \
+                dict[str, GroupPos]()
+        
+        ptv_dict[gpos.group_name] = gpos
+
+    def short_data_states(self) -> list[dict[str, Union[str, bool]]]:
+        '''Used by RaySession to send short OSC str messages
+        about view datas'''
+
+        out_list = list[dict[str, Union[str, bool]]]()
+        for index, view_data in self.items():
+            out_dict = {'index': index}
+            if view_data.name:
+                out_dict['name'] = view_data.name
+            if view_data.default_port_types_view is not PortTypesViewFlag.ALL:
+                out_dict['default_ptv'] = \
+                    view_data.default_port_types_view.name
+            if view_data.is_white_list:
+                out_dict['is_white_list'] = True
+            out_list.append(out_dict)
+        return out_list
+    
+    def update_from_short_data_states(
+            self, data_states: list[dict[str, Union[str, bool]]]):
+        if not isinstance(data_states, list):
+            return
+
+        for view_state in data_states:
+            if not isinstance(view_state, dict):
+                return
+        
+        indexes = set[int]()
+        
+        for view_state in data_states:
+            index = view_state.get('index')
+            if not isinstance(index, int):
+                continue
+            
+            indexes.add(index)
+            
+            view_data = self.get(index)
+            if view_data is None:
+                continue
+            
+            name = view_state.get('name')
+            if isinstance(name, str):
+                view_data.name = name
+                
+            default_ptv_str = view_state.get('default_ptv')
+            if isinstance(default_ptv_str, str):
+                view_data.default_port_types_view = \
+                    PortTypesViewFlag.from_config_str(default_ptv_str)
+                    
+            is_white_list = view_state.get('is_white_list')
+            if isinstance(is_white_list, bool):
+                view_data.is_white_list = is_white_list
+                
+        rm_indexes = set[int]()
+        for index in self.keys():
+            if index not in indexes:
+                rm_indexes.add(index)
+                
+        for rm_index in rm_indexes:
+            self.pop(rm_index)
+    
+    def add_group_pos(self, view_num: int, gpos: GroupPos):
+        view_data = self.get(view_num)
+        if view_data is None:
+            view_data = self[view_num] = ViewData(PortTypesViewFlag.ALL)
+            
+        ptv_dict = view_data.ptvs.get(gpos.port_types_view)
+        if ptv_dict is None:
+            ptv_dict = view_data.ptvs[gpos.port_types_view] = \
+                dict[str, GroupPos]()
+        
+        ptv_dict[gpos.group_name] = gpos
+
+    def clear_absents(
+            self, view_num: int, ptv: PortTypesViewFlag, presents: set[str]):
+        view_data = self.get(view_num)
+        if view_data is None:
+            return
+        
+        ptv_dict = view_data.ptvs.get(ptv)
+        if ptv_dict is None:
+            return
+        
+        rm_list = list[str]()
+        for group_name in ptv_dict.keys():
+            if group_name not in presents:
+                rm_list.append(group_name)
+        
+        for rm_group_name in rm_list:
+            ptv_dict.pop(rm_group_name)
+
+        
