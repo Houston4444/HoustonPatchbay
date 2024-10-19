@@ -4,8 +4,8 @@ from typing import Optional
 
 from PyQt5.QtCore import QRectF
 
-from .init_values import (
-    BoxLayoutMode, BoxPos, PortMode, GroupObject, canvas, BoxType, Joining)
+from .patshared import BoxLayoutMode, BoxPos, PortMode, BoxType
+from .init_values import GroupObject, canvas, Joining
 from .utils import nearest_on_grid, next_left_on_grid, next_top_on_grid
 from .box_widget import BoxWidget
 from .patchcanvas import (

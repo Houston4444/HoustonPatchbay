@@ -30,9 +30,9 @@ from PyQt5.QtGui import (QCursor, QFontMetrics, QImage, QFont,
                          QColor, QPainterPath, QBrush)
 from PyQt5.QtWidgets import QGraphicsItem, QApplication
 
+from .patshared import PortMode, BoxLayoutMode, BoxType
 from .init_values import (
     AliasingReason,
-    BoxHidding,
     CanvasItemType,
     GroupObject,
     PortObject,
@@ -41,10 +41,7 @@ from .init_values import (
     canvas,
     options,
     CallbackAct,
-    PortMode,
-    BoxLayoutMode,
     MAX_PLUGIN_ID_ALLOWED,
-    BoxType,
     Direction,
     Zv)
 

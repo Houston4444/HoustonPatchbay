@@ -17,14 +17,14 @@
 #
 # For a full copy of the GNU General Public License see the doc/GPL.txt file.
 
-from typing import TYPE_CHECKING, Iterator, Optional, Union
+from typing import TYPE_CHECKING, Iterator, Optional
 from enum import Enum, Flag, IntEnum, auto
 import logging
 
 from PyQt5.QtCore import QPointF, QRectF, QSettings, QPoint
 from PyQt5.QtWidgets import QGraphicsItem
 
-from .base_enums import (
+from .patshared import (
     PortMode, PortType, PortSubType, BoxType, BoxFlag, BoxLayoutMode, BoxPos)
 
 if TYPE_CHECKING:

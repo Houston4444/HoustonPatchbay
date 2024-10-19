@@ -1,22 +1,13 @@
 
-import logging
 from typing import Iterator, Optional
 from PyQt5.QtCore import QRectF
 from PyQt5.QtGui import QPainterPath
 from PyQt5.QtWidgets import QGraphicsItem
 
-
+from .patshared import (
+    BoxLayoutMode, PortMode, PortType, PortSubType, BoxType)
 from .init_values import (
-    canvas,
-    options,
-    InlineDisplay,
-    BoxLayoutMode,
-    PortMode,
-    PortType,
-    PortSubType,
-    BoxType,
-    GroupObject)
-
+    canvas, options, InlineDisplay, GroupObject)
 from .utils import get_portgroup_name_from_ports_names
 from .box_widget_moth import BoxWidgetMoth, UnwrapButton, TitleLine, WrappingState
 from .box_layout import PortsMinSizes, TitleOn, BoxLayout

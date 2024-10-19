@@ -3,7 +3,8 @@ from dataclasses import dataclass
 import logging
 from typing import TYPE_CHECKING
 
-from .init_values import PortMode, canvas, BoxLayoutMode, options
+from .patshared import PortMode, BoxLayoutMode
+from .init_values import canvas, options
 from .utils import next_width_on_grid, next_height_on_grid
 
 if TYPE_CHECKING:

@@ -12,9 +12,9 @@ from PyQt5.QtCore import QTimer, QSettings, QThread
 from .patchcanvas import patchcanvas, PortType, PortSubType, PortMode
 from .patchcanvas.utils import get_new_group_positions
 from .patchcanvas.scene_view import PatchGraphicsView
-from .patchcanvas.base_enums import (
+from .patchcanvas.patshared import (
     PortTypesViewFlag, GroupPos, from_json_to_str,
-    ViewsDict, PortgroupsDict)
+    ViewsDict, PortgroupsDict, PortgroupMem)
 from .patchcanvas.init_values import (
     AliasingReason, CallbackAct, CanvasFeaturesObject,
     CanvasOptionsObject, GridStyle)
@@ -25,8 +25,7 @@ from .canvas_menu import CanvasMenu
 from .options_dialog import CanvasOptionsDialog
 from .filter_frame import FilterFrame
 from .base_elements import (
-    JackPortFlag, PortgroupMem, ToolDisplayed,
-    TransportPosition)
+    JackPortFlag, ToolDisplayed, TransportPosition)
 from .base_group import Group
 from .base_connection import Connection
 from .base_port import Port

@@ -3,7 +3,8 @@ from PyQt5.QtWidgets import QGraphicsItem
 from PyQt5.QtGui import QPainter, QPen, QBrush, QPolygonF
 from PyQt5.QtCore import QRectF, Qt, QPointF
 
-from .init_values import canvas, ZvBox, PortMode
+from .patshared import PortMode
+from .init_values import canvas, ZvBox
 
 if TYPE_CHECKING:
     from .box_widget import BoxWidget

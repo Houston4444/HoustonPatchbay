@@ -24,14 +24,13 @@ from PyQt5.QtGui import (QColor, QLinearGradient,
                          QPainterPath, QPen, QBrush)
 from PyQt5.QtWidgets import QGraphicsPathItem
 
+from .patshared import PortType, PortMode
 from .init_values import (
     ConnectionThemeState,
     BoxHidding,
     canvas,
     options,
     CanvasItemType,
-    PortType,
-    PortMode,
     Zv)
 
 if TYPE_CHECKING:

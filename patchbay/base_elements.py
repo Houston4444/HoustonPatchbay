@@ -6,7 +6,7 @@ from .patchcanvas import (
     PortMode, PortType, PortSubType,
     BoxLayoutMode, BoxPos, BoxFlag, BoxType,
     AliasingReason)
-from .patchcanvas.base_enums import (
+from .patchcanvas.patshared import (
     GroupPos, GroupPosFlag, PortTypesViewFlag, ViewData, PortgroupMem)
 
 
