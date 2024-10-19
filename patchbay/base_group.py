@@ -634,9 +634,9 @@ class Group:
                     and other_port.mode() is port.mode()
                     and not other_port.portgroup_id
                     and not other_port.prevent_stereo):
-                for portgroup_mem in self.manager.get_portgroup_mem_list(
+                for pg_mem in self.manager.portgroups_memory.iter_portgroups(
                         self.name, port.type, port.mode()):
-                    if other_port.short_name() in portgroup_mem.port_names:
+                    if other_port.short_name() in pg_mem.port_names:
                         # other_port (left) is in a remembered portgroup
                         # prevent stereo detection
                         return
@@ -725,22 +725,14 @@ class Group:
 
         # check in the saved portgroups if we need to make a portgroup
         # or prevent stereo detection
-        for portgroup_mem in self.manager.get_portgroup_mem_list(
+        for pg_mem in self.manager.portgroups_memory.iter_portgroups(
                 self.name, last_port.type, last_port.mode()):
-            if last_port_name != portgroup_mem.port_names[-1]:
+            if last_port_name != pg_mem.port_names[-1]:
                 continue
-            
-        #         if (len(portgroup_mem.port_names) == 1
-        #                 or)
-        
-        # for portgroup_mem in self.manager.portgroups_memory:
-        #     if (portgroup_mem.group_name == self.name
-        #             and portgroup_mem.port_type == last_port.type
-        #             and portgroup_mem.port_mode == last_port.mode()
-        #             and last_port_name == portgroup_mem.port_names[-1]):
-            if (len(portgroup_mem.port_names) == 1
-                or portgroup_mem.port_names.index(last_port_name) + 1
-                    != len(portgroup_mem.port_names)):
+
+            if (len(pg_mem.port_names) == 1
+                or pg_mem.port_names.index(last_port_name) + 1
+                    != len(pg_mem.port_names)):
                 return
 
             port_list = list[Port]()
@@ -748,12 +740,12 @@ class Group:
             for port in self.ports:
                 if (port.type is last_port.type
                         and port.mode() is last_port.mode()):
-                    if (len(portgroup_mem.port_names) > len(port_list)
+                    if (len(pg_mem.port_names) > len(port_list)
                             and port.short_name()
-                            == portgroup_mem.port_names[len(port_list)]):
+                            == pg_mem.port_names[len(port_list)]):
                         port_list.append(port)
 
-                        if len(port_list) == len(portgroup_mem.port_names):
+                        if len(port_list) == len(pg_mem.port_names):
                             portgroup = self.manager.new_portgroup(
                                 self.group_id, port.mode(), port_list)
                             self.portgroups.append(portgroup)

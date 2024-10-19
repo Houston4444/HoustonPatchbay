@@ -1226,12 +1226,30 @@ class PortgroupsDict(
         
         return out_dict
     
-    def iter_portgroups(self) -> Iterator[PortgroupMem]:
+    def iter_all_portgroups(self) -> Iterator[PortgroupMem]:
         for ptype_dict in self.values():
             for gpname_dict in ptype_dict.values():
                 for pmode_list in gpname_dict.values():
                     for pg_mem in pmode_list:
                         yield pg_mem
+                        
+    def iter_portgroups(
+            self, group_name: str, port_type: PortType,
+            port_mode: PortMode) -> Iterator[PortgroupMem]:
+        ptype_dict = self.get(port_type)
+        if ptype_dict is None:
+            return
+
+        group_dict = ptype_dict.get(group_name)
+        if group_dict is None:
+            return
+
+        pmode_list = group_dict.get(port_mode)
+        if pmode_list is None:
+            return
+        
+        for pg_mem in pmode_list:
+            yield pg_mem
                         
     def save_portgroup(self, pg_mem: PortgroupMem):
         ptype_dict = self.get(pg_mem.port_type)

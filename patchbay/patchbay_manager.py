@@ -3,7 +3,6 @@ import logging
 import operator
 from pathlib import Path
 from dataclasses import dataclass
-import time
 from typing import Any, Callable, Iterator, Optional, Union
 
 from PyQt5.QtGui import QCursor, QGuiApplication
@@ -14,7 +13,8 @@ from .patchcanvas import patchcanvas, PortType, PortSubType, PortMode
 from .patchcanvas.utils import get_new_group_positions
 from .patchcanvas.scene_view import PatchGraphicsView
 from .patchcanvas.base_enums import (
-    PortTypesViewFlag, GroupPos, from_json_to_str, ViewsDict)
+    PortTypesViewFlag, GroupPos, from_json_to_str,
+    ViewsDict, PortgroupsDict)
 from .patchcanvas.init_values import (
     AliasingReason, CallbackAct, CanvasFeaturesObject,
     CanvasOptionsObject, GridStyle)
@@ -26,7 +26,7 @@ from .options_dialog import CanvasOptionsDialog
 from .filter_frame import FilterFrame
 from .base_elements import (
     JackPortFlag, PortgroupMem, ToolDisplayed,
-    TransportPosition, ViewData)
+    TransportPosition)
 from .base_group import Group
 from .base_connection import Connection
 from .base_port import Port
@@ -55,6 +55,7 @@ def enum_to_flag(enum_int: int) -> int:
     if enum_int <= 0:
         return 0
     return 2 ** (enum_int - 1)
+
 
 @dataclass
 class DelayedOrder:
@@ -123,8 +124,7 @@ class PatchbayManager:
     view_number = 1
     views = ViewsDict()
     
-    portgroups_memory = dict[
-        PortType, dict[str, dict[PortMode, list[PortgroupMem]]]]()
+    portgroups_memory = PortgroupsDict()
     
     delayed_orders = list[DelayedOrder]()
 
@@ -653,49 +653,8 @@ class PatchbayManager:
         self.save_group_position(gpos)
         return gpos
 
-    def get_portgroup_mem_list(
-            self, group_name: str, port_type: PortType,
-            port_mode: PortMode) -> list[PortgroupMem]:
-        ptype_dict = self.portgroups_memory.get(port_type)
-        if ptype_dict is None:
-            return []
-
-        group_dict = ptype_dict.get(group_name)
-        if group_dict is None:
-            return []
-
-        pmode_list = group_dict.get(port_mode)
-        if pmode_list is None:
-            return []
-        return pmode_list
-
     def add_portgroup_memory(self, portgroup_mem: PortgroupMem):
-        ptype_dict = self.portgroups_memory.get(portgroup_mem.port_type)
-        if ptype_dict is None:
-            ptype_dict = self.portgroups_memory[portgroup_mem.port_type] = \
-                dict[str, dict[PortMode, list[PortgroupMem]]]()
-                
-        group_dict = ptype_dict.get(portgroup_mem.group_name)
-        if group_dict is None:
-            group_dict = ptype_dict[portgroup_mem.group_name] = \
-                dict[PortMode, list[PortgroupMem]]()
-        
-        pmode_list = group_dict.get(portgroup_mem.port_mode)
-        if pmode_list is None:
-            pmode_list = group_dict[portgroup_mem.port_mode] = \
-                list[PortgroupMem]()
-
-        remove_list = set[PortgroupMem]()
-        
-        for pg_mem in pmode_list:
-            for port_name in pg_mem.port_names:
-                if port_name in portgroup_mem.port_names:
-                    remove_list.add(pg_mem)
-        
-        for pg_mem in remove_list:
-            pmode_list.remove(pg_mem)
-
-        pmode_list.append(portgroup_mem)
+        self.portgroups_memory.save_portgroup(portgroup_mem)
         
         group = self.get_group_from_name(portgroup_mem.group_name)
         if group is not None:
@@ -1693,6 +1652,8 @@ class PatchbayManager:
 
         file_dict['views'] = self.views.to_json_list()
 
+        # save specific portgroups json dict
+        # because we save only portgroups with present ports
         portgroups_dict = dict[str, dict[str, dict[str, dict]]]()
 
         for port_type, ptype_dict in self.portgroups_memory.items():
