@@ -18,16 +18,13 @@
 # For a full copy of the GNU General Public License see the doc/GPL.txt file.
 
 from typing import TYPE_CHECKING
+
 from PyQt5.QtCore import Qt, QPointF
 from PyQt5.QtGui import QPainter, QPainterPath
 from PyQt5.QtWidgets import QGraphicsPathItem
 
-from .init_values import (
-    canvas,
-    CanvasItemType,
-    PortMode,
-    PortType,
-    Zv)
+from .patshared import PortMode, PortType
+from .init_values import canvas, CanvasItemType, Zv
 
 # only to get parent type in IDE
 if TYPE_CHECKING:

@@ -10,7 +10,6 @@ from PyQt5.QtCore import QTimer
 
 from .theme import Theme
 from .init_values import canvas, CallbackAct
-
 from .xdg import xdg_data_dirs, xdg_data_home
 
 _logger = logging.Logger(__name__)

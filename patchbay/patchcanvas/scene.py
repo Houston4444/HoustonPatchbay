@@ -18,17 +18,13 @@
 # For a full copy of the GNU General Public License see the doc/GPL.txt file.
 
 from dataclasses import dataclass
-import time
 from typing import Optional, Union
-from PyQt5.QtCore import QRectF, QMarginsF, QPoint, Qt
+
+from PyQt5.QtCore import QRectF, QMarginsF, Qt
 from PyQt5.QtWidgets import QGraphicsView
 
-from .init_values import (
-    BoxHidding,
-    canvas,
-    options,
-    PortMode,
-    Direction)
+from .patshared import PortMode
+from .init_values import canvas, options, Direction
 from .utils import (previous_left_on_grid, next_left_on_grid,
                     previous_top_on_grid, next_top_on_grid)
 

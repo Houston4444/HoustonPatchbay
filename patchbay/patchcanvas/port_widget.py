@@ -18,7 +18,6 @@
 # For a full copy of the GNU General Public License see the doc/GPL.txt file.
 
 
-# Imports (Global)
 import logging
 from typing import TYPE_CHECKING
 
@@ -28,23 +27,14 @@ from PyQt5.QtGui import (
     QLinearGradient, QColor, QPainterPath)
 from PyQt5.QtWidgets import QGraphicsItem, QApplication
 
-from .grouped_lines_widget import GroupedLinesWidget
-
 
 # Imports (Custom)
+from .patshared import PortMode, PortType, PortSubType
 from .init_values import (
-    CanvasItemType,
-    PortObject,
-    PortSubType,
-    canvas,
-    CallbackAct,
-    PortMode,
-    PortType,
-    ZvBox)
-
+    CanvasItemType, PortObject, canvas, CallbackAct, ZvBox)
 from .utils import canvas_callback
 from .connectable_widget import ConnectableWidget
-from .line_widget import LineWidget
+from .grouped_lines_widget import GroupedLinesWidget
 
 if TYPE_CHECKING:
     from .box_widget import BoxWidget
@@ -89,7 +79,6 @@ class PortWidget(ConnectableWidget):
         self._portgrp_widget = None
         self._loop_select_done = False
 
-        self._lines_widgets = list[LineWidget]()
         self._connect_pos = QPointF(0.0, 0.0)
         self._update_connect_pos()
         self.setZValue(ZvBox.PORT.value)

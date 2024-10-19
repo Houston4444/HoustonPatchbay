@@ -17,8 +17,6 @@
 #
 # For a full copy of the GNU General Public License see the doc/GPL.txt file.
 
-# ------------------------------------------------------------------------------------------------------------
-# Imports (Global)
 
 import logging
 from typing import TYPE_CHECKING, Union
@@ -27,21 +25,11 @@ from PyQt5.QtCore import QPointF, QFile, QRectF
 from PyQt5.QtGui import QIcon, QPalette
 from PyQt5.QtWidgets import QWidget
 
-# ------------------------------------------------------------------------------------------------------------
-# Imports (Custom)
-
-from .init_values import (
-    CanvasItemType,
-    PortgrpObject,
-    canvas,
-    options,
-    BoxType,
-    PortMode,
-    CallbackAct)
+from .patshared import PortMode, BoxType
+from .init_values import canvas, options, CallbackAct
 
 if TYPE_CHECKING:
     from .box_widget import BoxWidget
-# ------------------------------------------------------------------------------------------------------------
 
 _logger = logging.getLogger(__name__)
 _logging_str = ''

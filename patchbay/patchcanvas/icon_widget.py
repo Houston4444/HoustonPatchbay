@@ -25,7 +25,8 @@ from PyQt5.QtGui import QPainter, QIcon, QPixmap
 from PyQt5.QtSvg import QGraphicsSvgItem, QSvgRenderer
 from PyQt5.QtWidgets import QGraphicsPixmapItem
 
-from .init_values import canvas, CanvasItemType, BoxType, PortMode
+from .patshared import BoxType, PortMode
+from .init_values import canvas, CanvasItemType
 
 
 _logger = logging.getLogger(__name__)

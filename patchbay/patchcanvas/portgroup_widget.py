@@ -18,7 +18,6 @@
 # For a full copy of the GNU General Public License see the doc/GPL.txt file.
 
 
-# Imports (Global)
 import logging
 from typing import TYPE_CHECKING
 
@@ -28,27 +27,14 @@ from PyQt5.QtGui import (QFontMetrics, QPainter, QBrush,
                          QColor)
 from PyQt5.QtWidgets import QApplication, QGraphicsItem
 
-# Imports (Custom)
 from .connectable_widget import ConnectableWidget
+from .patshared import PortMode, PortType, PortSubType
 from .init_values import (
-    CanvasItemType,
-    PortSubType,
-    PortgrpObject,
-    ZvBox,
-    canvas,
-    CallbackAct,
-    PortMode,
-    PortType,
-    Zv)
+    CanvasItemType, PortgrpObject, ZvBox, canvas, CallbackAct)
 
 if TYPE_CHECKING:
     from .box_widget import BoxWidget
 
-# -------------------------
-
-_translate = QApplication.translate
-
-# -------------------------
 
 class PortgroupWidget(ConnectableWidget):
     def __init__(self, portgrp: PortgrpObject, parent: 'BoxWidget'):

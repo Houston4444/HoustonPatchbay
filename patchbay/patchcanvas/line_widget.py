@@ -25,12 +25,12 @@ from PyQt5.QtGui import (QColor, QLinearGradient, QPainter,
                          QPainterPath, QPen, QBrush)
 from PyQt5.QtWidgets import QGraphicsPathItem
 
+from .patshared import PortType
 from .init_values import (
     canvas,
     options,
     CanvasItemType,
-    CallbackAct,
-    PortType)
+    CallbackAct)
 
 if TYPE_CHECKING:
     from .port_widget import PortWidget

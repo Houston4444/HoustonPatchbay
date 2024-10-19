@@ -26,6 +26,7 @@ from PyQt5.QtCore import (pyqtSlot, QObject, QPointF, QRectF,
                           QSettings, QTimer, pyqtSignal)
 
 # local imports
+from .patshared import PortMode, BoxLayoutMode, BoxType, BoxPos
 from .init_values import (
     AliasingReason,
     GridStyle,
@@ -43,11 +44,6 @@ from .init_values import (
     PortObject,
     PortgrpObject,
     ConnectionObject,
-    PortMode,
-    BoxLayoutMode,
-    BoxType,
-    BoxFlag,
-    BoxPos,
     BoxHidding,
     Zv
 )

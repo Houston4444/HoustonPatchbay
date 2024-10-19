@@ -41,21 +41,19 @@ from PyQt5.QtWidgets import (
     QGraphicsItem,
     QGraphicsView)
 
-# Imports (locals)
+from .patshared import PortMode
 from .init_values import (
     AliasingReason,
     BoxHidding,
     CanvasItemType,
     GridStyle,
     Joining,
-    PortMode,
     Direction,
     canvas,
     options,
     CallbackAct,
     Zv,
     MAX_PLUGIN_ID_ALLOWED)
-
 from .box_widget import BoxWidget
 from .connectable_widget import ConnectableWidget
 from .line_widget import LineWidget
