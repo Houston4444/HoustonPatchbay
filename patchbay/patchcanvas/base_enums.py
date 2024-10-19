@@ -1,6 +1,6 @@
 import json
 from enum import Enum, IntEnum, IntFlag, auto
-from typing import Iterator, Optional, Union, Any
+from typing import Iterator, Optional, TypedDict, Union, Any
 import logging
 
 _logger = logging.getLogger(__name__)
@@ -1113,4 +1113,152 @@ class ViewsDict(dict[int, ViewData]):
             self.pop(index)
             
         if self._ensure_one_view and not self.keys():
-            self[1] = ViewData(PortTypesViewFlag.ALL)
+            self[1] = ViewData(PortTypesViewFlag.ALL)    
+
+
+class PortgroupsDict(
+        dict[PortType, dict[str, dict[PortMode, list[PortgroupMem]]]]):    
+    def _eat_json_new(
+            self, json_dict: dict[str, dict[str, dict[str, list[dict]]]]):
+        for ptype_str, ptype_dict in json_dict.items():
+            try:
+                port_type = PortType[ptype_str]
+                assert isinstance(ptype_dict, dict)
+            except:
+                continue
+
+            nw_ptype_dict = self[port_type] = \
+                dict[str, dict[PortMode, list[PortgroupMem]]]()
+            
+            for gp_name, gp_dict in ptype_dict.items():
+                if not isinstance(gp_dict, dict):
+                    continue
+                    
+                nw_gp_dict = nw_ptype_dict[gp_name] = \
+                    dict[PortMode, list[PortgroupMem]]()
+                
+                for pmode_str, pmode_list in gp_dict.items():
+                    try:
+                        port_mode = PortMode[pmode_str]
+                        assert isinstance(pmode_list, list)
+                    except:
+                        continue
+                    
+                    nw_pmode_list = nw_gp_dict[port_mode] = \
+                        list[PortgroupMem]()
+                    
+                    all_port_names = set[str]()
+                    
+                    for pg_mem_dict in pmode_list:
+                        if not isinstance(pg_mem_dict, dict):
+                            continue
+                        
+                        port_names = pg_mem_dict.get('port_names')
+                        if not isinstance(port_names, list):
+                            continue
+                        
+                        port_already_in_pg_mem = False
+                        for port_name in port_names:
+                            if port_name in all_port_names:
+                                port_already_in_pg_mem = True
+                                break
+                                
+                            if isinstance(port_name, str):
+                                all_port_names.add(port_name)
+                        
+                        if port_already_in_pg_mem:
+                            continue
+                        
+                        pg_mem = PortgroupMem.from_new_dict(pg_mem_dict)
+                        pg_mem.group_name = gp_name
+                        pg_mem.port_type = port_type
+                        pg_mem.port_mode = port_mode
+                        
+                        nw_pmode_list.append(pg_mem)
+    
+    def _eat_json_old(self, json_list: list[dict]):
+        for pg_mem_dict in json_list:
+            pg_mem = PortgroupMem.from_serialized_dict(pg_mem_dict)
+            
+            ptype_dict = self.get(pg_mem.port_type)
+            if ptype_dict is None:
+                ptype_dict = self[pg_mem.port_type] = \
+                    dict[str, dict[PortMode, list[PortgroupMem]]]()
+            
+            gp_name_dict = ptype_dict.get(pg_mem.group_name)
+            if gp_name_dict is None:
+                gp_name_dict = ptype_dict[pg_mem.group_name] = \
+                    dict[PortMode, list[PortgroupMem]]()
+            
+            pmode_list = gp_name_dict.get(pg_mem.port_mode)
+            if pmode_list is None:
+                pmode_list = gp_name_dict[pg_mem.port_mode] = \
+                    list[PortgroupMem]()
+
+            all_port_names = set[str]()
+            for portgroup_mem in pmode_list:
+                for port_name in portgroup_mem.port_names:
+                    all_port_names.add(port_name)
+            
+            for port_name in pg_mem.port_names:
+                if port_name in all_port_names:
+                    break
+            else:
+                pmode_list.append(pg_mem)
+
+    def eat_json(self, json_obj: Union[list, dict]):
+        if isinstance(json_obj, dict):
+            self._eat_json_new(json_obj)
+        elif isinstance(json_obj, list):
+            self._eat_json_old(json_obj)
+    
+    def to_json(self) -> dict[str, dict[str, dict[str, list[dict]]]]:
+        out_dict = dict[str, dict[str, dict[str, list[dict]]]]()
+        for port_type, ptype_dict in self.items():
+            out_dict[port_type.name] = js_ptype_dict = {}
+            for gp_name, group_dict in ptype_dict.items():
+                js_ptype_dict[gp_name] = {}
+
+                for port_mode, pmode_list in group_dict.items():
+                    pg_list = js_ptype_dict[gp_name][port_mode.name] = []
+                    for pg_mem in pmode_list:
+                        pg_list.append(pg_mem.as_new_dict())
+        
+        return out_dict
+    
+    def iter_portgroups(self) -> Iterator[PortgroupMem]:
+        for ptype_dict in self.values():
+            for gpname_dict in ptype_dict.values():
+                for pmode_list in gpname_dict.values():
+                    for pg_mem in pmode_list:
+                        yield pg_mem
+                        
+    def save_portgroup(self, pg_mem: PortgroupMem):
+        ptype_dict = self.get(pg_mem.port_type)
+        if ptype_dict is None:
+            ptype_dict = self[pg_mem.port_type] = \
+                dict[str, dict[PortMode, list[PortgroupMem]]]()
+        
+        gpname_dict = ptype_dict.get(pg_mem.group_name)
+        if gpname_dict is None:
+            gpname_dict = ptype_dict[pg_mem.group_name] = \
+                dict[PortMode, list[PortgroupMem]]()
+        
+        pmode_list = gpname_dict.get(pg_mem.port_mode)
+        if pmode_list is None:
+            pmode_list = gpname_dict[pg_mem.port_mode] = \
+                list[PortgroupMem]()
+        
+        rm_pg_mems = list[PortgroupMem]()
+        
+        for sv_pg_mem in pmode_list:
+            for port_name in sv_pg_mem.port_names:
+                if port_name in pg_mem.port_names:
+                    rm_pg_mems.append(sv_pg_mem)
+                    break
+        
+        for rm_pg_mem in rm_pg_mems:
+            pmode_list.remove(rm_pg_mem)
+        
+        pmode_list.append(pg_mem)
+        
