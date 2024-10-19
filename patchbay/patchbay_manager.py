@@ -120,7 +120,6 @@ class PatchbayManager:
     _groups_by_id = dict[int, Group]()
     _ports_by_name = dict[str, Port]()
 
-    group_positions = list[GroupPos]()
     view_number = 1
     views = ViewsDict()
     

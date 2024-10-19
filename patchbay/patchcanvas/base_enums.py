@@ -337,9 +337,6 @@ class GroupPos:
         'returns a GroupPos from an old json file dict.'
         port_types_view = src.get('port_types_view')
         group_name = src.get('group_name')
-        in_zone = src.get('in_zone')
-        out_zone = src.get('out_zone')
-        both_zone = src.get('null_zone')
         null_xy = src.get('null_xy')
         in_xy = src.get('in_xy')
         out_xy = src.get('out_xy')
@@ -370,20 +367,14 @@ class GroupPos:
         
         for port_mode in PortMode.in_out_both():
             if port_mode is PortMode.INPUT:
-                if isinstance(in_zone, str):
-                    gpos.boxes[port_mode].zone = in_zone
                 if GroupPos.is_point(in_xy):
                     gpos.boxes[port_mode].pos = in_xy
                 wrapped = bool(gpos.flags & GroupPosFlag.WRAPPED_INPUT)
             elif port_mode is PortMode.OUTPUT:
-                if isinstance(out_zone, str):
-                    gpos.boxes[port_mode].zone = out_zone
                 if GroupPos.is_point(out_xy):
                     gpos.boxes[port_mode].pos = out_xy
                 wrapped = bool(gpos.flags & GroupPosFlag.WRAPPED_OUTPUT)
             else:
-                if isinstance(both_zone, str):
-                    gpos.boxes[port_mode].zone = both_zone
                 if GroupPos.is_point(null_xy):
                     gpos.boxes[port_mode].pos = null_xy
                 wrapped = bool(gpos.flags & (GroupPosFlag.WRAPPED_INPUT
