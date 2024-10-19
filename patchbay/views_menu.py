@@ -76,7 +76,7 @@ class ViewsMenu(QMenu):
         change_num_menu = QMenu(
             _translate('views_menu', 'Change view number to...'), self)
         
-        if self.mng is not None:
+        if view_keys:
             n_nums_in_change_menu = max(max(view_keys) + 2, 10)
         else:
             n_nums_in_change_menu = 10
