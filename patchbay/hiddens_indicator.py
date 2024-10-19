@@ -336,7 +336,7 @@ class HiddensIndicator(QToolButton):
         menu.addSeparator()
 
         is_white_list = False
-        view_data = self.mng.views_datas.get(self.mng.view_number)
+        view_data = self.mng.views.get(self.mng.view_number)
         if view_data is not None:
             is_white_list = view_data.is_white_list
 
@@ -395,14 +395,14 @@ class HiddensIndicator(QToolButton):
         if act_data == WHITE_LIST:
             if act.isChecked():
                 self.mng.clear_absents_in_view()
-            self.mng.views_datas[self.mng.view_number].is_white_list = \
+            self.mng.views[self.mng.view_number].is_white_list = \
                 act.isChecked()
             self.mng.set_views_changed()
             return
         
         if act_data == SHOW_ALL:
             is_white_list = False
-            view_data = self.mng.views_datas.get(self.mng.view_number)
+            view_data = self.mng.views.get(self.mng.view_number)
             if view_data is not None:
                 is_white_list = view_data.is_white_list
             

@@ -52,7 +52,7 @@ class ItemmDeleg(QAbstractItemDelegate):
             view_num = self._parent.itemData(index)
             
             if self.mng is not None:
-                view_name = self.mng.views_datas[view_num].name
+                view_name = self.mng.views[view_num].name
                         
             font = QFont()
             name_width = QFontMetricsF(font).width(view_name)
@@ -154,11 +154,10 @@ class ViewSelectorWidget(QWidget):
         if self.mng.views.get(self.mng.view_number) is None:
             return False
 
-        for ptv, gp_name_pos in self.mng.views[self.mng.view_number].items():
-            for gp_name in gp_name_pos.keys():
-                if not gp_name in group_names:
-                    return True
-
+        for gpos in self.mng.views.iter_group_poses(
+                view_num=self.mng.view_number):
+            if gpos.group_name not in group_names:
+                return True
         return False
     
     def _build_menu(self):
@@ -190,10 +189,10 @@ class ViewSelectorWidget(QWidget):
         for i in range(1, n_nums_in_change_menu):
             act_new_view_num = change_num_menu.addAction(str(i))
             if self.mng is not None:
-                if self.mng.views.get(i) is not None:
-                    if self.mng.views_datas.get(i) is not None:
-                        view_name = self.mng.views_datas[i].name
-                        act_new_view_num.setText(f'{i}\t{view_name}')
+                view_data = self.mng.views.get(i)
+                if view_data is not None:
+                    if view_data.name:
+                        act_new_view_num.setText(f'{i}\t{view_data.name}')
 
                     if i == self.mng.view_number:
                         act_new_view_num.setEnabled(False)
@@ -246,17 +245,15 @@ class ViewSelectorWidget(QWidget):
         index = 0
         view_names = set[str]()
         
-        for view_num in self.mng.views.keys():
-            view_data = self.mng.views_datas.get(view_num)
-            if view_data is None or not view_data.name:
+        for view_num, view_data in self.mng.views.items():
+            if not view_data.name:
                 view_name = _translate('views_widget', f'View {view_num}')
             else:
                 view_name = view_data.name
             
-            full_view_name = view_name
-            view_names.add(full_view_name)
+            view_names.add(view_name)
 
-            self.ui.comboBoxView.addItem(full_view_name)
+            self.ui.comboBoxView.addItem(view_name)
             self.ui.comboBoxView.setItemData(index, view_num)
 
             index += 1

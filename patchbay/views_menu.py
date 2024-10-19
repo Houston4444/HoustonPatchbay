@@ -28,34 +28,33 @@ class ViewsMenu(QMenu):
         if self.mng.views.get(self.mng.view_number) is None:
             return False
 
-        for ptv, gp_name_pos in self.mng.views[self.mng.view_number].items():
-            for gp_name in gp_name_pos.keys():
-                if not gp_name in group_names:
-                    return True
+        for gpos in self.mng.views.iter_group_poses(
+                view_num=self.mng.view_number):
+            if gpos.group_name not in group_names:
+                return True
         return False
     
     def _build(self):
         self.clear()
+        view_keys = list[int]()
         
-        view_keys = [n for n in self.mng.views.keys()]
-        
-        for view in view_keys:
-            view_data = self.mng.views_datas.get(view)
-            if view_data is None or not view_data.name:
-                view_name = _translate('views_menu', 'View n°%i') % view
-            else:
-                view_name = view_data.name
+        if self.mng is not None:
+            view_keys = [k for k in self.mng.views.keys()]
 
-            view_text = view_name
-            if 0 <= view <= 9:
-                view_text += f'\tAlt+{view}'
+            for index, view_data in self.mng.views.items():
+                view_text = view_data.name
+                if not view_text:
+                    view_text = _translate('views_menu', 'View n°%i') % index
+                
+                if 0 <= index <= 9:
+                    view_text += f'\tAlt+{index}'
 
-            view_act = self.addAction(view_text)
-            view_act.setData(view)
-            view_act.triggered.connect(self._change_view)
+                view_act = self.addAction(view_text)
+                view_act.setData(index)
+                view_act.triggered.connect(self._change_view)
 
-            if view == self.mng.view_number:
-                view_act.setEnabled(False)
+                if index == self.mng.view_number:
+                    view_act.setEnabled(False)
 
         self.addSeparator()
         
@@ -77,7 +76,7 @@ class ViewsMenu(QMenu):
         change_num_menu = QMenu(
             _translate('views_menu', 'Change view number to...'), self)
         
-        if self.mng is not None and view_keys:
+        if self.mng is not None:
             n_nums_in_change_menu = max(max(view_keys) + 2, 10)
         else:
             n_nums_in_change_menu = 10
@@ -85,10 +84,10 @@ class ViewsMenu(QMenu):
         for i in range(1, n_nums_in_change_menu):
             act_new_view_num = change_num_menu.addAction(str(i))
             if self.mng is not None:
-                if self.mng.views.get(i) is not None:
-                    if self.mng.views_datas.get(i) is not None:
-                        view_name = self.mng.views_datas[i].name
-                        act_new_view_num.setText(f'{i}\t{view_name}')
+                view_data = self.mng.views.get(i)
+                if view_data is not None:
+                    if view_data.name:
+                        act_new_view_num.setText(f'{i}\t{view_data.name}')
 
                     if i == self.mng.view_number:
                         act_new_view_num.setEnabled(False)
@@ -126,7 +125,7 @@ class ViewsMenu(QMenu):
 
     @pyqtSlot()
     def _rename_view(self):
-        view_data = self.mng.views_datas.get(self.mng.view_number)
+        view_data = self.mng.views.get(self.mng.view_number)
         if view_data is None:
             view_name = ''
         else:

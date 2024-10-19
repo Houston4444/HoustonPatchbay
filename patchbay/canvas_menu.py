@@ -273,15 +273,12 @@ class CanvasMenu(QMenu):
                 has_hiddens = True
         
         if not has_hiddens:
-            ptv_view = self.mng.views[
-                self.mng.view_number].get(
-                    self.mng.port_types_view)
-            
-            for group_name, gpos in ptv_view.items():
-                if gpos.hidden_port_modes():
+            for gpos in self.mng.views.iter_group_poses(
+                    view_num=self.mng.view_number):
+                if gpos.hidden_port_modes() is not PortMode.NULL:
                     has_hiddens = True
-                    break            
-        
+                    break
+
         if has_hiddens:
             self.show_hiddens_menu.addSeparator()
             display_all_act = self.show_hiddens_menu.addAction(

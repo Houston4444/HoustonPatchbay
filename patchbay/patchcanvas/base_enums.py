@@ -838,6 +838,16 @@ def portgroups_memory_to_json(
     
 
 class ViewsDict(dict[int, ViewData]):
+    def _sort_views_by_index(self):
+        sorted_indexes = sorted([k for k in self.keys()])
+        tmp_copy = dict[int, ViewData]()
+        for i in sorted_indexes:
+            tmp_copy[i] = self[i]
+        
+        self.clear()
+        for i, vd in tmp_copy.items():
+            self[i] = vd        
+        
     def eat_json_list(self, json_list: list):
         if not isinstance(json_list, list):
             return
@@ -887,8 +897,11 @@ class ViewsDict(dict[int, ViewData]):
                 for gp_name, gpos_dict in gp_dict.items():
                     nw_ptv_dict[gp_name] = GroupPos.from_new_dict(
                         ptv, gp_name, gpos_dict)
+        self._sort_views_by_index()
                     
     def to_json_list(self) -> list[dict[str, Any]]:
+        self._sort_views_by_index()
+        
         out_list = list[dict[str, Any]]()
         
         for index, view_data in self.items():
@@ -906,7 +919,8 @@ class ViewsDict(dict[int, ViewData]):
                 js_ptv_dict = out_dict[ptv.name] = \
                     dict[str, dict[str, dict]]()
                 for gp_name, gpos in ptv_dict.items():
-                    js_ptv_dict[gp_name] = gpos.as_new_dict()
+                    if gpos.has_sure_existence:
+                        js_ptv_dict[gp_name] = gpos.as_new_dict()
             
             out_list.append(out_dict)
 
@@ -1016,4 +1030,64 @@ class ViewsDict(dict[int, ViewData]):
         for rm_group_name in rm_list:
             ptv_dict.pop(rm_group_name)
 
+    def get_group_pos(
+            self, view_num: int, ptv: PortTypesViewFlag,
+            group_name: str) -> Optional[GroupPos]:
+        view_data = self.get(view_num)
+        if view_data is None:
+            return
+        
+        ptv_dict = view_data.ptvs.get(ptv)
+        if ptv_dict is None:
+            return
+        
+        return ptv_dict.get(group_name)
+        
+
+    def iter_group_poses(
+            self, view_num: Optional[int] =None) -> Iterator[GroupPos]:
+        if view_num is None:
+            for view_data in self.values():
+                for ptv_dict in view_data.ptvs.values():
+                    for gpos in ptv_dict.values():
+                        yield gpos
+                        
+            return
+        
+        view_data = self.get(view_num)
+        if view_data is None:
+            return
+
+        for ptv_dict in view_data.ptvs.values():
+            for gpos in ptv_dict.values():
+                yield gpos
+    
+    def add_view(
+            self, view_num: Optional[int]=None,
+            default_ptv=PortTypesViewFlag.ALL) -> Optional[int]:
+        if view_num is None:
+            new_num = 1
+            while True:
+                for num in self.keys():
+                    if new_num == num:
+                        new_num += 1
+                        break
+                else:
+                    break
+        else:
+            new_num = view_num
+
+        if new_num in self.keys():
+            return None
+
+        self[new_num] = ViewData(default_ptv)
+        self._sort_views_by_index()
+        return new_num
+
+    def remove_view(self, index: int):
+        if len(self.keys()) <= 1:
+            return
+
+        if index in self.keys():
+            self.pop(index)
         
