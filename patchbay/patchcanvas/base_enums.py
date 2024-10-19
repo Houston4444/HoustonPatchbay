@@ -829,20 +829,40 @@ def portgroups_memory_to_json(
     
 
 class ViewsDict(dict[int, ViewData]):
+    def __init__(self, ensure_one_view=True):
+        super().__init__()
+        self._ensure_one_view = ensure_one_view
+        if self._ensure_one_view:
+            self[1] = ViewData(PortTypesViewFlag.ALL)
+
     def _sort_views_by_index(self):
         sorted_indexes = sorted([k for k in self.keys()])
         tmp_copy = dict[int, ViewData]()
         for i in sorted_indexes:
             tmp_copy[i] = self[i]
         
-        self.clear()
+        super().clear()
         for i, vd in tmp_copy.items():
             self[i] = vd        
-        
-    def eat_json_list(self, json_list: list):
+    
+    def clear(self):
+        super().clear()
+        if self._ensure_one_view:
+            self[1] = ViewData(PortTypesViewFlag.ALL)
+    
+    def first_view_num(self) -> Optional[int]:
+        '''if this instance has "ensure_one_view", 
+        we are sure this returns a valid int.'''
+        for key in self.keys():
+            return key
+    
+    def eat_json_list(self, json_list: list, clear=False):
         if not isinstance(json_list, list):
             return
         
+        if clear:
+            super().clear()
+
         for view_dict in json_list:
             if not isinstance(view_dict, dict):
                 continue
@@ -888,7 +908,11 @@ class ViewsDict(dict[int, ViewData]):
                 for gp_name, gpos_dict in gp_dict.items():
                     nw_ptv_dict[gp_name] = GroupPos.from_new_dict(
                         ptv, gp_name, gpos_dict)
+
         self._sort_views_by_index()
+        
+        if self._ensure_one_view and not self.keys():
+            self[1] = ViewData(PortTypesViewFlag.ALL)
                     
     def to_json_list(self) -> list[dict[str, Any]]:
         self._sort_views_by_index()
@@ -917,8 +941,12 @@ class ViewsDict(dict[int, ViewData]):
 
         return out_list
 
-    def add_old_json_gpos(self, old_gpos_dict: dict, version: tuple[int]):
-        gpos = GroupPos.from_serialized_dict(old_gpos_dict, version)
+    def add_old_json_gpos(
+            self, old_gpos_dict: dict, version: Optional[tuple[int]]=None):
+        if version is None:
+            gpos = GroupPos.from_serialized_dict(old_gpos_dict)
+        else:
+            gpos = GroupPos.from_serialized_dict(old_gpos_dict, version)
         
         view_one = self.get(1)
         if view_one is None:
@@ -990,6 +1018,9 @@ class ViewsDict(dict[int, ViewData]):
                 
         for rm_index in rm_indexes:
             self.pop(rm_index)
+            
+        if self._ensure_one_view and not self.keys():
+            self[1] = ViewData(PortTypesViewFlag.ALL)
     
     def add_group_pos(self, view_num: int, gpos: GroupPos):
         view_data = self.get(view_num)
@@ -1033,7 +1064,6 @@ class ViewsDict(dict[int, ViewData]):
             return
         
         return ptv_dict.get(group_name)
-        
 
     def iter_group_poses(
             self, view_num: Optional[int] =None) -> Iterator[GroupPos]:
@@ -1081,4 +1111,6 @@ class ViewsDict(dict[int, ViewData]):
 
         if index in self.keys():
             self.pop(index)
-        
+            
+        if self._ensure_one_view and not self.keys():
+            self[1] = ViewData(PortTypesViewFlag.ALL)
