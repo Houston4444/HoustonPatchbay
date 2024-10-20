@@ -1,9 +1,9 @@
 
 from typing import TYPE_CHECKING
 
-from PyQt5.QtCore import Qt, pyqtSignal, pyqtSlot, QPoint, QSize
+from PyQt5.QtCore import Qt, pyqtSignal, pyqtSlot, QPoint, QSize, QRectF, QPointF
 from PyQt5.QtGui import (
-    QWheelEvent, QKeyEvent, QMouseEvent)
+    QWheelEvent, QKeyEvent, QMouseEvent, QPaintEvent, QPainter, QPen, QColor, QPainterPath)
 from PyQt5.QtWidgets import (
     QApplication, QProgressBar, QSlider, QToolTip,
     QLineEdit, QLabel, QMenu, QAction, QCheckBox,
@@ -252,7 +252,12 @@ class ViewsComboBox(QComboBox):
     @pyqtSlot(str)
     def _edit_text_changed(self, text: str):
         self._editing_text = text
-        
+    
+    def sizeHint(self) -> QSize:
+        size = super().sizeHint()
+        size.setWidth(size.width() + 20)
+        return size
+    
     def keyPressEvent(self, event: QKeyEvent):
         if self.isEditable():
             if event.key() in (Qt.Key_Return, Qt.Key_Enter):
@@ -293,8 +298,38 @@ class ViewsComboBox(QComboBox):
             if previous_index == 0:
                 self.setCurrentIndex(self.count() - 1)
             else:
-                self.setCurrentIndex(0)        
-
+                self.setCurrentIndex(0)
+    
+    def paintEvent(self, event: QPaintEvent):
+        # super().paintEvent(event)
+        # return
+    
+        painter = QPainter(self)
+        # painter.setRenderHint(QPainter.Antialiasing, True)
+        self.palette().button().color()
+        painter.setPen(QPen(self.palette().midlight().color(), 1.0))
+        painter.setBrush(self.palette().alternateBase().color())
+        painter.drawRoundedRect(
+            QRectF(1.0, 1.0, self.width() - 2.0,
+                   self.height() - 2.0), 2.0, 2.0)
+        
+        painter.setPen(QPen(QApplication.palette().text().color(), 1.0))
+        
+        font = QApplication.font()
+        
+        text_pos = QPoint(6, (self.height() + font.pointSize()) // 2 )
+        painter.setFont(font)
+        painter.drawText(text_pos, self.currentText())
+        
+        arrow_side = self.height() / 7
+        path = QPainterPath()
+        path.moveTo(
+            QPointF(self.width() - arrow_side * 4, arrow_side * 3))
+        path.lineTo(
+            QPointF(self.width() - arrow_side * 3, arrow_side * 4))
+        path.lineTo(
+            QPointF(self.width() - arrow_side * 2, arrow_side * 3))
+        painter.drawPath(path)
 
 class ToolsWidgetFrame(QFrame):
     ...

@@ -5,12 +5,13 @@ from PyQt5.QtWidgets import (
     QWidget, QApplication, QMenu, QAbstractItemDelegate,
     QStyleOptionViewItem)
 from PyQt5.QtGui import (
-    QIcon, QKeyEvent, QPen, QFont, QFontMetricsF, QResizeEvent)
+    QIcon, QKeyEvent, QPen, QFont, QFontMetricsF, QResizeEvent, QColor)
 from PyQt5.QtCore import pyqtSlot, Qt, QSize, QPointF, QRect, QModelIndex
 
 from .ui.view_selector import Ui_Form
 
-from .patchcanvas import arranger
+from .patchcanvas.patshared import PortTypesViewFlag
+from .patchcanvas import arranger, canvas
 
 if TYPE_CHECKING:
     from patchbay_manager import PatchbayManager
@@ -61,7 +62,7 @@ class ItemmDeleg(QAbstractItemDelegate):
             else:
                 num_width = QFontMetricsF(font).width(str(view_num))
             
-            needed_width = max(needed_width, name_width + num_width + 30.0)
+            needed_width = max(needed_width, name_width + num_width + 42.0)
             
         return ceil(needed_width)
     
@@ -107,8 +108,56 @@ class ItemmDeleg(QAbstractItemDelegate):
             font.setItalic(True)
             painter.setFont(font)
 
-        num_pos.setX(self._width - QFontMetricsF(font).width(num_text) - 4.0)
+        num_pos.setX(self._width - QFontMetricsF(font).width(num_text) - 26.0)
         painter.drawText(num_pos, num_text)
+        
+        if self.mng is not None:
+            view_data = self.mng.views.get(view_num)
+            if view_data is not None:
+                xst = 18
+                spac = 4
+                
+                bg = QColor(canvas.theme.scene_background_color)
+                bg.setAlpha(255)
+                painter.setBrush(bg)
+                painter.setPen(QPen(Qt.NoPen))
+                painter.drawRect(
+                    self._width - xst - spac, row * self._height,
+                    5 * spac, self._height)
+                
+                if row == self._highlighted_index:            
+                    painter.setPen(QPen(QApplication.palette().highlight(), 1.0))
+                    painter.drawLine(
+                        self._width - xst - spac, row * self._height,
+                        self._width - xst + 4 *spac, row * self._height)
+                    painter.drawLine(
+                        self._width - xst - spac, (1 + row) * self._height - 1,
+                        self._width - xst + 4 *spac, (1 + row) * self._height - 1)
+                
+                c = canvas.theme.port
+                if view_data.default_port_types_view & PortTypesViewFlag.AUDIO:
+                    painter.setPen(QPen(c.audio.background_color(), 2.0))
+                    painter.drawLine(
+                        self._width - xst, row * self._height + 4,
+                        self._width - xst, (row + 1) * self._height - 4)
+                
+                if view_data.default_port_types_view & PortTypesViewFlag.MIDI:
+                    painter.setPen(QPen(c.midi.background_color(), 2.0))
+                    painter.drawLine(
+                        self._width - xst + spac, row * self._height + 4,
+                        self._width - xst + spac, (row + 1) * self._height - 4)
+                    
+                if view_data.default_port_types_view & PortTypesViewFlag.CV:
+                    painter.setPen(QPen(c.cv.background_color(), 2.0))
+                    painter.drawLine(
+                        self._width - xst + 2 * spac, row * self._height + 4,
+                        self._width - xst + 2 * spac, (row + 1) * self._height - 4)
+                
+                if view_data.default_port_types_view & PortTypesViewFlag.ALSA:
+                    painter.setPen(QPen(c.alsa.background_color(), 2.0))
+                    painter.drawLine(
+                        self._width - xst + 3 * spac, row * self._height + 4,
+                        self._width - xst + 3 * spac, (row + 1) * self._height - 4)
         
         painter.restore()
     
@@ -275,6 +324,7 @@ class ViewSelectorWidget(QWidget):
     
     def set_patchbay_manager(self, mng: 'PatchbayManager'):
         self.mng = mng
+        self.item_dellag.set_patchbay_manager(mng)
         self.mng.sg.view_changed.connect(self._view_changed)
         self.mng.sg.views_changed.connect(self._views_changed)
         self._fill_combo()
