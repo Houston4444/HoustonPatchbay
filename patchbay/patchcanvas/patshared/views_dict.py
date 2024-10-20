@@ -15,6 +15,22 @@ class ViewData:
         self.is_white_list = False
         self.ptvs = dict[PortTypesViewFlag, dict[str, GroupPos]]()
     
+    def __eq__(self, view_data: 'ViewData') -> bool:        
+        return (self.name == view_data.name
+                and (self.default_port_types_view
+                     is view_data.default_port_types_view)
+                and self.is_white_list is view_data.is_white_list)
+    
+    def copy(self) -> 'ViewData':
+        view_data = ViewData(self.default_port_types_view)
+        view_data.name = self.name
+        view_data.is_white_list = self.is_white_list
+        for ptv, ptv_dict in self.ptvs.items():
+            view_data.ptvs[ptv] = dict[str, GroupPos]()
+            for gp_name, gpos in ptv_dict.items():
+                view_data.ptvs[ptv][gp_name] = gpos.copy()
+        return view_data
+    
 
 class ViewsDict(dict[int, ViewData]):
     def __init__(self, ensure_one_view=True):
@@ -32,6 +48,12 @@ class ViewsDict(dict[int, ViewData]):
         super().clear()
         for i, vd in tmp_copy.items():
             self[i] = vd        
+    
+    def copy(self) -> 'ViewsDict':
+        views_dict = ViewsDict(ensure_one_view=self._ensure_one_view)
+        for index, view_data in self.items():
+            views_dict[index] = view_data.copy()
+        return views_dict
     
     def clear(self):
         super().clear()
@@ -147,39 +169,39 @@ class ViewsDict(dict[int, ViewData]):
         
         ptv_dict[gpos.group_name] = gpos
 
-    def short_data_states(self) -> list[dict[str, Union[str, bool]]]:
+    def short_data_states(self) -> dict[int, dict[str, Union[str, bool]]]:
         '''Used by RaySession to send short OSC str messages
         about view datas'''
 
-        out_list = list[dict[str, Union[str, bool]]]()
+        out_dict = dict[int, dict[str, Union[str, bool]]]()
+        
         for index, view_data in self.items():
-            out_dict = {'index': index}
+            view_dict = {}
             if view_data.name:
-                out_dict['name'] = view_data.name
+                view_dict['name'] = view_data.name
             if view_data.default_port_types_view is not PortTypesViewFlag.ALL:
-                out_dict['default_ptv'] = \
+                view_dict['default_ptv'] = \
                     view_data.default_port_types_view.name
             if view_data.is_white_list:
-                out_dict['is_white_list'] = True
-            out_list.append(out_dict)
-        return out_list
+                view_dict['is_white_list'] = True
+            out_dict[index] = view_dict
+        return out_dict
     
     def update_from_short_data_states(
-            self, data_states: list[dict[str, Union[str, bool]]]):
-        if not isinstance(data_states, list):
+            self, data_states: dict[int, dict[str, Union[str, bool]]]):
+        
+        if not isinstance(data_states, dict):
             return
-
-        for view_state in data_states:
-            if not isinstance(view_state, dict):
+        
+        for index_str, view_state in data_states.items():
+            if not (isinstance(index_str, str) and index_str.isdigit()
+                    and isinstance(view_state, dict)):
                 return
         
         indexes = set[int]()
         
-        for view_state in data_states:
-            index = view_state.get('index')
-            if not isinstance(index, int):
-                continue
-            
+        for index_str, view_state in data_states.items():
+            index = int(index_str)
             indexes.add(index)
             
             view_data = self.get(index)
@@ -189,16 +211,22 @@ class ViewsDict(dict[int, ViewData]):
             name = view_state.get('name')
             if isinstance(name, str):
                 view_data.name = name
+            else:
+                view_data.name = ''
                 
             default_ptv_str = view_state.get('default_ptv')
             if isinstance(default_ptv_str, str):
                 view_data.default_port_types_view = \
                     PortTypesViewFlag.from_config_str(default_ptv_str)
-                    
+            else:
+                view_data.default_port_types_view = PortTypesViewFlag.ALL
+            
             is_white_list = view_state.get('is_white_list')
             if isinstance(is_white_list, bool):
                 view_data.is_white_list = is_white_list
-                
+            else:
+                view_data.is_white_list = False
+
         rm_indexes = set[int]()
         for index in self.keys():
             if index not in indexes:

@@ -926,6 +926,7 @@ class PatchbayManager:
 
         self.change_port_types_view(ptv, force=True)
         self.sg.view_changed.emit(view_number)
+        self.set_views_changed()
     
     def remove_view(self, view_number: int):
         if len(self.views) <= 1:
