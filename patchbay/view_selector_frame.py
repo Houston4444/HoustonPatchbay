@@ -117,14 +117,6 @@ class ItemmDeleg(QAbstractItemDelegate):
                 xst = 18
                 spac = 4
                 
-                bg = QColor(canvas.theme.scene_background_color)
-                bg.setAlpha(255)
-                painter.setBrush(bg)
-                painter.setPen(QPen(Qt.NoPen))
-                painter.drawRect(
-                    self._width - xst - spac, row * self._height,
-                    5 * spac, self._height)
-                
                 if row == self._highlighted_index:            
                     painter.setPen(QPen(QApplication.palette().highlight(), 1.0))
                     painter.drawLine(

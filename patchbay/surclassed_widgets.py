@@ -3,12 +3,16 @@ from typing import TYPE_CHECKING
 
 from PyQt5.QtCore import Qt, pyqtSignal, pyqtSlot, QPoint, QSize, QRectF, QPointF
 from PyQt5.QtGui import (
-    QWheelEvent, QKeyEvent, QMouseEvent, QPaintEvent, QPainter, QPen, QColor, QPainterPath)
+    QWheelEvent, QKeyEvent, QMouseEvent, QPaintEvent,
+    QPainter, QPen, QColor, QPainterPath, QBrush)
 from PyQt5.QtWidgets import (
     QApplication, QProgressBar, QSlider, QToolTip,
     QLineEdit, QLabel, QMenu, QAction, QCheckBox,
     QComboBox, QFrame, QWidget)
 
+
+from .patchcanvas.patshared import PortTypesViewFlag
+from .patchcanvas import patchcanvas
 from .base_elements import TransportViewMode, AliasingReason
 
 if TYPE_CHECKING:
@@ -288,7 +292,7 @@ class ViewsComboBox(QComboBox):
                 return
 
         super().keyPressEvent(event)
-        
+    
     def wheelEvent(self, event: QWheelEvent) -> None:
         previous_index = self.currentIndex()
         super().wheelEvent(event)
@@ -301,18 +305,17 @@ class ViewsComboBox(QComboBox):
                 self.setCurrentIndex(0)
     
     def paintEvent(self, event: QPaintEvent):
-        # super().paintEvent(event)
-        # return
-    
         painter = QPainter(self)
-        # painter.setRenderHint(QPainter.Antialiasing, True)
-        self.palette().button().color()
+        
+        # Draw rect
+        bg_col = self.palette().alternateBase().color()
         painter.setPen(QPen(self.palette().midlight().color(), 1.0))
-        painter.setBrush(self.palette().alternateBase().color())
+        painter.setBrush(bg_col)
         painter.drawRoundedRect(
             QRectF(1.0, 1.0, self.width() - 2.0,
                    self.height() - 2.0), 2.0, 2.0)
         
+        # Draw text      
         painter.setPen(QPen(QApplication.palette().text().color(), 1.0))
         
         font = QApplication.font()
@@ -321,6 +324,7 @@ class ViewsComboBox(QComboBox):
         painter.setFont(font)
         painter.drawText(text_pos, self.currentText())
         
+        # Draw arrow
         arrow_side = self.height() / 7
         path = QPainterPath()
         path.moveTo(
@@ -330,6 +334,54 @@ class ViewsComboBox(QComboBox):
         path.lineTo(
             QPointF(self.width() - arrow_side * 2, arrow_side * 3))
         painter.drawPath(path)
+        
+        # Draw PortTypesView thumbnail
+        thmp = patchcanvas.canvas.theme.port
+        pcols = [thmp.audio.background_color(),
+                 thmp.midi.background_color(),
+                 thmp.cv.background_color(), 
+                 thmp.alsa.background_color()]
+        
+        # adapt colors lightness to be clearly visible on this background
+        bg_ligthness = bg_col.lightnessF()
+        if bg_ligthness > 0.5:
+            for i in range(len(pcols)):
+                while bg_ligthness - pcols[i].lightnessF() < 0.25:
+                    pcols[i] = pcols[i].darker()
+                    
+                    if pcols[i].lightnessF() == 0.0:
+                        break
+        else:
+            for i in range(len(pcols)):                
+                while pcols[i].lightnessF() - bg_ligthness < 0.25:
+                    pcols[i] = pcols[i].lighter()
+                    
+                    if pcols[i].lightnessF() == 1.0:
+                        break
+
+        mng = self._parent.mng
+        if mng is None:
+            return
+        
+        hgt = int(self.height())
+        SPAC = 4
+        Y_OFFSET = 10
+        XBASE = int(self.width() - 40)
+        
+        ptvs = [PortTypesViewFlag.AUDIO, PortTypesViewFlag.MIDI,
+                PortTypesViewFlag.CV]
+        if mng.alsa_midi_enabled:
+            ptvs.append(PortTypesViewFlag.ALSA)
+
+        for i in range(len(ptvs)):
+            painter.setPen(QPen(pcols[i], 2.0))
+            if mng.port_types_view & ptvs[i]:
+                painter.drawLine(XBASE + i * SPAC, Y_OFFSET,
+                                 XBASE + i * SPAC, hgt - Y_OFFSET)
+            else:
+                painter.drawLine(XBASE + i * SPAC, hgt // 2 - 1,
+                                 XBASE + i * SPAC, hgt // 2 + 1)
+
 
 class ToolsWidgetFrame(QFrame):
     ...
