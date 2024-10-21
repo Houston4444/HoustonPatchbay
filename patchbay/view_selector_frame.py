@@ -34,6 +34,7 @@ class ItemmDeleg(QAbstractItemDelegate):
 
         self._height = int(font.pointSize() * 2.5)
         self._width = 500
+        self._port_colors = [QColor() for i in range(4)]
     
     def sizeHint(self, option: 'QStyleOptionViewItem',
                  index: QModelIndex) -> QSize:
@@ -69,13 +70,44 @@ class ItemmDeleg(QAbstractItemDelegate):
     def set_width(self, width: int):
         self._width = width
     
+    def update_port_colors(self):
+        if self.mng is None:
+            return
+        
+        thmp = canvas.theme.port
+        self._port_colors = [
+            thmp.audio.background_color(),
+            thmp.midi.background_color(),
+            thmp.cv.background_color(),
+            thmp.alsa.background_color()]
+        
+        bg_col = QApplication.palette().base().color()
+        bg_ligthness = bg_col.lightnessF()
+        pcols = self._port_colors
+
+        if bg_ligthness > 0.5:
+            for i in range(len(pcols)):
+                while bg_ligthness - pcols[i].lightnessF() < 0.25:
+                    pcols[i] = pcols[i].darker()
+                    
+                    if pcols[i].lightnessF() == 0.0:
+                        break
+        else:
+            for i in range(len(pcols)):                
+                while pcols[i].lightnessF() - bg_ligthness < 0.25:
+                    pcols[i] = pcols[i].lighter()
+                    
+                    if pcols[i].lightnessF() == 1.0:
+                        break
+
     def set_patchbay_manager(self, mng: 'PatchbayManager'):
         self.mng = mng
+        self.update_port_colors()
     
     def paint(self, painter, option, index):        
         row = index.row()
         painter.save()
-        
+
         text_brush = QApplication.palette().text()
         
         if row == self._highlighted_index:            
@@ -83,7 +115,14 @@ class ItemmDeleg(QAbstractItemDelegate):
             painter.setBrush(QApplication.palette().highlight())
             painter.drawRect(QRect(
                 0, row * self._height, self._width, self._height))
-        
+            painter.setBrush(QApplication.palette().base())
+            
+            # draw rect under port types view thumbnail with the
+            # base color.
+            painter.drawRect(QRect(
+                self._width - 23, row * self._height + 1,
+                22, self._height - 2))
+
             text_brush = QApplication.palette().highlightedText()
 
         font = QFont()
@@ -113,43 +152,29 @@ class ItemmDeleg(QAbstractItemDelegate):
         
         if self.mng is not None:
             view_data = self.mng.views.get(view_num)
+            ptvs = [PortTypesViewFlag.AUDIO,
+                    PortTypesViewFlag.MIDI,
+                    PortTypesViewFlag.CV]
+            if self.mng.alsa_midi_enabled:
+                ptvs.append(PortTypesViewFlag.ALSA)
+            
             if view_data is not None:
-                xst = 18
-                spac = 4
+                xst = self._width - 18
+                SPAC = 4
                 
-                if row == self._highlighted_index:            
-                    painter.setPen(QPen(QApplication.palette().highlight(), 1.0))
-                    painter.drawLine(
-                        self._width - xst - spac, row * self._height,
-                        self._width - xst + 4 *spac, row * self._height)
-                    painter.drawLine(
-                        self._width - xst - spac, (1 + row) * self._height - 1,
-                        self._width - xst + 4 *spac, (1 + row) * self._height - 1)
-                
-                c = canvas.theme.port
-                if view_data.default_port_types_view & PortTypesViewFlag.AUDIO:
-                    painter.setPen(QPen(c.audio.background_color(), 2.0))
-                    painter.drawLine(
-                        self._width - xst, row * self._height + 4,
-                        self._width - xst, (row + 1) * self._height - 4)
-                
-                if view_data.default_port_types_view & PortTypesViewFlag.MIDI:
-                    painter.setPen(QPen(c.midi.background_color(), 2.0))
-                    painter.drawLine(
-                        self._width - xst + spac, row * self._height + 4,
-                        self._width - xst + spac, (row + 1) * self._height - 4)
-                    
-                if view_data.default_port_types_view & PortTypesViewFlag.CV:
-                    painter.setPen(QPen(c.cv.background_color(), 2.0))
-                    painter.drawLine(
-                        self._width - xst + 2 * spac, row * self._height + 4,
-                        self._width - xst + 2 * spac, (row + 1) * self._height - 4)
-                
-                if view_data.default_port_types_view & PortTypesViewFlag.ALSA:
-                    painter.setPen(QPen(c.alsa.background_color(), 2.0))
-                    painter.drawLine(
-                        self._width - xst + 3 * spac, row * self._height + 4,
-                        self._width - xst + 3 * spac, (row + 1) * self._height - 4)
+                for i in range(len(ptvs)):
+                    pcol = self._port_colors[i]
+                    painter.setPen(QPen(pcol, 2.0))
+                    if view_data.default_port_types_view & ptvs[i]:
+                        painter.drawLine(
+                            xst + SPAC * i, row * self._height + 6,
+                            xst + SPAC * i, (row + 1) * self._height - 6)
+                    else:
+                        painter.drawLine(
+                            xst + SPAC * i,
+                            row * self._height + self._height // 2 - 1,
+                            xst + SPAC * i,
+                            (row + 1) * self._height - self._height // 2 + 1)
         
         painter.restore()
     
