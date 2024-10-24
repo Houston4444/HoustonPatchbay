@@ -161,11 +161,14 @@ class ItemmDeleg(QAbstractItemDelegate):
             if view_data is not None:
                 xst = self._width - 18
                 SPAC = 4
+                ptv = view_data.default_port_types_view
+                if view_num == self.mng.view_number:
+                    ptv = self.mng.port_types_view
                 
                 for i in range(len(ptvs)):
                     pcol = self._port_colors[i]
                     painter.setPen(QPen(pcol, 2.0))
-                    if view_data.default_port_types_view & ptvs[i]:
+                    if ptv & ptvs[i]:
                         painter.drawLine(
                             xst + SPAC * i, row * self._height + 6,
                             xst + SPAC * i, (row + 1) * self._height - 6)
@@ -342,8 +345,11 @@ class ViewSelectorWidget(QWidget):
     def set_patchbay_manager(self, mng: 'PatchbayManager'):
         self.mng = mng
         self.item_dellag.set_patchbay_manager(mng)
+        self.mng.sg.port_types_view_changed.connect(
+            self._port_types_view_changed)
         self.mng.sg.view_changed.connect(self._view_changed)
         self.mng.sg.views_changed.connect(self._views_changed)
+        
         self._fill_combo()
         self._build_menu()
 
@@ -363,6 +369,10 @@ class ViewSelectorWidget(QWidget):
     def _views_changed(self):
         self._fill_combo()
         self._build_menu()
+        
+    @pyqtSlot(int)
+    def _port_types_view_changed(self, ptv_int: int):
+        self.ui.comboBoxView.update()
 
     @pyqtSlot(int) 
     def _change_view(self, index: int):
