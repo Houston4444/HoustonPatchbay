@@ -311,6 +311,13 @@ class ViewsComboBox(QComboBox):
             else:
                 self.setCurrentIndex(0)
     
+    def mouseDoubleClickEvent(self, event: QMouseEvent) -> None:
+        super().mouseDoubleClickEvent(event)
+        if self.isEditable():
+            self.setEditable(False)
+        else:
+            self.set_editable()
+    
     def paintEvent(self, event: QPaintEvent):
         painter = QPainter(self)
         
@@ -319,8 +326,9 @@ class ViewsComboBox(QComboBox):
         painter.setPen(QPen(self.palette().midlight().color(), 1.0))
         painter.setBrush(bg_col)
         painter.drawRoundedRect(
-            QRectF(1.0, 1.0, self.width() - 2.0,
-                   self.height() - 2.0), 2.0, 2.0)
+            QRectF(0.0, 1.0, self.width(),
+                   self.height() - 2.0),
+            2.0, 2.0)
         
         # Draw text      
         painter.setPen(QPen(QApplication.palette().text().color(), 1.0))

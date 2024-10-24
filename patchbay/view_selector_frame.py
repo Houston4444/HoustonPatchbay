@@ -348,7 +348,8 @@ class ViewSelectorWidget(QWidget):
             index += 1
         
         needed_width = max(
-            self.item_dellag.get_needed_width(), self.ui.comboBoxView.width())
+            self.item_dellag.get_needed_width(),
+            self.ui.comboBoxView.width() - 6)
         self.item_dellag.set_width(needed_width)
         self.ui.comboBoxView.view().setMinimumWidth(
             self.item_dellag.get_needed_width())
