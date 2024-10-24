@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING
 from PyQt5.QtCore import Qt, pyqtSignal, pyqtSlot, QPoint, QSize, QRectF, QPointF
 from PyQt5.QtGui import (
     QWheelEvent, QKeyEvent, QMouseEvent, QPaintEvent,
-    QPainter, QPen, QColor, QPainterPath, QBrush)
+    QPainter, QPen, QColor, QPainterPath, QPixmap)
 from PyQt5.QtWidgets import (
     QApplication, QProgressBar, QSlider, QToolTip,
     QLineEdit, QLabel, QMenu, QAction, QCheckBox,
@@ -243,6 +243,13 @@ class ViewsComboBox(QComboBox):
         self._editing_text = ''
         self._selected_index = 0
         self._selected_view = 1
+        
+        dark = self.palette().text().color().lightnessF() > 0.5
+        color_scheme = 'breeze-dark' if dark else 'breeze'
+        
+        self._white_image = QPixmap(
+            f':scalable/{color_scheme}/color-picker-white.svg').toImage()
+        
         self.editTextChanged.connect(self._edit_text_changed)
         self.view().setMinimumWidth(800)
     
@@ -259,7 +266,7 @@ class ViewsComboBox(QComboBox):
     
     def sizeHint(self) -> QSize:
         size = super().sizeHint()
-        size.setWidth(size.width() + 20)
+        size.setWidth(size.width() + 40)
         return size
     
     def keyPressEvent(self, event: QKeyEvent):
@@ -381,6 +388,12 @@ class ViewsComboBox(QComboBox):
             else:
                 painter.drawLine(XBASE + i * SPAC, hgt // 2 - 1,
                                  XBASE + i * SPAC, hgt // 2 + 1)
+        
+        view_data = mng.views.get(mng.view_number)
+        if view_data is not None and view_data.is_white_list:
+            white_list_image_rect = QRectF(
+                XBASE - 20.0, self.height() * 0.5 - 8.0, 16.0, 16.0)
+            painter.drawImage(white_list_image_rect, self._white_image)
 
 
 class ToolsWidgetFrame(QFrame):

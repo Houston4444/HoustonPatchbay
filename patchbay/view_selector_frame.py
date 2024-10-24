@@ -5,8 +5,9 @@ from PyQt5.QtWidgets import (
     QWidget, QApplication, QMenu, QAbstractItemDelegate,
     QStyleOptionViewItem)
 from PyQt5.QtGui import (
-    QIcon, QKeyEvent, QPen, QFont, QFontMetricsF, QResizeEvent, QColor)
-from PyQt5.QtCore import pyqtSlot, Qt, QSize, QPointF, QRect, QModelIndex
+    QIcon, QKeyEvent, QPen, QFont, QFontMetricsF,
+    QResizeEvent, QColor, QPixmap)
+from PyQt5.QtCore import pyqtSlot, Qt, QSize, QPointF, QRect, QRectF, QModelIndex
 
 from .ui.view_selector import Ui_Form
 
@@ -35,6 +36,12 @@ class ItemmDeleg(QAbstractItemDelegate):
         self._height = int(font.pointSize() * 2.5)
         self._width = 500
         self._port_colors = [QColor() for i in range(4)]
+        
+        dark = QApplication.palette().text().color().lightnessF() > 0.5
+        color_scheme = 'breeze-dark' if dark else 'breeze'
+        
+        self._white_image = QPixmap(
+            f':scalable/{color_scheme}/color-picker-white.svg').toImage()
     
     def sizeHint(self, option: 'QStyleOptionViewItem',
                  index: QModelIndex) -> QSize:
@@ -63,7 +70,7 @@ class ItemmDeleg(QAbstractItemDelegate):
             else:
                 num_width = QFontMetricsF(font).width(str(view_num))
             
-            needed_width = max(needed_width, name_width + num_width + 42.0)
+            needed_width = max(needed_width, name_width + num_width + 62.0)
             
         return ceil(needed_width)
     
@@ -147,7 +154,7 @@ class ItemmDeleg(QAbstractItemDelegate):
             font.setItalic(True)
             painter.setFont(font)
 
-        num_pos.setX(self._width - QFontMetricsF(font).width(num_text) - 26.0)
+        num_pos.setX(self._width - QFontMetricsF(font).width(num_text) - 42.0)
         painter.drawText(num_pos, num_text)
         
         if self.mng is not None:
@@ -178,6 +185,12 @@ class ItemmDeleg(QAbstractItemDelegate):
                             row * self._height + self._height // 2 - 1,
                             xst + SPAC * i,
                             (row + 1) * self._height - self._height // 2 + 1)
+                
+                if view_data.is_white_list:
+                    white_rect = QRectF(
+                        xst - 20.0, row * self._height + self._height * 0.5 - 8.0,
+                        16.0, 16.0)
+                    painter.drawImage(white_rect, self._white_image)
         
         painter.restore()
     

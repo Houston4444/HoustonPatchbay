@@ -100,7 +100,7 @@ class ViewsDict(dict[int, ViewData]):
                 view_data.name = name
                 
             if isinstance(is_white_list, bool):
-                view_data.is_white_list = bool
+                view_data.is_white_list = is_white_list
                 
             for ptv_str, gp_dict in view_dict.items():
                 if not (isinstance(ptv_str, str)
