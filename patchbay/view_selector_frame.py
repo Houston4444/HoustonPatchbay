@@ -363,6 +363,7 @@ class ViewSelectorWidget(QWidget):
             self._port_types_view_changed)
         self.mng.sg.view_changed.connect(self._view_changed)
         self.mng.sg.views_changed.connect(self._views_changed)
+        self.mng.sg.theme_changed.connect(self._theme_changed)
         
         self._fill_combo()
         self._build_menu()
@@ -387,6 +388,10 @@ class ViewSelectorWidget(QWidget):
     @pyqtSlot(int)
     def _port_types_view_changed(self, ptv_int: int):
         self.ui.comboBoxView.update()
+
+    @pyqtSlot(str)
+    def _theme_changed(self, theme_name: str):
+        self.item_dellag.update_port_colors()
 
     @pyqtSlot(int) 
     def _change_view(self, index: int):
