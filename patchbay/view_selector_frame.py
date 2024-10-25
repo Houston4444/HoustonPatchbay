@@ -70,7 +70,7 @@ class ItemmDeleg(QAbstractItemDelegate):
             else:
                 num_width = QFontMetricsF(font).width(str(view_num))
             
-            needed_width = max(needed_width, name_width + num_width + 62.0)
+            needed_width = max(needed_width, name_width + num_width + 102.0)
             
         return ceil(needed_width)
     
