@@ -645,6 +645,7 @@ class Theme(StyleAttributer):
         self.box_spacing_horizontal = 24
         self.magnet = 12
         self.hardware_rack_width = 5
+        self.thumbnail_port_colors = 'background'
 
         self.icon = IconTheme()
 
@@ -839,6 +840,10 @@ class Theme(StyleAttributer):
                         self.monitor_color = _to_qcolor(body_value)
                         if self.monitor_color is None:
                             self.monitor_color = QColor(190, 158, 0)
+                    
+                    elif body_key == 'thumbnail_port_colors':
+                        self.thumbnail_port_colors = str(body_value)
+
                 continue
 
             sub_attributer = self.__getattribute__(begin)

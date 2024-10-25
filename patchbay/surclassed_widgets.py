@@ -338,7 +338,7 @@ class ViewsComboBox(QComboBox):
         text_pos = QPoint(6, (self.height() + font.pointSize()) // 2 )
         painter.setFont(font)
         painter.drawText(text_pos, self.currentText())
-        
+
         # Draw arrow
         arrow_side = self.height() / 7
         path = QPainterPath()
@@ -352,10 +352,17 @@ class ViewsComboBox(QComboBox):
         
         # Draw PortTypesView thumbnail
         thmp = patchcanvas.canvas.theme.port
-        pcols = [thmp.audio.background_color(),
-                 thmp.midi.background_color(),
-                 thmp.cv.background_color(), 
-                 thmp.alsa.background_color()]
+
+        if patchcanvas.canvas.theme.thumbnail_port_colors.lower() == 'text':
+            pcols = [thmp.audio.text_color(),
+                     thmp.midi.text_color(),
+                     thmp.cv.text_color(), 
+                     thmp.alsa.text_color()]
+        else:
+            pcols = [thmp.audio.background_color(),
+                     thmp.midi.background_color(),
+                     thmp.cv.background_color(), 
+                     thmp.alsa.background_color()]
         
         # adapt colors lightness to be clearly visible on this background
         bg_ligthness = bg_col.lightnessF()

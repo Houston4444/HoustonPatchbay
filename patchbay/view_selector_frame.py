@@ -82,11 +82,19 @@ class ItemmDeleg(QAbstractItemDelegate):
             return
         
         thmp = canvas.theme.port
-        self._port_colors = [
-            thmp.audio.background_color(),
-            thmp.midi.background_color(),
-            thmp.cv.background_color(),
-            thmp.alsa.background_color()]
+
+        if canvas.theme.thumbnail_port_colors.lower() == 'text':
+            self._port_colors = [
+                thmp.audio.text_color(),
+                thmp.midi.text_color(),
+                thmp.cv.text_color(),
+                thmp.alsa.text_color()]
+        else:
+            self._port_colors = [
+                thmp.audio.background_color(),
+                thmp.midi.background_color(),
+                thmp.cv.background_color(),
+                thmp.alsa.background_color()]
         
         bg_col = QApplication.palette().base().color()
         bg_ligthness = bg_col.lightnessF()
@@ -392,6 +400,7 @@ class ViewSelectorWidget(QWidget):
     @pyqtSlot(str)
     def _theme_changed(self, theme_name: str):
         self.item_dellag.update_port_colors()
+        self.ui.comboBoxView.update()
 
     @pyqtSlot(int) 
     def _change_view(self, index: int):
