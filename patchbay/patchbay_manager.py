@@ -5,14 +5,15 @@ from pathlib import Path
 from dataclasses import dataclass
 from typing import Any, Callable, Iterator, Optional, Union
 
-from PyQt5.QtGui import QCursor, QGuiApplication
+from PyQt5.QtGui import QCursor, QGuiApplication, QKeyEvent
 from PyQt5.QtWidgets import QMainWindow, QMessageBox, QWidget
-from PyQt5.QtCore import QTimer, QSettings, QThread
+from PyQt5.QtCore import QTimer, QSettings, QThread, Qt
 
-from .patchcanvas import patchcanvas, PortType, PortSubType, PortMode
+from .patchcanvas import arranger, patchcanvas
 from .patchcanvas.utils import get_new_group_positions
 from .patchcanvas.scene_view import PatchGraphicsView
 from .patchcanvas.patshared import (
+    PortType, PortSubType, PortMode,
     PortTypesViewFlag, GroupPos, from_json_to_str,
     ViewsDict, PortgroupsDict, PortgroupMem)
 from .patchcanvas.init_values import (
@@ -1696,5 +1697,15 @@ class PatchbayManager:
             _logger.error(f'Failed to save patchichi file: {str(e)}')
             return False
         
+    def key_press_event(self, event: QKeyEvent):
+        if event.modifiers() & Qt.KeyboardModifier.AltModifier:
+            if event.text().isdigit():
+                # change view with Alt+Num
+                self.change_view(int(event.text()))
             
+            elif event.text().upper() == 'A':
+                arranger.arrange_follow_signal()
+            
+            elif event.text().upper() == 'Q':
+                arranger.arrange_face_to_face()
         

@@ -76,14 +76,14 @@ class CanvasMenu(QMenu):
 
         menu_arrange = QMenu(_translate('views_menu', 'Arrange'), self)
         menu_arrange.setIcon(QIcon.fromTheme('code-block'))
-        
-        act_arrange_facing = menu_arrange.addAction(
-            _translate('views_menu', 'Two columns facing each other'))
-        act_arrange_facing.triggered.connect(self._arrange_facing)
-        
-        act_arrange_signal = menu_arrange.addAction(
+
+        act_arrange_signal = menu_arrange.addAction("%s\tAlt+A" %
             _translate('views_menu', 'Follow the signal chain'))
         act_arrange_signal.triggered.connect(self._arrange_follow_signal)
+        
+        act_arrange_facing = menu_arrange.addAction("%s\tAlt+Q" %
+            _translate('views_menu', 'Two columns facing each other'))
+        act_arrange_facing.triggered.connect(self._arrange_facing)
 
         self.addMenu(menu_arrange)
 
