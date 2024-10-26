@@ -95,6 +95,8 @@ class ViewsDict(dict[int, ViewData]):
             view_data = self.get(index)
             if view_data is None:
                 view_data = self[index] = ViewData(default_ptv)
+            else:
+                view_data.default_port_types_view = default_ptv
 
             if isinstance(name, str):
                 view_data.name = name

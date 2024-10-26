@@ -695,6 +695,9 @@ class PatchbayManager:
         
         self.sg.all_groups_removed.emit()
 
+    def save_view_and_port_types_view(self):
+        ...
+
     def change_port_types_view(
             self, port_types_view: PortTypesViewFlag, force=False):
         if not force and port_types_view is self.port_types_view:
@@ -750,6 +753,9 @@ class PatchbayManager:
             patchcanvas.redraw_all_groups()
             
             self.sg.port_types_view_changed.emit(self.port_types_view)
+            self.views[self.view_number].default_port_types_view = \
+                self.port_types_view
+            self.save_view_and_port_types_view()
             return
         
         rm_all_before = bool(ex_ptv & self.port_types_view
@@ -860,6 +866,9 @@ class PatchbayManager:
             patchcanvas.repulse_all_boxes()
 
         self.sg.port_types_view_changed.emit(self.port_types_view)
+        self.views[self.view_number].default_port_types_view = \
+            self.port_types_view
+        self.save_view_and_port_types_view()
 
     def set_views_changed(self):
         '''emit the "view_changed" signal. Can be Inherited to do other tasks'''
@@ -899,7 +908,8 @@ class PatchbayManager:
                         if not port_mode & pmode:
                             box_pos.set_hidden(True)
 
-        # self.sort_views_by_index()
+        self.views[self.view_number].default_port_types_view = \
+            self.port_types_view
         self.view_number = new_num
         self.set_views_changed()
         self.change_port_types_view(self.port_types_view, force=True)
@@ -909,10 +919,6 @@ class PatchbayManager:
         self.set_views_changed()
     
     def change_view(self, view_number: int):
-        # save the port types view of the current view
-        self.views[self.view_number].default_port_types_view = \
-            self.port_types_view
-        
         if not view_number in self.views.keys():
             self.new_view(view_number=view_number)
             return
@@ -926,7 +932,6 @@ class PatchbayManager:
 
         self.change_port_types_view(ptv, force=True)
         self.sg.view_changed.emit(view_number)
-        self.set_views_changed()
     
     def remove_view(self, view_number: int):
         if len(self.views) <= 1:
