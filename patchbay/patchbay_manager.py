@@ -894,6 +894,9 @@ class PatchbayManager:
         if exclusive_with is None:
             for gpos in self.views.iter_group_poses(view_num=self.view_number):
                 self.views.add_group_pos(new_num, gpos.copy())
+            
+            if self.views[self.view_number].is_white_list:
+                self.views[new_num].is_white_list = True
 
         else:
             self.views[new_num].is_white_list = True
