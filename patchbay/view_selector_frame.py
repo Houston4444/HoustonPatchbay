@@ -12,7 +12,7 @@ from PyQt5.QtCore import pyqtSlot, Qt, QSize, QPointF, QRect, QRectF, QModelInde
 from .ui.view_selector import Ui_Form
 
 from .patchcanvas.patshared import PortTypesViewFlag
-from .patchcanvas import arranger, canvas
+from .patchcanvas import canvas
 
 if TYPE_CHECKING:
     from patchbay_manager import PatchbayManager
@@ -303,7 +303,7 @@ class ViewSelectorWidget(QWidget):
         
         act_arrange_facing = menu_arrange.addAction("%s\tAlt+Q" %
             _translate('views_menu', 'Two columns facing each other'))
-        act_arrange_facing.triggered.connect(self._arrange_facing)
+        act_arrange_facing.triggered.connect(self._arrange_face_to_face)
 
         self._menu.addMenu(menu_arrange)
         
@@ -463,12 +463,14 @@ class ViewSelectorWidget(QWidget):
             self.mng.change_view_number(new_num)
 
     @pyqtSlot()
-    def _arrange_facing(self):
-        arranger.arrange_face_to_face()
+    def _arrange_face_to_face(self):
+        if self.mng is not None:
+            self.mng.arrange_face_to_face()
 
     @pyqtSlot()
     def _arrange_follow_signal(self):
-        arranger.arrange_follow_signal()
+        if self.mng is not None:
+            self.mng.arrange_follow_signal()
 
     @pyqtSlot()
     def _remove_all_other_views(self):

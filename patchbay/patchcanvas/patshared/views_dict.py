@@ -333,4 +333,13 @@ class ViewsDict(dict[int, ViewData]):
         if self._ensure_one_view and not self.keys():
             self[1] = ViewData(PortTypesViewFlag.ALL)    
 
+    def change_view_number(self, from_num: int, to_num: int):
+        if not from_num in self.keys():
+            return
 
+        if to_num in self.keys():
+            self[from_num], self[to_num] = self[to_num], self[from_num]
+        else:
+            self[to_num] = self.pop(from_num)
+            
+        self._sort_views_by_index()

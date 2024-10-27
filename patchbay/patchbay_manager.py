@@ -20,6 +20,7 @@ from .patchcanvas.init_values import (
     AliasingReason, CallbackAct, CanvasFeaturesObject,
     CanvasOptionsObject, GridStyle)
 
+from .cancel_mng import CancelMng, CancelOpType
 from .patchbay_signals import SignalsObject
 from .tools_widgets import PatchbayToolsWidget
 from .canvas_menu import CanvasMenu
@@ -130,6 +131,7 @@ class PatchbayManager:
 
     def __init__(self, settings: QSettings):
         self.callbacker = Callbacker(self)
+        self.cancel_mng = CancelMng(self)
         self._settings = settings
 
         self.main_win: QMainWindow = None
@@ -977,15 +979,8 @@ class PatchbayManager:
         if new_num == self.view_number:
             return
         
-        if new_num in self.views.keys():
-            # reverse the two view numbers
-            self.views[self.view_number], self.views[new_num] = \
-                self.views[new_num], self.views[self.view_number]
-        else:
-            self.views[new_num] = self.views.pop(self.view_number)
-            
+        self.views.change_view_number(self.view_number, new_num)
         self.view_number = new_num
-        self.sort_views_by_index()
         self.sg.views_changed.emit()
 
     def write_view_data(
@@ -1009,6 +1004,16 @@ class PatchbayManager:
         view_data.is_white_list = white_list_view
         
         self.set_views_changed()
+
+    def arrange_follow_signal(self):
+        self.cancel_mng.prepare(CancelOpType.ARRANGE, self.view_number)
+        arranger.arrange_follow_signal()
+        self.cancel_mng.post_prepare(CancelOpType.ARRANGE, self.view_number)
+        
+    def arrange_face_to_face(self):
+        self.cancel_mng.prepare(CancelOpType.ARRANGE, self.view_number)
+        arranger.arrange_face_to_face()
+        self.cancel_mng.post_prepare(CancelOpType.ARRANGE, self.view_number)
 
     # --- options triggers ---
 
@@ -1529,13 +1534,6 @@ class PatchbayManager:
         
         self.sg.patch_may_have_changed.emit()
 
-    def sort_views_by_index(self):
-        indexes = sorted([i for i in self.views.keys()])
-        views = self.views.copy()
-        self.views.clear()
-        for i in indexes:
-            self.views[i] = views[i]
-
     def _export_port_list_to_patchichi(self) -> str:
         def slcol(input_str: str) -> str:
             return input_str.replace(':', '\\:')
@@ -1707,8 +1705,15 @@ class PatchbayManager:
                 self.change_view(int(event.text()))
             
             elif event.text().upper() == 'A':
-                arranger.arrange_follow_signal()
+                self.arrange_follow_signal()
             
             elif event.text().upper() == 'Q':
-                arranger.arrange_face_to_face()
+                self.arrange_face_to_face()
+                
+        elif event.modifiers() & Qt.KeyboardModifier.ControlModifier:
+            if event.key() == 90: # 90 = Z
+                if event.modifiers() & Qt.KeyboardModifier.ShiftModifier:
+                    self.cancel_mng.redo()
+                else:
+                    self.cancel_mng.undo()
         

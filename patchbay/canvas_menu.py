@@ -6,7 +6,6 @@ from PyQt5.QtCore import QLocale, QUrl, pyqtSlot
 
 from . import patchcanvas
 from .patchcanvas import utils
-from .patchcanvas import arranger
 from .base_elements import PortType, PortTypesViewFlag, PortMode
 from .views_menu import ViewsMenu
 from .selected_boxes_menu import SelectedBoxesMenu
@@ -205,11 +204,11 @@ class CanvasMenu(QMenu):
 
     @pyqtSlot()
     def _arrange_facing(self):
-        arranger.arrange_face_to_face()
+        self.mng.arrange_face_to_face()
 
     @pyqtSlot()
     def _arrange_follow_signal(self):
-        arranger.arrange_follow_signal()
+        self.mng.arrange_follow_signal()
 
     def _port_types_view_changed(self, port_types_view: int):
         self.action_all_types.setChecked(
