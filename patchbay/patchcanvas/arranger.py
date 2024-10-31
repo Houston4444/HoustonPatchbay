@@ -4,7 +4,7 @@ from typing import Optional
 
 from PyQt5.QtCore import QRectF
 
-from .patshared import BoxLayoutMode, BoxPos, PortMode, BoxType
+from .patshared import BoxLayoutMode, PortMode, BoxType, GroupPos
 from .init_values import GroupObject, canvas, Joining
 from .utils import nearest_on_grid, next_left_on_grid, next_top_on_grid
 from .box_widget import BoxWidget
@@ -417,6 +417,9 @@ class CanvasArranger:
                 group_ids_to_split.add(ba.group_id)
 
         # join or split groups we want to join or split
+        # for group in canvas.group_list:
+        #     group.gpos.set_splitted(group.group_id in group_ids_to_split)
+        
         for group in canvas.group_list:
             if group.splitted:
                 if (group.box_type is not BoxType.HARDWARE
@@ -427,6 +430,9 @@ class CanvasArranger:
                 if (group.box_type is BoxType.HARDWARE
                         or group.group_id in group_ids_to_split):
                     split_group(group.group_id)
+
+        for group in canvas.group_list:
+            group.gpos.set_splitted(group.group_id in group_ids_to_split)
         
         for box_arranger in self.box_arrangers:
             box_arranger.set_box()
@@ -586,7 +592,7 @@ class CanvasArranger:
             if ba.joining:
                 group = canvas.get_group(ba.group_id)
                 if group is not None:
-                    group.box_poses[PortMode.BOTH].pos = grid_xy
+                    group.gpos.boxes[PortMode.BOTH].pos = grid_xy
                     canvas.qobject.add_group_to_join(group.group_id)
                     
                     for box in group.widgets:
@@ -597,7 +603,10 @@ class CanvasArranger:
                         else:
                             canvas.scene.add_box_to_animation(
                                 box, *grid_xy, joining=Joining.YES)
-            else:    
+            else:
+                group = canvas.get_group(ba.group_id)
+                if group is not None:
+                    group.gpos.boxes[ba.port_mode].pos = grid_xy
                 canvas.scene.add_box_to_animation(ba.box, *grid_xy)
 
 
@@ -618,21 +627,28 @@ def arrange_face_to_face():
     max_out_width = 0
     X_SPACING = 300
     
-    gp_box_poses = dict[int, dict[PortMode, BoxPos]]()
+    gp_gposes = dict[int, GroupPos]()
     
     for group in canvas.group_list:
         for box in group.widgets:
             if not box.isVisible():
                 continue
             
-            box_poses = gp_box_poses.get(group.group_id)
-            if box_poses is None:
-                box_poses = dict[PortMode, BoxPos]()
-                for port_mode in PortMode.in_out_both():
-                    box_poses[port_mode] = BoxPos()
-                gp_box_poses[group.group_id] = box_poses
+            gpos = gp_gposes.get(group.group_id)
+            if gpos is None:
+                # gpos = group.gpos.copy()
+                gpos = group.gpos
+                gpos.set_splitted(True)
+                gp_gposes[group.group_id] = gpos
                 
-            box_pos = box_poses[box.get_port_mode()]
+            # box_poses = gp_box_poses.get(group.group_id)
+            # if box_poses is None:
+            #     box_poses = dict[PortMode, BoxPos]()
+            #     for port_mode in PortMode.in_out_both():
+            #         box_poses[port_mode] = BoxPos()
+            #     gp_box_poses[group.group_id] = box_poses
+                
+            box_pos = gpos.boxes[box.get_port_mode()]
             layout_mode = BoxLayoutMode.LARGE
             wrapped = False
             
@@ -671,15 +687,16 @@ def arrange_face_to_face():
         if group is None:
             continue
 
-        box_poses = gp_box_poses.get(group_id)
-        if box_poses is None:
-            continue
+        # box_poses = gp_box_poses.get(group_id)
+        # if box_poses is None:
+        #     continue
+        gpos = group.gpos
 
         for box in group.widgets:
             if not box.isVisible():
                 continue
 
-            box_pos = box_poses.get(box.get_port_mode())
+            box_pos = gpos.boxes.get(box.get_port_mode())
             if box_pos is None:
                 continue
 
@@ -703,7 +720,10 @@ def arrange_face_to_face():
             
             box_pos.pos = (to_x, to_y)
             
-    for group_id, box_poses in gp_box_poses.items():
-        move_group_boxes(group_id, box_poses, True)
+    for group_id, gpos in gp_gposes.items():
+        move_group_boxes(group_id, gpos)
+    
+    # for group_id, gpos in gp_box_poses.items():
+    #     canvas.callback(CallbackAct.GROUP_POS_MODIFIED, group_id, gpos)
     
     repulse_all_boxes()

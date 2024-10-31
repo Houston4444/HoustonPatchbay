@@ -17,16 +17,21 @@
 #
 # For a full copy of the GNU General Public License see the doc/GPL.txt file.
 
-# global imports
 import logging
 from pathlib import Path
 import time
 from typing import Callable
+
 from PyQt5.QtCore import (pyqtSlot, QObject, QPointF, QRectF,
                           QSettings, QTimer, pyqtSignal)
 
-# local imports
-from .patshared import PortMode, BoxLayoutMode, BoxType, BoxPos
+from .patshared import (
+    PortMode,
+    BoxLayoutMode,
+    BoxType,
+    BoxPos,
+    GroupPos
+    )
 from .init_values import (
     AliasingReason,
     GridStyle,
@@ -212,16 +217,15 @@ def set_loading_items(yesno: bool):
 
 @patchbay_api
 def add_group(group_id: int, group_name: str, split: bool,
-              box_type: BoxType=BoxType.APPLICATION, icon_name='',
-              box_poses : dict[PortMode, BoxPos]={}):
+              box_type: BoxType, icon_name: str, gpos: GroupPos):
     if canvas.get_group(group_id) is not None:
         _logger.error(f"{_logging_str} - group already exists.")
         return
 
-    bx_poses = dict[PortMode, BoxPos]()
-    for port_mode in PortMode.in_out_both():
-        box_pos = box_poses.get(port_mode)
-        bx_poses[port_mode] = BoxPos() if box_pos is None else BoxPos(box_pos)
+    # bx_poses = dict[PortMode, BoxPos]()
+    # for port_mode in PortMode.in_out_both():
+    #     box_pos = box_poses.get(port_mode)
+    #     bx_poses[port_mode] = BoxPos() if box_pos is None else BoxPos(box_pos)
 
     group = GroupObject()
     group.group_id = group_id
@@ -234,21 +238,22 @@ def add_group(group_id: int, group_name: str, split: bool,
     group.plugin_inline = False
     group.handle_client_gui = False
     group.gui_visible = False
-    group.box_poses = bx_poses
+    # group.box_poses = bx_poses
+    group.gpos = gpos
     group.widgets = list[BoxWidget]()
 
     if split:
         out_box = BoxWidget(group, PortMode.OUTPUT)
-        out_box.set_top_left(nearest_on_grid(bx_poses[PortMode.OUTPUT].pos))
+        out_box.set_top_left(nearest_on_grid(gpos.boxes[PortMode.OUTPUT].pos))
         group.widgets.append(out_box)
 
         in_box = BoxWidget(group, PortMode.INPUT)
-        in_box.set_top_left(nearest_on_grid(bx_poses[PortMode.INPUT].pos))
+        in_box.set_top_left(nearest_on_grid(gpos.boxes[PortMode.INPUT].pos))
         group.widgets.append(in_box)
 
     else:
         box = BoxWidget(group, PortMode.BOTH)
-        box.set_top_left(nearest_on_grid(bx_poses[PortMode.BOTH].pos))
+        box.set_top_left(nearest_on_grid(gpos.boxes[PortMode.BOTH].pos))
         group.widgets.append(box)
 
     canvas.add_group(group)
@@ -546,9 +551,9 @@ def animate_before_join(
     elif origin_box_mode is PortMode.INPUT:
         x, y = group.widgets[1].top_left()
     else:
-        x, y = group.box_poses[PortMode.BOTH].pos
+        x, y = group.gpos.boxes[PortMode.BOTH].pos
         
-    group.box_poses[PortMode.BOTH].pos = (x, y)
+    group.gpos.boxes[PortMode.BOTH].pos = (x, y)
 
     tmp_box = BoxWidget(group, PortMode.BOTH)
     rect = QRectF(tmp_box.get_dummy_rect())
@@ -570,8 +575,7 @@ def animate_before_join(
 @patchbay_api
 def move_group_boxes(
         group_id: int,
-        box_poses: dict[PortMode, BoxPos],
-        split: bool,
+        gpos: GroupPos,
         redraw=PortMode.NULL,
         restore=PortMode.NULL):
     '''Highly optimized function used at view change.
@@ -581,12 +585,14 @@ def move_group_boxes(
     if group is None:
         return
 
+    if group.group_name == 'Hydrogen':
+        print('hydro tu mouve vers', gpos.as_new_dict())
+
+    group.gpos = gpos
+    split = gpos.is_splitted()
     join = False
     splitted = False
     orig_rect = QRectF()
-
-    for port_mode, box_pos in box_poses.items():
-        group.box_poses[port_mode] = BoxPos(box_pos)
 
     if group.splitted != split:
         if split:
@@ -601,7 +607,7 @@ def move_group_boxes(
         else:
             join = True
 
-    for port_mode, box_pos, in box_poses.items():
+    for port_mode, box_pos, in gpos.boxes.items():
         for box in group.widgets:
             if box.get_port_mode() is not port_mode:
                 continue
@@ -614,7 +620,7 @@ def move_group_boxes(
                 redraw |= port_mode
 
             if join:
-                wanted_wrap = box_poses[PortMode.BOTH].is_wrapped()
+                wanted_wrap = gpos.boxes[PortMode.BOTH].is_wrapped()
             else:
                 wanted_wrap = box_pos.is_wrapped()
 
@@ -652,8 +658,8 @@ def move_group_boxes(
                 if join:
                     canvas.scene.add_box_to_animation_restore(box)
 
-                    both_pos = nearest_on_grid(box_poses[PortMode.BOTH].pos)
-                    
+                    both_pos = nearest_on_grid(gpos.boxes[PortMode.BOTH].pos)
+
                     if port_mode is PortMode.OUTPUT:
                         canvas.qobject.add_group_to_join(group.group_id)
                         joined_widget = BoxWidget(group, PortMode.BOTH)
@@ -681,7 +687,7 @@ def move_group_boxes(
                     box.hidder_widget = None
 
                 if join:
-                    both_pos = nearest_on_grid(box_poses[PortMode.BOTH].pos)
+                    both_pos = nearest_on_grid(gpos.boxes[PortMode.BOTH].pos)
 
                     if port_mode is PortMode.OUTPUT:
                         canvas.qobject.add_group_to_join(group.group_id)
@@ -724,7 +730,7 @@ def set_group_layout_mode(group_id: int, port_mode: PortMode,
             "set_group_layout_mode, no group with group_id {group_id}")
         return
     
-    group.box_poses[port_mode].layout_mode = layout_mode
+    group.gpos.boxes[port_mode].layout_mode = layout_mode
     
     if canvas.loading_items:
         return
@@ -1034,7 +1040,7 @@ def disconnect_ports(connection_id: int):
             f"{_logging_str} - unable to find connection ports")
         return
     
-    tmp_conn = connection.copy_no_widget()
+    tmp_conn = connection.copy()
     canvas.remove_connection(connection)
     
     GroupedLinesWidget.prepare_conn_changes(

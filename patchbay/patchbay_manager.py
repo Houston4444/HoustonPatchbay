@@ -20,7 +20,7 @@ from .patchcanvas.init_values import (
     AliasingReason, CallbackAct, CanvasFeaturesObject,
     CanvasOptionsObject, GridStyle)
 
-from .cancel_mng import CancelMng, CancelOpType
+from .cancel_mng import CancelMng, CancelOpType, CancellableAction
 from .patchbay_signals import SignalsObject
 from .tools_widgets import PatchbayToolsWidget
 from .canvas_menu import CanvasMenu
@@ -503,7 +503,7 @@ class PatchbayManager:
 
         self.optimize_operation(False)
         patchcanvas.move_group_boxes(
-            group.group_id, gpos.boxes, gpos.is_splitted(),
+            group.group_id, gpos,
             redraw=hidden_port_mode, restore=hidden_port_mode)
         patchcanvas.repulse_from_group(group.group_id, hidden_port_mode)
 
@@ -532,9 +532,8 @@ class PatchbayManager:
         
         for group in groups_to_restore:
             patchcanvas.move_group_boxes(
-                group.group_id, group.current_position.boxes,
-                group.current_position.is_splitted(), redraw=PortMode.BOTH,
-                restore=PortMode.BOTH)
+                group.group_id, group.current_position,
+                redraw=PortMode.BOTH, restore=PortMode.BOTH)
             patchcanvas.repulse_from_group(group.group_id, PortMode.BOTH)
 
         self.sg.hidden_boxes_changed.emit()
@@ -562,8 +561,8 @@ class PatchbayManager:
         
         for group in groups_to_hide:
             patchcanvas.move_group_boxes(
-                group.group_id, group.current_position.boxes,
-                group.current_position.is_splitted(), redraw=PortMode.BOTH)
+                group.group_id, group.current_position,
+                redraw=PortMode.BOTH)
         
         self.sg.hidden_boxes_changed.emit()
 
@@ -1006,14 +1005,12 @@ class PatchbayManager:
         self.set_views_changed()
 
     def arrange_follow_signal(self):
-        self.cancel_mng.prepare(CancelOpType.ARRANGE, self.view_number)
-        arranger.arrange_follow_signal()
-        self.cancel_mng.post_prepare(CancelOpType.ARRANGE, self.view_number)
+        with CancellableAction(self, CancelOpType.ARRANGE, self.view_number):
+            arranger.arrange_follow_signal()
         
     def arrange_face_to_face(self):
-        self.cancel_mng.prepare(CancelOpType.ARRANGE, self.view_number)
-        arranger.arrange_face_to_face()
-        self.cancel_mng.post_prepare(CancelOpType.ARRANGE, self.view_number)
+        with CancellableAction(self, CancelOpType.ARRANGE, self.view_number):
+            arranger.arrange_face_to_face()
 
     # --- options triggers ---
 

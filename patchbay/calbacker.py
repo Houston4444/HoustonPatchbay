@@ -1,10 +1,11 @@
 import time
 from typing import TYPE_CHECKING, Callable
+
 from PyQt5.QtCore import QPoint
 from PyQt5.QtGui import QCursor
 
-
 from . import patchcanvas
+from .patchcanvas.patshared import PortMode, PortType, BoxLayoutMode, GroupPos
 from .patchcanvas import CallbackAct, PortMode, PortType, BoxLayoutMode
 from .base_elements import PortgroupMem, BoxPos
 from .base_port import Port
@@ -43,6 +44,9 @@ class Callbacker:
     
     def _group_rename(self, group_id: int):
         ...
+
+    def _group_pos_modified(self, group_id: int, gpos: GroupPos):
+        print('zpos', gpos.group_name, gpos.as_new_dict())
 
     def _group_splitted(self, group_id: int):
         group = self.mng.get_group_from_id(group_id)

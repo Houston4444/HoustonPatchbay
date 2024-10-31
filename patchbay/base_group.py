@@ -109,7 +109,7 @@ class Group:
         
         patchcanvas.add_group(
             self.group_id, display_name, splitted,
-            box_type, icon_name, box_poses=gpos.boxes)
+            box_type, icon_name, gpos)
 
         self.in_canvas = True
             
@@ -334,8 +334,7 @@ class Group:
 
         patchcanvas.move_group_boxes(
             self.group_id,
-            self.current_position.boxes,
-            split=self.current_position.is_splitted(),
+            self.current_position,
             redraw=redraw,
             restore=restore)
 

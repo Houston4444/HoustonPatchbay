@@ -25,7 +25,7 @@ from PyQt5.QtCore import QPointF, QRectF, QSettings, QPoint
 from PyQt5.QtWidgets import QGraphicsItem
 
 from .patshared import (
-    PortMode, PortType, PortSubType, BoxType, BoxFlag, BoxLayoutMode, BoxPos)
+    PortMode, PortType, PortSubType, BoxType, BoxPos, GroupPos)
 
 if TYPE_CHECKING:
     # all these classes are not importable normally because
@@ -52,8 +52,8 @@ class CallbackAct(IntEnum):
     GROUP_RENAME = auto()         # group_id: int
     GROUP_SPLITTED = auto()       # group_id: int
     GROUP_JOINED = auto()         # group_id: int
-    GROUP_MOVE = auto()           # group_id: int, splitted_mode: PortMode, x: int, y: int
     GROUP_BOX_POS_CHANGED = auto()# group_id: int, port_mode: PortMode, box_pos: BoxPos
+    GROUP_POS_MODIFIED = auto()   # group_id: int, gpos: GroupPos
     GROUP_WRAP = auto()           # group_id: int, folded: bool
     GROUP_LAYOUT_CHANGE = auto()  # group_id: int, layout_mode: BoxLayoutMode, splitted_mode: PortMode
     GROUP_SELECTED = auto()       # group_id: int, splitted_mode: PortMode
@@ -231,7 +231,7 @@ class GroupObject:
     splitted: bool
     box_type: BoxType
     icon_name: str
-    box_poses: dict[PortMode, BoxPos]
+    gpos: GroupPos
     plugin_id: int
     plugin_ui: int # to verify
     plugin_inline: int # to verify
@@ -240,16 +240,6 @@ class GroupObject:
     widgets: list
     if TYPE_CHECKING:
         widgets: list[BoxWidget]
-
-    def copy_no_widget(self) -> 'GroupObject':
-        group_copy = GroupObject()
-        group_copy.__dict__ = self.__dict__.copy()
-        group_copy.widgets = []
-        group_copy.box_poses = {}
-        for port_mode in PortMode.in_out_both():
-            group_copy.box_poses[port_mode] = \
-                BoxPos(self.box_poses[port_mode])
-        return group_copy
     
     def current_port_mode(self) -> PortMode:
         port_mode = PortMode.NULL
@@ -334,7 +324,7 @@ class ConnectionObject:
     in_selected: bool
     out_selected: bool
 
-    def copy_no_widget(self) -> 'ConnectionObject':
+    def copy(self) -> 'ConnectionObject':
         conn_copy = ConnectionObject()
         conn_copy.__dict__ = self.__dict__.copy()
         return conn_copy

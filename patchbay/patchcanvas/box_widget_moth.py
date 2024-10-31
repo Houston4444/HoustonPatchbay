@@ -143,7 +143,7 @@ class BoxWidgetMoth(QGraphicsItem):
         self._header_line_left = None
         self._header_line_right = None
         
-        if group.box_poses[port_mode].is_wrapped():
+        if group.gpos.boxes[port_mode].is_wrapped():
             self._wrapping_state = WrappingState.WRAPPED
         else:
             self._wrapping_state = WrappingState.NORMAL
@@ -215,7 +215,7 @@ class BoxWidgetMoth(QGraphicsItem):
         self._gui_visible = group.gui_visible
         'NSM GUI visibility state'
 
-        self._layout_mode = group.box_poses[port_mode].layout_mode
+        self._layout_mode = group.gpos.boxes[port_mode].layout_mode
         self._current_layout_mode = BoxLayoutMode.LARGE
         self._title_under_icon = False
         self._painter_path = QPainterPath()
@@ -246,7 +246,7 @@ class BoxWidgetMoth(QGraphicsItem):
                 'set_port_mode impossible, it fails to find its group')
         
         self._port_mode = port_mode
-        self._layout_mode = group.box_poses[port_mode].layout_mode
+        self._layout_mode = group.gpos.boxes[port_mode].layout_mode
 
     def get_current_port_mode(self):
         return self._current_port_mode
@@ -779,7 +779,7 @@ class BoxWidgetMoth(QGraphicsItem):
                 f"Box has no group_id {self._group_id} in canvas")
             return
 
-        box_pos = group.box_poses[self._port_mode]
+        box_pos = group.gpos.boxes[self._port_mode]
         box_pos.pos = self.top_left()
         box_pos.set_wrapped(self.is_wrapped())
         box_pos.layout_mode = self._layout_mode
@@ -787,7 +787,7 @@ class BoxWidgetMoth(QGraphicsItem):
         canvas_callback(
             CallbackAct.GROUP_BOX_POS_CHANGED, self._group_id,
             self._port_mode, box_pos)
-        group.box_poses[self._port_mode].pos = self.top_left()
+        group.gpos.boxes[self._port_mode].pos = self.top_left()
 
     def send_hide_callback(self):
         canvas_callback(
