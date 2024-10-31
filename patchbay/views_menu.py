@@ -141,11 +141,13 @@ class ViewsMenu(QMenu):
             text=view_name)
         
         if ok:
-            self.mng.rename_current_view(new_name)
+            with CancellableAction(self.mng, CancelOpType.VIEW_RENAME):
+                self.mng.rename_current_view(new_name)
 
     @pyqtSlot()
     def _clear_absents(self):
-        self.mng.clear_absents_in_view()
+        with CancellableAction(self.mng, CancelOpType.FORGET_ABSENTS):
+            self.mng.clear_absents_in_view()
         self._build()
 
     @pyqtSlot()

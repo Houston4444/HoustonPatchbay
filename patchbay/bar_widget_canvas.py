@@ -4,7 +4,7 @@ from PyQt5.QtCore import pyqtSlot
 from PyQt5.QtWidgets import QWidget, QApplication
 
 from .base_elements import ToolDisplayed
-from .cancel_mng import actions_names
+from .cancel_mng import ACTION_NAMES
 from .ui.canvas_bar import Ui_Form as CanvasUiForm
 
 if TYPE_CHECKING:
@@ -57,7 +57,7 @@ class BarWidgetCanvas(QWidget):
             self.ui.toolButtonUndo.setEnabled(True)
             self.ui.toolButtonUndo.setToolTip(
                 _translate('cancellable', 'Undo') + ' '
-                + actions_names[cc.actions[-1].type])
+                + ACTION_NAMES[cc.actions[-1].type])
         else:
             self.ui.toolButtonUndo.setEnabled(False)
             self.ui.toolButtonUndo.setToolTip('')
@@ -66,7 +66,7 @@ class BarWidgetCanvas(QWidget):
             self.ui.toolButtonRedo.setEnabled(True)
             self.ui.toolButtonRedo.setToolTip(
                 _translate('cancellable', 'Redo') + ' '
-                + actions_names[cc.canceled_acts[-1].type])
+                + ACTION_NAMES[cc.canceled_acts[-1].type])
         else:
             self.ui.toolButtonRedo.setEnabled(False)
             self.ui.toolButtonRedo.setToolTip('')

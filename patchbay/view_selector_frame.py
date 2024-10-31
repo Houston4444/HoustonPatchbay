@@ -457,7 +457,8 @@ class ViewSelectorWidget(QWidget):
     @pyqtSlot()
     def _clear_absents(self):
         if self.mng is not None:
-            self.mng.clear_absents_in_view()
+            with CancellableAction(self.mng, CancelOpType.FORGET_ABSENTS):
+                self.mng.clear_absents_in_view()
 
     @pyqtSlot()
     def _change_view_number(self):
@@ -487,7 +488,8 @@ class ViewSelectorWidget(QWidget):
 
     def write_view_name(self, view_number: int, name: str):
         if self.mng is not None:
-            self.mng.write_view_data(view_number, name=name)
+            with CancellableAction(self.mng, CancelOpType.VIEW_RENAME):
+                self.mng.write_view_data(view_number, name=name)
 
     def keyPressEvent(self, event: QKeyEvent):
         if (self.ui.comboBoxView.isEditable()
