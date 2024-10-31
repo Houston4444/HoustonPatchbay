@@ -35,6 +35,9 @@ class SignalsObject(QObject):
     all_groups_removed = pyqtSignal()
     'emitted when all groups are removed.'
 
+    undo_redo_changed = pyqtSignal()
+    'emitted when an action changed undo/redo state'
+
     full_screen_toggle_wanted = pyqtSignal()
     filters_bar_toggle_wanted = pyqtSignal()
 

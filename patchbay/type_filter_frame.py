@@ -3,7 +3,9 @@ from typing import TYPE_CHECKING
 
 from PyQt5.QtWidgets import QFrame
 
+
 from .base_elements import PortTypesViewFlag
+from .cancel_mng import CancelOpType, CancellableAction
 
 from .ui.type_filter_frame import Ui_FrameTypesFilter
 
@@ -73,16 +75,23 @@ class TypeFilterFrame(QFrame):
             if not self._mng.alsa_midi_enabled:
                 port_types_view &= ~PortTypesViewFlag.ALSA
         
-        self._mng.change_port_types_view(port_types_view)
+        self._change_mng_port_types_view(port_types_view)
+    
+    def _change_mng_port_types_view(self, port_types_view: PortTypesViewFlag):
+        if self._mng is None:
+            return
+
+        with CancellableAction(self._mng, CancelOpType.PTV_CHANGE):
+            self._mng.change_port_types_view(port_types_view)
     
     def _exclusive_choice(self, view_flag: PortTypesViewFlag):
         if self._mng is None:
             return
         
         if self._mng.port_types_view is view_flag:
-            self._mng.change_port_types_view(PortTypesViewFlag.ALL)
+            self._change_mng_port_types_view(PortTypesViewFlag.ALL)
         else:
-            self._mng.change_port_types_view(view_flag)
+            self._change_mng_port_types_view(view_flag)
     
     def _check_box_audio_right_clicked(self, alternate: bool):
         if alternate:

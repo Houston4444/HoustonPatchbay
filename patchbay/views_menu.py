@@ -4,6 +4,8 @@ from PyQt5.QtCore import pyqtSlot
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QMenu, QApplication, QInputDialog
 
+from .cancel_mng import CancelOpType, CancellableAction
+
 if TYPE_CHECKING:
     from patchbay_manager import PatchbayManager
     
@@ -121,7 +123,8 @@ class ViewsMenu(QMenu):
     @pyqtSlot()
     def _change_view(self):
         view_number: int = self.sender().data()
-        self.mng.change_view(view_number)
+        with CancellableAction(self.mng, CancelOpType.VIEW_CHANGE):
+            self.mng.change_view(view_number)
 
     @pyqtSlot()
     def _rename_view(self):

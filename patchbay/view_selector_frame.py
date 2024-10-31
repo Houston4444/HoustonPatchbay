@@ -9,10 +9,11 @@ from PyQt5.QtGui import (
     QResizeEvent, QColor, QPixmap)
 from PyQt5.QtCore import pyqtSlot, Qt, QSize, QPointF, QRect, QRectF, QModelIndex
 
-from .ui.view_selector import Ui_Form
-
 from .patchcanvas.patshared import PortTypesViewFlag
 from .patchcanvas import canvas
+from .cancel_mng import CancelOpType, CancellableAction
+
+from .ui.view_selector import Ui_Form
 
 if TYPE_CHECKING:
     from patchbay_manager import PatchbayManager
@@ -413,7 +414,9 @@ class ViewSelectorWidget(QWidget):
             view_number = self.ui.comboBoxView.itemData(index)
             if isinstance(view_number, int):
                 if view_number >= 0:
-                    self.mng.change_view(view_number)
+                    with CancellableAction(
+                            self.mng, CancelOpType.VIEW_CHANGE):
+                        self.mng.change_view(view_number)
                 elif view_number == -1:
                     self.mng.new_view()
             

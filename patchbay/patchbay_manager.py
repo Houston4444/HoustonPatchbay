@@ -1027,6 +1027,7 @@ class PatchbayManager:
         if self.alsa_midi_enabled != bool(yesno):
             self.alsa_midi_enabled = bool(yesno)
             self.change_port_types_view(PortTypesViewFlag.ALL, force=True)
+            self.cancel_mng.reset()
 
     def set_group_shadows(self, yesno: int):
         patchcanvas.options.show_shadows = bool(yesno)
@@ -1699,7 +1700,8 @@ class PatchbayManager:
         if event.modifiers() & Qt.KeyboardModifier.AltModifier:
             if event.text().isdigit():
                 # change view with Alt+Num
-                self.change_view(int(event.text()))
+                with CancellableAction(self, CancelOpType.VIEW_CHANGE):
+                    self.change_view(int(event.text()))
             
             elif event.text().upper() == 'A':
                 self.arrange_follow_signal()

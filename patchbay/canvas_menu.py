@@ -1,17 +1,20 @@
 
 from typing import TYPE_CHECKING
+
 from PyQt5.QtGui import QIcon, QDesktopServices
 from PyQt5.QtWidgets import QMenu, QApplication
 from PyQt5.QtCore import QLocale, QUrl, pyqtSlot
 
 from . import patchcanvas
 from .patchcanvas import utils
-from .base_elements import PortType, PortTypesViewFlag, PortMode
+from .patchcanvas.patshared import PortTypesViewFlag, PortMode
 from .views_menu import ViewsMenu
 from .selected_boxes_menu import SelectedBoxesMenu
+from .cancel_mng import CancelOpType, CancellableAction
 
 if TYPE_CHECKING:
     from .patchbay_manager import PatchbayManager
+
 
 _translate = QApplication.translate
 
@@ -58,8 +61,7 @@ class CanvasMenu(QMenu):
         self.action_fullscreen.triggered.connect(
             self.mng.sg.full_screen_toggle_wanted.emit)
 
-        port_types_view = self.mng.port_types_view & (
-            PortType.AUDIO_JACK | PortType.MIDI_JACK)
+        port_types_view = self.mng.port_types_view
 
         self.action_find_box = self.addAction(
             _translate('patchbay', "Find a box...\tCtrl+F"))
@@ -222,25 +224,29 @@ class CanvasMenu(QMenu):
         self.action_alsa.setChecked(
             port_types_view == PortTypesViewFlag.ALSA)
 
+    def _change_ptv(self, ptv: PortTypesViewFlag):
+        with CancellableAction(self.mng, CancelOpType.PTV_CHANGE):
+            self.mng.change_port_types_view(ptv)
+
+    @pyqtSlot()
     def port_types_view_all_types_choice(self):
-        self.mng.change_port_types_view(
-            PortTypesViewFlag.ALL)
+        self._change_ptv(PortTypesViewFlag.ALL)
 
+    @pyqtSlot()
     def port_types_view_audio_choice(self):
-        self.mng.change_port_types_view(
-            PortTypesViewFlag.AUDIO)
+        self._change_ptv(PortTypesViewFlag.AUDIO)
 
+    @pyqtSlot()
     def port_types_view_midi_choice(self):
-        self.mng.change_port_types_view(
-            PortTypesViewFlag.MIDI)
+        self._change_ptv(PortTypesViewFlag.MIDI)
 
+    pyqtSlot()
     def port_types_view_cv_choice(self):
-        self.mng.change_port_types_view(
-            PortTypesViewFlag.CV)
+        self._change_ptv(PortTypesViewFlag.CV)
 
+    pyqtSlot()
     def port_types_view_alsa_choice(self):
-        self.mng.change_port_types_view(
-            PortTypesViewFlag.ALSA)
+        self._change_ptv(PortTypesViewFlag.ALSA)
 
     def _alsa_midi_enabled(self, yesno: bool):
         self.action_alsa.setVisible(yesno)

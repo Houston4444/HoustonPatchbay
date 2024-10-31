@@ -585,9 +585,6 @@ def move_group_boxes(
     if group is None:
         return
 
-    if group.group_name == 'Hydrogen':
-        print('hydro tu mouve vers', gpos.as_new_dict())
-
     group.gpos = gpos
     split = gpos.is_splitted()
     join = False

@@ -30,7 +30,6 @@ class BoxArranger:
     def __init__(self, arranger: 'CanvasArranger',
                  group: GroupObject, port_mode: PortMode):
         self.arranger = arranger
-        self.box: BoxWidget = None
         self.box_rect = QRectF()
         
         # we don't take the group here
@@ -41,7 +40,6 @@ class BoxArranger:
         self.box_type = group.box_type
         self.group_name = group.group_name
         self.port_mode = port_mode
-        self.joining = False
 
         self.conns_in_group_ids = set[int]()
         self.conns_out_group_ids = set[int]()
@@ -81,43 +79,15 @@ class BoxArranger:
     
     def set_box(self):
         group = canvas.get_group(self.group_id)
-        if group.splitted:
-            if self.port_mode is PortMode.BOTH:
-                if group.current_port_mode() is PortMode.BOTH:
-                    box = BoxWidget(group, PortMode.BOTH)
-                    self.box_rect = box.get_dummy_rect()
-                    canvas.scene.remove_box(box)
-                    self.joining = True
-                    
-                else:
-                    for box in group.widgets:
-                        if box._current_port_mode is group.current_port_mode():
-                            self.box = box
-                            self.box_rect = self.box.boundingRect()
-                            break
-                    else:
-                        _logger.error(
-                            f'Group {group.group_id} {group.group_name} '
-                            f'should have a box with '
-                            f'current port mode {group.current_port_mode()}')
-                
-            else:
-                for box in group.widgets:
-                    if box._port_mode is self.port_mode:
-                        self.box = box
-                        self.box_rect = self.box.boundingRect()
-                        break
-
-        else:
-            if self.port_mode is PortMode.BOTH:
-                for box in group.widgets:
-                    self.box = box
-                    self.box_rect = self.box.boundingRect()
-                    break
-                else:
-                    _logger.error(f"{self} unable to find parent box")
-            else:
-                _logger.error(f'{self} says that group should be splitted')
+        for box in group.widgets:
+            if box._port_mode is self.port_mode:
+                self.box_rect = box.boundingRect()
+                return
+        
+        tmp_box = BoxWidget(group, self.port_mode)
+        self.box_rect = tmp_box.get_dummy_rect()
+        canvas.scene.remove_box(tmp_box)
+        del tmp_box
     
     def is_owner(self, group_id: int, port_mode: PortMode):
         return bool(self.group_id == group_id
@@ -417,20 +387,6 @@ class CanvasArranger:
                 group_ids_to_split.add(ba.group_id)
 
         # join or split groups we want to join or split
-        # for group in canvas.group_list:
-        #     group.gpos.set_splitted(group.group_id in group_ids_to_split)
-        
-        for group in canvas.group_list:
-            if group.splitted:
-                if (group.box_type is not BoxType.HARDWARE
-                        and group.group_id not in group_ids_to_split
-                        and group.current_port_mode() is PortMode.BOTH):
-                    animate_before_join(group.group_id)
-            else:
-                if (group.box_type is BoxType.HARDWARE
-                        or group.group_id in group_ids_to_split):
-                    split_group(group.group_id)
-
         for group in canvas.group_list:
             group.gpos.set_splitted(group.group_id in group_ids_to_split)
         
@@ -474,8 +430,10 @@ class CanvasArranger:
                     last_top = last_bottom
 
                 elif (previous_column is not None
-                        and (direction is GoTo.RIGHT and column > previous_column)
-                             or (direction == GoTo.LEFT and column < previous_column)):
+                        and (direction is GoTo.RIGHT
+                             and column > previous_column)
+                             or (direction is GoTo.LEFT
+                                 and column < previous_column)):
                     y_pos = last_top
                 
                 else:
@@ -495,7 +453,8 @@ class CanvasArranger:
 
                 used_columns_in_line.add(column)
 
-                if not hardware_on_sides or column not in (1, number_of_columns):
+                if (not hardware_on_sides
+                        or column not in (1, number_of_columns)):
                     last_top = y_pos
 
                 bottom = (y_pos
@@ -504,7 +463,8 @@ class CanvasArranger:
                 
                 columns_bottoms[column] = bottom
 
-                if not hardware_on_sides or column not in (1, number_of_columns):
+                if (not hardware_on_sides
+                        or column not in (1, number_of_columns)):
                     last_bottom = max(bottom, last_bottom)
 
                 previous_column = column
@@ -515,7 +475,8 @@ class CanvasArranger:
 
             ba = ba_network[0]
             
-            if ba.get_column_with_nb(number_of_columns) in (1, number_of_columns):
+            if (ba.get_column_with_nb(number_of_columns)
+                    in (1, number_of_columns)):
                 ba.column = ba.get_column_with_nb(number_of_columns)
                 ba.y_pos = columns_bottoms[ba.column]
                 columns_bottoms[ba.column] += (ba.box_rect.height()
@@ -541,7 +502,7 @@ class CanvasArranger:
             ba.y_pos = bottom_min
 
             columns_bottoms[ba.column] += (ba.box_rect.height()
-                                                + canvas.theme.box_spacing)
+                                           + canvas.theme.box_spacing)
 
         max_hardware = 0
         max_middle = 0
@@ -589,25 +550,10 @@ class CanvasArranger:
             xy = (int(x_pos), int(ba.y_pos - ba.box_rect.top() + y_offset))
             grid_xy = nearest_on_grid(xy)
 
-            if ba.joining:
-                group = canvas.get_group(ba.group_id)
-                if group is not None:
-                    group.gpos.boxes[PortMode.BOTH].pos = grid_xy
-                    canvas.qobject.add_group_to_join(group.group_id)
-                    
-                    for box in group.widgets:
-                        if box._port_mode is PortMode.OUTPUT:
-                            canvas.scene.add_box_to_animation(
-                                box, *grid_xy, joining=Joining.YES,
-                                joined_rect=ba.box_rect)
-                        else:
-                            canvas.scene.add_box_to_animation(
-                                box, *grid_xy, joining=Joining.YES)
-            else:
-                group = canvas.get_group(ba.group_id)
-                if group is not None:
-                    group.gpos.boxes[ba.port_mode].pos = grid_xy
-                canvas.scene.add_box_to_animation(ba.box, *grid_xy)
+            group = canvas.get_group(ba.group_id)
+            if group is not None:
+                group.gpos.boxes[ba.port_mode].pos = grid_xy
+                move_group_boxes(group.group_id, group.gpos)
 
 
 def arrange_follow_signal():
