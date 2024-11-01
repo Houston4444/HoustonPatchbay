@@ -5,7 +5,7 @@ from PyQt5.QtWidgets import QFrame
 
 
 from .base_elements import PortTypesViewFlag
-from .cancel_mng import CancelOpType, CancellableAction
+from .cancel_mng import CancelOp, CancellableAction
 
 from .ui.type_filter_frame import Ui_FrameTypesFilter
 
@@ -81,7 +81,7 @@ class TypeFilterFrame(QFrame):
         if self._mng is None:
             return
 
-        with CancellableAction(self._mng, CancelOpType.PTV_CHANGE):
+        with CancellableAction(self._mng, CancelOp.PTV_CHANGE):
             self._mng.change_port_types_view(port_types_view)
     
     def _exclusive_choice(self, view_flag: PortTypesViewFlag):

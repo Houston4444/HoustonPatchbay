@@ -10,7 +10,7 @@ from .patchcanvas import utils
 from .patchcanvas.patshared import PortTypesViewFlag, PortMode
 from .views_menu import ViewsMenu
 from .selected_boxes_menu import SelectedBoxesMenu
-from .cancel_mng import CancelOpType, CancellableAction
+from .cancel_mng import CancelOp, CancellableAction
 
 if TYPE_CHECKING:
     from .patchbay_manager import PatchbayManager
@@ -225,7 +225,7 @@ class CanvasMenu(QMenu):
             port_types_view == PortTypesViewFlag.ALSA)
 
     def _change_ptv(self, ptv: PortTypesViewFlag):
-        with CancellableAction(self.mng, CancelOpType.PTV_CHANGE):
+        with CancellableAction(self.mng, CancelOp.PTV_CHANGE):
             self.mng.change_port_types_view(ptv)
 
     @pyqtSlot()
@@ -303,7 +303,8 @@ class CanvasMenu(QMenu):
     
     @pyqtSlot()
     def _show_all_hidden_groups(self):
-        self.mng.restore_all_group_hidden_sides()
+        with CancellableAction(self.mng, CancelOp.DISPLAY_ALL_BOXES):
+            self.mng.restore_all_group_hidden_sides()
     
     def internal_manual(self):
         short_locale = 'en'

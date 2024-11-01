@@ -56,8 +56,8 @@ class BarWidgetCanvas(QWidget):
         if cc.actions:
             self.ui.toolButtonUndo.setEnabled(True)
             self.ui.toolButtonUndo.setToolTip(
-                _translate('cancellable', 'Undo') + ' '
-                + ACTION_NAMES[cc.actions[-1].type])
+                '<p>%s<br>' %  _translate('cancellable', 'Undo')
+                + f'<i>{cc.actions[-1].name}</i></p>')
         else:
             self.ui.toolButtonUndo.setEnabled(False)
             self.ui.toolButtonUndo.setToolTip('')
@@ -66,7 +66,7 @@ class BarWidgetCanvas(QWidget):
             self.ui.toolButtonRedo.setEnabled(True)
             self.ui.toolButtonRedo.setToolTip(
                 _translate('cancellable', 'Redo') + ' '
-                + ACTION_NAMES[cc.canceled_acts[-1].type])
+                + cc.canceled_acts[-1].name)
         else:
             self.ui.toolButtonRedo.setEnabled(False)
             self.ui.toolButtonRedo.setToolTip('')

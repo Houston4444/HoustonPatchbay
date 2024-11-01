@@ -11,7 +11,7 @@ from PyQt5.QtCore import pyqtSlot, Qt, QSize, QPointF, QRect, QRectF, QModelInde
 
 from .patchcanvas.patshared import PortTypesViewFlag
 from .patchcanvas import canvas
-from .cancel_mng import CancelOpType, CancellableAction
+from .cancel_mng import CancelOp, CancellableAction
 
 from .ui.view_selector import Ui_Form
 
@@ -415,7 +415,7 @@ class ViewSelectorWidget(QWidget):
             if isinstance(view_number, int):
                 if view_number >= 0:
                     with CancellableAction(
-                            self.mng, CancelOpType.VIEW_CHANGE):
+                            self.mng, CancelOp.VIEW_CHANGE):
                         self.mng.change_view(view_number)
                 elif view_number == -1:
                     self.mng.new_view()
@@ -437,7 +437,7 @@ class ViewSelectorWidget(QWidget):
         if self.mng.views.get(index) is None:
             return
         
-        with CancellableAction(self.mng, CancelOpType.VIEW_REMOVE):
+        with CancellableAction(self.mng, CancelOp.VIEW_REMOVE):
             self.mng.remove_view(index)
         
         # ex_view_num = -1
@@ -460,14 +460,14 @@ class ViewSelectorWidget(QWidget):
     @pyqtSlot()
     def _clear_absents(self):
         if self.mng is not None:
-            with CancellableAction(self.mng, CancelOpType.FORGET_ABSENTS):
+            with CancellableAction(self.mng, CancelOp.FORGET_ABSENTS):
                 self.mng.clear_absents_in_view()
 
     @pyqtSlot()
     def _change_view_number(self):
         new_num: int = self.sender().data()
         if self.mng is not None:
-            with CancellableAction(self.mng, CancelOpType.VIEW_NUM_CHANGE):
+            with CancellableAction(self.mng, CancelOp.VIEW_NUM_CHANGE):
                 self.mng.change_view_number(new_num)
 
     @pyqtSlot()
@@ -483,17 +483,18 @@ class ViewSelectorWidget(QWidget):
     @pyqtSlot()
     def _remove_all_other_views(self):
         if self.mng is not None:
-            with CancellableAction(self.mng, CancelOpType.REMOVE_OTHER_VIEWS):
+            with CancellableAction(self.mng, CancelOp.REMOVE_OTHER_VIEWS):
                 self.mng.remove_all_other_views()
 
     @pyqtSlot()
     def _new_view(self):
         if self.mng is not None:
-            self.mng.new_view()
+            with CancellableAction(self.mng, CancelOp.NEW_VIEW):
+                self.mng.new_view()
 
     def write_view_name(self, view_number: int, name: str):
         if self.mng is not None:
-            with CancellableAction(self.mng, CancelOpType.VIEW_RENAME):
+            with CancellableAction(self.mng, CancelOp.VIEW_RENAME):
                 self.mng.write_view_data(view_number, name=name)
 
     def keyPressEvent(self, event: QKeyEvent):

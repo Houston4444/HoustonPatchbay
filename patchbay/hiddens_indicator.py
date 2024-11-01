@@ -5,6 +5,7 @@ from PyQt5.QtCore import pyqtSlot, QTimer
 from PyQt5.QtGui import QIcon, QPixmap
 from PyQt5.QtWidgets import QToolButton, QMenu, QApplication, QAction
 
+from .cancel_mng import CancelOp, CancellableAction
 from .base_elements import PortMode
 from .base_group import Group
 from .patchcanvas import utils
@@ -393,21 +394,25 @@ class HiddensIndicator(QToolButton):
         act_data: int = act.data()
         
         if act_data == WHITE_LIST:
-            if act.isChecked():
-                self.mng.clear_absents_in_view()
-            self.mng.views[self.mng.view_number].is_white_list = \
-                act.isChecked()
-            self.mng.set_views_changed()
+            with (CancellableAction(self.mng, CancelOp.VIEW_WHITE_LIST)
+                    as a):
+                a.name = 'Whiitite list'
+                if act.isChecked():
+                    self.mng.clear_absents_in_view()
+                self.mng.views[self.mng.view_number].is_white_list = \
+                    act.isChecked()
+                self.mng.set_views_changed()
             return
         
         if act_data == SHOW_ALL:
-            is_white_list = False
-            view_data = self.mng.views.get(self.mng.view_number)
-            if view_data is not None:
-                is_white_list = view_data.is_white_list
-            
-            self.mng.restore_all_group_hidden_sides(
-                even_absents=is_white_list)
+            with CancellableAction(self.mng, CancelOp.DISPLAY_ALL_BOXES):
+                is_white_list = False
+                view_data = self.mng.views.get(self.mng.view_number)
+                if view_data is not None:
+                    is_white_list = view_data.is_white_list
+                
+                self.mng.restore_all_group_hidden_sides(
+                    even_absents=is_white_list)
             return
         
         if act_data == HIDE_ALL:

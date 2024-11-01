@@ -4,7 +4,7 @@ from PyQt5.QtCore import pyqtSlot
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QMenu, QApplication, QInputDialog
 
-from .cancel_mng import CancelOpType, CancellableAction
+from .cancel_mng import CancelOp, CancellableAction
 
 if TYPE_CHECKING:
     from patchbay_manager import PatchbayManager
@@ -123,7 +123,7 @@ class ViewsMenu(QMenu):
     @pyqtSlot()
     def _change_view(self):
         view_number: int = self.sender().data()
-        with CancellableAction(self.mng, CancelOpType.VIEW_CHANGE):
+        with CancellableAction(self.mng, CancelOp.VIEW_CHANGE):
             self.mng.change_view(view_number)
 
     @pyqtSlot()
@@ -141,33 +141,34 @@ class ViewsMenu(QMenu):
             text=view_name)
         
         if ok:
-            with CancellableAction(self.mng, CancelOpType.VIEW_RENAME):
+            with CancellableAction(self.mng, CancelOp.VIEW_RENAME):
                 self.mng.rename_current_view(new_name)
 
     @pyqtSlot()
     def _clear_absents(self):
-        with CancellableAction(self.mng, CancelOpType.FORGET_ABSENTS):
+        with CancellableAction(self.mng, CancelOp.FORGET_ABSENTS):
             self.mng.clear_absents_in_view()
         self._build()
 
     @pyqtSlot()
     def _change_view_number(self):
         new_num: int = self.sender().data()
-        with CancellableAction(self.mng, CancelOpType.VIEW_NUM_CHANGE):
+        with CancellableAction(self.mng, CancelOp.VIEW_NUM_CHANGE):
             self.mng.change_view_number(new_num)
 
     @pyqtSlot()
     def _remove_all_other_views(self):
-        with CancellableAction(self.mng, CancelOpType.REMOVE_OTHER_VIEWS):
+        with CancellableAction(self.mng, CancelOp.REMOVE_OTHER_VIEWS):
             self.mng.remove_all_other_views()
 
     @pyqtSlot()
     def _new_view(self):
-        self.mng.new_view()
+        with CancellableAction(self.mng, CancelOp.NEW_VIEW):
+            self.mng.new_view()
 
     @pyqtSlot()
     def _remove_view(self):
-        with CancellableAction(self.mng, CancelOpType.VIEW_REMOVE):
+        with CancellableAction(self.mng, CancelOp.VIEW_REMOVE):
             self.mng.remove_view(self.mng.view_number)
     
     def showEvent(self, event) -> None:

@@ -20,7 +20,7 @@ from .patchcanvas.init_values import (
     AliasingReason, CallbackAct, CanvasFeaturesObject,
     CanvasOptionsObject, GridStyle)
 
-from .cancel_mng import CancelMng, CancelOpType, CancellableAction
+from .cancel_mng import CancelMng, CancelOp, CancellableAction
 from .patchbay_signals import SignalsObject
 from .tools_widgets import PatchbayToolsWidget
 from .canvas_menu import CanvasMenu
@@ -1005,11 +1005,11 @@ class PatchbayManager:
         self.set_views_changed()
 
     def arrange_follow_signal(self):
-        with CancellableAction(self, CancelOpType.ARRANGE, self.view_number):
+        with CancellableAction(self, CancelOp.ARRANGE, self.view_number):
             arranger.arrange_follow_signal()
         
     def arrange_face_to_face(self):
-        with CancellableAction(self, CancelOpType.ARRANGE, self.view_number):
+        with CancellableAction(self, CancelOp.ARRANGE, self.view_number):
             arranger.arrange_face_to_face()
 
     # --- options triggers ---
@@ -1700,7 +1700,7 @@ class PatchbayManager:
         if event.modifiers() & Qt.KeyboardModifier.AltModifier:
             if event.text().isdigit():
                 # change view with Alt+Num
-                with CancellableAction(self, CancelOpType.VIEW_CHANGE):
+                with CancellableAction(self, CancelOp.VIEW_CHANGE):
                     self.change_view(int(event.text()))
             
             elif event.text().upper() == 'A':
