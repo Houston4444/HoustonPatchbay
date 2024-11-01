@@ -153,11 +153,13 @@ class ViewsMenu(QMenu):
     @pyqtSlot()
     def _change_view_number(self):
         new_num: int = self.sender().data()
-        self.mng.change_view_number(new_num)
+        with CancellableAction(self.mng, CancelOpType.VIEW_NUM_CHANGE):
+            self.mng.change_view_number(new_num)
 
     @pyqtSlot()
     def _remove_all_other_views(self):
-        self.mng.remove_all_other_views()
+        with CancellableAction(self.mng, CancelOpType.REMOVE_OTHER_VIEWS):
+            self.mng.remove_all_other_views()
 
     @pyqtSlot()
     def _new_view(self):
@@ -165,7 +167,8 @@ class ViewsMenu(QMenu):
 
     @pyqtSlot()
     def _remove_view(self):
-        self.mng.remove_view(self.mng.view_number)
+        with CancellableAction(self.mng, CancelOpType.VIEW_REMOVE):
+            self.mng.remove_view(self.mng.view_number)
     
     def showEvent(self, event) -> None:
         self._build()

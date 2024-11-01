@@ -437,22 +437,25 @@ class ViewSelectorWidget(QWidget):
         if self.mng.views.get(index) is None:
             return
         
-        ex_view_num = -1
+        with CancellableAction(self.mng, CancelOpType.VIEW_REMOVE):
+            self.mng.remove_view(index)
         
-        for view_num in self.mng.views.keys():
-            if view_num < index:
-                ex_view_num = view_num
+        # ex_view_num = -1
+        
+        # for view_num in self.mng.views.keys():
+        #     if view_num < index:
+        #         ex_view_num = view_num
             
-            elif view_num == index:
-                if ex_view_num >= 0:
-                    self.mng.change_view(ex_view_num)
-                    self.mng.remove_view(index)
-                    break
+        #     elif view_num == index:
+        #         if ex_view_num >= 0:
+        #             self.mng.change_view(ex_view_num)
+        #             self.mng.remove_view(index)
+        #             break
             
-            elif view_num > index:
-                self.mng.change_view(view_num)
-                self.mng.remove_view(index)
-                break
+        #     elif view_num > index:
+        #         self.mng.change_view(view_num)
+        #         self.mng.remove_view(index)
+        #         break
     
     @pyqtSlot()
     def _clear_absents(self):
@@ -464,7 +467,8 @@ class ViewSelectorWidget(QWidget):
     def _change_view_number(self):
         new_num: int = self.sender().data()
         if self.mng is not None:
-            self.mng.change_view_number(new_num)
+            with CancellableAction(self.mng, CancelOpType.VIEW_NUM_CHANGE):
+                self.mng.change_view_number(new_num)
 
     @pyqtSlot()
     def _arrange_face_to_face(self):
@@ -479,7 +483,8 @@ class ViewSelectorWidget(QWidget):
     @pyqtSlot()
     def _remove_all_other_views(self):
         if self.mng is not None:
-            self.mng.remove_all_other_views()
+            with CancellableAction(self.mng, CancelOpType.REMOVE_OTHER_VIEWS):
+                self.mng.remove_all_other_views()
 
     @pyqtSlot()
     def _new_view(self):
