@@ -1,7 +1,7 @@
 
 from typing import TYPE_CHECKING
 
-from PyQt5.QtWidgets import QFrame
+from PyQt5.QtWidgets import QFrame, QApplication
 
 
 from .base_elements import PortTypesViewFlag
@@ -11,6 +11,9 @@ from .ui.type_filter_frame import Ui_FrameTypesFilter
 
 if TYPE_CHECKING:
     from patchbay_manager import PatchbayManager
+
+
+_translate = QApplication.translate
 
 
 class TypeFilterFrame(QFrame):
@@ -81,7 +84,9 @@ class TypeFilterFrame(QFrame):
         if self._mng is None:
             return
 
-        with CancellableAction(self._mng, CancelOp.PTV_CHANGE):
+        with CancellableAction(self._mng, CancelOp.ALL_VIEWS_NO_POS) as a:
+            a.name = _translate('undo', 'Change visible port types to %s') \
+                % port_types_view.name
             self._mng.change_port_types_view(port_types_view)
     
     def _exclusive_choice(self, view_flag: PortTypesViewFlag):

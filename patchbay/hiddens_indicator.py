@@ -394,9 +394,8 @@ class HiddensIndicator(QToolButton):
         act_data: int = act.data()
         
         if act_data == WHITE_LIST:
-            with (CancellableAction(self.mng, CancelOp.VIEW_WHITE_LIST)
-                    as a):
-                a.name = 'Whiitite list'
+            with CancellableAction(self.mng, CancelOp.VIEW) as a:
+                a.name = act.text()
                 if act.isChecked():
                     self.mng.clear_absents_in_view()
                 self.mng.views[self.mng.view_number].is_white_list = \
@@ -405,7 +404,8 @@ class HiddensIndicator(QToolButton):
             return
         
         if act_data == SHOW_ALL:
-            with CancellableAction(self.mng, CancelOp.DISPLAY_ALL_BOXES):
+            with CancellableAction(self.mng, CancelOp.VIEW) as a:
+                a.name = act.text()
                 is_white_list = False
                 view_data = self.mng.views.get(self.mng.view_number)
                 if view_data is not None:

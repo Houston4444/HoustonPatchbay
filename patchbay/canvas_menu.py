@@ -225,7 +225,9 @@ class CanvasMenu(QMenu):
             port_types_view == PortTypesViewFlag.ALSA)
 
     def _change_ptv(self, ptv: PortTypesViewFlag):
-        with CancellableAction(self.mng, CancelOp.PTV_CHANGE):
+        with CancellableAction(self.mng, CancelOp.ALL_VIEWS_NO_POS) as a:
+            a.name = _translate('undo', 'Change visible port types to %s') \
+                % ptv.name
             self.mng.change_port_types_view(ptv)
 
     @pyqtSlot()
@@ -303,7 +305,8 @@ class CanvasMenu(QMenu):
     
     @pyqtSlot()
     def _show_all_hidden_groups(self):
-        with CancellableAction(self.mng, CancelOp.DISPLAY_ALL_BOXES):
+        with CancellableAction(self.mng, CancelOp.VIEW) as a:
+            a.name = self.sender().text()
             self.mng.restore_all_group_hidden_sides()
     
     def internal_manual(self):

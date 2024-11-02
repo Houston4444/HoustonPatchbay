@@ -1,10 +1,9 @@
-import pickle
 from enum import Enum, auto
 from typing import TYPE_CHECKING
 
 from PyQt5.QtWidgets import QApplication
 
-from .patchcanvas.patshared.views_dict import ViewsDict
+from .patchcanvas.patshared.views_dict import ViewData, ViewsDict
 
 if TYPE_CHECKING:
     from patchbay_manager import PatchbayManager
@@ -13,46 +12,30 @@ if TYPE_CHECKING:
 _translate = QApplication.translate
 
 
-class CancelOp(Enum):
-    CONNECTION = auto()
-    ARRANGE = auto()
-    VIEW_CHANGE = auto()
-    PTV_CHANGE = auto()
-    VIEW_RENAME = auto()
-    VIEW_REMOVE = auto()
-    FORGET_ABSENTS = auto()
-    VIEW_NUM_CHANGE = auto()
-    VIEW_WHITE_LIST = auto()
-    REMOVE_OTHER_VIEWS = auto()
-    NEW_VIEW = auto()
-    DISPLAY_ALL_BOXES = auto()
+class CancelOp(Enum):    
+    VIEW_CHOICE = auto()
+    'save and restore view choice only'
+    
+    VIEW = auto()
+    'save and restore all the current view'
+    
+    ALL_VIEWS = auto()
+    'save and restore all the views'
+    # TODO : ALL_VIEWS is still required at keyboard view change 
+    # because it can create a view 
+    
+    ALL_VIEWS_NO_POS = auto()
+    'save and restore all the views, without group positions'
+    
 
 
 ACTION_NAMES = {
-    CancelOp.CONNECTION:
-        _translate('cancellable', 'Connect'),
-    CancelOp.ARRANGE:
-        _translate('cancellable', 'Arrange'),
-    CancelOp.VIEW_CHANGE: 
-        _translate('cancellable', 'Change view'),
-    CancelOp.PTV_CHANGE:
-        _translate('cancellable', 'Change visible port types'),
-    CancelOp.VIEW_RENAME:
-        _translate('cancellable', 'Rename view'),
-    CancelOp.VIEW_REMOVE:
-        _translate('cancellable', 'Remove view'),
-    CancelOp.FORGET_ABSENTS:
-        _translate('cancellable', 'Forget positions of those absents'),
-    CancelOp.VIEW_NUM_CHANGE:
-        _translate('cancellable', 'Change view number'),
-    CancelOp.VIEW_WHITE_LIST:
-        _translate('cancellable', 'Toggle hide all new boxes'),
-    CancelOp.REMOVE_OTHER_VIEWS:
-        _translate('cancellable', 'Remove all other views'),
-    CancelOp.NEW_VIEW:
-        _translate('cancellable', 'New view'),
-    CancelOp.DISPLAY_ALL_BOXES:
-        _translate('cancellable', 'Display all boxes')
+    CancelOp.VIEW_CHOICE:
+        _translate('cancellable', 'View choice action'),
+    CancelOp.VIEW:
+        _translate('translate', 'Action affecting the current view'),
+    CancelOp.ALL_VIEWS:
+        _translate('translate', 'Action affecting several views')
 }
 
 class ActionRestorer:
@@ -60,6 +43,13 @@ class ActionRestorer:
         self.type = op_type
         self.datas = []
         self.name = ACTION_NAMES.get(op_type, '')
+
+        self.view_num_bef = 1
+        self.view_num_aft = 1
+        self.view_data_bef: ViewData = None
+        self.view_data_aft: ViewData = None
+        self.views_bef : ViewsDict = None
+        self.views_aft: ViewsDict = None
 
 
 class CancellableAction:
@@ -89,30 +79,20 @@ class CancelMng:
         
         action = ActionRestorer(op_type)
 
-        if op_type in (CancelOp.ARRANGE,
-                       CancelOp.FORGET_ABSENTS,
-                       CancelOp.VIEW_REMOVE,
-                       CancelOp.VIEW_WHITE_LIST,
-                       CancelOp.DISPLAY_ALL_BOXES):
-            action.datas = [self.mng.view_number, view_data.copy()]
-
-        elif op_type in (CancelOp.VIEW_CHANGE,
-                         CancelOp.VIEW_NUM_CHANGE,
-                         CancelOp.NEW_VIEW):
-            action.datas = [set(self.mng.views), self.mng.view_number]
-
-        elif op_type is CancelOp.PTV_CHANGE:
-            action.datas = [self.mng.port_types_view]
-
-        elif op_type is CancelOp.VIEW_RENAME:
-            action.datas = [view_data.name]
+        if op_type in (CancelOp.VIEW_CHOICE,
+                       CancelOp.VIEW,
+                       CancelOp.ALL_VIEWS):
+            action.view_num_bef = self.mng.view_number
             
-        elif op_type is CancelOp.REMOVE_OTHER_VIEWS:
-            views_save = ViewsDict(ensure_one_view=False)
-            for view_num, view_data in self.mng.views.items():
-                views_save[view_num] = view_data.copy()
-            action.datas = [self.mng.view_number, views_save]
-        
+        if op_type is CancelOp.VIEW:
+            action.view_data_bef = self.mng.views[self.mng.view_number].copy()
+            
+        elif op_type is CancelOp.ALL_VIEWS:
+            action.views_bef = self.mng.views.copy()
+            
+        elif op_type is CancelOp.ALL_VIEWS_NO_POS:
+            action.views_bef = self.mng.views.copy(with_positions=False)
+
         self.actions.append(action)
         self.canceled_acts.clear()
         return action
@@ -127,20 +107,19 @@ class CancelMng:
             # should not happen, for the same reason
             return
         
-        if op_type in (CancelOp.ARRANGE,
-                       CancelOp.FORGET_ABSENTS,
-                       CancelOp.VIEW_REMOVE,
-                       CancelOp.VIEW_WHITE_LIST,
-                       CancelOp.DISPLAY_ALL_BOXES):
-            action.datas.append(self.mng.views[self.mng.view_number].copy())
-        elif op_type in (CancelOp.VIEW_CHANGE,
-                         CancelOp.VIEW_NUM_CHANGE,
-                         CancelOp.NEW_VIEW):
-            action.datas.append(self.mng.view_number)
-        elif op_type is CancelOp.PTV_CHANGE:
-            action.datas.append(self.mng.port_types_view)
-        elif op_type is CancelOp.VIEW_RENAME:
-            action.datas.append(self.mng.views[self.mng.view_number].name)
+        if op_type in (CancelOp.VIEW_CHOICE,
+                       CancelOp.VIEW,
+                       CancelOp.ALL_VIEWS):
+            action.view_num_aft = self.mng.view_number
+            
+        if op_type is CancelOp.VIEW:
+            action.view_data_aft = self.mng.views[self.mng.view_number].copy()
+            
+        elif op_type is CancelOp.ALL_VIEWS:
+            action.views_aft = self.mng.views.copy()
+        
+        elif op_type is CancelOp.ALL_VIEWS_NO_POS:
+            action.views_aft = self.mng.views.copy(with_positions=False)
 
         self.mng.sg.undo_redo_changed.emit()
 
@@ -151,63 +130,23 @@ class CancelMng:
         action = self.actions.pop(-1)
         self.canceled_acts.append(action)
 
-        if action.type is CancelOp.ARRANGE:
-            view_num, view_data_before, view_data_after = action.datas
-            self.mng.views[view_num] = view_data_before
-            if self.mng.view_number == view_num:
-                self.mng.change_view(self.mng.view_number)
-        
-        elif action.type is CancelOp.VIEW_CHANGE:
-            nums_before, view_num_before, view_num_after = action.datas
-            self.mng.change_view(view_num_before)
-            if (view_num_after not in nums_before
-                    and view_num_after in self.mng.views):
-                self.mng.views.pop(view_num_after)
-                self.mng.set_views_changed()
+        if action.type is CancelOp.VIEW_CHOICE:
+            self.mng.change_view(action.view_num_bef)
+            
+        elif action.type is CancelOp.VIEW:
+            self.mng.views[action.view_num_bef] = action.view_data_bef.copy()
+            self.mng.set_views_changed()
+            self.mng.change_view(action.view_num_bef)
+                
+        elif action.type is CancelOp.ALL_VIEWS:
+            self.mng.views = action.views_bef.copy()
+            self.mng.set_views_changed()
+            self.mng.change_view(action.view_num_bef)
 
-        elif action.type is CancelOp.PTV_CHANGE:
-            self.mng.change_port_types_view(action.datas[0])
-        
-        elif action.type is CancelOp.VIEW_RENAME:
-            name_bef, name_aft = action.datas
-            self.mng.rename_current_view(name_bef)
-        
-        elif action.type is CancelOp.VIEW_REMOVE:
-            view_num, view_data_before, view_data_after = action.datas
-            self.mng.views.add_view(view_num=view_num)
-            self.mng.views[view_num] = view_data_before
+        elif action.type is CancelOp.ALL_VIEWS_NO_POS:
+            self.mng.views.eat_views_dict_datas(action.views_bef)
             self.mng.set_views_changed()
-            self.mng.change_view(view_num)
-        
-        elif action.type is CancelOp.FORGET_ABSENTS:
-            view_num, view_data_before, view_data_after = action.datas
-            self.mng.views[view_num] = view_data_before
-        
-        elif action.type is CancelOp.VIEW_NUM_CHANGE:
-            nums_before, view_num_before, view_num_after = action.datas
-            self.mng.change_view_number(view_num_before)
-        
-        elif action.type in (CancelOp.VIEW_WHITE_LIST,
-                             CancelOp.DISPLAY_ALL_BOXES):
-            view_num, view_data_before, view_data_after = action.datas
-            self.mng.views[view_num] = view_data_before
-            self.mng.set_views_changed()
-            if self.mng.view_number == view_num:
-                self.mng.change_view(self.mng.view_number)
-        
-        elif action.type is CancelOp.REMOVE_OTHER_VIEWS:
-            view_num: int = action.datas[0]
-            views_save: ViewsDict = action.datas[1]
-            for sv_num, sv_view_data in views_save.items():
-                if sv_num not in self.mng.views:
-                    self.mng.views.add_view(sv_num)
-                    self.mng.views[sv_num] = sv_view_data.copy()
-            self.mng.set_views_changed()
-        
-        elif action.type is CancelOp.NEW_VIEW:
-            nums_before, view_num_before, view_num_after = action.datas
-            self.mng.change_view(view_num_before)
-            self.mng.remove_view(view_num_after)
+            self.mng.change_view(action.view_num_bef)
             
         self.mng.sg.undo_redo_changed.emit()
         
@@ -218,51 +157,18 @@ class CancelMng:
         action = self.canceled_acts.pop(-1)
         self.actions.append(action)
 
-        if action.type is CancelOp.ARRANGE:
-            view_num, view_data_before, view_data_after = action.datas
-
-            self.mng.views[view_num] = view_data_after
-            if self.mng.view_number == view_num:
-                self.mng.change_view(self.mng.view_number)
-        
-        elif action.type is CancelOp.VIEW_CHANGE:
-            nums_before, view_num_before, view_num_after = action.datas
-            self.mng.change_view(view_num_after)
-
-        elif action.type is CancelOp.PTV_CHANGE:
-            self.mng.change_port_types_view(action.datas[1])
+        if action.type is CancelOp.VIEW_CHOICE:
+            self.mng.change_view(action.view_num_aft)
             
-        elif action.type is CancelOp.VIEW_RENAME:
-            name_bef, name_aft = action.datas
-            self.mng.rename_current_view(name_aft)
-        
-        elif action.type is CancelOp.VIEW_REMOVE:
-            view_num, view_data_before, view_data_after = action.datas
-            self.mng.remove_view(view_num)
-        
-        elif action.type is CancelOp.FORGET_ABSENTS:
-            view_num, view_data_before, view_data_after = action.datas
-            self.mng.views[view_num] = view_data_after
-
-        elif action.type is CancelOp.VIEW_NUM_CHANGE:
-            nums_before, view_num_before, view_num_after = action.datas
-            self.mng.change_view_number(view_num_after)
-        
-        elif action.type in (CancelOp.VIEW_WHITE_LIST,
-                             CancelOp.DISPLAY_ALL_BOXES):
-            view_num, view_data_before, view_data_after = action.datas
-
-            self.mng.views[view_num] = view_data_after
+        elif action.type is CancelOp.VIEW:
+            self.mng.views[action.view_num_aft] = action.view_data_aft.copy()
             self.mng.set_views_changed()
-            if self.mng.view_number == view_num:
-                self.mng.change_view(self.mng.view_number)
-        
-        elif action.type is CancelOp.REMOVE_OTHER_VIEWS:
-            self.mng.remove_all_other_views()
-
-        elif action.type is CancelOp.NEW_VIEW:
-            nums_before, view_num_before, view_num_after = action.datas
-            self.mng.new_view()
+            self.mng.change_view(action.view_num_aft)
+                
+        elif action.type is CancelOp.ALL_VIEWS:
+            self.mng.views = action.views_aft.copy()
+            self.mng.set_views_changed()
+            self.mng.change_view(action.view_num_aft)
 
         self.mng.sg.undo_redo_changed.emit()
 

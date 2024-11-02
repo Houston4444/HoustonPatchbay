@@ -1005,11 +1005,15 @@ class PatchbayManager:
         self.set_views_changed()
 
     def arrange_follow_signal(self):
-        with CancellableAction(self, CancelOp.ARRANGE, self.view_number):
+        with CancellableAction(self, CancelOp.VIEW) as a:
+            a.name = _translate(
+                'arrange', 'Arrange: follow the signal chain')
             arranger.arrange_follow_signal()
         
     def arrange_face_to_face(self):
-        with CancellableAction(self, CancelOp.ARRANGE, self.view_number):
+        with CancellableAction(self, CancelOp.VIEW) as a:
+            a.name = _translate(
+                'arrange', 'Arrange: Two columns facing each other')
             arranger.arrange_face_to_face()
 
     # --- options triggers ---
@@ -1700,8 +1704,11 @@ class PatchbayManager:
         if event.modifiers() & Qt.KeyboardModifier.AltModifier:
             if event.text().isdigit():
                 # change view with Alt+Num
-                with CancellableAction(self, CancelOp.VIEW_CHANGE):
-                    self.change_view(int(event.text()))
+                with CancellableAction(self, CancelOp.ALL_VIEWS) as a:
+                    new_num = int(event.text())
+                    a.name = _translate('patchbay', 'Change view %i -> %i') \
+                        % (self.view_number, new_num)
+                    self.change_view(new_num)
             
             elif event.text().upper() == 'A':
                 self.arrange_follow_signal()

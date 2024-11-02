@@ -21,14 +21,17 @@ class ViewData:
                      is view_data.default_port_types_view)
                 and self.is_white_list is view_data.is_white_list)
     
-    def copy(self) -> 'ViewData':
+    def copy(self, with_positions=True) -> 'ViewData':
         view_data = ViewData(self.default_port_types_view)
         view_data.name = self.name
         view_data.is_white_list = self.is_white_list
-        for ptv, ptv_dict in self.ptvs.items():
-            view_data.ptvs[ptv] = dict[str, GroupPos]()
-            for gp_name, gpos in ptv_dict.items():
-                view_data.ptvs[ptv][gp_name] = gpos.copy()
+
+        if with_positions:
+            for ptv, ptv_dict in self.ptvs.items():
+                view_data.ptvs[ptv] = dict[str, GroupPos]()
+                for gp_name, gpos in ptv_dict.items():
+                    view_data.ptvs[ptv][gp_name] = gpos.copy()
+
         return view_data
     
 
@@ -49,12 +52,25 @@ class ViewsDict(dict[int, ViewData]):
         for i, vd in tmp_copy.items():
             self[i] = vd        
     
-    def copy(self) -> 'ViewsDict':
+    def copy(self, with_positions=True) -> 'ViewsDict':
         views_dict = ViewsDict(ensure_one_view=self._ensure_one_view)
         for index, view_data in self.items():
-            views_dict[index] = view_data.copy()
+            views_dict[index] = view_data.copy(with_positions=with_positions)
         return views_dict
-    
+
+    def eat_views_dict_datas(self, views_dict: 'ViewsDict'):
+        '''For all view, take all property of the incoming views_dict
+        except group positions.'''
+
+        for view_num, view_data in self.items():
+            vdata = views_dict.get(view_num)
+            if vdata is None:
+                continue
+            
+            view_data.default_port_types_view = vdata.default_port_types_view
+            view_data.name = vdata.name
+            view_data.is_white_list = vdata.is_white_list
+
     def clear(self):
         super().clear()
         if self._ensure_one_view:
