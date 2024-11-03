@@ -416,8 +416,12 @@ class HiddensIndicator(QToolButton):
             return
         
         if act_data == HIDE_ALL:
-            self.mng.hide_all_groups()
+            with CancellableAction(self.mng, CancelOp.VIEW) as a:
+                a.name = act.text()
+                self.mng.hide_all_groups()
             return
 
         # act_data is now a group_id
-        self.mng.restore_group_hidden_sides(act_data)
+        with CancellableAction(self.mng, CancelOp.VIEW) as a:
+            a.name = _translate('undo', 'Restore "%s"') % act.text()
+            self.mng.restore_group_hidden_sides(act_data)

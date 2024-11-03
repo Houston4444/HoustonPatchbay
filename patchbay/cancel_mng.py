@@ -25,23 +25,24 @@ class CancelOp(Enum):
     # because it can create a view 
     
     ALL_VIEWS_NO_POS = auto()
-    'save and restore all the views, without group positions'
-    
+    'save and restore all the views, without group positions'    
 
 
 ACTION_NAMES = {
     CancelOp.VIEW_CHOICE:
-        _translate('cancellable', 'View choice action'),
+        _translate('undo', 'View choice action'),
     CancelOp.VIEW:
-        _translate('translate', 'Action affecting the current view'),
+        _translate('undo', 'Action affecting the current view'),
     CancelOp.ALL_VIEWS:
-        _translate('translate', 'Action affecting several views')
+        _translate('undo', 'Action affecting several views'),
+    CancelOp.ALL_VIEWS_NO_POS:
+        _translate('undo', 'Action affecting views datas')
 }
+
 
 class ActionRestorer:
     def __init__(self, op_type: CancelOp):
         self.type = op_type
-        self.datas = []
         self.name = ACTION_NAMES.get(op_type, '')
 
         self.view_num_bef = 1
