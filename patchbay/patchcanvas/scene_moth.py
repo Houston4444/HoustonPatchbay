@@ -492,7 +492,6 @@ class PatchSceneMoth(QGraphicsScene):
             for box in boxes:
                 if box.update_positions_pending:
                     box.update_positions()
-                box.send_move_callback()
 
             canvas.qobject.move_boxes_finished.emit()
 
@@ -547,6 +546,15 @@ class PatchSceneMoth(QGraphicsScene):
 
         if joining is not Joining.NO_CHANGE:
             moving_box.is_joining = True if joining is Joining.YES else False
+
+        # save the group position
+        group = canvas.get_group(box_widget._group_id)
+        if group is not None:
+            if moving_box.is_joining:
+                if not joined_rect.isNull():
+                    group.gpos.boxes[PortMode.BOTH].pos = (to_x, to_y)
+            else:
+                group.gpos.boxes[box_widget._port_mode].pos = (to_x, to_y)
 
         moving_box.start_time = time.time() - self._move_timer_start_at
 

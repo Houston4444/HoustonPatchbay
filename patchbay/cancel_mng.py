@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING
 
 from PyQt5.QtWidgets import QApplication
 
-from .patchcanvas.patshared.views_dict import ViewData, ViewsDict
+from .patchcanvas.patshared import ViewData, ViewsDict
 
 if TYPE_CHECKING:
     from patchbay_manager import PatchbayManager
@@ -154,18 +154,18 @@ class CancelMng:
     def redo(self):
         if not self.canceled_acts:
             return
-        
+
         action = self.canceled_acts.pop(-1)
         self.actions.append(action)
 
         if action.type is CancelOp.VIEW_CHOICE:
             self.mng.change_view(action.view_num_aft)
-            
+
         elif action.type is CancelOp.VIEW:
             self.mng.views[action.view_num_aft] = action.view_data_aft.copy()
             self.mng.set_views_changed()
             self.mng.change_view(action.view_num_aft)
-                
+
         elif action.type is CancelOp.ALL_VIEWS:
             self.mng.views = action.views_aft.copy()
             self.mng.set_views_changed()
