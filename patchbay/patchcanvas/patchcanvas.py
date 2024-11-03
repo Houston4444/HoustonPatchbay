@@ -342,6 +342,7 @@ def split_group(group_id: int, on_place=False, redraw=True):
     canvas.add_box(new_box)
     group.splitted = True
 
+    group.gpos.set_splitted(True)
     canvas.callback(CallbackAct.GROUP_SPLITTED, group_id)
     
     if not redraw:
@@ -356,21 +357,23 @@ def split_group(group_id: int, on_place=False, redraw=True):
     if on_place:
         for box in group.widgets:
             if box.get_current_port_mode() is PortMode.OUTPUT:
-                canvas.scene.add_box_to_animation(
-                    box,
+                group.gpos.boxes[PortMode.OUTPUT].pos = (
                     previous_left_on_grid(
                         int(ex_rect.right() + (full_width - ex_rect.width()) / 2
                             - box.boundingRect().width())),
                     previous_top_on_grid(
-                        int(ex_rect.y())))
+                        int(ex_rect.y()))
+                )
             else:
-                canvas.scene.add_box_to_animation(
-                    box,
+                group.gpos.boxes[PortMode.INPUT].pos = (
                     previous_left_on_grid(
                         int(ex_rect.left() - (full_width - ex_rect.width()) / 2)),
-                    previous_top_on_grid(int(ex_rect.y())))
-            
-            canvas.scene.deplace_boxes_from_repulsers([box])
+                    previous_top_on_grid(int(ex_rect.y()))
+                )
+        
+        move_group_boxes(group_id, group.gpos)    
+        canvas.scene.deplace_boxes_from_repulsers(
+            [b for b in group.widgets if b.isVisible()])
 
     QTimer.singleShot(0, canvas.scene.update)
 
@@ -533,51 +536,9 @@ def change_grid_widget_style(style: GridStyle):
     canvas.scene.update_grid_style()
 
 @patchbay_api
-def animate_before_join(
-        group_id: int, origin_box_mode: PortMode=PortMode.NULL,
-        prevent_overlap=False):
-    group = canvas.get_group(group_id)
-    if group is None:
-        return
-
-    if not group.splitted:
-        _logger.error(f'{_logging_str} - group is not splitted')
-        return
-
-    canvas.qobject.add_group_to_join(group.group_id)
-
-    if origin_box_mode is PortMode.OUTPUT:
-        x, y = group.widgets[0].top_left()
-    elif origin_box_mode is PortMode.INPUT:
-        x, y = group.widgets[1].top_left()
-    else:
-        x, y = group.gpos.boxes[PortMode.BOTH].pos
-        
-    group.gpos.boxes[PortMode.BOTH].pos = (x, y)
-
-    tmp_box = BoxWidget(group, PortMode.BOTH)
-    rect = QRectF(tmp_box.get_dummy_rect())
-    rect.translate(x, y)
-    canvas.scene.removeItem(tmp_box)
-    del tmp_box
-
-    for box in group.widgets:
-        if box.get_port_mode() is PortMode.INPUT:
-            canvas.scene.add_box_to_animation(
-                box, x, y, joining=Joining.YES, joined_rect=rect)
-
-            if prevent_overlap:
-                canvas.scene.deplace_boxes_from_repulsers([box]) 
-        else:
-            canvas.scene.add_box_to_animation(
-                box, x, y, joining=Joining.YES)
-
-@patchbay_api
 def move_group_boxes(
-        group_id: int,
-        gpos: GroupPos,
-        redraw=PortMode.NULL,
-        restore=PortMode.NULL):
+        group_id: int, gpos: GroupPos,
+        redraw=PortMode.NULL, restore=PortMode.NULL):
     '''Highly optimized function used at view change.
     Only things that need to be redrawn are redrawn.
     Any change in this function can easily create unwanted bugs ;)'''

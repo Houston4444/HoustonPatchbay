@@ -789,10 +789,6 @@ class BoxWidgetMoth(QGraphicsItem):
             self._port_mode, box_pos)
         group.gpos.boxes[self._port_mode].pos = self.top_left()
 
-    def send_hide_callback(self):
-        canvas_callback(
-            CallbackAct.GROUP_HIDE_BOX, self._group_id, self._port_mode)
-
     def fix_pos_after_move(self):
         selected_boxes = canvas.scene.get_selected_boxes()
         if len(selected_boxes) == 1:

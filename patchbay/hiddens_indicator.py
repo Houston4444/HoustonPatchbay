@@ -299,7 +299,6 @@ class HiddensIndicator(QToolButton):
         
         dark = self._is_dark()        
         groups = [g for g in self._list_hidden_groups()]
-        n_groups = len(groups)
         
         groups.sort(key=lambda x: x.name)
         group_list = divide_group_list(GroupList('', groups))

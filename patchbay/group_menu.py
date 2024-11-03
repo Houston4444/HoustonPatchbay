@@ -4,9 +4,10 @@ from PyQt5.QtCore import pyqtSlot
 from PyQt5.QtGui import QIcon, QPixmap
 
 
-from .base_elements import PortMode, BoxLayoutMode
+
+from .cancel_mng import CancelOp, CancellableAction
+from .patchcanvas.patshared import PortMode, BoxLayoutMode
 from .base_group import Group
-from .selected_boxes_menu import SelectedBoxesMenu
 from .patchcanvas import canvas, CallbackAct, patchcanvas, utils
 if TYPE_CHECKING:
     from .patchbay_manager import PatchbayManager
@@ -214,13 +215,28 @@ class GroupMenu(QMenu):
     
     @pyqtSlot()
     def _join(self):
-        patchcanvas.animate_before_join(
-            self._group.group_id, self._port_mode, prevent_overlap=True)
-        self._group.current_position.set_splitted(False)
+        with CancellableAction(self._mng, CancelOp.VIEW) as a:
+            a.name = _translate('undo', 'Join "%s"') % self._group.cnv_name
+
+            gpos = self._group.current_position
+            gpos.set_splitted(False)
+            gpos.boxes[PortMode.BOTH].pos = gpos.boxes[self._port_mode].pos
+            gpos.boxes[PortMode.BOTH].set_wrapped(
+                gpos.boxes[PortMode.OUTPUT].is_wrapped()
+                and gpos.boxes[PortMode.INPUT].is_wrapped())
+
+            print('rtas1', gpos.as_new_dict())
+            patchcanvas.move_group_boxes(self._group.group_id, gpos)
+            print('rtas2', gpos.as_new_dict())
+            patchcanvas.repulse_from_group(self._group.group_id, PortMode.BOTH)
+            print('rtas3', gpos.as_new_dict())
+            print('zpeof', self._mng.views[self._mng.view_number].ptvs[self._mng.port_types_view][self._group.name] is gpos)
     
     @pyqtSlot()  
     def _split(self):
-        patchcanvas.split_group(self._group.group_id, on_place=True)
+        with CancellableAction(self._mng, CancelOp.VIEW) as a:
+            a.name = _translate('undo', 'Split "%s"') % self._group.cnv_name
+            patchcanvas.split_group(self._group.group_id, on_place=True)
 
     @pyqtSlot()
     def _wrap(self):
