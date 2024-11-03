@@ -725,10 +725,24 @@ class BoxWidgetMoth(QGraphicsItem):
             canvas.scene.unset_cursor()
             self.repaint_lines(forced=True)
             canvas.scene.reset_scroll_bars()
-            self.fix_pos_after_move()
+            
+            selected_boxes = canvas.scene.get_selected_boxes()
+            
+            # callback the state of positions 
+            arg_list = list[tuple[int, PortMode, int, int]]()
+            if len(selected_boxes) == 1:
+                xy = nearest_on_grid_check_others(self.top_left(), self)
+                arg_list.append(
+                    (self._group_id, self._port_mode, *xy))
+            else: 
+                # many selected boxes, do not auto-adapt the position
+                # to other existing boxes (no check_others)
+                for box in selected_boxes:
+                    xy = nearest_on_grid(box.top_left())
+                    arg_list.append((box._group_id, box._port_mode, *xy))
+                
+            canvas.callback(CallbackAct.BOXES_MOVED, *arg_list)
 
-            canvas.scene.deplace_boxes_from_repulsers(
-                [b for b in canvas.list_boxes() if b.isSelected()])
             canvas.set_aliasing_reason(AliasingReason.USER_MOVE, False)
 
             QTimer.singleShot(0, canvas.scene.update)
@@ -788,19 +802,6 @@ class BoxWidgetMoth(QGraphicsItem):
             CallbackAct.GROUP_BOX_POS_CHANGED, self._group_id,
             self._port_mode, box_pos)
         group.gpos.boxes[self._port_mode].pos = self.top_left()
-
-    def fix_pos_after_move(self):
-        selected_boxes = canvas.scene.get_selected_boxes()
-        if len(selected_boxes) == 1:
-            self.fix_pos(check_others=True)
-            self.send_move_callback()
-            return
-
-        # many selected boxes, do not auto-adapt the position
-        # to other existing boxes (no check_others)
-        for box in selected_boxes:
-            box.fix_pos()
-            box.send_move_callback()
 
     def set_in_cache(self, yesno: bool):
         cache_mode = self.cacheMode()

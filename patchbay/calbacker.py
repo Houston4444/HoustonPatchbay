@@ -1,8 +1,8 @@
-import time
 from typing import TYPE_CHECKING, Callable
 
 from PyQt5.QtCore import QPoint
 from PyQt5.QtGui import QCursor
+from PyQt5.QtWidgets import QApplication
 
 from . import patchcanvas
 from .patchcanvas.patshared import PortMode, PortType, BoxLayoutMode, GroupPos
@@ -12,9 +12,13 @@ from .base_port import Port
 from .port_info_dialog import CanvasPortInfoDialog
 from .port_menu import PoMenu, ConnectMenu
 from .group_menu import GroupMenu
+from .cancel_mng import CancellableAction, CancelOp
 
 if TYPE_CHECKING:
     from .patchbay_manager import PatchbayManager
+
+
+_translate = QApplication.translate
 
 
 class Callbacker:
@@ -67,6 +71,19 @@ class Callbacker:
         group.current_position.boxes[port_mode].pos = (x, y)
         group.save_current_position()
 
+    def _boxes_moved(self, *pos_tuples: tuple[int, PortMode, int, int]):
+        with CancellableAction(self.mng, CancelOp.VIEW) as a:
+            a.name = _translate('undo', 'Move a box')
+            for group_id, port_mode, x, y in pos_tuples:
+                group = self.mng.get_group_from_id(group_id)
+                if group is None:
+                    continue
+                
+                group.current_position.boxes[port_mode].pos = (x, y)
+                group.set_group_position(
+                    group.current_position, PortMode.NULL, PortMode.NULL)
+                patchcanvas.repulse_from_group(group_id, port_mode)
+
     def _group_box_pos_changed(
             self, group_id: int, port_mode: PortMode, box_pos: BoxPos):
         group = self.mng.get_group_from_id(group_id)
@@ -77,10 +94,18 @@ class Callbacker:
         
         group.save_current_position()
 
-    def _group_wrap(self, group_id: int, splitted_mode: PortMode, yesno: bool):
+    def _group_wrap(
+            self, group_id: int, splitted_mode: PortMode, yesno: bool):
         group = self.mng.get_group_from_id(group_id)
         if group is not None:
-            group.wrap_box(splitted_mode, yesno)
+            with CancellableAction(self.mng, CancelOp.VIEW) as a:
+                if yesno:
+                    a.name = _translate('undo', 'Wrap "%s"') \
+                        % group.cnv_name
+                else:
+                    a.name = _translate('undo', 'Unwrap "%s"') \
+                        % group.cnv_name
+                group.wrap_box(splitted_mode, yesno)
     
     def _group_layout_change(self, group_id: int, port_mode: PortMode,
                             layout_mode: BoxLayoutMode):

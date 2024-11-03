@@ -236,26 +236,16 @@ class GroupMenu(QMenu):
 
     @pyqtSlot()
     def _wrap(self):
-        with CancellableAction(self._mng, CancelOp.VIEW) as a:
-            if self._is_wrapped:
-                a.name = _translate('undo', 'Unwrap "%s"') \
-                    % self._group.cnv_name
-            else:
-                a.name = _translate('undo', 'Wrap "%s"') \
-                    % self._group.cnv_name
-
-            canvas.callback(CallbackAct.GROUP_WRAP,
-                            self._group.group_id, self._port_mode,
-                            not self._is_wrapped)
+        canvas.callback(CallbackAct.GROUP_WRAP,
+                        self._group.group_id, self._port_mode,
+                        not self._is_wrapped)
         
     @pyqtSlot()
     def _auto_layout(self):
         with CancellableAction(self._mng, CancelOp.VIEW) as a:
             a.name = _translate('undo', 'Set auto layout for "%s"') \
                 % self._group.cnv_name
-            canvas.callback(CallbackAct.GROUP_LAYOUT_CHANGE,
-                            self._group.group_id, self._port_mode,
-                            BoxLayoutMode.AUTO)
+            self._group.set_layout_mode(self._port_mode, BoxLayoutMode.AUTO)
         
     @pyqtSlot()
     def _change_layout(self):
@@ -271,10 +261,8 @@ class GroupMenu(QMenu):
         
         with CancellableAction(self._mng, CancelOp.VIEW) as a:
             a.name = _translate('undo', 'Set "%s" layout to %s') \
-                % next_layout.name
-            canvas.callback(CallbackAct.GROUP_LAYOUT_CHANGE,
-                            self._group.group_id, self._port_mode,
-                            next_layout)
+                % (self._group.cnv_name, next_layout.name)
+            self._group.set_layout_mode(self._port_mode, next_layout)
     
     @pyqtSlot()
     def _hide_box(self):
