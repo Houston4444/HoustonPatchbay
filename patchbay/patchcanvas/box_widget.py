@@ -1341,7 +1341,8 @@ class BoxWidget(BoxWidgetMoth):
                     port.hidden_conn_widget.update()
                     
     def get_dummy_rect(self) -> QRectF:
-        '''Used only for dummy box, to know its size before joining'''
+        '''Used only for dummy box, to know its size
+        before joining or arranging.'''
         self._current_port_mode = PortMode.NULL
         self._port_list.clear()
         self._portgrp_list.clear()
@@ -1368,7 +1369,8 @@ class BoxWidget(BoxWidgetMoth):
             return QRectF(-hwr, -hwr, box_layout.full_wrapped_width,
                           box_layout.full_wrapped_height)
         
-        return QRectF(-hwr, -hwr, box_layout.width, box_layout.height)
+        return QRectF(-hwr, -hwr,
+                      box_layout.full_width, box_layout.full_height)
     
     def get_layout(self, layout_mode: Optional[BoxLayoutMode] = None) -> BoxLayout:
         if layout_mode is None:
