@@ -269,6 +269,12 @@ class CanvasMenu(QMenu):
         for group in self.mng.groups:
             hidden_port_mode = group.current_position.hidden_port_modes()
             if hidden_port_mode:
+                if not ((group.outs_ptv & self.mng.port_types_view
+                            and PortMode.OUTPUT in hidden_port_mode)
+                         or (group.ins_ptv & self.mng.port_types_view
+                            and PortMode.INPUT in hidden_port_mode)):
+                    continue
+                
                 group_act = self.show_hiddens_menu.addAction(
                     group.cnv_name)
                 group_act.setIcon(utils.get_icon(
@@ -301,7 +307,9 @@ class CanvasMenu(QMenu):
     @pyqtSlot()
     def _show_hidden_group(self):
         group_id: int = self.sender().data()
-        self.mng.restore_group_hidden_sides(group_id, self._scene_pos)
+        with CancellableAction(self.mng, CancelOp.VIEW) as a:
+            a.name = _translate('undo', 'Restore "%s"') % self.sender().text()
+            self.mng.restore_group_hidden_sides(group_id, self._scene_pos)
     
     @pyqtSlot()
     def _show_all_hidden_groups(self):
