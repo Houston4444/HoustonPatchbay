@@ -582,17 +582,9 @@ def arrange_face_to_face():
             
             gpos = gp_gposes.get(group.group_id)
             if gpos is None:
-                # gpos = group.gpos.copy()
                 gpos = group.gpos
                 gpos.set_splitted(True)
                 gp_gposes[group.group_id] = gpos
-                
-            # box_poses = gp_box_poses.get(group.group_id)
-            # if box_poses is None:
-            #     box_poses = dict[PortMode, BoxPos]()
-            #     for port_mode in PortMode.in_out_both():
-            #         box_poses[port_mode] = BoxPos()
-            #     gp_box_poses[group.group_id] = box_poses
                 
             box_pos = gpos.boxes[box.get_port_mode()]
             layout_mode = BoxLayoutMode.LARGE
@@ -633,16 +625,11 @@ def arrange_face_to_face():
         if group is None:
             continue
 
-        # box_poses = gp_box_poses.get(group_id)
-        # if box_poses is None:
-        #     continue
-        gpos = group.gpos
-
         for box in group.widgets:
             if not box.isVisible():
                 continue
 
-            box_pos = gpos.boxes.get(box.get_port_mode())
+            box_pos = group.gpos.boxes.get(box.get_port_mode())
             if box_pos is None:
                 continue
 
@@ -668,8 +655,5 @@ def arrange_face_to_face():
             
     for group_id, gpos in gp_gposes.items():
         move_group_boxes(group_id, gpos)
-    
-    # for group_id, gpos in gp_box_poses.items():
-    #     canvas.callback(CallbackAct.GROUP_POS_MODIFIED, group_id, gpos)
     
     repulse_all_boxes()
