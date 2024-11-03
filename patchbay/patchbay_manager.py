@@ -509,13 +509,19 @@ class PatchbayManager:
 
         self.sg.hidden_boxes_changed.emit()
 
-    def restore_all_group_hidden_sides(self, even_absents=True):
+    def restore_all_group_hidden_sides(self):
         self.optimize_operation(True)
 
         groups_to_restore = set[Group]()
         for group in self.groups:
+            
+            
             if group.current_position.hidden_port_modes():
                 group.current_position.set_hidden_port_mode(PortMode.NULL)
+                if not group.current_position.fully_set:
+                    if group._is_hardware:
+                        group.current_position.set_splitted(True)
+                
                 group.add_to_canvas()
                 group.add_all_ports_to_canvas()
                 groups_to_restore.add(group)
@@ -621,7 +627,7 @@ class PatchbayManager:
         if gpos is not None:
             return gpos
 
-        is_white_list_view = self.views.get(self.view_number).is_white_list
+        is_white_list_view = self.views[self.view_number].is_white_list
 
         # prevent move to a new position in case of port_types_view change
         # if there is no remembered position for this group in new view

@@ -405,14 +405,8 @@ class HiddensIndicator(QToolButton):
         
         if act_data == SHOW_ALL:
             with CancellableAction(self.mng, CancelOp.VIEW) as a:
-                a.name = act.text()
-                is_white_list = False
-                view_data = self.mng.views.get(self.mng.view_number)
-                if view_data is not None:
-                    is_white_list = view_data.is_white_list
-                
-                self.mng.restore_all_group_hidden_sides(
-                    even_absents=is_white_list)
+                a.name = act.text()                
+                self.mng.restore_all_group_hidden_sides()
             return
         
         if act_data == HIDE_ALL:
