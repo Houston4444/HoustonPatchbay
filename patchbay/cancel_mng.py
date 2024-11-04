@@ -1,49 +1,30 @@
 from enum import Enum, auto
-from typing import TYPE_CHECKING
-
-from PyQt5.QtWidgets import QApplication
+from typing import TYPE_CHECKING, Callable
 
 from .patchcanvas.patshared import ViewData, ViewsDict
 
 if TYPE_CHECKING:
-    from patchbay_manager import PatchbayManager
-
-
-_translate = QApplication.translate
+    from patchbay_manager import PatchbayManager    
 
 
 class CancelOp(Enum):    
     VIEW_CHOICE = auto()
-    'save and restore view choice only'
+    'save view choice only'
     
     VIEW = auto()
-    'save and restore all the current view'
+    'save all the current view'
     
     ALL_VIEWS = auto()
-    'save and restore all the views'
-    # TODO : ALL_VIEWS is still required at keyboard view change 
-    # because it can create a view 
+    'save all the views'
     
     ALL_VIEWS_NO_POS = auto()
-    'save and restore all the views, without group positions'    
-
-
-ACTION_NAMES = {
-    CancelOp.VIEW_CHOICE:
-        _translate('undo', 'View choice action'),
-    CancelOp.VIEW:
-        _translate('undo', 'Action affecting the current view'),
-    CancelOp.ALL_VIEWS:
-        _translate('undo', 'Action affecting several views'),
-    CancelOp.ALL_VIEWS_NO_POS:
-        _translate('undo', 'Action affecting views datas')
-}
+    'save all the views, without group positions'    
 
 
 class ActionRestorer:
     def __init__(self, op_type: CancelOp):
         self.type = op_type
-        self.name = ACTION_NAMES.get(op_type, '')
+        self.name = ''
 
         self.view_num_bef = 1
         self.view_num_aft = 1
@@ -51,6 +32,11 @@ class ActionRestorer:
         self.view_data_aft: ViewData = None
         self.views_bef : ViewsDict = None
         self.views_aft: ViewsDict = None
+
+        self.undo_func: Callable = None
+        self.undo_args: tuple = ()
+        self.redo_func: Callable = None
+        self.redo_args: tuple = ()
 
 
 class CancellableAction:
@@ -72,11 +58,14 @@ class CancelMng:
         self.mng = mng
         self.actions = list[ActionRestorer]()
         self.canceled_acts = list[ActionRestorer]()
+        
+        self._recording = False
 
     def prepare(self, op_type: CancelOp):
-        view_data = self.mng.views.get(self.mng.view_number)
-        if view_data is None:
-            return
+        if self._recording:
+            raise RecursionError
+        
+        self._recording = True
         
         action = ActionRestorer(op_type)
 
@@ -99,6 +88,8 @@ class CancelMng:
         return action
             
     def post_prepare(self, op_type: CancelOp):
+        self._recording = False
+        
         if not self.actions:
             # should not happen, prepare has just added an action
             return
@@ -131,6 +122,9 @@ class CancelMng:
         action = self.actions.pop(-1)
         self.canceled_acts.append(action)
 
+        if action.undo_func is not None:
+            action.undo_func(*action.undo_args)
+
         if action.type is CancelOp.VIEW_CHOICE:
             self.mng.change_view(action.view_num_bef)
             
@@ -157,6 +151,9 @@ class CancelMng:
 
         action = self.canceled_acts.pop(-1)
         self.actions.append(action)
+
+        if action.redo_func is not None:
+            action.redo_func(*action.redo_args)
 
         if action.type is CancelOp.VIEW_CHOICE:
             self.mng.change_view(action.view_num_aft)

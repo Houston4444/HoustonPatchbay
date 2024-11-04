@@ -1,14 +1,17 @@
 
 from pathlib import Path
 from typing import TYPE_CHECKING
+
 from PyQt5.QtWidgets import (QDialog, QApplication, QInputDialog,
                              QMessageBox, QWidget, QFileDialog, QAction)
 from PyQt5.QtGui import QIcon, QPixmap
 from PyQt5.QtCore import Qt, QProcess, QSettings
 
+
 from .patchcanvas import patchcanvas, xdg
 from .patchcanvas.theme_manager import ThemeData
 from .patchcanvas.init_values import GridStyle
+from .cancel_mng import CancelOp, CancellableAction
 from .tools_widgets import is_dark_theme
 from .ui.canvas_options import Ui_CanvasOptions
 
