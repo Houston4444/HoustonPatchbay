@@ -74,12 +74,18 @@ class Callbacker:
 
     def _boxes_moved(self, *pos_tuples: tuple[int, PortMode, int, int]):
         with CancellableAction(self.mng, CancelOp.VIEW) as a:
-            a.name = _translate('undo', 'Move a box')
+            if len(pos_tuples) >= 1:
+                a.name = _translate('undo', 'Move %i boxes') % len(pos_tuples)
+
             for group_id, port_mode, x, y in pos_tuples:
                 group = self.mng.get_group_from_id(group_id)
                 if group is None:
                     continue
                 
+                if len(pos_tuples) == 1:
+                    a.name = _translate('undo', 'Move %s') \
+                        % group.cnv_name
+
                 group.current_position.boxes[port_mode].pos = (x, y)
                 group.set_group_position(
                     group.current_position, PortMode.NULL, PortMode.NULL)
