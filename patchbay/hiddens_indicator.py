@@ -6,9 +6,9 @@ from PyQt5.QtGui import QIcon, QPixmap
 from PyQt5.QtWidgets import QToolButton, QMenu, QApplication, QAction
 
 from .cancel_mng import CancelOp, CancellableAction
-from .base_elements import PortMode
 from .base_group import Group
 from .patchcanvas import utils
+from .patchcanvas.patshared import PortMode
 
 if TYPE_CHECKING:
     from .patchbay_manager import PatchbayManager

@@ -1,13 +1,5 @@
 from dataclasses import dataclass
 from enum import IntFlag, IntEnum, auto
-from typing import Any, Union
-
-from .patchcanvas import (
-    PortMode, PortType, PortSubType,
-    BoxLayoutMode, BoxPos, BoxFlag, BoxType,
-    AliasingReason)
-from .patchcanvas.patshared import (
-    GroupPos, GroupPosFlag, PortTypesViewFlag, ViewData, PortgroupMem)
 
 
 # Port Flags as defined by JACK
@@ -18,9 +10,6 @@ class JackPortFlag(IntFlag):
     CAN_MONITOR = 0x08
     IS_TERMINAL = 0x10
     IS_CONTROL_VOLTAGE = 0x100
-            
-
-
 
 
 @dataclass
@@ -41,6 +30,7 @@ class TransportViewMode(IntEnum):
 
 
 class ToolDisplayed(IntFlag):
+    UNDO_REDO = auto()
     VIEWS_SELECTOR = auto()
     HIDDENS_BOX = auto()
     PORT_TYPES_VIEW = auto()
@@ -53,7 +43,8 @@ class ToolDisplayed(IntFlag):
     LATENCY = auto()
     XRUNS = auto()
     DSP_LOAD = auto()
-    ALL = (VIEWS_SELECTOR
+    ALL = (UNDO_REDO
+           | VIEWS_SELECTOR
            | HIDDENS_BOX
            | PORT_TYPES_VIEW
            | TRANSPORT_CLOCK

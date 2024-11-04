@@ -1,19 +1,22 @@
 
 from enum import IntEnum, IntFlag
 from typing import TYPE_CHECKING, Union
+
 from PyQt5.QtWidgets import (
     QMenu, QCheckBox, QFrame, QLabel, QHBoxLayout,
     QSpacerItem, QSizePolicy, QWidgetAction,
     QApplication, QAction)
-from PyQt5.QtGui import QIcon, QColor, QKeyEvent, QPixmap, QMouseEvent, QCursor, QFocusEvent, QPaintEvent, QPainter, QPen, QBrush, QPolygonF
-from PyQt5.QtCore import Qt, QSize, pyqtSlot, QEvent, QPoint, QPointF
-
+from PyQt5.QtGui import (
+    QIcon, QColor, QKeyEvent, QPixmap, QMouseEvent,
+    QCursor, QFocusEvent, QPaintEvent, QPainter,
+    QPen, QBrush)
+from PyQt5.QtCore import Qt, QSize, pyqtSlot, QEvent, QPoint
 
 from .patchcanvas import canvas, CallbackAct, BoxType, options
 from .patchcanvas.theme import StyleAttributer
 from .patchcanvas.utils import (
     get_portgroup_name_from_ports_names, get_icon, is_dark_theme)
-from .base_elements import (
+from .patchcanvas.patshared import (
     PortType, PortSubType, PortMode)
 from .base_group import Group
 from .base_port import Port
@@ -23,7 +26,9 @@ from .base_connection import Connection
 if TYPE_CHECKING:
     from patchbay_manager import PatchbayManager
 
+
 _translate = QApplication.translate
+
 
 def theme_css(theme: StyleAttributer) -> str:
     pen = theme.fill_pen()

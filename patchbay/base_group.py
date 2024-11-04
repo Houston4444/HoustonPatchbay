@@ -1,17 +1,16 @@
-import time
 from typing import TYPE_CHECKING, Optional, Union
 
-
-from .base_elements import (
+from .patchcanvas.patshared import (
     BoxType,
     GroupPos,
     BoxLayoutMode,
     PortMode,
     PortType,
     PortSubType,
-    JackPortFlag,
     PortTypesViewFlag,
-    PortgroupMem)
+    PortgroupMem    
+)
+from .base_elements import JackPortFlag
 from .base_port import Port
 from .base_portgroup import Portgroup
 from .base_connection import Connection

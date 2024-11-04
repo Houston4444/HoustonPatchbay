@@ -1,12 +1,9 @@
 from typing import TYPE_CHECKING
 
-from .base_elements import (
-    PortMode,
-    PortType,
-    PortSubType,
-    JackPortFlag)
-from .base_connection import Connection
+from .patchcanvas.patshared import PortMode, PortType, PortSubType
 from .patchcanvas import patchcanvas
+from .base_elements import JackPortFlag
+from .base_connection import Connection
 
 if TYPE_CHECKING:
     from .patchbay_manager import PatchbayManager

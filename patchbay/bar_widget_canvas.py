@@ -32,6 +32,10 @@ class BarWidgetCanvas(QWidget):
             bool(tools_displayed & ToolDisplayed.PORT_TYPES_VIEW))
         self.ui.sliderZoom.setVisible(
             bool(tools_displayed & ToolDisplayed.ZOOM_SLIDER))
+        self.ui.toolButtonUndo.setVisible(
+            bool(tools_displayed & ToolDisplayed.UNDO_REDO))
+        self.ui.toolButtonRedo.setVisible(
+            bool(tools_displayed & ToolDisplayed.UNDO_REDO))
         
     def set_patchbay_manager(self, mng: 'PatchbayManager'):
         self.ui.frameTypeFilter.set_patchbay_manager(mng)

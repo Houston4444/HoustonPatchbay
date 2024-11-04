@@ -1,13 +1,13 @@
-
 from typing import TYPE_CHECKING
 
-from .base_elements import PortMode
 from .base_port import Port
 from .patchcanvas import canvas
 from .patchcanvas.init_values import CallbackAct
+from .patchcanvas.patshared import PortMode
 
 if TYPE_CHECKING:
     from patchbay_manager import PatchbayManager
+
 
 class ConnClipboard:
     all_ports = list[tuple[Port, list[Port]]]()

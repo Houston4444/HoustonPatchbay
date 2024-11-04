@@ -12,8 +12,8 @@ from PyQt5.QtWidgets import (
 
 
 from .patchcanvas.patshared import PortTypesViewFlag
-from .patchcanvas import patchcanvas
-from .base_elements import TransportViewMode, AliasingReason
+from .patchcanvas import patchcanvas, AliasingReason
+from .base_elements import TransportViewMode
 
 if TYPE_CHECKING:
     from .patchbay_manager import PatchbayManager

@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING
 
-from .base_elements import (
+from .patchcanvas.patshared import (
     PortType,
     PortSubType,
     PortTypesViewFlag

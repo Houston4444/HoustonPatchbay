@@ -5,9 +5,10 @@ from PyQt5.QtGui import QCursor
 from PyQt5.QtWidgets import QApplication
 
 from . import patchcanvas
-from .patchcanvas.patshared import PortMode, PortType, BoxLayoutMode, GroupPos
+from .patchcanvas.patshared import (
+    PortMode, PortType, BoxLayoutMode, GroupPos,
+    PortgroupMem, BoxPos)
 from .patchcanvas import CallbackAct, PortMode, PortType, BoxLayoutMode
-from .base_elements import PortgroupMem, BoxPos
 from .base_port import Port
 from .port_info_dialog import CanvasPortInfoDialog
 from .port_menu import PoMenu, ConnectMenu

@@ -88,6 +88,9 @@ class PatchbayToolsWidget(QObject):
     @staticmethod
     def _make_context_actions() -> dict[ToolDisplayed, QAction]:
         return {
+            ToolDisplayed.UNDO_REDO:
+                QAction(QIcon.fromTheme('edit-undo'),
+                        _translate('tool_bar', 'Undo / Redo')),
             ToolDisplayed.VIEWS_SELECTOR:
                 QAction(QIcon.fromTheme('view-multiple-objects'),
                         _translate('tool_bar', 'Views selector')),

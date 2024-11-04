@@ -1,7 +1,8 @@
 from PyQt5.QtGui import QShowEvent, QFontMetrics, QFont
 from PyQt5.QtWidgets import QApplication, QDialog
 
-from .base_elements import PortType, JackPortFlag
+from .patchcanvas.patshared import PortType
+from .base_elements import JackPortFlag
 from .base_port import Port
 from .ui.canvas_port_info import Ui_CanvasPortInfo
 
