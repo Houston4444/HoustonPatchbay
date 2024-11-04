@@ -1710,8 +1710,13 @@ class PatchbayManager:
         if event.modifiers() & Qt.KeyboardModifier.AltModifier:
             if event.text().isdigit():
                 # change view with Alt+Num
-                with CancellableAction(self, CancelOp.ALL_VIEWS) as a:
-                    new_num = int(event.text())
+                new_num = int(event.text())
+                if self.views.get(new_num) is None:
+                    cancel_op = CancelOp.ALL_VIEWS
+                else:
+                    cancel_op = CancelOp.VIEW_CHOICE
+
+                with CancellableAction(self, cancel_op) as a:
                     a.name = _translate('patchbay', 'Change view %i -> %i') \
                         % (self.view_number, new_num)
                     self.change_view(new_num)

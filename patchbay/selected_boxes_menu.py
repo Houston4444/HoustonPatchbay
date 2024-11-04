@@ -3,8 +3,10 @@ from PyQt5.QtCore import pyqtSlot
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QMenu, QApplication
 
+
 from . import patchcanvas
-from .base_elements import PortMode
+from .patchcanvas.patshared import PortMode
+from .cancel_mng import CancelOp, CancellableAction
 
 if TYPE_CHECKING:
     from .patchbay_manager import PatchbayManager
@@ -50,17 +52,22 @@ class SelectedBoxesMenu(QMenu):
     
     @pyqtSlot()    
     def _new_exclusive_view(self):
-        patchcanvas.clear_selection()
-        self.mng.new_view(exclusive_with=self._selected_boxes)
+        with CancellableAction(self.mng, CancelOp.ALL_VIEWS) as a:
+            a.name = self.sender().text()
+            patchcanvas.clear_selection()
+            self.mng.new_view(exclusive_with=self._selected_boxes)
         
     @pyqtSlot()
     def _hide_selected_boxes(self):
-        for group_id, port_mode in self._selected_boxes.items():
-            group = self.mng.get_group_from_id(group_id)
-            if group is None:
-                continue
+        with CancellableAction(self.mng, CancelOp.VIEW) as a:
+            a.name = self.sender().text()
 
-            group.hide(port_mode)
+            for group_id, port_mode in self._selected_boxes.items():
+                group = self.mng.get_group_from_id(group_id)
+                if group is None:
+                    continue
+
+                group.hide(port_mode)
 
     @pyqtSlot()
     def _invert_boxes_selection(self):
