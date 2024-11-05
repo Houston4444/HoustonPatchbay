@@ -145,7 +145,7 @@ class BarWidgetJack(QWidget):
             self.ui.pushButtonXruns.setVisible(False)
             self.ui.progressBarDsp.setVisible(False)
             
-    def change_tools_displayed(self, tools_displayed: ToolDisplayed):    
+    def change_tools_displayed(self, tools_displayed: ToolDisplayed):
         if not self._jack_running:
             self.set_jack_running(False)
             return

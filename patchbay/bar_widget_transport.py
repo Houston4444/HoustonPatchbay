@@ -225,6 +225,7 @@ class BarWidgetTransport(QWidget):
             self.ui.toolButtonForward.setVisible(False)
             self.ui.toolButtonPlayPause.setVisible(False)
             self.ui.toolButtonStop.setVisible(False)
+            self.ui.labelTempo.setVisible(False)
     
     def change_tools_displayed(self, tools_displayed: ToolDisplayed):
         has_clock = bool(tools_displayed & ToolDisplayed.TRANSPORT_CLOCK)

@@ -139,7 +139,10 @@ class PatchbayToolsWidget(QObject):
             act.setChecked(bool(self._tools_displayed & key))
             if self.mng is not None:
                 if not self.mng.server_is_started:
-                    if key in (ToolDisplayed.PORT_TYPES_VIEW,
+                    if key in (ToolDisplayed.UNDO_REDO,
+                               ToolDisplayed.VIEWS_SELECTOR,
+                               ToolDisplayed.PORT_TYPES_VIEW,
+                               ToolDisplayed.HIDDENS_BOX,
                                ToolDisplayed.ZOOM_SLIDER):
                         act.setEnabled(self.mng.alsa_midi_enabled)
                     else:
@@ -336,13 +339,13 @@ class PatchbayToolsWidget(QObject):
 
     def set_jack_running(self, yesno: bool, use_alsa_midi=False):
         self._jack_running = yesno
+        if self._transport_wg is not None:
+            self._transport_wg.set_jack_running(yesno)
+        if self._jack_wg is not None:
+            self._jack_wg.set_jack_running(yesno)
         
         if yesno:
             self.change_tools_displayed(self._tools_displayed)
-        else:
-            if self._jack_wg is not None:
-                self._jack_wg.set_jack_running(False)
-                self._transport_wg.set_jack_running(False)
 
     def _canvas_is_last_of_line(self, layout: str) -> bool:
         for line in layout.split('_'):
