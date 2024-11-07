@@ -225,9 +225,10 @@ class CanvasMenu(QMenu):
             port_types_view == PortTypesViewFlag.ALSA)
 
     def _change_ptv(self, ptv: PortTypesViewFlag):
-        with CancellableAction(self.mng, CancelOp.ALL_VIEWS_NO_POS) as a:
-            a.name = _translate('undo', 'Change visible port types to %s') \
-                % ptv.name
+        with CancellableAction(self.mng, CancelOp.PTV_CHOICE) as a:
+            a.name = _translate(
+                'undo', 'Change visible port types from %s to %s') \
+                    % (self.mng.port_types_view.name, ptv.name)
             self.mng.change_port_types_view(ptv)
 
     @pyqtSlot()

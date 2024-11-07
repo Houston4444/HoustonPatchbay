@@ -84,9 +84,9 @@ class TypeFilterFrame(QFrame):
         if self._mng is None:
             return
 
-        with CancellableAction(self._mng, CancelOp.ALL_VIEWS_NO_POS) as a:
-            a.name = _translate('undo', 'Change visible port types to %s') \
-                % port_types_view.name
+        with CancellableAction(self._mng, CancelOp.PTV_CHOICE) as a:
+            a.name = _translate('undo', 'Change visible port types from %s to %s') \
+                % (self._mng.port_types_view.name, port_types_view.name)
             self._mng.change_port_types_view(port_types_view)
     
     def _exclusive_choice(self, view_flag: PortTypesViewFlag):

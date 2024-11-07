@@ -627,6 +627,8 @@ class PatchbayManager:
         if gpos is not None:
             return gpos
 
+        self.cancel_mng.new_pos_created = True
+
         is_white_list_view = self.views[self.view_number].is_white_list
 
         # prevent move to a new position in case of port_types_view change
