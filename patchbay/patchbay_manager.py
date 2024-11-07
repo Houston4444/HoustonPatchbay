@@ -1017,6 +1017,9 @@ class PatchbayManager:
             a.name = _translate(
                 'arrange', 'Arrange: follow the signal chain')
             arranger.arrange_follow_signal()
+            
+            # boxes will be at a completely different place after arrange
+            # it takes no sense to keep positions of absent boxes
             self.views.clear_absents(
                 self.view_number, self.port_types_view,
                 set([g.name for g in self.groups
@@ -1027,6 +1030,9 @@ class PatchbayManager:
             a.name = _translate(
                 'arrange', 'Arrange: Two columns facing each other')
             arranger.arrange_face_to_face()
+            
+            # boxes will be at a completely different place after arrange
+            # it takes no sense to keep positions of absent boxes
             self.views.clear_absents(
                 self.view_number, self.port_types_view,
                 set([g.name for g in self.groups
