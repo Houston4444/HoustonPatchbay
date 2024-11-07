@@ -1017,12 +1017,20 @@ class PatchbayManager:
             a.name = _translate(
                 'arrange', 'Arrange: follow the signal chain')
             arranger.arrange_follow_signal()
+            self.views.clear_absents(
+                self.view_number, self.port_types_view,
+                set([g.name for g in self.groups
+                     if g.is_in_port_types_view(self.port_types_view)]))
         
     def arrange_face_to_face(self):
         with CancellableAction(self, CancelOp.VIEW) as a:
             a.name = _translate(
                 'arrange', 'Arrange: Two columns facing each other')
             arranger.arrange_face_to_face()
+            self.views.clear_absents(
+                self.view_number, self.port_types_view,
+                set([g.name for g in self.groups
+                     if g.is_in_port_types_view(self.port_types_view)]))
 
     # --- options triggers ---
 
