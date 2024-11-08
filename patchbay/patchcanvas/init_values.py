@@ -59,6 +59,7 @@ class CallbackAct(IntEnum):
     
     Not emitted in case of area multiple selection (optimization)'''
     
+    GROUP_POS_MODIFIED = auto()    # group_id
     BOXES_MOVED = auto()           # *[tuple[int, PortMode, int, int]]
                                    #    [group_id, port_mode, x, y]
     GROUP_HIDE_BOX = auto()        # group_id: int, port_mode: PortMode

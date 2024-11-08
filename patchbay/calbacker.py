@@ -50,8 +50,12 @@ class Callbacker:
     def _group_rename(self, group_id: int):
         ...
 
-    def _group_pos_modified(self, group_id: int, gpos: GroupPos):
-        print('zpos', gpos.group_name, gpos.as_new_dict())
+    def _group_pos_modified(self, group_id: int):
+        # print('zpos', gpos.group_name, gpos.as_new_dict())
+        group = self.mng.get_group_from_id(group_id)
+        if group is None:
+            return
+        group.save_current_position()
 
     def _group_splitted(self, group_id: int):
         group = self.mng.get_group_from_id(group_id)
@@ -89,6 +93,7 @@ class Callbacker:
                 group.current_position.boxes[port_mode].pos = (x, y)
                 group.set_group_position(
                     group.current_position, PortMode.NULL, PortMode.NULL)
+                group.save_current_position()
                 patchcanvas.repulse_from_group(group_id, port_mode)
 
     def _group_box_pos_changed(

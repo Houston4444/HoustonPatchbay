@@ -658,7 +658,6 @@ class PatchbayManager:
             gpos.boxes[port_mode].pos = xy
 
         ptv_view[group_name] = gpos
-        # self.group_positions.append(gpos)
         self.save_group_position(gpos)
         return gpos
 

@@ -5,7 +5,7 @@ from typing import Optional
 from PyQt5.QtCore import QRectF
 
 from .patshared import BoxLayoutMode, PortMode, BoxType, GroupPos
-from .init_values import GroupObject, canvas
+from .init_values import GroupObject, canvas, CallbackAct
 from .utils import nearest_on_grid, next_left_on_grid, next_top_on_grid
 from .box_widget import BoxWidget
 from .patchcanvas import (
@@ -554,6 +554,8 @@ class CanvasArranger:
             if group is not None:
                 group.gpos.boxes[ba.port_mode].pos = grid_xy
                 move_group_boxes(group.group_id, group.gpos)
+                canvas.callback(
+                    CallbackAct.GROUP_POS_MODIFIED, group.group_id)
 
 
 def arrange_follow_signal():
@@ -655,5 +657,6 @@ def arrange_face_to_face():
             
     for group_id, gpos in gp_gposes.items():
         move_group_boxes(group_id, gpos)
-    
+        canvas.callback(CallbackAct.GROUP_POS_MODIFIED, group_id)
+
     repulse_all_boxes()
