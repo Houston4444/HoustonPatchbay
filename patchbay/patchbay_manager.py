@@ -969,7 +969,14 @@ class PatchbayManager:
             
             self.change_view(switch_to_view)
     
-    def clear_absents_in_view(self):
+    def clear_absents_in_view(self, only_current_ptv=False):
+        if only_current_ptv:
+            self.views.clear_absents(
+                self.view_number, self.port_types_view,
+                set([g.name for g in self.groups
+                     if g.is_in_port_types_view(self.port_types_view)]))
+            return
+
         for ptv in self.views[self.view_number].ptvs.keys():
             self.views.clear_absents(
                 self.view_number, ptv,
@@ -1020,10 +1027,7 @@ class PatchbayManager:
             
             # boxes will be at a completely different place after arrange
             # it takes no sense to keep positions of absent boxes
-            self.views.clear_absents(
-                self.view_number, self.port_types_view,
-                set([g.name for g in self.groups
-                     if g.is_in_port_types_view(self.port_types_view)]))
+            self.clear_absents_in_view(only_current_ptv=True)
         
     def arrange_face_to_face(self):
         with CancellableAction(self, CancelOp.VIEW) as a:
@@ -1033,10 +1037,7 @@ class PatchbayManager:
             
             # boxes will be at a completely different place after arrange
             # it takes no sense to keep positions of absent boxes
-            self.views.clear_absents(
-                self.view_number, self.port_types_view,
-                set([g.name for g in self.groups
-                     if g.is_in_port_types_view(self.port_types_view)]))
+            self.clear_absents_in_view(only_current_ptv=True)
 
     # --- options triggers ---
 
