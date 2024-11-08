@@ -555,6 +555,7 @@ class PatchSceneMoth(QGraphicsScene):
                     group.gpos.boxes[PortMode.BOTH].pos = (to_x, to_y)
             else:
                 group.gpos.boxes[box_widget._port_mode].pos = (to_x, to_y)
+            canvas.callback(CallbackAct.GROUP_POS_MODIFIED, group.group_id)
 
         moving_box.start_time = time.time() - self._move_timer_start_at
 
