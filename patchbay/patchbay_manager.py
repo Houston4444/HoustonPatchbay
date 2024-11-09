@@ -953,9 +953,7 @@ class PatchbayManager:
             return
 
         rm_current_view = bool(view_number is self.view_number)
-        
         self.views.remove_view(view_number)
-        self.set_views_changed()
 
         if rm_current_view:
             switch_to_view = -1
@@ -968,6 +966,8 @@ class PatchbayManager:
             
             self.change_view(switch_to_view)
     
+        self.set_views_changed()
+
     def clear_absents_in_view(self, only_current_ptv=False):
         if only_current_ptv:
             self.views.clear_absents(

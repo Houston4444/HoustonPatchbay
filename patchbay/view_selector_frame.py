@@ -442,23 +442,6 @@ class ViewSelectorWidget(QWidget):
         with CancellableAction(self.mng, CancelOp.ALL_VIEWS) as a:
             a.name = _translate('undo', 'Remove view n°%i') % index
             self.mng.remove_view(index)
-        
-        # ex_view_num = -1
-        
-        # for view_num in self.mng.views.keys():
-        #     if view_num < index:
-        #         ex_view_num = view_num
-            
-        #     elif view_num == index:
-        #         if ex_view_num >= 0:
-        #             self.mng.change_view(ex_view_num)
-        #             self.mng.remove_view(index)
-        #             break
-            
-        #     elif view_num > index:
-        #         self.mng.change_view(view_num)
-        #         self.mng.remove_view(index)
-        #         break
     
     @pyqtSlot()
     def _clear_absents(self):
