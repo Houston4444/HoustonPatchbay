@@ -158,7 +158,8 @@ class BoxArranger:
 
         self.col_left = left_min
         if fixed and fixed == len(self.ins_connected_to):
-            self.col_left_fixed = True
+            if not self.col_right_fixed:
+                self.col_left_fixed = True
         
         self.col_left_counted = True
     
@@ -189,7 +190,8 @@ class BoxArranger:
         
         self.col_right = right_min
         if fixed and fixed == len(self.outs_connected_to):
-            self.col_right_fixed = True
+            if not self.col_left_fixed:
+                self.col_right_fixed = True
 
         self.col_right_counted = True
     
@@ -378,6 +380,7 @@ class CanvasArranger:
                     else:
                         box_arranger.col_right = -1
                         box_arranger.col_right_fixed = True
+                        
             correct_leveling = self.count_column_boxes(
                 hardware_on_sides=hardware_on_sides)
         
