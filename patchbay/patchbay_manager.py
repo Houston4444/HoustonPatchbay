@@ -15,7 +15,7 @@ from .patchcanvas.scene_view import PatchGraphicsView
 from .patchcanvas.patshared import (
     PortType, PortSubType, PortMode,
     PortTypesViewFlag, GroupPos, from_json_to_str,
-    ViewsDict, PortgroupsDict, PortgroupMem)
+    ViewsDict, ViewData, PortgroupsDict, PortgroupMem)
 from .patchcanvas.init_values import (
     AliasingReason, CallbackAct, CanvasFeaturesObject,
     CanvasOptionsObject, GridStyle)
@@ -257,22 +257,6 @@ class PatchbayManager:
         
         # just to have the zoom slider updated with the default zoom
         patchcanvas.canvas.scene.zoom_reset()
-
-        # # get port_types_view from config file only if the port type view
-        # # filter widget is visible.         
-        # try:
-        #     port_types_view = PortTypesViewFlag(
-        #         self._settings.value(
-        #             'Canvas/default_port_types_view',
-        #             PortTypesViewFlag.ALL.value,
-        #             type=int))
-        # except:
-        #     _logger.warning(
-        #         "unable to find correct default port types view "
-        #         "in the config file.")
-        #     port_types_view = PortTypesViewFlag.ALL
-                
-        # self.change_port_types_view(port_types_view)
         
     def _scene_scale_changed(self, value: float):
         self.sg.scene_scale_changed.emit(value)
@@ -305,6 +289,9 @@ class PatchbayManager:
         
         self.options_dialog.move(QCursor.pos())
         self.options_dialog.show()
+
+    def view(self) -> ViewData:
+        return self.views[self.view_number]
 
     # --- manager methods --- #
 
@@ -618,10 +605,10 @@ class PatchbayManager:
         ...
 
     def get_group_position(self, group_name: str) -> GroupPos:
-        ptv_view = self.views[self.view_number].ptvs.get(self.port_types_view)
+        ptv_view = self.view().ptvs.get(self.port_types_view)
         if ptv_view is None:
             ptv_view = dict[str, GroupPos]()
-            self.views[self.view_number].ptvs[self.port_types_view] = ptv_view
+            self.view().ptvs[self.port_types_view] = ptv_view
             
         gpos = ptv_view.get(group_name)
         if gpos is not None:
@@ -629,7 +616,7 @@ class PatchbayManager:
 
         self.cancel_mng.new_pos_created = True
 
-        is_white_list_view = self.views[self.view_number].is_white_list
+        is_white_list_view = self.view().is_white_list
 
         # prevent move to a new position in case of port_types_view change
         # if there is no remembered position for this group in new view
@@ -762,8 +749,7 @@ class PatchbayManager:
             patchcanvas.redraw_all_groups()
             
             self.sg.port_types_view_changed.emit(self.port_types_view)
-            self.views[self.view_number].default_port_types_view = \
-                self.port_types_view
+            self.view().default_port_types_view = self.port_types_view
             self.save_view_and_port_types_view()
             return
         
@@ -875,8 +861,7 @@ class PatchbayManager:
             patchcanvas.repulse_all_boxes()
 
         self.sg.port_types_view_changed.emit(self.port_types_view)
-        self.views[self.view_number].default_port_types_view = \
-            self.port_types_view
+        self.view().default_port_types_view = self.port_types_view
         self.save_view_and_port_types_view()
 
     def set_views_changed(self):
@@ -903,13 +888,13 @@ class PatchbayManager:
             for gpos in self.views.iter_group_poses(view_num=self.view_number):
                 self.views.add_group_pos(new_num, gpos.copy())
             
-            if self.views[self.view_number].is_white_list:
+            if self.view().is_white_list:
                 self.views[new_num].is_white_list = True
 
         else:
             self.views[new_num].is_white_list = True
 
-            v = self.views[self.view_number].ptvs[self.port_types_view]
+            v = self.view().ptvs[self.port_types_view]
             self.views[new_num].ptvs[self.port_types_view] = new_v = {}
 
             for group_id, port_mode in exclusive_with.items():
@@ -920,14 +905,13 @@ class PatchbayManager:
                         if not port_mode & pmode:
                             box_pos.set_hidden(True)
 
-        self.views[self.view_number].default_port_types_view = \
-            self.port_types_view
+        self.view().default_port_types_view = self.port_types_view
         self.view_number = new_num
         self.set_views_changed()
         self.change_port_types_view(self.port_types_view, force=True)
     
     def rename_current_view(self, new_name: str):
-        self.views[self.view_number].name = new_name
+        self.view().name = new_name
         self.set_views_changed()
     
     def change_view(self, view_number: int):
@@ -976,7 +960,7 @@ class PatchbayManager:
                      if g.is_in_port_types_view(self.port_types_view)]))
             return
 
-        for ptv in self.views[self.view_number].ptvs.keys():
+        for ptv in self.view().ptvs.keys():
             self.views.clear_absents(
                 self.view_number, ptv,
                 set([g.name for g in self.groups

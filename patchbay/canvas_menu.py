@@ -295,7 +295,7 @@ class CanvasMenu(QMenu):
                 _translate('hiddens_indicator', 'Hide all new boxes'))
         act_white_list.setCheckable(True)
         act_white_list.setChecked(
-            self.mng.views[self.mng.view_number].is_white_list)
+            self.mng.view().is_white_list)
         act_white_list.triggered.connect(self._set_view_white_list)
         
         if not has_hiddens:
@@ -334,7 +334,7 @@ class CanvasMenu(QMenu):
     def _set_view_white_list(self, state: bool):
         with CancellableAction(self.mng, op_type=CancelOp.VIEW) as a:
             a.name = self.sender().text()
-            self.mng.views[self.mng.view_number].is_white_list = state
+            self.mng.view().is_white_list = state
             self.mng.set_views_changed()
 
     def internal_manual(self):
