@@ -1,7 +1,7 @@
 
 from typing import TYPE_CHECKING
 
-from PyQt5.QtGui import QIcon, QDesktopServices
+from PyQt5.QtGui import QIcon, QDesktopServices, QPixmap
 from PyQt5.QtWidgets import QMenu, QApplication
 from PyQt5.QtCore import QLocale, QUrl, pyqtSlot
 
@@ -286,6 +286,18 @@ class CanvasMenu(QMenu):
                 group_act.triggered.connect(self._show_hidden_group)
                 has_hiddens = True
         
+        self.show_hiddens_menu.addSeparator()
+        
+        color_scheme = 'breeze-dark' if dark else 'breeze'
+        act_white_list = self.show_hiddens_menu.addAction(
+            QIcon(QPixmap(
+                f':scalable/{color_scheme}/color-picker-white.svg')),
+                _translate('hiddens_indicator', 'Hide all new boxes'))
+        act_white_list.setCheckable(True)
+        act_white_list.setChecked(
+            self.mng.views[self.mng.view_number].is_white_list)
+        act_white_list.triggered.connect(self._set_view_white_list)
+        
         if not has_hiddens:
             for gpos in self.mng.views.iter_group_poses(
                     view_num=self.mng.view_number):
@@ -318,6 +330,13 @@ class CanvasMenu(QMenu):
             a.name = self.sender().text()
             self.mng.restore_all_group_hidden_sides()
     
+    @pyqtSlot(bool)
+    def _set_view_white_list(self, state: bool):
+        with CancellableAction(self.mng, op_type=CancelOp.VIEW) as a:
+            a.name = self.sender().text()
+            self.mng.views[self.mng.view_number].is_white_list = state
+            self.mng.set_views_changed()
+
     def internal_manual(self):
         short_locale = 'en'
         manual_dir = self.mng._manual_path
