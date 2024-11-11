@@ -20,8 +20,8 @@
 from dataclasses import dataclass
 from typing import Optional, Union
 
-from PyQt5.QtCore import QRectF, QMarginsF, Qt
-from PyQt5.QtWidgets import QGraphicsView
+from qtpy.QtCore import QRectF, QMarginsF, Qt
+from qtpy.QtWidgets import QGraphicsView
 
 from .patshared import PortMode
 from .init_values import canvas, options, Direction

@@ -24,11 +24,11 @@ from typing import Optional, Union
 from sip import voidptr
 import sys
 from enum import Enum
-from PyQt5.QtCore import Qt, QPointF, QRectF, QTimer, QMarginsF
-from PyQt5.QtGui import (QCursor, QFontMetrics, QImage, QFont,
+from qtpy.QtCore import Qt, QPointF, QRectF, QTimer, QMarginsF
+from qtpy.QtGui import (QCursor, QFontMetrics, QImage, QFont,
                          QLinearGradient, QPainter, QPen, QPolygonF,
                          QColor, QPainterPath, QBrush)
-from PyQt5.QtWidgets import QGraphicsItem, QApplication
+from qtpy.QtWidgets import QGraphicsItem, QApplication
 
 from .patshared import PortMode, BoxLayoutMode, BoxType
 from .init_values import (

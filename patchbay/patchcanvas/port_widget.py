@@ -21,11 +21,11 @@
 import logging
 from typing import TYPE_CHECKING
 
-from PyQt5.QtCore import Qt, QPointF, QRectF
-from PyQt5.QtGui import (
+from qtpy.QtCore import Qt, QPointF, QRectF
+from qtpy.QtGui import (
     QBrush, QFontMetrics, QPainter, QPen, QPolygonF,
     QLinearGradient, QColor, QPainterPath)
-from PyQt5.QtWidgets import QGraphicsItem, QApplication
+from qtpy.QtWidgets import QGraphicsItem, QApplication
 
 
 # Imports (Custom)

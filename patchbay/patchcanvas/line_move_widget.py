@@ -19,9 +19,9 @@
 
 from typing import TYPE_CHECKING
 
-from PyQt5.QtCore import Qt, QPointF
-from PyQt5.QtGui import QPainter, QPainterPath
-from PyQt5.QtWidgets import QGraphicsPathItem
+from qtpy.QtCore import Qt, QPointF
+from qtpy.QtGui import QPainter, QPainterPath
+from qtpy.QtWidgets import QGraphicsPathItem
 
 from .patshared import PortMode, PortType
 from .init_values import canvas, CanvasItemType, Zv

@@ -1,9 +1,9 @@
 
 from typing import TYPE_CHECKING
 
-from PyQt5.QtGui import QIcon, QDesktopServices, QPixmap
-from PyQt5.QtWidgets import QMenu, QApplication
-from PyQt5.QtCore import QLocale, QUrl, pyqtSlot
+from qtpy.QtGui import QIcon, QDesktopServices, QPixmap
+from qtpy.QtWidgets import QMenu, QApplication
+from qtpy.QtCore import QLocale, QUrl, Slot
 
 from . import patchcanvas
 from .patchcanvas import utils
@@ -186,12 +186,12 @@ class CanvasMenu(QMenu):
     def set_selected_boxes(self, selected_boxes: dict[int, PortMode]):
         self._selected_boxes = selected_boxes
     
-    @pyqtSlot()
+    @Slot()
     def _new_exclusive_view(self):
         self.mng.new_view(exclusive_with=self._selected_boxes)
         patchcanvas.clear_selection()
     
-    @pyqtSlot()
+    @Slot()
     def _hide_selected_boxes(self):
         for group_id, port_mode in self._selected_boxes.items():
             group = self.mng.get_group_from_id(group_id)
@@ -200,15 +200,15 @@ class CanvasMenu(QMenu):
 
             group.hide(port_mode)
 
-    @pyqtSlot()
+    @Slot()
     def _invert_boxes_selection(self):
         patchcanvas.invert_boxes_selection()
 
-    @pyqtSlot()
+    @Slot()
     def _arrange_facing(self):
         self.mng.arrange_face_to_face()
 
-    @pyqtSlot()
+    @Slot()
     def _arrange_follow_signal(self):
         self.mng.arrange_follow_signal()
 
@@ -231,23 +231,23 @@ class CanvasMenu(QMenu):
                     % (self.mng.port_types_view.name, ptv.name)
             self.mng.change_port_types_view(ptv)
 
-    @pyqtSlot()
+    @Slot()
     def port_types_view_all_types_choice(self):
         self._change_ptv(PortTypesViewFlag.ALL)
 
-    @pyqtSlot()
+    @Slot()
     def port_types_view_audio_choice(self):
         self._change_ptv(PortTypesViewFlag.AUDIO)
 
-    @pyqtSlot()
+    @Slot()
     def port_types_view_midi_choice(self):
         self._change_ptv(PortTypesViewFlag.MIDI)
 
-    pyqtSlot()
+    Slot()
     def port_types_view_cv_choice(self):
         self._change_ptv(PortTypesViewFlag.CV)
 
-    pyqtSlot()
+    Slot()
     def port_types_view_alsa_choice(self):
         self._change_ptv(PortTypesViewFlag.ALSA)
 
@@ -260,7 +260,7 @@ class CanvasMenu(QMenu):
             self.action_all_types.setText(
                 _translate('patchbay', 'AUDIO | MIDI | CV'))
 
-    @pyqtSlot()
+    @Slot()
     def _list_hidden_groups(self):
         self.show_hiddens_menu.clear()
         
@@ -317,20 +317,20 @@ class CanvasMenu(QMenu):
                 _translate('patchbay', 'All boxes are visible.'))
             no_hiddens_act.setEnabled(False)
 
-    @pyqtSlot()
+    @Slot()
     def _show_hidden_group(self):
         group_id: int = self.sender().data()
         with CancellableAction(self.mng, CancelOp.VIEW) as a:
             a.name = _translate('undo', 'Restore "%s"') % self.sender().text()
             self.mng.restore_group_hidden_sides(group_id, self._scene_pos)
     
-    @pyqtSlot()
+    @Slot()
     def _show_all_hidden_groups(self):
         with CancellableAction(self.mng, CancelOp.VIEW) as a:
             a.name = self.sender().text()
             self.mng.restore_all_group_hidden_sides()
     
-    @pyqtSlot(bool)
+    @Slot(bool)
     def _set_view_white_list(self, state: bool):
         with CancellableAction(self.mng, op_type=CancelOp.VIEW) as a:
             a.name = self.sender().text()

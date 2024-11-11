@@ -1,66 +1,66 @@
 
 from enum import IntEnum
-from PyQt5.QtCore import QObject, pyqtSignal
+from qtpy.QtCore import QObject, Signal
 
-# we need a QObject for pyqtSignal
+# we need a QObject for Signal
 class SignalsObject(QObject):
-    out_thread_order = pyqtSignal()
-    to_main_thread = pyqtSignal(object, tuple, dict)
-    callback_sig = pyqtSignal(IntEnum, tuple)
+    out_thread_order = Signal()
+    to_main_thread = Signal(object, tuple, dict)
+    callback_sig = Signal(IntEnum, tuple)
     
-    view_changed = pyqtSignal(int)
+    view_changed = Signal(int)
     'emitted when the current view has changed [int]'
     
-    views_changed = pyqtSignal()
+    views_changed = Signal()
     '''emitted when something related to views changed
     (view added, renamed, removed...)'''
     
-    port_types_view_changed = pyqtSignal(int)
+    port_types_view_changed = Signal(int)
     'emitted when port types view filter changed the view [int]'
     
-    hidden_boxes_changed = pyqtSignal()
+    hidden_boxes_changed = Signal()
     'emitted when list of hidden boxes has changed'
     
-    animation_finished = pyqtSignal()
+    animation_finished = Signal()
     'emitted when a canvas animation is finished'
     
-    group_added = pyqtSignal(int)
+    group_added = Signal(int)
     '''emitted when a group is added by a port.
     Used only by hiddens indicator. [group_id]'''
     
-    group_removed = pyqtSignal(int)
+    group_removed = Signal(int)
     '''emitted when a group is removed
     with the deletion of its last port. [group_id]'''
     
-    all_groups_removed = pyqtSignal()
+    all_groups_removed = Signal()
     'emitted when all groups are removed.'
 
-    undo_redo_changed = pyqtSignal()
+    undo_redo_changed = Signal()
     'emitted when an action changed undo/redo state'
 
-    full_screen_toggle_wanted = pyqtSignal()
-    filters_bar_toggle_wanted = pyqtSignal()
+    full_screen_toggle_wanted = Signal()
+    filters_bar_toggle_wanted = Signal()
 
-    theme_changed = pyqtSignal(str)
+    theme_changed = Signal(str)
 
     # theses signals send int because they are related to checkboxes
     # but the int value is 0 or 1
-    graceful_names_changed = pyqtSignal(int)
-    a2j_grouped_changed = pyqtSignal(int)
-    alsa_midi_enabled_changed = pyqtSignal(int)
-    group_shadows_changed = pyqtSignal(int)
-    auto_select_items_changed = pyqtSignal(int)
-    elastic_changed = pyqtSignal(int)
-    borders_nav_changed = pyqtSignal(int)
-    prevent_overlap_changed = pyqtSignal(int)
+    graceful_names_changed = Signal(int)
+    a2j_grouped_changed = Signal(int)
+    alsa_midi_enabled_changed = Signal(int)
+    group_shadows_changed = Signal(int)
+    auto_select_items_changed = Signal(int)
+    elastic_changed = Signal(int)
+    borders_nav_changed = Signal(int)
+    prevent_overlap_changed = Signal(int)
     
-    max_port_width_changed = pyqtSignal(int)
-    default_zoom_changed = pyqtSignal(int)
-    scene_scale_changed = pyqtSignal(float)
+    max_port_width_changed = Signal(int)
+    default_zoom_changed = Signal(int)
+    scene_scale_changed = Signal(float)
     
-    connection_added = pyqtSignal(int)
-    connection_removed = pyqtSignal(int)
-    patch_may_have_changed = pyqtSignal()
+    connection_added = Signal(int)
+    connection_removed = Signal(int)
+    patch_may_have_changed = Signal()
 
     def __init__(self):
         QObject.__init__(self)

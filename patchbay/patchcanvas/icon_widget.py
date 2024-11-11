@@ -20,10 +20,10 @@
 import logging
 import os
 
-from PyQt5.QtCore import QRectF, QFile, Qt
-from PyQt5.QtGui import QPainter, QIcon, QPixmap
-from PyQt5.QtSvg import QGraphicsSvgItem, QSvgRenderer
-from PyQt5.QtWidgets import QGraphicsPixmapItem
+from qtpy.QtCore import QRectF, QFile, Qt
+from qtpy.QtGui import QPainter, QIcon, QPixmap
+from qtpy.QtSvg import QGraphicsSvgItem, QSvgRenderer
+from qtpy.QtWidgets import QGraphicsPixmapItem
 
 from .patshared import BoxType, PortMode
 from .init_values import canvas, CanvasItemType

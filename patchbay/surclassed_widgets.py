@@ -1,11 +1,11 @@
 
 from typing import TYPE_CHECKING
 
-from PyQt5.QtCore import Qt, pyqtSignal, pyqtSlot, QPoint, QSize, QRectF, QPointF
-from PyQt5.QtGui import (
+from qtpy.QtCore import Qt, Signal, Slot, QPoint, QSize, QRectF, QPointF
+from qtpy.QtGui import (
     QWheelEvent, QKeyEvent, QMouseEvent, QPaintEvent,
     QPainter, QPen, QColor, QPainterPath, QPixmap)
-from PyQt5.QtWidgets import (
+from qtpy.QtWidgets import (
     QApplication, QProgressBar, QSlider, QToolTip,
     QLineEdit, QLabel, QMenu, QAction, QCheckBox,
     QComboBox, QFrame, QWidget)
@@ -23,8 +23,8 @@ _translate = QApplication.translate
 
 
 class FilterBar(QLineEdit):
-    up_down_pressed = pyqtSignal(int)
-    key_event = pyqtSignal(object)
+    up_down_pressed = Signal(int)
+    key_event = Signal(object)
 
     def __init__(self, parent):
         QLineEdit.__init__(self)
@@ -97,7 +97,7 @@ class ZoomSlider(QSlider):
         string = "  Zoom: %i%%  " % int(self.zoom_percent())
         QToolTip.showText(self.mapToGlobal(QPoint(0, 12)), string)
 
-    @pyqtSlot(int)
+    @Slot(int)
     def _value_changed(self, value: int):
         if self._mng is None:
             return
@@ -164,7 +164,7 @@ class ZoomSlider(QSlider):
 
 
 class TimeTransportLabel(QLabel):
-    transport_view_changed = pyqtSignal()
+    transport_view_changed = Signal()
     
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -220,7 +220,7 @@ class TimeTransportLabel(QLabel):
 
 
 class TypeViewCheckBox(QCheckBox):
-    really_clicked = pyqtSignal(bool)
+    really_clicked = Signal(bool)
     
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -260,7 +260,7 @@ class ViewsComboBox(QComboBox):
         self.lineEdit().selectAll()
         self.lineEdit().setFocus()
     
-    @pyqtSlot(str)
+    @Slot(str)
     def _edit_text_changed(self, text: str):
         self._editing_text = text
     

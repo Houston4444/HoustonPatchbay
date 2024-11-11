@@ -18,8 +18,8 @@
 # For a full copy of the GNU General Public License see the doc/GPL.txt file.
 
 from typing import TYPE_CHECKING
-from PyQt5.QtGui import QColor
-from PyQt5.QtWidgets import QGraphicsDropShadowEffect, QGraphicsObject
+from qtpy.QtGui import QColor
+from qtpy.QtWidgets import QGraphicsDropShadowEffect, QGraphicsObject
 
 from .init_values import canvas
 from .theme import StyleAttributer

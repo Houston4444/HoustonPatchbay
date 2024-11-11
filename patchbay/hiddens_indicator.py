@@ -1,9 +1,9 @@
 
 from typing import TYPE_CHECKING, Callable, Iterator, Optional, Union
 
-from PyQt5.QtCore import pyqtSlot, QTimer
-from PyQt5.QtGui import QIcon, QPixmap
-from PyQt5.QtWidgets import QToolButton, QMenu, QApplication, QAction
+from qtpy.QtCore import Slot, QTimer
+from qtpy.QtGui import QIcon, QPixmap
+from qtpy.QtWidgets import QToolButton, QMenu, QApplication, QAction
 
 from .cancel_mng import CancelOp, CancellableAction
 from .base_group import Group
@@ -220,7 +220,7 @@ class HiddensIndicator(QToolButton):
         if cg > pv_count:
             self._start_blink()
     
-    @pyqtSlot()
+    @Slot()
     def _blink_timer_timeout(self):
         self._blink_times_done += 1
         if self._blink_times_done % 2:
@@ -232,19 +232,19 @@ class HiddensIndicator(QToolButton):
             self._blink_times_done = 0
             self._blink_timer.stop()
     
-    @pyqtSlot(int)
+    @Slot(int)
     def _view_changed(self, view_num: int):
         self._check_count()
         
-    @pyqtSlot(int)
+    @Slot(int)
     def _port_types_view_changed(self, port_types_flag: int):
         self._check_count()
     
-    @pyqtSlot()
+    @Slot()
     def _hidden_boxes_changed(self):
         self._check_count()
     
-    @pyqtSlot(int)
+    @Slot(int)
     def _group_added(self, group_id: int):
         group = self.mng.get_group_from_id(group_id)
         if group is None:
@@ -256,11 +256,11 @@ class HiddensIndicator(QToolButton):
         if group.is_in_port_types_view(self.mng.port_types_view):
             self.add_one()
 
-    @pyqtSlot(int)
+    @Slot(int)
     def _group_removed(self, group_id: int):
         self._check_count()
         
-    @pyqtSlot()
+    @Slot()
     def _all_groups_removed(self):
         self.set_count(0)
         self._stop_blink()
@@ -289,7 +289,7 @@ class HiddensIndicator(QToolButton):
                 else:
                     yield group
     
-    @pyqtSlot()
+    @Slot()
     def _build_menu(self):
         if self.mng is None:
             return
@@ -387,7 +387,7 @@ class HiddensIndicator(QToolButton):
                 act.setParent(menu)
                 menu.addAction(act)
 
-    @pyqtSlot()
+    @Slot()
     def _menu_action_triggered(self):
         act: QAction = self.sender()
         act_data: int = act.data()

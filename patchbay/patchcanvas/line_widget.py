@@ -20,10 +20,10 @@
 from enum import Enum
 from typing import TYPE_CHECKING
 
-from PyQt5.QtCore import Qt
-from PyQt5.QtGui import (QColor, QLinearGradient, QPainter,
+from qtpy.QtCore import Qt
+from qtpy.QtGui import (QColor, QLinearGradient, QPainter,
                          QPainterPath, QPen, QBrush)
-from PyQt5.QtWidgets import QGraphicsPathItem
+from qtpy.QtWidgets import QGraphicsPathItem
 
 from .patshared import PortType
 from .init_values import (

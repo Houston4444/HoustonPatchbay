@@ -2,10 +2,10 @@
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from PyQt5.QtWidgets import (QDialog, QApplication, QInputDialog,
+from qtpy.QtWidgets import (QDialog, QApplication, QInputDialog,
                              QMessageBox, QWidget, QFileDialog, QAction)
-from PyQt5.QtGui import QIcon, QPixmap
-from PyQt5.QtCore import Qt, QProcess, QSettings
+from qtpy.QtGui import QIcon, QPixmap
+from qtpy.QtCore import Qt, QProcess, QSettings
 
 
 from .patchcanvas import patchcanvas, xdg

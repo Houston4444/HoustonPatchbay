@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING
 
-from PyQt5.QtCore import QTimer
-from PyQt5.QtWidgets import QWidget
+from qtpy.QtCore import QTimer
+from qtpy.QtWidgets import QWidget
 
 from .base_elements import ToolDisplayed
 

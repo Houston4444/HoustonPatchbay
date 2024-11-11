@@ -1,8 +1,8 @@
 from typing import TYPE_CHECKING
 
-from PyQt5.QtWidgets import QGraphicsPathItem
-from PyQt5.QtGui import QPolygonF, QPen, QColor, QBrush, QPainter, QPainterPath
-from PyQt5.QtCore import QPointF, Qt
+from qtpy.QtWidgets import QGraphicsPathItem
+from qtpy.QtGui import QPolygonF, QPen, QColor, QBrush, QPainter, QPainterPath
+from qtpy.QtCore import QPointF, Qt
 
 from .patshared import PortMode, PortType
 from .init_values import canvas, CanvasItemType, options, Zv

@@ -1,8 +1,8 @@
 
 from typing import TYPE_CHECKING
-from PyQt5.QtWidgets import QFrame
-from PyQt5.QtGui import QKeyEvent
-from PyQt5.QtCore import Qt, QSettings, pyqtSlot
+from qtpy.QtWidgets import QFrame
+from qtpy.QtGui import QKeyEvent
+from qtpy.QtCore import Qt, QSettings, Slot
 
 from .ui.filter_frame import Ui_Frame
 
@@ -89,7 +89,7 @@ class FilterFrame(QFrame):
 
         self._filter_groups()
 
-    @pyqtSlot(int)
+    @Slot(int)
     def _up_down_pressed(self, key: int):
         if not self.ui.toolButtonUp.isEnabled():
             # could be toolButtonDown
@@ -131,13 +131,13 @@ class FilterFrame(QFrame):
         if event.key() == Qt.Key_Escape:
             self.hide()
     
-    @pyqtSlot(int)
+    @Slot(int)
     def _port_types_view_changed(self, port_types_view: int):
         if not self.isVisible():
             return
         self._filter_groups()
     
-    @pyqtSlot()
+    @Slot()
     def _animation_finished(self):
         if self.isVisible():
             self._filter_groups()

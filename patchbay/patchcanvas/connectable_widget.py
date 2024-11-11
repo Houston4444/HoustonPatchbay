@@ -1,9 +1,9 @@
 
 import time
 from typing import TYPE_CHECKING
-from PyQt5.QtCore import Qt, QPointF
-from PyQt5.QtGui import QCursor
-from PyQt5.QtWidgets import QGraphicsItem
+from qtpy.QtCore import Qt, QPointF
+from qtpy.QtGui import QCursor
+from qtpy.QtWidgets import QGraphicsItem
 
 from .patshared import PortMode, PortType, PortSubType
 from .init_values import (

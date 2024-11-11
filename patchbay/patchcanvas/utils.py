@@ -21,9 +21,9 @@
 import logging
 from typing import TYPE_CHECKING, Union
 
-from PyQt5.QtCore import QPointF, QFile, QRectF
-from PyQt5.QtGui import QIcon, QPalette
-from PyQt5.QtWidgets import QWidget
+from qtpy.QtCore import QPointF, QFile, QRectF
+from qtpy.QtGui import QIcon, QPalette
+from qtpy.QtWidgets import QWidget
 
 from .patshared import PortMode, BoxType
 from .init_values import canvas, options, CallbackAct

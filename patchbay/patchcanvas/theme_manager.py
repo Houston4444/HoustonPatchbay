@@ -6,7 +6,7 @@ import os
 import shutil
 from pathlib import Path
 
-from PyQt5.QtCore import QTimer
+from qtpy.QtCore import QTimer
 
 from .theme import Theme
 from .init_values import canvas, CallbackAct

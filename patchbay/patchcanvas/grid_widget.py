@@ -2,9 +2,9 @@ import inspect
 import math
 import time
 from typing import TYPE_CHECKING
-from PyQt5.QtWidgets import QGraphicsPathItem
-from PyQt5.QtGui import QPen, QColor, QBrush, QPainter, QPainterPath
-from PyQt5.QtCore import QPointF, Qt, QRectF
+from qtpy.QtWidgets import QGraphicsPathItem
+from qtpy.QtGui import QPen, QColor, QBrush, QPainter, QPainterPath
+from qtpy.QtCore import QPointF, Qt, QRectF
 
 from .init_values import canvas, options, GridStyle
 

@@ -1,6 +1,6 @@
-from PyQt5.QtCore import Qt, QPoint
-from PyQt5.QtGui import QMouseEvent, QWheelEvent, QPainter
-from PyQt5.QtWidgets import QApplication, QGraphicsView, QScrollBar
+from qtpy.QtCore import Qt, QPoint
+from qtpy.QtGui import QMouseEvent, QWheelEvent, QPainter
+from qtpy.QtWidgets import QApplication, QGraphicsView, QScrollBar
 
 from .init_values import AliasingReason, canvas
 

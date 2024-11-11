@@ -1,13 +1,13 @@
 from typing import TYPE_CHECKING, Optional
 from math import ceil
 
-from PyQt5.QtWidgets import (
+from qtpy.QtWidgets import (
     QWidget, QApplication, QMenu, QAbstractItemDelegate,
     QStyleOptionViewItem)
-from PyQt5.QtGui import (
+from qtpy.QtGui import (
     QIcon, QKeyEvent, QPen, QFont, QFontMetricsF,
     QResizeEvent, QColor, QPixmap)
-from PyQt5.QtCore import pyqtSlot, Qt, QSize, QPointF, QRect, QRectF, QModelIndex
+from qtpy.QtCore import Slot, Qt, QSize, QPointF, QRect, QRectF, QModelIndex
 
 from .patchcanvas.patshared import PortTypesViewFlag
 from .patchcanvas import canvas
@@ -230,7 +230,7 @@ class ViewSelectorWidget(QWidget):
         self.ui.comboBoxView.setItemDelegate(self.item_dellag)
         self.ui.comboBoxView.highlighted.connect(self.item_dellag.highlighted)
     
-    @pyqtSlot()
+    @Slot()
     def _before_show_menu(self):
         self._build_menu()
     
@@ -377,7 +377,7 @@ class ViewSelectorWidget(QWidget):
         self._fill_combo()
         self._build_menu()
 
-    @pyqtSlot(int)
+    @Slot(int)
     def _view_changed(self, view_number: int):
         self._filling_combo = True
 
@@ -389,21 +389,21 @@ class ViewSelectorWidget(QWidget):
         
         self._filling_combo = False
 
-    @pyqtSlot()
+    @Slot()
     def _views_changed(self):
         self._fill_combo()
         self._build_menu()
         
-    @pyqtSlot(int)
+    @Slot(int)
     def _port_types_view_changed(self, ptv_int: int):
         self.ui.comboBoxView.update()
 
-    @pyqtSlot(str)
+    @Slot(str)
     def _theme_changed(self, theme_name: str):
         self.item_dellag.update_port_colors()
         self.ui.comboBoxView.update()
 
-    @pyqtSlot(int) 
+    @Slot(int) 
     def _change_view(self, index: int):
         if self._filling_combo:
             return
@@ -422,14 +422,14 @@ class ViewSelectorWidget(QWidget):
                 elif view_number == -1:
                     self.mng.new_view()
             
-    @pyqtSlot()
+    @Slot()
     def _rename(self):
         if self.ui.comboBoxView.isEditable():
             self.ui.comboBoxView.setEditable(False)
         else:
             self.ui.comboBoxView.set_editable()
 
-    @pyqtSlot()
+    @Slot()
     def _remove(self):
         index: int = self.ui.comboBoxView.currentData()
         
@@ -443,14 +443,14 @@ class ViewSelectorWidget(QWidget):
             a.name = _translate('undo', 'Remove view n°%i') % index
             self.mng.remove_view(index)
     
-    @pyqtSlot()
+    @Slot()
     def _clear_absents(self):
         if self.mng is not None:
             with CancellableAction(self.mng, CancelOp.VIEW) as a:
                 a.name = self.sender().text()
                 self.mng.clear_absents_in_view()
 
-    @pyqtSlot()
+    @Slot()
     def _change_view_number(self):
         new_num: int = self.sender().data()
         if self.mng is not None:
@@ -459,24 +459,24 @@ class ViewSelectorWidget(QWidget):
                     self.mng.view_number, new_num)
                 self.mng.change_view_number(new_num)
 
-    @pyqtSlot()
+    @Slot()
     def _arrange_face_to_face(self):
         if self.mng is not None:
             self.mng.arrange_face_to_face()
 
-    @pyqtSlot()
+    @Slot()
     def _arrange_follow_signal(self):
         if self.mng is not None:
             self.mng.arrange_follow_signal()
 
-    @pyqtSlot()
+    @Slot()
     def _remove_all_other_views(self):
         if self.mng is not None:
             with CancellableAction(self.mng, CancelOp.ALL_VIEWS) as a:
                 a.name = self.sender().text()
                 self.mng.remove_all_other_views()
 
-    @pyqtSlot()
+    @Slot()
     def _new_view(self):
         if self.mng is not None:
             with CancellableAction(self.mng, CancelOp.ALL_VIEWS) as a:

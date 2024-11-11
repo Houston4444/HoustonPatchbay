@@ -21,8 +21,8 @@ from typing import TYPE_CHECKING, Iterator, Optional
 from enum import Enum, Flag, IntEnum, auto
 import logging
 
-from PyQt5.QtCore import QPointF, QRectF, QSettings, QPoint
-from PyQt5.QtWidgets import QGraphicsItem
+from qtpy.QtCore import QPointF, QRectF, QSettings, QPoint
+from qtpy.QtWidgets import QGraphicsItem
 
 from .patshared import (
     PortMode, PortType, PortSubType, BoxType, BoxPos, GroupPos)

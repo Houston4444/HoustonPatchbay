@@ -1,8 +1,8 @@
 from typing import TYPE_CHECKING
 
-from PyQt5.QtCore import pyqtSlot
-from PyQt5.QtGui import QIcon
-from PyQt5.QtWidgets import QMenu, QApplication, QInputDialog
+from qtpy.QtCore import Slot
+from qtpy.QtGui import QIcon
+from qtpy.QtWidgets import QMenu, QApplication, QInputDialog
 
 from .cancel_mng import CancelOp, CancellableAction
 
@@ -120,7 +120,7 @@ class ViewsMenu(QMenu):
         if not self._are_there_absents():
             act_clear_absents.setEnabled(False)
 
-    @pyqtSlot()
+    @Slot()
     def _change_view(self):
         view_number: int = self.sender().data()
         with CancellableAction(self.mng, CancelOp.VIEW_CHOICE) as a:
@@ -128,7 +128,7 @@ class ViewsMenu(QMenu):
                 self.mng.view_number, view_number)
             self.mng.change_view(view_number)
 
-    @pyqtSlot()
+    @Slot()
     def _rename_view(self):
         view_data = self.mng.views.get(self.mng.view_number)
         if view_data is None:
@@ -148,14 +148,14 @@ class ViewsMenu(QMenu):
                     self.mng.view_number, new_name)
                 self.mng.rename_current_view(new_name)
 
-    @pyqtSlot()
+    @Slot()
     def _clear_absents(self):
         with CancellableAction(self.mng, CancelOp.VIEW) as a:
             a.name = self.sender().text()
             self.mng.clear_absents_in_view()
         self._build()
 
-    @pyqtSlot()
+    @Slot()
     def _change_view_number(self):
         new_num: int = self.sender().data()
         with CancellableAction(self.mng, CancelOp.ALL_VIEWS) as a:
@@ -163,19 +163,19 @@ class ViewsMenu(QMenu):
                 self.mng.view_number, new_num)
             self.mng.change_view_number(new_num)
 
-    @pyqtSlot()
+    @Slot()
     def _remove_all_other_views(self):
         with CancellableAction(self.mng, CancelOp.ALL_VIEWS) as a:
             a.name = self.sender().text()
             self.mng.remove_all_other_views()
 
-    @pyqtSlot()
+    @Slot()
     def _new_view(self):
         with CancellableAction(self.mng, CancelOp.ALL_VIEWS) as a:
             a.name = self.sender().text()
             self.mng.new_view()
 
-    @pyqtSlot()
+    @Slot()
     def _remove_view(self):
         with CancellableAction(self.mng, CancelOp.ALL_VIEWS) as a:
             a.name = self.sender().text()

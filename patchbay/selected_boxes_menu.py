@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING
-from PyQt5.QtCore import pyqtSlot
-from PyQt5.QtGui import QIcon
-from PyQt5.QtWidgets import QMenu, QApplication
+from qtpy.QtCore import Slot
+from qtpy.QtGui import QIcon
+from qtpy.QtWidgets import QMenu, QApplication
 
 
 from . import patchcanvas
@@ -50,14 +50,14 @@ class SelectedBoxesMenu(QMenu):
         self.action_invert_selection.triggered.connect(
             self._invert_boxes_selection)
     
-    @pyqtSlot()    
+    @Slot()    
     def _new_exclusive_view(self):
         with CancellableAction(self.mng, CancelOp.ALL_VIEWS) as a:
             a.name = self.sender().text()
             patchcanvas.clear_selection()
             self.mng.new_view(exclusive_with=self._selected_boxes)
         
-    @pyqtSlot()
+    @Slot()
     def _hide_selected_boxes(self):
         with CancellableAction(self.mng, CancelOp.VIEW) as a:
             a.name = self.sender().text()
@@ -69,6 +69,6 @@ class SelectedBoxesMenu(QMenu):
 
                 group.hide(port_mode)
 
-    @pyqtSlot()
+    @Slot()
     def _invert_boxes_selection(self):
         patchcanvas.invert_boxes_selection()

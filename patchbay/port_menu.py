@@ -2,15 +2,15 @@
 from enum import IntEnum, IntFlag
 from typing import TYPE_CHECKING, Union
 
-from PyQt5.QtWidgets import (
+from qtpy.QtWidgets import (
     QMenu, QCheckBox, QFrame, QLabel, QHBoxLayout,
     QSpacerItem, QSizePolicy, QWidgetAction,
     QApplication, QAction)
-from PyQt5.QtGui import (
+from qtpy.QtGui import (
     QIcon, QColor, QKeyEvent, QPixmap, QMouseEvent,
     QCursor, QFocusEvent, QPaintEvent, QPainter,
     QPen, QBrush)
-from PyQt5.QtCore import Qt, QSize, pyqtSlot, QEvent, QPoint
+from qtpy.QtCore import Qt, QSize, Slot, QEvent, QPoint
 
 from .patchcanvas import canvas, CallbackAct, BoxType, options
 from .patchcanvas.theme import StyleAttributer
@@ -919,23 +919,23 @@ class PoMenu(AbstractConnectionsMenu):
         for conn_id in conn_ids:
             canvas.callback(CallbackAct.PORTS_DISCONNECT, conn_id)
 
-    @pyqtSlot()
+    @Slot()
     def _disconnect_all_visible(self):
         self._disconnect_all(visible_only=True)
 
-    @pyqtSlot()
+    @Slot()
     def _cb_cut(self):
         self._mng.connections_clipboard.cb_cut(self._ports())
     
-    @pyqtSlot()
+    @Slot()
     def _cb_copy(self):
         self._mng.connections_clipboard.cb_copy(self._ports())
 
-    @pyqtSlot()
+    @Slot()
     def _cb_paste(self):
         self._mng.connections_clipboard.cb_paste(self._ports())
 
-    @pyqtSlot()
+    @Slot()
     def _split_to_monos(self):
         if not isinstance(self._po, Portgroup):
             return
@@ -943,7 +943,7 @@ class PoMenu(AbstractConnectionsMenu):
         canvas.callback(CallbackAct.PORTGROUP_REMOVE,
                         self._po.group_id, self._po.portgroup_id)
         
-    @pyqtSlot()
+    @Slot()
     def _set_as_stereo_with(self):
         port: Port = self.sender().data()
         
@@ -951,7 +951,7 @@ class PoMenu(AbstractConnectionsMenu):
                         port.mode(), port.type,
                         (self._po.port_id, port.port_id))
         
-    @pyqtSlot()
+    @Slot()
     def _display_port_infos(self):
         if not isinstance(self._po, Port):
             return

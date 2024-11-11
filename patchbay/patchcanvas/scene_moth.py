@@ -24,17 +24,17 @@ from math import floor
 import time
 from typing import Optional
 
-from PyQt5.QtCore import (
+from qtpy.QtCore import (
     QT_VERSION,
-    pyqtSignal,
-    pyqtSlot,
+    Signal,
+    Slot,
     Qt,
     QPoint,
     QPointF,
     QRectF,
     QTimer)
-from PyQt5.QtGui import QCursor, QPixmap, QPolygonF, QBrush, QPainter
-from PyQt5.QtWidgets import (
+from qtpy.QtGui import QCursor, QPixmap, QPolygonF, QBrush, QPainter
+from qtpy.QtWidgets import (
     QGraphicsRectItem,
     QGraphicsScene,
     QApplication,
@@ -126,9 +126,9 @@ class PatchSceneMoth(QGraphicsScene):
     " This class is used for the scene. "
     " The child class in scene.py has all things to manage"
     " repulsives boxes."
-    scale_changed = pyqtSignal(float)
-    scene_group_moved = pyqtSignal(int, int, QPointF)
-    plugin_selected = pyqtSignal(list)
+    scale_changed = Signal(float)
+    scene_group_moved = Signal(int, int, QPointF)
+    plugin_selected = Signal(list)
 
     def __init__(self, view: PatchGraphicsView):
         QGraphicsScene.__init__(self)
@@ -864,7 +864,7 @@ class PatchSceneMoth(QGraphicsScene):
         self._view.setTransform(transform)
         self.scale_changed.emit(default_scale)
 
-    @pyqtSlot()
+    @Slot()
     def _slot_selection_changed(self):
         items_list = self.selectedItems()
 

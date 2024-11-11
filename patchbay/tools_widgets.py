@@ -1,8 +1,8 @@
 from enum import Enum, IntEnum
 from typing import TYPE_CHECKING
-from PyQt5.QtCore import QTimer, pyqtSlot, QPoint, QObject, Qt
-from PyQt5.QtGui import QPalette, QIcon
-from PyQt5.QtWidgets import (
+from qtpy.QtCore import QTimer, Slot, QPoint, QObject, Qt
+from qtpy.QtGui import QPalette, QIcon
+from qtpy.QtWidgets import (
     QWidget, QMainWindow, QAction, QApplication, QMenu)
 
 from .bar_widget_jack import BarWidgetJack
@@ -223,7 +223,7 @@ class PatchbayToolsWidget(QObject):
         
         self._resize_later()
     
-    @pyqtSlot(QPoint)
+    @Slot(QPoint)
     def _menu_asked(self, point: QPoint):
         context_actions = self._make_context_actions()
         menu = self._make_context_menu(context_actions)
@@ -297,7 +297,7 @@ class PatchbayToolsWidget(QObject):
 
         QTimer.singleShot(0, self._resize_later)        
 
-    @pyqtSlot()
+    @Slot()
     def _resize_later(self):
         if self.mng is not None and self.mng.main_win is not None:
             self.main_win_resize(self.mng.main_win)

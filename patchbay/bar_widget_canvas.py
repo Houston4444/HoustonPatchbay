@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING
 
-from PyQt5.QtCore import pyqtSlot
-from PyQt5.QtWidgets import QWidget, QApplication
+from qtpy.QtCore import Slot
+from qtpy.QtWidgets import QWidget, QApplication
 
 from .base_elements import ToolDisplayed
 from .ui.canvas_bar import Ui_Form as CanvasUiForm
@@ -49,7 +49,7 @@ class BarWidgetCanvas(QWidget):
     def set_at_end_of_line(self, end_of_line: bool):
         self.ui.widgetSpacerRight.setVisible(not end_of_line)
     
-    @pyqtSlot()
+    @Slot()
     def undo_redo_changed(self):
         if self.mng is None:
             return
@@ -74,14 +74,14 @@ class BarWidgetCanvas(QWidget):
             self.ui.toolButtonRedo.setEnabled(False)
             self.ui.toolButtonRedo.setToolTip('')
         
-    @pyqtSlot()
+    @Slot()
     def undo(self):
         if self.mng is None:
             return
         
         self.mng.cancel_mng.undo()
         
-    @pyqtSlot()
+    @Slot()
     def redo(self):
         if self.mng is None:
             return

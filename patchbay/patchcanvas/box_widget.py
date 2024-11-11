@@ -1,8 +1,8 @@
 
 from typing import Iterator, Optional
-from PyQt5.QtCore import QRectF
-from PyQt5.QtGui import QPainterPath
-from PyQt5.QtWidgets import QGraphicsItem
+from qtpy.QtCore import QRectF
+from qtpy.QtGui import QPainterPath
+from qtpy.QtWidgets import QGraphicsItem
 
 from .patshared import (
     BoxLayoutMode, PortMode, PortType, PortSubType, BoxType)

@@ -5,9 +5,9 @@ from pathlib import Path
 from dataclasses import dataclass
 from typing import Any, Callable, Iterator, Optional, Union
 
-from PyQt5.QtGui import QCursor, QGuiApplication, QKeyEvent
-from PyQt5.QtWidgets import QMainWindow, QMessageBox, QWidget
-from PyQt5.QtCore import QTimer, QSettings, QThread, Qt
+from qtpy.QtGui import QCursor, QGuiApplication, QKeyEvent
+from qtpy.QtWidgets import QMainWindow, QMessageBox, QWidget
+from qtpy.QtCore import QTimer, QSettings, QThread, Qt
 
 from .patchcanvas import arranger, patchcanvas
 from .patchcanvas.utils import get_new_group_positions

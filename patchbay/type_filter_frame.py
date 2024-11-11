@@ -1,7 +1,7 @@
 
 from typing import TYPE_CHECKING
 
-from PyQt5.QtWidgets import QFrame, QApplication
+from qtpy.QtWidgets import QFrame, QApplication
 
 
 from .patchcanvas.patshared import PortTypesViewFlag

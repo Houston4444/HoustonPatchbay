@@ -22,8 +22,8 @@ from pathlib import Path
 import time
 from typing import Callable
 
-from PyQt5.QtCore import (pyqtSlot, QObject, QPointF, QRectF,
-                          QSettings, QTimer, pyqtSignal)
+from qtpy.QtCore import (Slot, QObject, QPointF, QRectF,
+                          QSettings, QTimer, Signal)
 
 from .patshared import (
     PortMode,
@@ -91,11 +91,11 @@ def patchbay_api(func: Callable):
 
 
 class CanvasObject(QObject):
-    port_added = pyqtSignal(int, int)
-    port_removed = pyqtSignal(int, int)
-    connection_added = pyqtSignal(int)
-    connection_removed = pyqtSignal(int)
-    move_boxes_finished = pyqtSignal()
+    port_added = Signal(int, int)
+    port_removed = Signal(int, int)
+    connection_added = Signal(int)
+    connection_removed = Signal(int)
+    move_boxes_finished = Signal()
 
     def __init__(self, parent=None):
         QObject.__init__(self, parent)
@@ -122,11 +122,11 @@ class CanvasObject(QObject):
         self._aliasing_view_timer.timeout.connect(
             self._aliasing_view_timer_finished)
 
-    @pyqtSlot()
+    @Slot()
     def _connect_update_timer_finished(self):
         GroupedLinesWidget.change_all_prepared_conns()
 
-    @pyqtSlot()
+    @Slot()
     def _aliasing_move_timer_finished(self):
         if time.time() - self._aliasing_timer_started_at > 0.060:
             canvas.set_aliasing_reason(self._aliasing_reason, True)
@@ -134,7 +134,7 @@ class CanvasObject(QObject):
         if self._aliasing_reason is AliasingReason.VIEW_MOVE:
             self._aliasing_view_timer.start()
 
-    @pyqtSlot()
+    @Slot()
     def _aliasing_view_timer_finished(self):
         canvas.set_aliasing_reason(AliasingReason.VIEW_MOVE, False)
 
@@ -143,7 +143,7 @@ class CanvasObject(QObject):
         self._aliasing_timer_started_at = time.time()
         self._aliasing_move_timer.start()
 
-    @pyqtSlot()
+    @Slot()
     def _join_after_move(self):
         for group_id in self._gps_to_join:
             join_group(group_id)

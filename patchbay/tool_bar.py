@@ -2,9 +2,9 @@
 from types import NoneType
 from typing import Optional
 
-from PyQt5.QtWidgets import QToolBar, QLabel
-from PyQt5.QtGui import QMouseEvent
-from PyQt5.QtCore import Qt, QPoint, pyqtSignal, QSize
+from qtpy.QtWidgets import QToolBar, QLabel
+from qtpy.QtGui import QMouseEvent
+from qtpy.QtCore import Qt, QPoint, Signal, QSize
 
 from .surclassed_widgets import SpacerWidget
 from .hiddens_indicator import HiddensIndicator
@@ -14,7 +14,7 @@ from .bar_widget_transport import BarWidgetTransport
 
 
 class PatchbayToolBar(QToolBar):
-    menu_asked = pyqtSignal(QPoint)
+    menu_asked = Signal(QPoint)
     
     def __init__(self, parent):
         super().__init__(parent)

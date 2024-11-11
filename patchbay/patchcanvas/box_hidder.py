@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING, Optional
-from PyQt5.QtWidgets import QGraphicsItem
-from PyQt5.QtGui import QPainter, QPen, QBrush, QPolygonF
-from PyQt5.QtCore import QRectF, Qt, QPointF
+from qtpy.QtWidgets import QGraphicsItem
+from qtpy.QtGui import QPainter, QPen, QBrush, QPolygonF
+from qtpy.QtCore import QRectF, Qt, QPointF
 
 from .patshared import PortMode
 from .init_values import canvas, ZvBox

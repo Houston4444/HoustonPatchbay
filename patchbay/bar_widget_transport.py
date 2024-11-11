@@ -1,9 +1,9 @@
 import time
 from typing import TYPE_CHECKING
 
-from PyQt5.QtWidgets import QWidget
-from PyQt5.QtGui import QPalette, QIcon, QColor, QKeySequence
-from PyQt5.QtCore import pyqtSlot
+from qtpy.QtWidgets import QWidget
+from qtpy.QtGui import QPalette, QIcon, QColor, QKeySequence
+from qtpy.QtCore import Slot
 
 from .base_elements import (
     ToolDisplayed, TransportPosition, TransportViewMode)
@@ -91,17 +91,17 @@ class BarWidgetTransport(QWidget):
         self.ui.labelTime.setStyleSheet(
             f"QLabel{{background:{count_bg}; border: 2px solid {background}}}")
     
-    @pyqtSlot(bool)
+    @Slot(bool)
     def _play_clicked(self, play: bool):
         if self.mng is not None:
             self.mng.transport_play_pause(play)
     
-    @pyqtSlot()
+    @Slot()
     def _stop_clicked(self):
         if self.mng is not None:
             self.mng.transport_stop()
 
-    @pyqtSlot()
+    @Slot()
     def _rewind_clicked(self):
         if self.mng is not None:
             now = time.time()
@@ -118,7 +118,7 @@ class BarWidgetTransport(QWidget):
     
             self._bw_clicked_last_time = now
     
-    @pyqtSlot()
+    @Slot()
     def _forward_clicked(self):
         if self.mng is not None:
             now = time.time()
@@ -135,7 +135,7 @@ class BarWidgetTransport(QWidget):
     
             self._fw_clicked_last_time = now
 
-    @pyqtSlot()
+    @Slot()
     def _transport_view_changed(self):
         self.refresh_transport(self._last_transport_pos)
 

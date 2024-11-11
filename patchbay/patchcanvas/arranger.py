@@ -2,7 +2,7 @@ import logging
 from enum import IntEnum
 from typing import Optional
 
-from PyQt5.QtCore import QRectF
+from qtpy.QtCore import QRectF
 
 from .patshared import BoxLayoutMode, PortMode, BoxType, GroupPos
 from .init_values import GroupObject, canvas, CallbackAct

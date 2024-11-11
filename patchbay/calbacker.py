@@ -1,8 +1,8 @@
 from typing import TYPE_CHECKING, Callable
 
-from PyQt5.QtCore import QPoint
-from PyQt5.QtGui import QCursor
-from PyQt5.QtWidgets import QApplication
+from qtpy.QtCore import QPoint
+from qtpy.QtGui import QCursor
+from qtpy.QtWidgets import QApplication
 
 from . import patchcanvas
 from .patchcanvas.patshared import (

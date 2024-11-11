@@ -19,10 +19,10 @@
 
 from typing import TYPE_CHECKING, Optional, Iterator
 
-from PyQt5.QtCore import Qt
-from PyQt5.QtGui import (QColor, QLinearGradient,
+from qtpy.QtCore import Qt
+from qtpy.QtGui import (QColor, QLinearGradient,
                          QPainterPath, QPen, QBrush)
-from PyQt5.QtWidgets import QGraphicsPathItem
+from qtpy.QtWidgets import QGraphicsPathItem
 
 from .patshared import PortType, PortMode
 from .init_values import (

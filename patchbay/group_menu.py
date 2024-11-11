@@ -1,8 +1,8 @@
 from typing import TYPE_CHECKING
 
-from PyQt5.QtWidgets import QMenu, QApplication
-from PyQt5.QtCore import pyqtSlot
-from PyQt5.QtGui import QIcon, QPixmap
+from qtpy.QtWidgets import QMenu, QApplication
+from qtpy.QtCore import Slot
+from qtpy.QtGui import QIcon, QPixmap
 
 from .cancel_mng import CancelOp, CancellableAction
 from .patchcanvas.patshared import PortMode, BoxLayoutMode
@@ -94,7 +94,7 @@ class DisconnectMenu(QMenu):
                         PortMode.INPUT, dark=use_dark_icon))
                 group_act.triggered.connect(self._apply_disconnections)
                 
-    @pyqtSlot()
+    @Slot()
     def _apply_disconnections(self):
         data : tuple[PortMode, Group] = self.sender().data()
         port_mode, group = data
@@ -213,7 +213,7 @@ class GroupMenu(QMenu):
                     canvas.callback(
                         CallbackAct.PORTS_DISCONNECT, conn.connection_id)
     
-    @pyqtSlot()
+    @Slot()
     def _join(self):
         with CancellableAction(self._mng, CancelOp.VIEW) as a:
             a.name = _translate('undo', 'Join "%s"') % self._group.cnv_name
@@ -228,26 +228,26 @@ class GroupMenu(QMenu):
             patchcanvas.move_group_boxes(self._group.group_id, gpos)
             patchcanvas.repulse_from_group(self._group.group_id, PortMode.BOTH)
     
-    @pyqtSlot()  
+    @Slot()  
     def _split(self):
         with CancellableAction(self._mng, CancelOp.VIEW) as a:
             a.name = _translate('undo', 'Split "%s"') % self._group.cnv_name
             patchcanvas.split_group(self._group.group_id, on_place=True)
 
-    @pyqtSlot()
+    @Slot()
     def _wrap(self):
         canvas.callback(CallbackAct.GROUP_WRAP,
                         self._group.group_id, self._port_mode,
                         not self._is_wrapped)
         
-    @pyqtSlot()
+    @Slot()
     def _auto_layout(self):
         with CancellableAction(self._mng, CancelOp.VIEW) as a:
             a.name = _translate('undo', 'Set auto layout for "%s"') \
                 % self._group.cnv_name
             self._group.set_layout_mode(self._port_mode, BoxLayoutMode.AUTO)
         
-    @pyqtSlot()
+    @Slot()
     def _change_layout(self):
         current_layout = patchcanvas.get_box_true_layout(
             self._group.group_id, self._port_mode)
@@ -264,7 +264,7 @@ class GroupMenu(QMenu):
                 % (self._group.cnv_name, next_layout.name)
             self._group.set_layout_mode(self._port_mode, next_layout)
     
-    @pyqtSlot()
+    @Slot()
     def _hide_box(self):
         with CancellableAction(self._mng, CancelOp.VIEW) as a:
             a.name = _translate('undo', 'Hide "%s"') \

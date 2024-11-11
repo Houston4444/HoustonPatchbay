@@ -6,8 +6,8 @@ import time
 import pickle
 from typing import TYPE_CHECKING, Union
 
-from PyQt5.QtCore import Qt
-from PyQt5.QtGui import (QColor, QPen, QFont, QBrush, QFontMetricsF,
+from qtpy.QtCore import Qt
+from qtpy.QtGui import (QColor, QPen, QFont, QBrush, QFontMetricsF,
                          QImage, QFontDatabase)
 
 from . import xdg
