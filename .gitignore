@@ -4,10 +4,12 @@
 !/.git
 !/.gitignore
 
+
 #UI builds
 /patchbay/ui/*.py
 
 #resources qt build
+build_config
 /patchbay/resources_rc.py
 
 /patchbay/.*
