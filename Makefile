@@ -4,21 +4,49 @@
 # Created by houston4444
 #
 
-PYUIC := pyuic5
+LRELEASE ?= lrelease
+QT_VERSION ?= 5
 PYRCC := pyrcc5
 
-LRELEASE := lrelease
-ifeq (, $(shell which $(LRELEASE)))
- LRELEASE := lrelease-qt5
+
+# if you set QT_VERSION environment variable to 6 at the make command
+# it will choose the other commands QT_API, pyuic6, pylupdate6.
+
+ifeq ($(QT_VERSION), 6)
+	QT_API ?= PyQt6
+	PYUIC ?= pyuic6
+	PYLUPDATE ?= pylupdate6
+	ifeq (, $(shell which $(LRELEASE)))
+		LRELEASE := lrelease-qt6
+	endif
+else
+    QT_API ?= PyQt5
+	PYUIC ?= pyuic5
+	PYLUPDATE ?= pylupdate5
+	ifeq (, $(shell which $(LRELEASE)))
+		LRELEASE := lrelease-qt5
+	endif
 endif
 
-ifeq (, $(shell which $(LRELEASE)))
- LRELEASE := lrelease-qt4
-endif
+# neeeded for make install
+BUILD_CFG_FILE := build_config
+QT_API_INST := $(shell grep ^QT_API= $(BUILD_CFG_FILE) 2>/dev/null| cut -d'=' -f2)
+QT_API_INST ?= PyQt5
 
 # ---------------------
 
-all: RES UI LOCALE
+all: QT_PREPARE RES UI LOCALE
+
+QT_PREPARE:
+	$(info compiling for Qt$(QT_VERSION) using $(QT_API))
+	$(file > $(BUILD_CFG_FILE),QT_API=$(QT_API))
+
+    ifeq ($(QT_API), $(QT_API_INST))
+    else
+		rm -f *~ patchbay/resources_rc.py \
+			 locale/*.qm patchbay/ui/*.py
+    endif
+	install -d patchbay/ui/
 
 # ---------------------
 # Resources
@@ -26,28 +54,26 @@ all: RES UI LOCALE
 RES: patchbay/resources_rc.py
 
 patchbay/resources_rc.py: resources/resources.qrc
-	$(PYRCC) $< -o $@
+	rcc -g python $< |sed 's/ PySide. / qtpy /' > $@
 
 # ---------------------
 # UI code
 
-UI: mkdir_ui patchbay 
-
-mkdir_ui:
-	@if ! [ -e patchbay/ui ];then mkdir -p patchbay/ui; fi
-
-patchbay: $(shell \
+UI: $(shell \
 	ls resources/ui/*.ui| sed 's|\.ui$$|.py|'| sed 's|^resources/|patchbay/|')
 
 patchbay/ui/%.py: resources/ui/%.ui
-	$(PYUIC) --import-from=.. $< -o $@
+ifeq ($(PYUIC), pyuic6)
+	$(PYUIC) $< > $@
+	echo 'import resources_rc' >> $@
+else
+	$(PYUIC) $< > $@
+endif
 		
 # ------------------------
 # # Translations Files
 
-LOCALE: locale
-
-locale: locale/patchbay_en.qm  \
+LOCALE: locale/patchbay_en.qm  \
 		locale/patchbay_fr.qm
 
 locale/%.qm: locale/%.ts
