@@ -42,7 +42,7 @@ class PatchGraphicsView(QGraphicsView):
 
     def mousePressEvent(self, event):
         if (event.button() == self._middle_button
-                and not QApplication.keyboardModifiers() & Qt.ControlModifier):
+                and not QApplication.keyboardModifiers() & Qt.KeyboardModifier.ControlModifier):
             self._panning = True
             self.setDragMode(QGraphicsView.ScrollHandDrag)
             event = QMouseEvent(event.type(), event.pos(), Qt.LeftButton,
@@ -68,9 +68,10 @@ class PatchGraphicsView(QGraphicsView):
             x, y = ev.angleDelta().x(), ev.angleDelta().y()
             new_delta = QPoint(y, x)
             new_event = QWheelEvent(
-                ev.posF(), ev.globalPosF(), ev.pixelDelta(), new_delta,
+                ev.position(), ev.globalPosition(),
+                ev.pixelDelta(), new_delta,
                 ev.buttons(), Qt.KeyboardModifier.AltModifier,
-                ev.phase(), ev.inverted(), ev.source())
+                ev.phase(), ev.inverted())
             QGraphicsView.wheelEvent(self, new_event)
             return
 

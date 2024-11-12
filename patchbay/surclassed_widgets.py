@@ -143,7 +143,7 @@ class ZoomSlider(QSlider):
     def wheelEvent(self, event: QWheelEvent):
         direction = 1 if event.angleDelta().y() > 0 else -1
 
-        if QApplication.keyboardModifiers() & Qt.ControlModifier:
+        if QApplication.keyboardModifiers() & Qt.KeyboardModifier.ControlModifier:
             self.set_percent(self.zoom_percent() + direction)
         else:
             self.set_percent(self.zoom_percent() + direction * 5)
@@ -229,7 +229,7 @@ class TypeViewCheckBox(QCheckBox):
         if event.button() in (Qt.LeftButton, Qt.RightButton):
             alternate = bool(
                 event.button() == Qt.RightButton
-                or QApplication.keyboardModifiers() & Qt.ControlModifier)
+                or QApplication.keyboardModifiers() & Qt.KeyboardModifier.ControlModifier)
             self.really_clicked.emit(alternate)
             return
     

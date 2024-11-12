@@ -24,7 +24,7 @@ from typing import TYPE_CHECKING
 from qtpy.QtCore import QPointF, QRectF, Qt
 from qtpy.QtGui import (QFontMetrics, QPainter, QBrush,
                          QPolygonF, QLinearGradient, QPen,
-                         QColor)
+                         QColor, QScreen)
 from qtpy.QtWidgets import QApplication, QGraphicsItem
 
 from .connectable_widget import ConnectableWidget
@@ -194,18 +194,20 @@ class PortgroupWidget(ConnectableWidget):
         canvas.menu_shown = True
 
         is_only_connect = bool(
-            QApplication.keyboardModifiers() & Qt.ControlModifier)
+            QApplication.keyboardModifiers()
+            & Qt.KeyboardModifier.ControlModifier)
         
         self.parentItem().setFlag(QGraphicsItem.ItemIsMovable, False)
-        
         start_point = canvas.scene.screen_position(
             self.scenePos() + QPointF(0.0, self.boundingRect().bottom()))
-        bottom_screen = QApplication.desktop().screenGeometry().bottom()
+        bottom_screen = QApplication.primaryScreen().geometry().bottom()
+        # bottom_screen = QApplication.desktop().screenGeometry().bottom()
         more = 12 if self._port_mode is PortMode.OUTPUT else 0
 
         if start_point.y() + 250 > bottom_screen:
             start_point = canvas.scene.screen_position(
-                self.scenePos() + QPointF(self._portgrp_width + more, self._portgrp_height))
+                self.scenePos()
+                + QPointF(self._portgrp_width + more, self._portgrp_height))
         
         canvas.callback(
             CallbackAct.PORTGROUP_MENU_CALL, self._group_id, self._portgrp_id,

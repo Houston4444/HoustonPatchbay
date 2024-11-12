@@ -916,7 +916,7 @@ class PatchSceneMoth(QGraphicsScene):
             self.zoom_fit()
             return
 
-        elif QApplication.keyboardModifiers() & Qt.ControlModifier:
+        elif QApplication.keyboardModifiers() & Qt.KeyboardModifier.ControlModifier:
             if event.key() == Qt.Key_Plus:
                 event.accept()
                 self.zoom_in()
@@ -1103,7 +1103,7 @@ class PatchSceneMoth(QGraphicsScene):
                 if isinstance(item, (BoxWidget, ConnectableWidget)):
                     break
             else:
-                if int(event.buttons()):
+                if event.buttons() != 0:
                     self._mouse_rubberband = True
             
         if self._mouse_rubberband:
@@ -1127,7 +1127,7 @@ class PatchSceneMoth(QGraphicsScene):
                 abs(pos_y - rubb_orig_point.y()))
 
         if (self._mid_button_down
-                and QApplication.keyboardModifiers() & Qt.ControlModifier):
+                and QApplication.keyboardModifiers() & Qt.KeyboardModifier.ControlModifier):
             for item in self.items(
                     QPolygonF([event.scenePos(), event.lastScenePos(),
                                event.scenePos()])):
@@ -1192,7 +1192,7 @@ class PatchSceneMoth(QGraphicsScene):
             self._mid_button_down = False
 
             # Connection cut mode off
-            if QApplication.keyboardModifiers() & Qt.ControlModifier:
+            if QApplication.keyboardModifiers() & Qt.KeyboardModifier.ControlModifier:
                 self.unset_cursor()
             return
 
@@ -1205,7 +1205,7 @@ class PatchSceneMoth(QGraphicsScene):
 
         canvas.qobject.start_aliasing_check(AliasingReason.VIEW_MOVE)
 
-        if QApplication.keyboardModifiers() & Qt.ControlModifier:
+        if QApplication.keyboardModifiers() & Qt.KeyboardModifier.ControlModifier:
             self.zoom_wheel(event.delta())
             event.accept()
             return
@@ -1221,7 +1221,7 @@ class PatchSceneMoth(QGraphicsScene):
             if isinstance(item, (BoxWidget, ConnectableWidget)):
                 break
         else:
-            if QApplication.keyboardModifiers() & Qt.ControlModifier:
+            if QApplication.keyboardModifiers() & Qt.KeyboardModifier.ControlModifier:
                 event.accept()
                 self._trigger_rubberband_scale()
                 return

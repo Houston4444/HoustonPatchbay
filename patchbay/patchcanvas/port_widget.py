@@ -251,7 +251,7 @@ class PortWidget(ConnectableWidget):
 
         canvas.menu_shown = True
         is_only_connect = bool(
-            QApplication.keyboardModifiers() & Qt.ControlModifier)
+            QApplication.keyboardModifiers() & Qt.KeyboardModifier.ControlModifier)
 
         # precise the menu start point to still view the port
         # and be able to read its portgroup name.
@@ -264,7 +264,7 @@ class PortWidget(ConnectableWidget):
                 self.scenePos() + QPointF(
                     0.0, canvas.theme.port_height * (0.5 + self._pg_len / 2.0)))
             
-        bottom_screen = QApplication.desktop().screenGeometry().bottom()
+        bottom_screen = QApplication.primaryScreen().geometry().bottom()
         more = 12 if self._port_mode is PortMode.OUTPUT else 0
 
         if start_point.y() + 250 > bottom_screen:

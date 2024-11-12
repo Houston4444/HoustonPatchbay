@@ -756,7 +756,7 @@ class BoxWidgetMoth(QGraphicsItem):
 
         self._mouse_down = False
 
-        if (QApplication.keyboardModifiers() & Qt.ShiftModifier
+        if (QApplication.keyboardModifiers() & Qt.KeyboardModifier.ShiftModifier
                 and not self._cursor_moving):
             return
         

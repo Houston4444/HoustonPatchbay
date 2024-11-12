@@ -37,9 +37,9 @@ class PatchbayToolBar(QToolBar):
             return
         
         # execute the menu, exit if no action
-        point = event.screenPos().toPoint()
+        point = QPoint(int(event.scenePosition().x()), 0)
         point.setY(self.mapToGlobal(QPoint(0, self.height())).y())
-        
+
         self.menu_asked.emit(point)
     
     def sizeHint(self) -> QSize:

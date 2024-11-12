@@ -42,6 +42,13 @@ class ConnState(IntEnum):
     NONE = 0
     IRREGULAR = 1
     REGULAR = 2
+    
+    def to_qt_check_state(self):
+        if self is ConnState.NONE:
+            return Qt.CheckState.Unchecked
+        if self is ConnState.IRREGULAR:
+            return Qt.CheckState.PartiallyChecked
+        return Qt.CheckState.Checked
 
 
 class ExistingConns(IntFlag):
@@ -279,8 +286,9 @@ class CheckFrame(QFrame):
         
         
 
-    def set_check_state(self, check_state: int):
-        self._check_box.setCheckState(check_state)
+    def set_check_state(self, check_state: ConnState):
+        self._check_box.setCheckState(
+            check_state.to_qt_check_state())
 
     def connection_asked_from_box(self, po: Union[Port, Portgroup], yesno: bool):
         self._parent.connection_asked_from_box(self._p_object, yesno)
