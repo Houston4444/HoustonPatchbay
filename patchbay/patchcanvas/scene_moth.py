@@ -83,7 +83,7 @@ class RubberbandRect(QGraphicsRectItem):
 class MovingBox:
     widget: BoxWidget
     from_pt: QPointF
-    to_pt: QPoint
+    to_pt: QPointF
     final_rect: QRectF
     start_time: float
     is_joining: bool
@@ -516,8 +516,8 @@ class PatchSceneMoth(QGraphicsScene):
                 moving_box.is_joining = False
                 canvas.qobject.rm_group_to_join(box_widget.get_group_id())
 
-        moving_box.from_pt = QPoint(*box_widget.top_left())
-        moving_box.to_pt = QPoint(to_x, to_y)
+        moving_box.from_pt = QPointF(*box_widget.top_left())
+        moving_box.to_pt = QPointF(to_x, to_y)
         moving_box.needs_move = bool(moving_box.from_pt != moving_box.to_pt)
         
         if joining is Joining.YES or not box_widget.isVisible():

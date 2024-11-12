@@ -22,7 +22,8 @@ import os
 
 from qtpy.QtCore import QRectF, QFile, Qt
 from qtpy.QtGui import QPainter, QIcon, QPixmap
-from qtpy.QtSvg import QGraphicsSvgItem, QSvgRenderer
+from qtpy.QtSvg import QSvgRenderer
+from qtpy.QtSvgWidgets import QGraphicsSvgItem
 from qtpy.QtWidgets import QGraphicsPixmapItem
 
 from .patshared import BoxType, PortMode

@@ -3,7 +3,7 @@
 !/.github
 !/.git
 !/.gitignore
-
+build_config
 
 #UI builds
 /patchbay/ui/*.py

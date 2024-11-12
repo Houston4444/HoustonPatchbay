@@ -21,9 +21,16 @@ import logging
 from math import ceil
 from struct import pack
 from typing import Optional, Union
-from sip import voidptr
+
+try:
+    from sip import voidptr
+except:
+    # not really used for now because there is no InlineDisplay
+    pass
+
 import sys
 from enum import Enum
+
 from qtpy.QtCore import Qt, QPointF, QRectF, QTimer, QMarginsF
 from qtpy.QtGui import (QCursor, QFontMetrics, QImage, QFont,
                          QLinearGradient, QPainter, QPen, QPolygonF,

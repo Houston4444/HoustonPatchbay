@@ -1,5 +1,5 @@
 #!/usr/bin/make -f
-# Makefile for houston_patchbay #
+# Makefile for HoustonPatchbay #
 # ---------------------- #
 # Created by houston4444
 #
@@ -65,9 +65,9 @@ UI: $(shell \
 patchbay/ui/%.py: resources/ui/%.ui
 ifeq ($(PYUIC), pyuic6)
 	$(PYUIC) $< > $@
-	echo 'import resources_rc' >> $@
+	echo 'from .. import resources_rc' >> $@
 else
-	$(PYUIC) $< > $@
+	$(PYUIC) --import-from=.. $< > $@
 endif
 		
 # ------------------------
