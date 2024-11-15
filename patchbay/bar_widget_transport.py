@@ -17,7 +17,8 @@ if TYPE_CHECKING:
 def is_dark_theme(widget: QWidget) -> bool:
     return bool(
         widget.palette().brush(
-            QPalette.Active, QPalette.WindowText).color().lightness()
+            QPalette.ColorGroup.Active,
+            QPalette.ColorRole.WindowText).color().lightness()
         > 128)
 
 
