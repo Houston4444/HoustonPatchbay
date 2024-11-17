@@ -6,7 +6,6 @@ from qtpy import QT5
 from qtpy.QtWidgets import QToolBar, QLabel
 from qtpy.QtGui import QMouseEvent
 from qtpy.QtCore import Qt, QPoint, Signal, QSize
-from qtpy import QT_VERSION
 
 from .surclassed_widgets import SpacerWidget
 from .hiddens_indicator import HiddensIndicator
