@@ -52,7 +52,7 @@ class BarWidgetTransport(QWidget):
         
         # set theme
         app_bg = self.ui.labelTempo.palette().brush(
-            QPalette.Active, QPalette.Button).color()
+            QPalette.ColorGroup.Active, QPalette.ColorRole.Button).color()
         
         scheme = 'dark' if dark else 'light'
         self._icon_play = QIcon(

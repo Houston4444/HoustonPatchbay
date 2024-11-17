@@ -262,8 +262,9 @@ class PatchScene(PatchSceneMoth):
                           canvas.theme.box_spacing))
                 
                 # search intersections in non moving boxes
-                for widget in self.items(search_rect, Qt.IntersectsItemShape,
-                                        Qt.AscendingOrder):
+                for widget in self.items(
+                        search_rect, Qt.ItemSelectionMode.IntersectsItemShape,
+                        Qt.SortOrder.AscendingOrder):
                     if not isinstance(widget, BoxWidget):
                         continue
                     

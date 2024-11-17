@@ -127,7 +127,7 @@ class ItemmDeleg(QAbstractItemDelegate):
         text_brush = QApplication.palette().text()
         
         if row == self._highlighted_index:            
-            painter.setPen(QPen(Qt.NoPen))
+            painter.setPen(QPen(Qt.PenStyle.NoPen))
             painter.setBrush(QApplication.palette().highlight())
             painter.drawRect(QRect(
                 0, row * self._height, self._width, self._height))
@@ -492,7 +492,7 @@ class ViewSelectorWidget(QWidget):
 
     def keyPressEvent(self, event: QKeyEvent):
         if (self.ui.comboBoxView.isEditable()
-                and event.key() in (Qt.Key_Return, Qt.Key_Enter)):
+                and event.key() in (Qt.Key.Key_Return, Qt.Key.Key_Enter)):
             self.mng.write_view_data(
                 self._selected_view, name=self._editing_text)
             self.ui.comboBoxView.setEditable(False)

@@ -2,6 +2,7 @@
 from types import NoneType
 from typing import Optional
 
+from qtpy import QT5
 from qtpy.QtWidgets import QToolBar, QLabel
 from qtpy.QtGui import QMouseEvent
 from qtpy.QtCore import Qt, QPoint, Signal, QSize
@@ -19,7 +20,7 @@ class PatchbayToolBar(QToolBar):
     
     def __init__(self, parent):
         super().__init__(parent)
-        self.setContextMenuPolicy(Qt.PreventContextMenu)
+        self.setContextMenuPolicy(Qt.ContextMenuPolicy.PreventContextMenu)
         self._min_width: Optional[int] = None
 
     def set_min_width(self, width: int):
@@ -29,7 +30,7 @@ class PatchbayToolBar(QToolBar):
         child_widget = self.childAt(event.pos())
         super().mousePressEvent(event)
 
-        if (event.button() != Qt.RightButton
+        if (event.button() != Qt.MouseButton.RightButton
                 or not isinstance(
                     child_widget,
                     (QLabel, BarWidgetCanvas,
@@ -38,7 +39,7 @@ class PatchbayToolBar(QToolBar):
             return
         
         # execute the menu, exit if no action
-        if QT_VERSION.startswith('5.'):
+        if QT5:
             point = event.screenPos().toPoint()
         else:
             point = QPoint(int(event.scenePosition().x()), 0)

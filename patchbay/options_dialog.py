@@ -147,7 +147,7 @@ class CanvasOptionsDialog(QDialog):
         patchcanvas.zoom_reset()
 
     def _theme_box_activated(self):
-        current_theme_ref_id = self.ui.comboBoxTheme.currentData(Qt.UserRole)
+        current_theme_ref_id = self.ui.comboBoxTheme.currentData(Qt.ItemDataRole.UserRole)
         if current_theme_ref_id == self._current_theme_ref:
             return
         
@@ -178,7 +178,7 @@ class CanvasOptionsDialog(QDialog):
                 self, _translate('patchbay_theme', 'Copy failed !'), message)
 
     def _edit_theme(self):
-        current_theme_ref_id = self.ui.comboBoxTheme.currentData(Qt.UserRole)
+        current_theme_ref_id = self.ui.comboBoxTheme.currentData(Qt.ItemDataRole.UserRole)
         
         for theme_data in self._theme_list:
             if (theme_data.ref_id == current_theme_ref_id
@@ -227,7 +227,7 @@ class CanvasOptionsDialog(QDialog):
 
     def set_theme(self, theme_ref: str):
         for i in range(self.ui.comboBoxTheme.count()):
-            ref_id = self.ui.comboBoxTheme.itemData(i, Qt.UserRole)
+            ref_id = self.ui.comboBoxTheme.itemData(i, Qt.ItemDataRole.UserRole)
             if ref_id == theme_ref:
                 self.ui.comboBoxTheme.setCurrentIndex(i)
                 break
@@ -236,7 +236,7 @@ class CanvasOptionsDialog(QDialog):
             # update the list and select it if it exists
             self.set_theme_list(patchcanvas.list_themes())
             for i in range(self.ui.comboBoxTheme.count()):
-                ref_id = self.ui.comboBoxTheme.itemData(i, Qt.UserRole)
+                ref_id = self.ui.comboBoxTheme.itemData(i, Qt.ItemDataRole.UserRole)
                 if ref_id == theme_ref:
                     self.ui.comboBoxTheme.setCurrentIndex(i)
                     

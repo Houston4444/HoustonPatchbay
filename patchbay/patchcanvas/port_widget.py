@@ -192,7 +192,7 @@ class PortWidget(ConnectableWidget):
         self._update_connect_pos()
 
     def itemChange(self, change: int, value: bool):
-        if change == QGraphicsItem.ItemSelectedHasChanged:            
+        if change == QGraphicsItem.GraphicsItemChange.ItemSelectedHasChanged:            
             if self.changing_select_state:
                 self.changing_select_state = False
                 return
@@ -289,7 +289,7 @@ class PortWidget(ConnectableWidget):
             return
         
         painter.save()
-        painter.setRenderHint(QPainter.Antialiasing, True)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
         
         theme = canvas.theme.port
 
@@ -420,7 +420,7 @@ class PortWidget(ConnectableWidget):
             polygon += QPointF(*xy)
 
         if poly_image is not None:
-            painter.setPen(Qt.NoPen)
+            painter.setPen(Qt.PenStyle.NoPen)
             painter.setBrush(QBrush(poly_image))
             painter.drawPolygon(polygon)
 

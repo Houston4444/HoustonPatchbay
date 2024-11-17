@@ -21,8 +21,8 @@ from enum import Enum
 from typing import TYPE_CHECKING
 
 from qtpy.QtCore import Qt
-from qtpy.QtGui import (QColor, QLinearGradient, QPainter,
-                         QPainterPath, QPen, QBrush)
+from qtpy.QtGui import (QColor, QLinearGradient,
+                        QPainterPath, QPen, QBrush)
 from qtpy.QtWidgets import QGraphicsPathItem
 
 from .patshared import PortType
@@ -189,7 +189,7 @@ class LineWidget(QGraphicsPathItem):
                 port_gradient.setColorAt(0.5, color_alter)
                 port_gradient.setColorAt(1.0, color_main)
             
-            self.setPen(QPen(port_gradient, tha.base_width, Qt.SolidLine, Qt.FlatCap))
+            self.setPen(QPen(port_gradient, tha.base_width, Qt.PenStyle.SolidLine, Qt.PenCapStyle.FlatCap))
         else:
             if self._semi_hidden:
                 shd = options.semi_hide_opacity
@@ -203,7 +203,7 @@ class LineWidget(QGraphicsPathItem):
             else:
                 color_main = tha.color_main
         
-            pen = QPen(QBrush(color_main), tha.base_width, Qt.SolidLine, Qt.FlatCap)
+            pen = QPen(QBrush(color_main), tha.base_width, Qt.PenStyle.SolidLine, Qt.PenCapStyle.FlatCap)
             pen.setCosmetic(True)
             self.setPen(pen)
         
@@ -212,7 +212,7 @@ class LineWidget(QGraphicsPathItem):
     #         return
     #     # return
     #     painter.save()
-    #     painter.setRenderHint(QPainter.Antialiasing, True)
+    #     painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
 
     #     QGraphicsPathItem.paint(self, painter, option, widget)
 
@@ -221,7 +221,7 @@ class LineWidget(QGraphicsPathItem):
     #     cosm_pen.setWidthF(1.00001)
 
     #     painter.setPen(cosm_pen)
-    #     painter.setBrush(Qt.NoBrush)
+    #     painter.setBrush(Qt.BrushStyle.NoBrush)
     #     painter.drawPath(self.path())
 
     #     painter.restore()

@@ -74,7 +74,7 @@ class BoxHidder(QGraphicsItem):
             polygon += QPointF(*xy)
 
         if canvas.theme.scene_background_image is not None:
-            painter.setPen(QPen(Qt.NoPen))
+            painter.setPen(QPen(Qt.PenStyle.NoPen))
             bg_brush = QBrush()
             bg_brush.setTextureImage(canvas.theme.scene_background_image)
             painter.setBrush(bg_brush)

@@ -125,14 +125,15 @@ class HiddenConnWidget(QGraphicsPathItem):
             color_main = tha.color_main
     
         self.setPen(QPen(
-            QBrush(color_main), tha.base_width * 0.5, Qt.SolidLine, Qt.FlatCap))
+            QBrush(color_main), tha.base_width * 0.5,
+            Qt.PenStyle.SolidLine, Qt.PenCapStyle.FlatCap))
         
     def paint(self, painter, option, widget):
         if canvas.loading_items:
             return
         
         painter.save()
-        painter.setRenderHint(QPainter.Antialiasing, True)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
 
         QGraphicsPathItem.paint(self, painter, option, widget)
 
@@ -141,7 +142,7 @@ class HiddenConnWidget(QGraphicsPathItem):
         cosm_pen.setWidthF(1.00001)
 
         painter.setPen(cosm_pen)
-        painter.setBrush(Qt.NoBrush)
+        painter.setBrush(Qt.BrushStyle.NoBrush)
         painter.drawPath(self.path())
 
         painter.restore()

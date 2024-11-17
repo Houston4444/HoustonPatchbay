@@ -213,21 +213,21 @@ def canvas_callback(action: CallbackAct, *args):
 
 def is_dark_theme(widget: QWidget) -> bool:
     return bool(
-        widget.palette().brush(QPalette.Active,
-                               QPalette.WindowText).color().lightness()
+        widget.palette().brush(QPalette.ColorGroup.Active,
+                               QPalette.ColorRole.WindowText).color().lightness()
         > 128)
 
 def boxes_in_dict(boxes: 'list[BoxWidget]') -> dict[int, PortMode]:
-        '''concatenate a list of boxes to have a dict
-        where key is group_id.'''
-        serial_dict = dict[int, PortMode]()
-        for box in boxes:
-            pmode = serial_dict.get(box._group_id)
-            if pmode is None:
-                serial_dict[box._group_id] = box._port_mode
-            else:
-                serial_dict[box._group_id] |= box._port_mode
-        return serial_dict
+    '''concatenate a list of boxes to have a dict
+    where key is group_id.'''
+    serial_dict = dict[int, PortMode]()
+    for box in boxes:
+        pmode = serial_dict.get(box._group_id)
+        if pmode is None:
+            serial_dict[box._group_id] = box._port_mode
+        else:
+            serial_dict[box._group_id] |= box._port_mode
+    return serial_dict
 
 def nearest_on_grid(xy: tuple[int, int]) -> tuple[int, int]:
     x, y = xy

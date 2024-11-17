@@ -225,7 +225,7 @@ class IconSvgWidget(QGraphicsSvgItem):
             return
 
         self._renderer = QSvgRenderer(icon_path, canvas.scene)
-        self._renderer.setAspectRatioMode(Qt.KeepAspectRatio)
+        self._renderer.setAspectRatioMode(Qt.AspectRatioMode.KeepAspectRatio)
         self.setSharedRenderer(self._renderer)
         self.update()
         
@@ -244,13 +244,13 @@ class IconSvgWidget(QGraphicsSvgItem):
     def boundingRect(self):
         return self._size
 
-    def paint(self, painter, option, widget):
+    def paint(self, painter: QPainter, option, widget):
         if not self._renderer:
             QGraphicsSvgItem.paint(self, painter, option, widget)
             return
 
         painter.save()
-        painter.setRenderHint(QPainter.Antialiasing, False)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing, False)
         painter.setRenderHint(QPainter.TextAntialiasing, False)
         self._renderer.render(painter, self._size)
         painter.restore()

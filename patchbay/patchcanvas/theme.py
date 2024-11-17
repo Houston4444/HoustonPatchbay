@@ -158,15 +158,15 @@ class StyleAttributer:
             if isinstance(value, str):
                 value = value.lower()
                 if value in ('solid', 'normal'):
-                    self._border_style = Qt.SolidLine
+                    self._border_style = Qt.PenStyle.SolidLine
                 elif value in ('nopen', 'none'):
-                    self._border_style = Qt.NoPen
+                    self._border_style = Qt.PenStyle.NoPen
                 elif value == 'dash':
-                    self._border_style = Qt.DashLine
+                    self._border_style = Qt.PenStyle.DashLine
                 elif value == 'dashdot':
-                    self._border_style = Qt.DashDotLine
+                    self._border_style = Qt.PenStyle.DashDotLine
                 elif value == 'dashdotdot':
-                    self._border_style = Qt.DashDotDotLine
+                    self._border_style = Qt.PenStyle.DashDotDotLine
                 else:
                     err = True
             else:
@@ -232,7 +232,7 @@ class StyleAttributer:
             elif isinstance(value, str):
                 value = value.lower()
                 if value == 'normal':
-                    self._font_state = QFont.Normal
+                    self._font_state = QFont.Weight.Normal
                 elif value == 'bold':
                     self._font_state = QFont.Bold
                 else:
@@ -615,7 +615,7 @@ class Theme(StyleAttributer):
         # fallbacks values for all (ugly style, but better than nothing)
         self._border_color = QColor('white')
         self._border_width = 1
-        self._border_style = Qt.SolidLine
+        self._border_style = Qt.PenStyle.SolidLine
         self._border_radius = 0
         self._background_color = QColor('black')
         self._background2_color = QColor('black')
@@ -623,7 +623,7 @@ class Theme(StyleAttributer):
         self._text_color = QColor('white')
         self._font_name = "Deja Vu Sans"
         self._font_size = 11
-        self._font_width = QFont.Normal # QFont.Normal is 50
+        self._font_width = QFont.Weight.Normal # QFont.Weight.Normal is 50
 
         self._port_spacing = 2
         self._port_type_spacing = 2

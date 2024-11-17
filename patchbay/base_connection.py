@@ -80,16 +80,3 @@ class Connection:
 
         patchcanvas.disconnect_ports(self.connection_id)
         self.in_canvas = False
-
-    def semi_hide(self, yesno: bool):
-        if not self.in_canvas:
-            return
-        
-        patchcanvas.semi_hide_connection(
-            self.connection_id, yesno)
-    
-    def set_in_front(self):
-        if not self.in_canvas:
-            return
-        
-        patchcanvas.set_connection_in_front(self.connection_id)

@@ -163,7 +163,7 @@ class PortgroupWidget(ConnectableWidget):
         self.setSelected(True)
 
     def itemChange(self, change: int, value: bool):
-        if change == QGraphicsItem.ItemSelectedHasChanged:
+        if change == QGraphicsItem.GraphicsItemChange.ItemSelectedHasChanged:
             self.changing_select_state = True
             
             modify_port_selection = True
@@ -197,7 +197,7 @@ class PortgroupWidget(ConnectableWidget):
             QApplication.keyboardModifiers()
             & Qt.KeyboardModifier.ControlModifier)
         
-        self.parentItem().setFlag(QGraphicsItem.ItemIsMovable, False)
+        self.parentItem().setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsMovable, False)
         start_point = canvas.scene.screen_position(
             self.scenePos() + QPointF(0.0, self.boundingRect().bottom()))
         bottom_screen = QApplication.primaryScreen().geometry().bottom()
@@ -232,7 +232,7 @@ class PortgroupWidget(ConnectableWidget):
             return
 
         painter.save()
-        painter.setRenderHint(QPainter.Antialiasing, True)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
 
         theme = self._theme
         # theme = canvas.theme.portgroup
@@ -339,7 +339,7 @@ class PortgroupWidget(ConnectableWidget):
             polygon += QPointF(*xy)
 
         if poly_image is not None:
-            painter.setPen(Qt.NoPen)
+            painter.setPen(Qt.PenStyle.NoPen)
             painter.setBrush(QBrush(poly_image))
             painter.drawPolygon(polygon)
 

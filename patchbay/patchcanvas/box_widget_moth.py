@@ -105,7 +105,7 @@ class TitleLine:
 class BoxWidgetMoth(QGraphicsItem):
     def __init__(self, group: GroupObject, port_mode: PortMode):
         QGraphicsItem.__init__(self)
-        self.setCacheMode(QGraphicsItem.DeviceCoordinateCache)
+        self.setCacheMode(QGraphicsItem.CacheMode.DeviceCoordinateCache)
 
         # Save Variables, useful for later
         self._group_id = group.group_id
@@ -202,9 +202,9 @@ class BoxWidgetMoth(QGraphicsItem):
                 self.shadow.setOffset(0, 2)
 
         # Final touches
-        self.setFlags(QGraphicsItem.ItemIsFocusable
-                      | QGraphicsItem.ItemIsMovable
-                      | QGraphicsItem.ItemIsSelectable)
+        self.setFlags(QGraphicsItem.GraphicsItemFlag.ItemIsFocusable
+                      | QGraphicsItem.GraphicsItemFlag.ItemIsMovable
+                      | QGraphicsItem.GraphicsItemFlag.ItemIsSelectable)
 
         # Wait for at least 1 port
         if options.auto_hide_groups:
@@ -602,7 +602,7 @@ class BoxWidgetMoth(QGraphicsItem):
     # --- protected Qt Functions redefined here ---
     
     def itemChange(self, change, value):
-        if change == QGraphicsItem.ItemSelectedHasChanged:
+        if change == QGraphicsItem.GraphicsItemChange.ItemSelectedHasChanged:
             is_selected = bool(value)
             if is_selected:
                 self.setZValue(Zv.SEL_BOX.value)
@@ -639,7 +639,7 @@ class BoxWidgetMoth(QGraphicsItem):
         canvas.menu_click_pos = QCursor.pos()
 
     def keyPressEvent(self, event):
-        if self._plugin_id >= 0 and event.key() == Qt.Key_Delete:
+        if self._plugin_id >= 0 and event.key() == Qt.Key.Key_Delete:
             event.accept()
             canvas.callback(CallbackAct.PLUGIN_REMOVE, self._plugin_id)
             return
@@ -661,7 +661,8 @@ class BoxWidgetMoth(QGraphicsItem):
         if self._plugin_id >= 0:
             event.accept()
             canvas.callback(
-                CallbackAct.PLUGIN_SHOW_UI if self._plugin_ui else CallbackAct.PLUGIN_EDIT,
+                CallbackAct.PLUGIN_SHOW_UI
+                if self._plugin_ui else CallbackAct.PLUGIN_EDIT,
                 self._plugin_id)
             return
 
@@ -675,22 +676,22 @@ class BoxWidgetMoth(QGraphicsItem):
             # if the cursor didn't move between the click for menu quit 
             # and the next one (this one).
             # strange Qt Bug.
-            self.setFlag(QGraphicsItem.ItemIsMovable, False)
+            self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsMovable, False)
         
-        elif event.button() == Qt.RightButton:
+        elif event.button() == Qt.MouseButton.RightButton:
             event.accept()
             canvas.scene.clearSelection()
             self.setSelected(True)
             self._mouse_down = False
             return
 
-        elif event.button() == Qt.LeftButton:
+        elif event.button() == Qt.MouseButton.LeftButton:
             if self.sceneBoundingRect().contains(event.scenePos()):
                 if self.wrap_unwrap_at_point(event.scenePos()):
                     event.ignore()
                     return
 
-                self.setFlag(QGraphicsItem.ItemIsMovable, True)
+                self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsMovable, True)
                 self._mouse_down = True
         else:
             self._mouse_down = False
@@ -713,7 +714,7 @@ class BoxWidgetMoth(QGraphicsItem):
                 # the box just after, prevent this.
                 canvas.scene.remove_box_from_animation(self)
 
-                canvas.scene.set_cursor(QCursor(Qt.SizeAllCursor))
+                canvas.scene.set_cursor(QCursor(Qt.CursorShape.SizeAllCursor))
                 self._cursor_moving = True
                 canvas.scene.fix_temporary_scroll_bars()
             QGraphicsItem.mouseMoveEvent(self, event)
@@ -812,17 +813,17 @@ class BoxWidgetMoth(QGraphicsItem):
 
     def set_in_cache(self, yesno: bool):
         cache_mode = self.cacheMode()
-        if yesno and cache_mode == QGraphicsItem.DeviceCoordinateCache:
+        if yesno and cache_mode == QGraphicsItem.CacheMode.DeviceCoordinateCache:
             return
         
-        if not yesno and cache_mode == QGraphicsItem.NoCache:
+        if not yesno and cache_mode == QGraphicsItem.CacheMode.NoCache:
             return
 
         # toggle cache_mode value
-        if cache_mode == QGraphicsItem.DeviceCoordinateCache:
-            cache_mode = QGraphicsItem.NoCache
+        if cache_mode == QGraphicsItem.CacheMode.DeviceCoordinateCache:
+            cache_mode = QGraphicsItem.CacheMode.NoCache
         else:
-            cache_mode = QGraphicsItem.DeviceCoordinateCache
+            cache_mode = QGraphicsItem.CacheMode.DeviceCoordinateCache
         
         self.setCacheMode(cache_mode)
         for port in self._port_list:
@@ -900,7 +901,7 @@ class BoxWidgetMoth(QGraphicsItem):
             return
 
         painter.save()
-        painter.setRenderHint(QPainter.Antialiasing, True)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
 
         # define theme for box, wrappers and header lines
         theme = canvas.theme.box
@@ -931,7 +932,7 @@ class BoxWidgetMoth(QGraphicsItem):
         # draw the background image if exists
         if bg_image:
             painter.setBrush(QBrush(bg_image))
-            painter.setPen(Qt.NoPen)
+            painter.setPen(Qt.PenStyle.NoPen)
             painter.drawPath(self._painter_path)
 
         # draw the main rectangle
@@ -1348,7 +1349,7 @@ class BoxWidgetMoth(QGraphicsItem):
                 "%iB" % (data['height'] * data['stride']), *data['data'])
             self._inline_image = QImage(
                 voidptr(self._inline_data), data['width'], data['height'],
-                data['stride'], QImage.Format_ARGB32)
+                data['stride'], QImage.Format.Format_ARGB32)
             self._inline_scaling = scaling
             self._plugin_inline = InlineDisplay.CACHED
 

@@ -20,26 +20,15 @@
 
 # Imports (Globals)
 import logging
-from math import floor
 import time
 from typing import Optional
 
 from qtpy.QtCore import (
-    QT_VERSION,
-    Signal,
-    Slot,
-    Qt,
-    QPoint,
-    QPointF,
-    QRectF,
-    QTimer)
+    Signal, Slot, Qt, QPoint, QPointF, QRectF, QTimer)
 from qtpy.QtGui import QCursor, QPixmap, QPolygonF, QBrush, QPainter
 from qtpy.QtWidgets import (
-    QGraphicsRectItem,
-    QGraphicsScene,
-    QApplication,
-    QGraphicsItem,
-    QGraphicsView)
+    QGraphicsRectItem, QGraphicsScene, QApplication,
+    QGraphicsItem, QGraphicsView)
 
 from .patshared import PortMode
 from .init_values import (
@@ -222,15 +211,12 @@ class PatchSceneMoth(QGraphicsScene):
 
     def set_anti_aliasing(self, yesno: bool):
         if self._view is not None:
-            self._view.setRenderHint(QPainter.Antialiasing, yesno)
+            self._view.setRenderHint(QPainter.RenderHint.Antialiasing, yesno)
 
     def screen_position(self, point: QPointF) -> QPoint:
         return self._view.mapToGlobal(self._view.mapFromScene(point))
 
     def get_device_pixel_ratio_f(self):
-        if QT_VERSION < 0x50600:
-            return 1.0
-
         return self._view.devicePixelRatioF()
 
     def get_scale_factor(self):
@@ -382,21 +368,28 @@ class PatchSceneMoth(QGraphicsScene):
             return
 
         if self._view.horizontalScrollBar().isVisible():
-            self._view.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
+            self._view.setHorizontalScrollBarPolicy(
+                Qt.ScrollBarPolicy.ScrollBarAlwaysOn)
         else:
-            self._view.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+            self._view.setHorizontalScrollBarPolicy(
+                Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
 
         if self._view.verticalScrollBar().isVisible():
-            self._view.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
+            self._view.setVerticalScrollBarPolicy(
+                Qt.ScrollBarPolicy.ScrollBarAlwaysOn)
         else:
-            self._view.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+            self._view.setVerticalScrollBarPolicy(
+                Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
 
     def reset_scroll_bars(self):
-        self._view.setHorizontalScrollBarPolicy(Qt.ScrollBarAsNeeded)
-        self._view.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
+        self._view.setHorizontalScrollBarPolicy(
+            Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+        self._view.setVerticalScrollBarPolicy(
+            Qt.ScrollBarPolicy.ScrollBarAsNeeded)
 
     def list_boxes_at(self, rect: QRectF):
-        return [item for item in self.items(rect) if isinstance(item, BoxWidget)]
+        return [item for item in self.items(rect)
+                if isinstance(item, BoxWidget)]
 
     def _start_move_timer(self):
         if self._move_box_timer.isActive():
@@ -652,12 +645,14 @@ class PatchSceneMoth(QGraphicsScene):
 
     def get_connectable_item_at(
             self, pos: QPointF, origin: ConnectableWidget) -> ConnectableWidget:
-        for item in self.items(pos, Qt.ContainsItemShape, Qt.AscendingOrder):
+        for item in self.items(pos, Qt.ItemSelectionMode.ContainsItemShape,
+                               Qt.SortOrder.AscendingOrder):
             if isinstance(item, ConnectableWidget) and item is not origin:
                 return item
 
     def get_box_at(self, pos: QPointF) -> BoxWidget:
-        for item in self.items(pos, Qt.ContainsItemShape, Qt.AscendingOrder):
+        for item in self.items(pos, Qt.ItemSelectionMode.ContainsItemShape,
+                               Qt.SortOrder.AscendingOrder):
             if isinstance(item, BoxWidget):
                 return item
     
@@ -697,7 +692,7 @@ class PatchSceneMoth(QGraphicsScene):
 
     def drawBackground(self, painter, rect):
         painter.save()
-        painter.setPen(Qt.NoPen)
+        painter.setPen(Qt.PenStyle.NoPen)
         
         if not canvas.theme.scene_background_image.isNull():
             canvas.theme.scene_background_image.setDevicePixelRatio(3.0)
@@ -829,7 +824,7 @@ class PatchSceneMoth(QGraphicsScene):
         if full_rect.isNull():
             return
         
-        self._view.fitInView(full_rect, Qt.KeepAspectRatio)
+        self._view.fitInView(full_rect, Qt.AspectRatioMode.KeepAspectRatio)
         self.fix_scale_factor()
         self.scale_changed.emit(self._view.transform().m11())
 
@@ -907,27 +902,28 @@ class PatchSceneMoth(QGraphicsScene):
             event.ignore()
             return
 
-        if event.key() == Qt.Key_Control:
+        if event.key() == Qt.Key.Key_Control:
             if self._mid_button_down:
                 self._start_connection_cut()
 
-        elif event.key() == Qt.Key_Home:
+        elif event.key() == Qt.Key.Key_Home:
             event.accept()
             self.zoom_fit()
             return
 
-        elif QApplication.keyboardModifiers() & Qt.KeyboardModifier.ControlModifier:
-            if event.key() == Qt.Key_Plus:
+        elif (QApplication.keyboardModifiers()
+                & Qt.KeyboardModifier.ControlModifier):
+            if event.key() == Qt.Key.Key_Plus:
                 event.accept()
                 self.zoom_in()
                 return
 
-            if event.key() == Qt.Key_Minus:
+            if event.key() == Qt.Key.Key_Minus:
                 event.accept()
                 self.zoom_out()
                 return
 
-            if event.key() == Qt.Key_1:
+            if event.key() == Qt.Key.Key_1:
                 event.accept()
                 self.zoom_reset()
                 return
@@ -935,7 +931,7 @@ class PatchSceneMoth(QGraphicsScene):
         QGraphicsScene.keyPressEvent(self, event)
 
     def keyReleaseEvent(self, event):
-        if event.key() == Qt.Key_Control:
+        if event.key() == Qt.Key.Key_Control:
             # Connection cut mode off
             if self._mid_button_down:
                 self.unset_cursor()
@@ -1006,13 +1002,14 @@ class PatchSceneMoth(QGraphicsScene):
                     box.setSelected(True)
 
     def mouseDoubleClickEvent(self, event):
-        if event.button() == Qt.LeftButton and not canvas.menu_shown:
+        if event.button() == Qt.MouseButton.LeftButton and not canvas.menu_shown:
             # parse items under mouse to prevent CallbackAct.DOUBLE_CLICK
             # if mouse is on a box
             
             has_box = False
             items = self.items(
-                event.scenePos(), Qt.ContainsItemShape, Qt.AscendingOrder)
+                event.scenePos(), Qt.ItemSelectionMode.ContainsItemShape,
+                Qt.SortOrder.AscendingOrder)
 
             for item in items:
                 if isinstance(item, ConnectableWidget):
@@ -1020,7 +1017,7 @@ class PatchSceneMoth(QGraphicsScene):
                     # here we just change the cursor
                     # and define the ConnectableWidget.
                     self.flying_connectable = item
-                    self.set_cursor(QCursor(Qt.CrossCursor))
+                    self.set_cursor(QCursor(Qt.CursorShape.CrossCursor))
                     self._start_navigation_on_borders()
                     return
 
@@ -1034,13 +1031,13 @@ class PatchSceneMoth(QGraphicsScene):
 
     def mousePressEvent(self, event):
         if self.flying_connectable:
-            if event.button() == Qt.LeftButton:
+            if event.button() == Qt.MouseButton.LeftButton:
                 self.flying_connectable.mouseReleaseEvent(event)
                 self.flying_connectable = None
-                self.set_cursor(Qt.ArrowCursor)
+                self.set_cursor(Qt.CursorShape.ArrowCursor)
                 return
 
-            if event.button() == Qt.RightButton:
+            if event.button() == Qt.MouseButton.RightButton:
                 self.flying_connectable.mousePressEvent(event)
                 return
 
@@ -1052,8 +1049,9 @@ class PatchSceneMoth(QGraphicsScene):
             & (Qt.KeyboardModifier.AltModifier
                | Qt.KeyboardModifier.MetaModifier))
         self._mouse_down_init = bool(
-            (event.button() == Qt.LeftButton and not alt_or_meta_pressed)
-            or (event.button() == Qt.RightButton and ctrl_pressed))
+            (event.button() == Qt.MouseButton.LeftButton
+                and not alt_or_meta_pressed)
+            or (event.button() == Qt.MouseButton.RightButton and ctrl_pressed))
         
         self._press_point = event.scenePos()
         self._mouse_rubberband = False
@@ -1084,8 +1082,8 @@ class PatchSceneMoth(QGraphicsScene):
         QGraphicsScene.mousePressEvent(self, event)
         canvas.menu_shown = False
 
-        if (self._view.dragMode() != QGraphicsView.ScrollHandDrag
-                and event.buttons() == Qt.LeftButton):
+        if (self._view.dragMode() != QGraphicsView.DragMode.ScrollHandDrag
+                and event.buttons() == Qt.MouseButton.LeftButton):
             # Middle click and move changes the view drag mode
             # and fake a left button.
             # we don't want navigation on borders in case of middle click.
@@ -1127,7 +1125,8 @@ class PatchSceneMoth(QGraphicsScene):
                 abs(pos_y - rubb_orig_point.y()))
 
         if (self._mid_button_down
-                and QApplication.keyboardModifiers() & Qt.KeyboardModifier.ControlModifier):
+                and (QApplication.keyboardModifiers()
+                     & Qt.KeyboardModifier.ControlModifier)):
             for item in self.items(
                     QPolygonF([event.scenePos(), event.lastScenePos(),
                                event.scenePos()])):
@@ -1154,7 +1153,8 @@ class PatchSceneMoth(QGraphicsScene):
                 rect = self._rubberband.rect()
                 self._view.fitInView(
                     rect.x(), rect.y(),
-                    rect.width(), rect.height(), Qt.KeepAspectRatio)
+                    rect.width(), rect.height(),
+                    Qt.AspectRatioMode.KeepAspectRatio)
                 self.fix_scale_factor()
 
             else:
@@ -1182,17 +1182,18 @@ class PatchSceneMoth(QGraphicsScene):
         self._mouse_down_init = False
         self._mouse_rubberband = False
 
-        if event.button() == Qt.LeftButton:
+        if event.button() == Qt.MouseButton.LeftButton:
             self._borders_nav_timer.stop()
             canvas.set_aliasing_reason(AliasingReason.NAV_ON_BORDERS, False)
 
-        if event.button() == Qt.MidButton:
+        if event.button() == Qt.MouseButton.MiddleButton:
             event.accept()
 
             self._mid_button_down = False
 
             # Connection cut mode off
-            if QApplication.keyboardModifiers() & Qt.KeyboardModifier.ControlModifier:
+            if (QApplication.keyboardModifiers()
+                    & Qt.KeyboardModifier.ControlModifier):
                 self.unset_cursor()
             return
 
@@ -1205,7 +1206,8 @@ class PatchSceneMoth(QGraphicsScene):
 
         canvas.qobject.start_aliasing_check(AliasingReason.VIEW_MOVE)
 
-        if QApplication.keyboardModifiers() & Qt.KeyboardModifier.ControlModifier:
+        if (QApplication.keyboardModifiers()
+                & Qt.KeyboardModifier.ControlModifier):
             self.zoom_wheel(event.delta())
             event.accept()
             return
@@ -1221,7 +1223,8 @@ class PatchSceneMoth(QGraphicsScene):
             if isinstance(item, (BoxWidget, ConnectableWidget)):
                 break
         else:
-            if QApplication.keyboardModifiers() & Qt.KeyboardModifier.ControlModifier:
+            if (QApplication.keyboardModifiers()
+                    & Qt.KeyboardModifier.ControlModifier):
                 event.accept()
                 self._trigger_rubberband_scale()
                 return

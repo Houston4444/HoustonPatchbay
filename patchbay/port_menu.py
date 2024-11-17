@@ -33,9 +33,9 @@ _translate = QApplication.translate
 def theme_css(theme: StyleAttributer) -> str:
     pen = theme.fill_pen()
     
-    return (f"background-color: {theme.background_color().name(QColor.HexArgb)};"
-            f"color: {theme.text_color().name(QColor.HexArgb)};"
-            f"border: {pen.widthF()}px solid {pen.color().name(QColor.HexArgb)}")
+    return (f"background-color: {theme.background_color().name(QColor.NameFormat.HexArgb)};"
+            f"color: {theme.text_color().name(QColor.NameFormat.HexArgb)};"
+            f"border: {pen.widthF()}px solid {pen.color().name(QColor.NameFormat.HexArgb)}")
 
 
 class ConnState(IntEnum):
@@ -67,7 +67,7 @@ class PortCheckBox(QCheckBox):
         self.setMinimumHeight(port_height)
         self.setMinimumWidth(port_height)
         
-        self.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+        self.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
         
         self._po = p_object
         self._parent = parent
@@ -97,11 +97,11 @@ class PortCheckBox(QCheckBox):
 
         self._theme = theme
         self._line_theme = line_theme
-        text_color = theme.text_color().name(QColor.HexArgb)
-        border_color = theme.fill_pen().color().name(QColor.HexArgb)
-        h_text_color = theme.selected.text_color().name(QColor.HexArgb)
-        ind_bg = full_theme.scene_background_color.name(QColor.HexArgb)
-        checked_bg = line_theme.selected.background_color().name(QColor.HexArgb)
+        text_color = theme.text_color().name(QColor.NameFormat.HexArgb)
+        border_color = theme.fill_pen().color().name(QColor.NameFormat.HexArgb)
+        h_text_color = theme.selected.text_color().name(QColor.NameFormat.HexArgb)
+        ind_bg = full_theme.scene_background_color.name(QColor.NameFormat.HexArgb)
+        checked_bg = line_theme.selected.background_color().name(QColor.NameFormat.HexArgb)
         
         border_width = theme.fill_pen().widthF()
         
@@ -156,7 +156,7 @@ class PortCheckBox(QCheckBox):
     def paintEvent(self, event: QPaintEvent):
         painter = QPainter()
         painter.begin(self)
-        painter.setRenderHint(QPainter.Antialiasing)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
         pen = QPen(self._theme.fill_pen())
         pen.setWidth(1)
         painter.setPen(pen)
@@ -169,7 +169,7 @@ class PortCheckBox(QCheckBox):
         
         line_color = self._line_theme.background_color()
         painter.setBrush(QBrush(line_color))
-        painter.setPen(QPen(Qt.NoPen))
+        painter.setPen(QPen(Qt.PenStyle.NoPen))
         circle_rect = rect.adjusted(3, 3, -3, -3)
         
         if self.checkState() == 2:
@@ -189,7 +189,7 @@ class CheckFrame(QFrame):
         QFrame.__init__(self, parent)
         port_height = int(canvas.theme.port_height * options.default_zoom / 100.0) + 2
         self.setMinimumHeight(port_height)
-        self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
+        self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
         
         self._p_object = p_object
         self._parent = parent
@@ -200,10 +200,10 @@ class CheckFrame(QFrame):
         self._layout.setSpacing(0)
         self._layout.setContentsMargins(0, 0, 0, 0)
         self._layout.addWidget(self._check_box)
-        spacer1 = QSpacerItem(2, 2, QSizePolicy.Fixed, QSizePolicy.Fixed)
+        spacer1 = QSpacerItem(2, 2, QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
         self._layout.addSpacerItem(spacer1)
         self._layout.addWidget(self._label_left)
-        spacer = QSpacerItem(2, 2, QSizePolicy.Expanding, QSizePolicy.Minimum)
+        spacer = QSpacerItem(2, 2, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
         self._layout.addSpacerItem(spacer)
         self._label_right = None
         if port_name_end:
@@ -297,7 +297,7 @@ class CheckFrame(QFrame):
         self._check_box.nextCheckState()
         
     def keyPressEvent(self, event: QKeyEvent):
-        if event.key() in (Qt.Key_Space, Qt.Key_Return):
+        if event.key() in (Qt.Key.Key_Space, Qt.Key.Key_Return):
             self._check_box.nextCheckState()
             return
         QFrame.keyPressEvent(self, event)
@@ -353,8 +353,8 @@ class GroupConnectMenu(QMenu):
         elif group.cnv_box_type is BoxType.HARDWARE:
             theme = theme.hardware
 
-        bg_color = theme.background_color().name(QColor.HexArgb)
-        border_color = theme.fill_pen().color().name(QColor.HexArgb)
+        bg_color = theme.background_color().name(QColor.NameFormat.HexArgb)
+        border_color = theme.fill_pen().color().name(QColor.NameFormat.HexArgb)
         
         self.setStyleSheet(
             "QMenu{"
@@ -685,7 +685,8 @@ class DisconnectMenu(AbstractConnectionsMenu):
                     label_name = QLabel(group.cnv_name)
                     label_name.setStyleSheet("color=red")
                     widget.layout.addWidget(QLabel(group.cnv_name))
-                    spacer = QSpacerItem(2, 2, QSizePolicy.Expanding, QSizePolicy.Minimum)
+                    spacer = QSpacerItem(2, 2, QSizePolicy.Policy.Expanding,
+                                         QSizePolicy.Policy.Minimum)
                     widget.layout.addSpacerItem(spacer)
                     
                     action = QWidgetAction(self)

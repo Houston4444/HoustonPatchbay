@@ -442,7 +442,7 @@ class GroupedLinesWidget(QGraphicsPathItem):
             port_gradient.setColorAt(0.5, color_alter)
             port_gradient.setColorAt(1.0, color_main)
             
-            self.setPen(QPen(port_gradient, tha.base_width, Qt.SolidLine, Qt.FlatCap))
+            self.setPen(QPen(port_gradient, tha.base_width, Qt.PenStyle.SolidLine, Qt.PenCapStyle.FlatCap))
         else:
             if self._semi_hidden:
                 shd = options.semi_hide_opacity
@@ -457,7 +457,7 @@ class GroupedLinesWidget(QGraphicsPathItem):
                 color_main = tha.color_main
         
             self.setPen(QPen(QBrush(color_main),
-                             tha.base_width, Qt.SolidLine, Qt.FlatCap))
+                             tha.base_width, Qt.PenStyle.SolidLine, Qt.PenCapStyle.FlatCap))
             
     def animate_hidding(self, ratio: float):
         '''animate hidding or restoring of connections.
@@ -551,7 +551,7 @@ class GroupedLinesWidget(QGraphicsPathItem):
             gradient.setColorAt(1.0, color_main)
 
         self.setPen(QPen(gradient, self._th_attribs.base_width,
-                         Qt.SolidLine, Qt.FlatCap))
+                         Qt.PenStyle.SolidLine, Qt.PenCapStyle.FlatCap))
     
     def set_mode_hidding(self, port_mode: PortMode, box_hidding: BoxHidding):
         if port_mode & PortMode.OUTPUT:

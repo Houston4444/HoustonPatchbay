@@ -119,7 +119,7 @@ class GridWidget(QGraphicsPathItem):
 
         self.setPath(path)
         self.setPen(theme.fill_pen())
-        self.setBrush(QBrush(Qt.NoBrush))
+        self.setBrush(QBrush(Qt.BrushStyle.NoBrush))
 
     def update_path(self):
         self._bounding_rect = self._scene.sceneRect()
@@ -325,7 +325,7 @@ class GridWidget(QGraphicsPathItem):
         else:
             self.right_path = None
 
-        path.setFillRule(Qt.WindingFill)
+        path.setFillRule(Qt.FillRule.WindingFill)
         
         self.setPath(x_path)
 
@@ -333,7 +333,8 @@ class GridWidget(QGraphicsPathItem):
         pen.setWidthF(cell_x)
         
         self.setPen(QPen(
-            theme.fill_pen().color(), cell_x, Qt.SolidLine, Qt.FlatCap))
+            theme.fill_pen().color(), cell_x,
+            Qt.PenStyle.SolidLine, Qt.PenCapStyle.FlatCap))
     
     def boundingRect(self) -> QRectF:
         # prevent the grid widget to make the scene Rect growing infinitely
@@ -344,7 +345,7 @@ class GridWidget(QGraphicsPathItem):
             return
         
         painter.save()
-        painter.setRenderHint(QPainter.Antialiasing, False)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing, False)
         
         QGraphicsPathItem.paint(self, painter, option, widget)
 

@@ -22,31 +22,30 @@ class CustomScrollBar(QScrollBar):
 class PatchGraphicsView(QGraphicsView):
     def __init__(self, parent):
         super().__init__(parent)
-        self.setTransformationAnchor(QGraphicsView.AnchorUnderMouse)
-        self.setOptimizationFlag(QGraphicsView.DontAdjustForAntialiasing, True)
-        self.setOptimizationFlag(QGraphicsView.DontSavePainterState, True)
-        self.setRenderHint(QPainter.Antialiasing, True)
+        self.setTransformationAnchor(
+            QGraphicsView.ViewportAnchor.AnchorUnderMouse)
+        self.setOptimizationFlag(
+            QGraphicsView.OptimizationFlag.DontAdjustForAntialiasing, True)
+        self.setOptimizationFlag(
+            QGraphicsView.OptimizationFlag.DontSavePainterState, True)
+        self.setRenderHint(QPainter.RenderHint.Antialiasing, True)
         
-        self._h_scroll_bar = CustomScrollBar(Qt.Horizontal, self)
+        self._h_scroll_bar = CustomScrollBar(Qt.Orientation.Horizontal, self)
         self.setHorizontalScrollBar(self._h_scroll_bar)
-        self._v_scroll_bar = CustomScrollBar(Qt.Vertical, self)
+        self._v_scroll_bar = CustomScrollBar(Qt.Orientation.Vertical, self)
         self.setVerticalScrollBar(self._v_scroll_bar)
 
         self._panning = False
         self.transforming = False
 
-        try:
-            self._middle_button = Qt.MiddleButton
-        except:
-            self._middle_button = Qt.MidButton
-
     def mousePressEvent(self, event):
-        if (event.button() == self._middle_button
-                and not QApplication.keyboardModifiers() & Qt.KeyboardModifier.ControlModifier):
+        if (event.button() == Qt.MouseButton.MiddleButton
+                and not (QApplication.keyboardModifiers()
+                         & Qt.KeyboardModifier.ControlModifier)):
             self._panning = True
-            self.setDragMode(QGraphicsView.ScrollHandDrag)
-            event = QMouseEvent(event.type(), event.pos(), Qt.LeftButton,
-                                Qt.LeftButton, event.modifiers())
+            self.setDragMode(QGraphicsView.DragMode.ScrollHandDrag)
+            event = QMouseEvent(event.type(), event.pos(), Qt.MouseButton.LeftButton,
+                                Qt.MouseButton.LeftButton, event.modifiers())
 
         QGraphicsView.mousePressEvent(self, event)
 
@@ -57,7 +56,7 @@ class PatchGraphicsView(QGraphicsView):
             return
 
         self._panning = False
-        self.setDragMode(QGraphicsView.NoDrag)
+        self.setDragMode(QGraphicsView.DragMode.NoDrag)
         
     def wheelEvent(self, ev: QWheelEvent) -> None:
         if (ev.modifiers() & Qt.KeyboardModifier.ShiftModifier

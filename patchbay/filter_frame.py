@@ -96,9 +96,9 @@ class FilterFrame(QFrame):
             # they both are enabled/disabled together
             return
 
-        if key == Qt.Key_Up:
+        if key == Qt.Key.Key_Up:
             self._up_pressed()
-        elif key == Qt.Key_Down:
+        elif key == Qt.Key.Key_Down:
             self._down_pressed()
     
     def _set_semi_hide_opacity(self, value:int):
@@ -128,7 +128,7 @@ class FilterFrame(QFrame):
     
     def keyPressEvent(self, event: QKeyEvent):
         super().keyPressEvent(event)
-        if event.key() == Qt.Key_Escape:
+        if event.key() == Qt.Key.Key_Escape:
             self.hide()
     
     @Slot(int)

@@ -51,7 +51,6 @@ class Callbacker:
         ...
 
     def _group_pos_modified(self, group_id: int):
-        # print('zpos', gpos.group_name, gpos.as_new_dict())
         group = self.mng.get_group_from_id(group_id)
         if group is None:
             return

@@ -30,8 +30,8 @@ class ConnectableWidget(QGraphicsItem):
 
     def __init__(self, connectable: ConnectableObject, parent: 'BoxWidget'):
         QGraphicsItem.__init__(self, parent)
-        self.setFlags(QGraphicsItem.ItemIsSelectable)
-        self.setCacheMode(QGraphicsItem.DeviceCoordinateCache)
+        self.setFlags(QGraphicsItem.GraphicsItemFlag.ItemIsSelectable)
+        self.setCacheMode(QGraphicsItem.CacheMode.DeviceCoordinateCache)
         
         if options.auto_select_items:
             self.setAcceptHoverEvents(True)
@@ -261,7 +261,7 @@ class ConnectableWidget(QGraphicsItem):
             event.ignore()
             return
         
-        if event.button() == Qt.LeftButton:
+        if event.button() == Qt.MouseButton.LeftButton:
             self._hover_item = None
             self._mouse_down = True
             self._cursor_moving = False
@@ -272,7 +272,7 @@ class ConnectableWidget(QGraphicsItem):
             else:
                 self._has_connections = False
 
-        elif event.button() == Qt.RightButton:
+        elif event.button() == Qt.MouseButton.RightButton:
             if canvas.is_line_mov:
                 if self._hover_item:
                     self._r_click_time = time.time()
@@ -300,13 +300,13 @@ class ConnectableWidget(QGraphicsItem):
         QGraphicsItem.mousePressEvent(self, event)
 
     def mouseMoveEvent(self, event):
-        if (not event.buttons() & Qt.LeftButton 
+        if (not event.buttons() & Qt.MouseButton.LeftButton 
                 and canvas.scene.flying_connectable is not self):
             QGraphicsItem.mouseMoveEvent(self, event)
             return
 
         if not self._cursor_moving:
-            canvas.scene.set_cursor(QCursor(Qt.CrossCursor))
+            canvas.scene.set_cursor(QCursor(Qt.CursorShape.CrossCursor))
             self._cursor_moving = True
 
         if not self._line_mov_list:
@@ -461,7 +461,7 @@ class ConnectableWidget(QGraphicsItem):
         canvas.qobject.start_aliasing_check(AliasingReason.USER_MOVE)
                 
     def mouseReleaseEvent(self, event):
-        if event.button() == Qt.LeftButton:
+        if event.button() == Qt.MouseButton.LeftButton:
             if self._mouse_down or canvas.scene.flying_connectable is self:
                 for line_mov in self._line_mov_list:
                     item = line_mov
@@ -479,7 +479,7 @@ class ConnectableWidget(QGraphicsItem):
                     canvas.scene.clearSelection()
 
             if self._cursor_moving:
-                canvas.scene.set_cursor(QCursor(Qt.ArrowCursor))
+                canvas.scene.set_cursor(QCursor(Qt.CursorShape.ArrowCursor))
 
             self._hover_item = None
             self._mouse_down = False

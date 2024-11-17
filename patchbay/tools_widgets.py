@@ -22,7 +22,7 @@ _translate = QApplication.translate
 def is_dark_theme(widget: QWidget) -> bool:
     return bool(
         widget.palette().brush(
-            QPalette.Active, QPalette.WindowText).color().lightness()
+            QPalette.ColorGroup.Active, QPalette.ColorRole.WindowText).color().lightness()
         > 128)
 
 
@@ -190,9 +190,9 @@ class PatchbayToolsWidget(QObject):
             # evaluate main bar widths (with and without text beside icons)
             main_bar = self.tbars[TBar.MAIN]
             tool_button_style = main_bar.toolButtonStyle()
-            main_bar.setToolButtonStyle(Qt.ToolButtonIconOnly)
+            main_bar.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonIconOnly)
             self._main_bar_little_width = main_bar.sizeHint().width()
-            main_bar.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)
+            main_bar.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
             self._main_bar_large_width = main_bar.sizeHint().width()
             main_bar.setToolButtonStyle(tool_button_style)
 
@@ -215,10 +215,10 @@ class PatchbayToolsWidget(QObject):
 
         main_bar = self.tbars[TBar.MAIN]
         
-        main_bar.setToolButtonStyle(Qt.ToolButtonIconOnly)
+        main_bar.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonIconOnly)
         self._main_bar_little_width = main_bar.sizeHint().width()
         
-        main_bar.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)
+        main_bar.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
         self._main_bar_large_width = main_bar.sizeHint().width()
         
         self._resize_later()
@@ -411,29 +411,29 @@ class PatchbayToolsWidget(QObject):
             if little_lines < large_lines:
                 layout = layout_little
                 self.tbars[TBar.MAIN].setToolButtonStyle(
-                    Qt.ToolButtonIconOnly)
+                    Qt.ToolButtonStyle.ToolButtonIconOnly)
             else:
                 layout = layout_large
                 if self._main_bar_large_width < self._last_win_width:
                     self.tbars[TBar.MAIN].setToolButtonStyle(
-                        Qt.ToolButtonTextBesideIcon)
+                        Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
                 else:
                     self.tbars[TBar.MAIN].setToolButtonStyle(
-                        Qt.ToolButtonIconOnly)
+                        Qt.ToolButtonStyle.ToolButtonIconOnly)
 
         elif self._text_with_icons is TextWithIcons.YES:
             if (self._main_bar_large_width
                     > self._last_win_width):
                 self.tbars[TBar.MAIN].setToolButtonStyle(
-                    Qt.ToolButtonIconOnly)
+                    Qt.ToolButtonStyle.ToolButtonIconOnly)
             else:
                 self.tbars[TBar.MAIN].setToolButtonStyle(
-                    Qt.ToolButtonTextBesideIcon)
+                    Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
             layout = self._get_toolbars_layout(self._last_win_width)
         
         else:
             self.tbars[TBar.MAIN].setToolButtonStyle(
-                Qt.ToolButtonIconOnly)
+                Qt.ToolButtonStyle.ToolButtonIconOnly)
             layout = self._get_toolbars_layout(self._last_win_width)
             
 

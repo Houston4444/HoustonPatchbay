@@ -75,8 +75,9 @@ class LineMoveWidget(QGraphicsPathItem):
         
         pen = theme.fill_pen()
         pen.setColor(theme.background_color())
-        pen.setStyle(Qt.DotLine if self.ready_to_disc else Qt.SolidLine)
-        pen.setCapStyle(Qt.FlatCap)
+        pen.setStyle(Qt.PenStyle.DotLine if self.ready_to_disc
+                     else Qt.PenStyle.SolidLine)
+        pen.setCapStyle(Qt.PenCapStyle.FlatCap)
         self.setPen(pen)
 
         phi = 0.75 if self._portgrp_len > 2 else 0.62
@@ -161,6 +162,6 @@ class LineMoveWidget(QGraphicsPathItem):
 
     def paint(self, painter, option, widget):
         painter.save()
-        painter.setRenderHint(QPainter.Antialiasing, True)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
         QGraphicsPathItem.paint(self, painter, option, widget)
         painter.restore()

@@ -30,7 +30,7 @@ class FilterBar(QLineEdit):
         QLineEdit.__init__(self)
 
     def keyPressEvent(self, event: QKeyEvent):
-        if event.key() in (Qt.Key_Up, Qt.Key_Down):
+        if event.key() in (Qt.Key.Key_Up, Qt.Key.Key_Down):
             self.up_down_pressed.emit(event.key())
             self.key_event.emit(event)
         QLineEdit.keyPressEvent(self, event)
@@ -75,10 +75,10 @@ class ZoomSlider(QSlider):
         self.setPageStep(10)
         self.setProperty("value", 500)
         self.setTracking(True)
-        self.setOrientation(Qt.Horizontal)
+        self.setOrientation(Qt.Orientation.Horizontal)
         self.setInvertedAppearance(False)
         self.setInvertedControls(False)
-        self.setTickPosition(QSlider.TicksBelow)
+        self.setTickPosition(QSlider.TickPosition.TicksBelow)
         self.setTickInterval(500)
         
         self.valueChanged.connect(self._value_changed)
@@ -226,9 +226,9 @@ class TypeViewCheckBox(QCheckBox):
         super().__init__(parent)
     
     def mousePressEvent(self, event: QMouseEvent) -> None:
-        if event.button() in (Qt.LeftButton, Qt.RightButton):
+        if event.button() in (Qt.MouseButton.LeftButton, Qt.MouseButton.RightButton):
             alternate = bool(
-                event.button() == Qt.RightButton
+                event.button() == Qt.MouseButton.RightButton
                 or QApplication.keyboardModifiers() & Qt.KeyboardModifier.ControlModifier)
             self.really_clicked.emit(alternate)
             return
@@ -271,7 +271,7 @@ class ViewsComboBox(QComboBox):
     
     def keyPressEvent(self, event: QKeyEvent):
         if self.isEditable():
-            if event.key() in (Qt.Key_Return, Qt.Key_Enter):
+            if event.key() in (Qt.Key.Key_Return, Qt.Key.Key_Enter):
                 self._parent.write_view_name(
                     self._selected_view, self._editing_text)
                 self.setEditable(False)
@@ -279,14 +279,14 @@ class ViewsComboBox(QComboBox):
                 event.ignore()
                 return
         else:
-            if event.key() == Qt.Key_F2:
+            if event.key() == Qt.Key.Key_F2:
                 if self.isEditable():
                     self.setEditable(False)
                 else:
                     self.set_editable()
                 return
 
-            if event.key() in (Qt.Key_Up, Qt.Key_Down):
+            if event.key() in (Qt.Key.Key_Up, Qt.Key.Key_Down):
                 previous_index = self.currentIndex()
                 super().keyPressEvent(event)
                 
