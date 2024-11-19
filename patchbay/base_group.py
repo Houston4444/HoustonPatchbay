@@ -647,6 +647,9 @@ class Group:
         port_name = port.full_name.replace(self.name + ':', '', 1)
         other_port_name = other_port.full_name.replace(self.name + ':', '', 1)
 
+        if not port_name:
+            return None
+
         if port.flags & JackPortFlag.IS_PHYSICAL:
             # force stereo detection for system ports
             # it forces it for firewire long and strange names
@@ -657,7 +660,7 @@ class Group:
             base_port = port_name[:-1]
             in_num = port_name[-1]
 
-            while base_port[-1].isdigit():
+            while base_port and base_port[-1].isdigit():
                 in_num = base_port[-1] + in_num
                 base_port = base_port[:-1]
 
