@@ -170,7 +170,8 @@ class ViewsDict(dict[int, ViewData]):
         return out_list
 
     def add_old_json_gpos(
-            self, old_gpos_dict: dict, version: Optional[tuple[int]]=None):
+            self, old_gpos_dict: dict,
+            version: Optional[tuple[int, int, int]]=None):
         if version is None:
             gpos = GroupPos.from_serialized_dict(old_gpos_dict)
         else:
