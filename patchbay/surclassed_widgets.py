@@ -4,7 +4,12 @@ from typing import TYPE_CHECKING
 from qtpy.QtCore import Qt, Signal, Slot, QPoint, QSize, QRectF, QPointF
 from qtpy.QtGui import (
     QWheelEvent, QKeyEvent, QMouseEvent, QPaintEvent,
-    QPainter, QPen, QColor, QPainterPath, QPixmap)
+    QPainter, QPen, QPainterPath, QPixmap)
+
+if TYPE_CHECKING:
+    # FIX : QAction not found by pylance
+    from qtpy.QtGui import QAction
+
 from qtpy.QtWidgets import (
     QApplication, QProgressBar, QSlider, QToolTip,
     QLineEdit, QLabel, QMenu, QAction, QCheckBox,

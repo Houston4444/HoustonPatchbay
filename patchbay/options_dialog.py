@@ -2,10 +2,13 @@
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+from qtpy.QtCore import Qt, QProcess, QSettings
+from qtpy.QtGui import QIcon, QPixmap
+if TYPE_CHECKING:
+    # FIX : QAction not found by pylance
+    from qtpy.QtGui import QAction
 from qtpy.QtWidgets import (QDialog, QApplication, QInputDialog,
                              QMessageBox, QWidget, QFileDialog, QAction)
-from qtpy.QtGui import QIcon, QPixmap
-from qtpy.QtCore import Qt, QProcess, QSettings
 
 
 from .patchcanvas import patchcanvas, xdg

@@ -3,6 +3,9 @@ from typing import TYPE_CHECKING, Callable, Iterator, Optional, Union
 
 from qtpy.QtCore import Slot, QTimer
 from qtpy.QtGui import QIcon, QPixmap
+if TYPE_CHECKING:
+    # FIX : QAction not found by pylance
+    from qtpy.QtGui import QAction
 from qtpy.QtWidgets import QToolButton, QMenu, QApplication, QAction
 
 from .cancel_mng import CancelOp, CancellableAction

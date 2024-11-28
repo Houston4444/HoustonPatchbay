@@ -1,7 +1,11 @@
 from enum import Enum, IntEnum
 from typing import TYPE_CHECKING
+
 from qtpy.QtCore import QTimer, Slot, QPoint, QObject, Qt
 from qtpy.QtGui import QPalette, QIcon
+if TYPE_CHECKING:
+    # FIX : QAction not found by pylance
+    from qtpy.QtGui import QAction
 from qtpy.QtWidgets import (
     QWidget, QMainWindow, QAction, QApplication, QMenu)
 
