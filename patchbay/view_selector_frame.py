@@ -338,7 +338,7 @@ class ViewSelectorWidget(QWidget):
         
         for view_num, view_data in self.mng.views.items():
             if not view_data.name:
-                view_name = _translate('views_widget', f'View {view_num}')
+                view_name = _translate('views', 'View %i') % view_num
             else:
                 view_name = view_data.name
             

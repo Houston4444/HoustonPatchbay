@@ -124,7 +124,7 @@ class ViewsMenu(QMenu):
     def _change_view(self):
         view_number: int = self.sender().data()
         with CancellableAction(self.mng, CancelOp.VIEW_CHOICE) as a:
-            a.name = _translate('cancel', 'Change view %i -> %i') % (
+            a.name = _translate('undo', 'Change view %i -> %i') % (
                 self.mng.view_number, view_number)
             self.mng.change_view(view_number)
 
@@ -144,7 +144,7 @@ class ViewsMenu(QMenu):
         
         if ok:
             with CancellableAction(self.mng, CancelOp.ALL_VIEWS_NO_POS) as a:
-                a.name = _translate('cancel', 'View %i renamed to "%s"') % (
+                a.name = _translate('undo', 'View %i renamed to "%s"') % (
                     self.mng.view_number, new_name)
                 self.mng.rename_current_view(new_name)
 

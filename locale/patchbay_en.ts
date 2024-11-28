@@ -104,27 +104,27 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../resources/ui/canvas_options.ui" line="239"/>
+        <location filename="../resources/ui/canvas_options.ui" line="259"/>
         <source>Tricks</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../resources/ui/canvas_options.ui" line="245"/>
+        <location filename="../resources/ui/canvas_options.ui" line="265"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Boxes can have two different layouts.&lt;/p&gt;&lt;p&gt;For boxes with input and output ports, if the layout is large, output ports are layouted at right of input ports, else ports are layouted in a descending order, no matter if they are input or output ports.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../resources/ui/canvas_options.ui" line="248"/>
+        <location filename="../resources/ui/canvas_options.ui" line="268"/>
         <source>Grouped boxes auto layout :</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../resources/ui/canvas_options.ui" line="260"/>
+        <location filename="../resources/ui/canvas_options.ui" line="280"/>
         <source>Maximum port width :</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../resources/ui/canvas_options.ui" line="273"/>
+        <location filename="../resources/ui/canvas_options.ui" line="376"/>
         <source> pts</source>
         <translation type="unfinished"></translation>
     </message>
@@ -134,13 +134,29 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../resources/ui/canvas_options.ui" line="323"/>
+        <location filename="../resources/ui/canvas_options.ui" line="411"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Patchichi is a software allowing to run patchbay scenes abstractly.&lt;/p&gt;&lt;p&gt;It is useful for developers, to can develop or fix bug on the patchbay.&lt;/p&gt;&lt;p&gt;It is also nicer to use Patchichi to edit patchbay themes.&lt;/p&gt;&lt;p&gt;You could also use it to build a patchbay graph, for tutorials or whatever you want.&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../resources/ui/canvas_options.ui" line="326"/>
+        <location filename="../resources/ui/canvas_options.ui" line="414"/>
         <source>Export scene to Patchichi</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../resources/ui/canvas_options.ui" line="331"/>
+        <source>Grid :</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../resources/ui/canvas_options.ui" line="324"/>
+        <source>Set grid width and height.
+Boxes positions and sizes are adapted to the grid.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../resources/ui/canvas_options.ui" line="363"/>
+        <source>x</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -238,98 +254,113 @@
 <context>
     <name>Form</name>
     <message>
-        <location filename="../resources/ui/patchbay_tools.ui" line="14"/>
+        <location filename="../resources/ui/view_selector.ui" line="14"/>
         <source>Form</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../resources/ui/patchbay_tools.ui" line="107"/>
+        <location filename="../resources/ui/transport_bar.ui" line="57"/>
         <source>Backwards</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../resources/ui/patchbay_tools.ui" line="255"/>
+        <location filename="../resources/ui/view_selector.ui" line="35"/>
         <source>...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../resources/ui/patchbay_tools.ui" line="153"/>
+        <location filename="../resources/ui/transport_bar.ui" line="103"/>
         <source>00:00:00</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../resources/ui/patchbay_tools.ui" line="169"/>
+        <location filename="../resources/ui/transport_bar.ui" line="119"/>
         <source>Fast-Forward</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../resources/ui/patchbay_tools.ui" line="217"/>
+        <location filename="../resources/ui/transport_bar.ui" line="167"/>
         <source>Play/Pause transport</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../resources/ui/patchbay_tools.ui" line="249"/>
+        <location filename="../resources/ui/transport_bar.ui" line="199"/>
         <source>Stop, return to start.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../resources/ui/patchbay_tools.ui" line="306"/>
+        <location filename="../resources/ui/transport_bar.ui" line="256"/>
         <source>Tempo (if known)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../resources/ui/patchbay_tools.ui" line="340"/>
+        <location filename="../resources/ui/patchbay_tools.ui" line="296"/>
         <source>Buffer :</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../resources/ui/patchbay_tools.ui" line="377"/>
+        <location filename="../resources/ui/patchbay_tools.ui" line="333"/>
         <source>JACK Buffer size</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../resources/ui/patchbay_tools.ui" line="408"/>
+        <location filename="../resources/ui/patchbay_tools.ui" line="364"/>
         <source>JACK Samplerate</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../resources/ui/patchbay_tools.ui" line="411"/>
+        <location filename="../resources/ui/patchbay_tools.ui" line="367"/>
         <source>48 000 Hz</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../resources/ui/patchbay_tools.ui" line="421"/>
+        <location filename="../resources/ui/patchbay_tools.ui" line="377"/>
         <source> | </source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../resources/ui/patchbay_tools.ui" line="437"/>
+        <location filename="../resources/ui/patchbay_tools.ui" line="393"/>
         <source>JACK latency</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../resources/ui/patchbay_tools.ui" line="440"/>
+        <location filename="../resources/ui/patchbay_tools.ui" line="396"/>
         <source>1,33 ms</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../resources/ui/patchbay_tools.ui" line="474"/>
+        <location filename="../resources/ui/patchbay_tools.ui" line="414"/>
         <source>Number of audio Xruns. Click on it to reset them.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../resources/ui/patchbay_tools.ui" line="481"/>
+        <location filename="../resources/ui/patchbay_tools.ui" line="421"/>
         <source>0 Xruns </source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../resources/ui/patchbay_tools.ui" line="517"/>
+        <location filename="../resources/ui/patchbay_tools.ui" line="473"/>
         <source>DSP: %p%</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../resources/ui/patchbay_tools.ui" line="524"/>
+        <location filename="../resources/ui/patchbay_tools.ui" line="496"/>
         <source>&lt;p style=&quot;color:red&quot;&gt;JACK is not started !&lt;/p&gt;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../resources/ui/patchbay_tools.ui" line="568"/>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Number of hidden boxes. Click here to restore a box.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../resources/ui/patchbay_tools.ui" line="575"/>
+        <source>0</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../resources/ui/view_selector.ui" line="17"/>
+        <source>View selector</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -346,7 +377,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../resources/ui/filter_frame.ui" line="112"/>
+        <location filename="../resources/ui/filter_frame.ui" line="158"/>
         <source>...</source>
         <translation type="unfinished"></translation>
     </message>
@@ -356,18 +387,23 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../resources/ui/filter_frame.ui" line="188"/>
+        <location filename="../resources/ui/filter_frame.ui" line="220"/>
         <source>adjust the opacity of boxes not matching with the filter</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../resources/ui/filter_frame.ui" line="181"/>
+        <location filename="../resources/ui/filter_frame.ui" line="213"/>
         <source>Opacity :</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../resources/ui/filter_frame.ui" line="191"/>
+        <location filename="../resources/ui/filter_frame.ui" line="223"/>
         <source>%</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../resources/ui/filter_frame.ui" line="152"/>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Number of hidden boxes matching with the filter text. Press it to restore a box.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -402,45 +438,102 @@
 <context>
     <name>alsa_midi</name>
     <message>
-        <location filename="../patchbay/options_dialog.py" line="221"/>
+        <location filename="../patchbay/options_dialog.py" line="255"/>
         <source>ALSA python lib version is not present or too old.
 Ensure to have python3-pyalsa &gt;= 1.2.4</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
+    <name>arrange</name>
+    <message>
+        <location filename="../patchbay/patchbay_manager.py" line="1006"/>
+        <source>Arrange: follow the signal chain</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../patchbay/patchbay_manager.py" line="1016"/>
+        <source>Arrange: Two columns facing each other</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>box_layout</name>
     <message>
-        <location filename="../patchbay/options_dialog.py" line="33"/>
+        <location filename="../patchbay/options_dialog.py" line="37"/>
         <source>Choose the smallest area</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../patchbay/options_dialog.py" line="34"/>
+        <location filename="../patchbay/options_dialog.py" line="38"/>
         <source>Prefer large boxes</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../patchbay/options_dialog.py" line="35"/>
+        <location filename="../patchbay/options_dialog.py" line="39"/>
         <source>Almost only large boxes</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../patchbay/options_dialog.py" line="36"/>
+        <location filename="../patchbay/options_dialog.py" line="40"/>
         <source>Force large boxes</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
+    <name>cancel</name>
+</context>
+<context>
     <name>file_dialog</name>
     <message>
-        <location filename="../patchbay/options_dialog.py" line="167"/>
+        <location filename="../patchbay/options_dialog.py" line="201"/>
         <source>Where do you want to save this patchbay scene ?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../patchbay/options_dialog.py" line="167"/>
+        <location filename="../patchbay/options_dialog.py" line="201"/>
         <source>Patchichi files (*.patchichi.json)</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>grid_style</name>
+    <message>
+        <location filename="../patchbay/options_dialog.py" line="44"/>
+        <source>None</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../patchbay/options_dialog.py" line="45"/>
+        <source>Technical Grid</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../patchbay/options_dialog.py" line="46"/>
+        <source>Grid</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../patchbay/options_dialog.py" line="47"/>
+        <source>Chessboard</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>hiddens_indicator</name>
+    <message>
+        <location filename="../patchbay/hiddens_indicator.py" line="343"/>
+        <source>Hide all new boxes</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../patchbay/hiddens_indicator.py" line="354"/>
+        <source>Display all boxes</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../patchbay/hiddens_indicator.py" line="361"/>
+        <source>Hide all boxes</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -462,367 +555,599 @@ Ensure to have python3-pyalsa &gt;= 1.2.4</source>
         <translation type="obsolete">Noir moderne</translation>
     </message>
     <message>
-        <location filename="../patchbay/canvas_menu.py" line="17"/>
+        <location filename="../patchbay/canvas_menu.py" line="23"/>
         <source>Patchbay</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../patchbay/canvas_menu.py" line="37"/>
+        <location filename="../patchbay/canvas_menu.py" line="57"/>
         <source>Toggle Full Screen</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../patchbay/canvas_menu.py" line="46"/>
+        <location filename="../patchbay/canvas_menu.py" line="65"/>
         <source>Find a box...<byte value="x9"/>Ctrl+F</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../patchbay/canvas_menu.py" line="52"/>
+        <location filename="../patchbay/canvas_menu.py" line="93"/>
         <source>Type filter</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../patchbay/canvas_menu.py" line="69"/>
+        <location filename="../patchbay/canvas_menu.py" line="110"/>
         <source>MIDI only</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../patchbay/canvas_menu.py" line="76"/>
+        <location filename="../patchbay/canvas_menu.py" line="117"/>
         <source>CV only</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../patchbay/canvas_menu.py" line="94"/>
+        <location filename="../patchbay/canvas_menu.py" line="135"/>
         <source>Zoom</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../patchbay/canvas_menu.py" line="97"/>
+        <location filename="../patchbay/canvas_menu.py" line="138"/>
         <source>auto-fit</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../patchbay/canvas_menu.py" line="103"/>
+        <location filename="../patchbay/canvas_menu.py" line="144"/>
         <source>Zoom +</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../patchbay/canvas_menu.py" line="109"/>
+        <location filename="../patchbay/canvas_menu.py" line="150"/>
         <source>Zoom -</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../patchbay/canvas_menu.py" line="115"/>
+        <location filename="../patchbay/canvas_menu.py" line="156"/>
         <source>Default Zoom</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../patchbay/canvas_menu.py" line="123"/>
+        <location filename="../patchbay/canvas_menu.py" line="164"/>
         <source>Refresh the canvas<byte value="x9"/>Ctrl+R</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../patchbay/canvas_menu.py" line="128"/>
+        <location filename="../patchbay/canvas_menu.py" line="169"/>
         <source>Patchbay manual</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../patchbay/canvas_menu.py" line="135"/>
+        <location filename="../patchbay/canvas_menu.py" line="176"/>
         <source>Canvas options</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../patchbay/patchbay_manager.py" line="850"/>
+        <location filename="../patchbay/patchbay_manager.py" line="1403"/>
         <source>JACK server lose</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../patchbay/patchbay_manager.py" line="850"/>
+        <location filename="../patchbay/patchbay_manager.py" line="1403"/>
         <source>JACK server seems to be totally busy... ;(</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../patchbay/port_info_dialog.py" line="40"/>
+        <location filename="../patchbay/port_info_dialog.py" line="42"/>
         <source>Audio</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../patchbay/port_info_dialog.py" line="42"/>
+        <location filename="../patchbay/port_info_dialog.py" line="44"/>
         <source>MIDI</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../patchbay/port_info_dialog.py" line="47"/>
+        <location filename="../patchbay/port_info_dialog.py" line="49"/>
         <source>NULL</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../patchbay/port_info_dialog.py" line="52"/>
+        <location filename="../patchbay/port_info_dialog.py" line="54"/>
         <source>Input</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../patchbay/port_info_dialog.py" line="53"/>
+        <location filename="../patchbay/port_info_dialog.py" line="55"/>
         <source>Output</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../patchbay/port_info_dialog.py" line="54"/>
+        <location filename="../patchbay/port_info_dialog.py" line="56"/>
         <source>Physical</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../patchbay/port_info_dialog.py" line="55"/>
+        <location filename="../patchbay/port_info_dialog.py" line="57"/>
         <source>Monitor</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../patchbay/port_info_dialog.py" line="56"/>
+        <location filename="../patchbay/port_info_dialog.py" line="58"/>
         <source>Terminal</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../patchbay/port_info_dialog.py" line="57"/>
+        <location filename="../patchbay/port_info_dialog.py" line="59"/>
         <source>Control Voltage</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../patchbay/patchcanvas/connect_menu.py" line="377"/>
+        <location filename="../patchbay/port_menu.py" line="642"/>
         <source>Disconnect</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../patchbay/patchcanvas/box_widget_moth.py" line="690"/>
-        <source>Disconnect &amp;All</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../patchbay/patchcanvas/box_widget_moth.py" line="695"/>
-        <source>Info</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../patchbay/patchcanvas/box_widget_moth.py" line="696"/>
-        <source>Rename</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../patchbay/patchcanvas/box_widget_moth.py" line="698"/>
+        <location filename="../patchbay/group_menu.py" line="158"/>
         <source>Split</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../patchbay/patchcanvas/box_widget_moth.py" line="701"/>
+        <location filename="../patchbay/group_menu.py" line="151"/>
         <source>Join</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../patchbay/patchcanvas/box_widget_moth.py" line="706"/>
+        <location filename="../patchbay/group_menu.py" line="168"/>
         <source>Wrap</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../patchbay/patchcanvas/box_widget_moth.py" line="709"/>
+        <location filename="../patchbay/group_menu.py" line="172"/>
         <source>Unwrap</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../patchbay/patchcanvas/box_widget_moth.py" line="715"/>
+        <location filename="../patchbay/group_menu.py" line="179"/>
         <source>Automatic layout</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../patchbay/patchcanvas/box_widget_moth.py" line="721"/>
+        <location filename="../patchbay/group_menu.py" line="186"/>
         <source>Change layout</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../patchbay/patchcanvas/connect_menu.py" line="254"/>
+        <location filename="../patchbay/port_menu.py" line="532"/>
         <source>Connect</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../patchbay/patchcanvas/connect_menu.py" line="270"/>
+        <location filename="../patchbay/port_menu.py" line="323"/>
         <source>Audio | DANGEROUS !!!</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../patchbay/patchcanvas/connect_menu.py" line="274"/>
+        <location filename="../patchbay/port_menu.py" line="326"/>
         <source>CV | DANGEROUS !!!</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../patchbay/patchcanvas/connect_menu.py" line="381"/>
+        <location filename="../patchbay/group_menu.py" line="49"/>
         <source>No connections</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../patchbay/patchcanvas/connect_menu.py" line="475"/>
+        <location filename="../patchbay/port_menu.py" line="797"/>
         <source>Clipboard</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../patchbay/patchcanvas/connect_menu.py" line="478"/>
+        <location filename="../patchbay/port_menu.py" line="800"/>
         <source>Cut connections</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../patchbay/patchcanvas/connect_menu.py" line="483"/>
+        <location filename="../patchbay/port_menu.py" line="802"/>
         <source>Copy connections</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../patchbay/patchcanvas/connect_menu.py" line="500"/>
+        <location filename="../patchbay/port_menu.py" line="804"/>
         <source>Paste connections</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../patchbay/patchcanvas/connect_menu.py" line="604"/>
+        <location filename="../patchbay/port_menu.py" line="782"/>
         <source>Disconnect All</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../patchbay/patchcanvas/portgroup_widget.py" line="199"/>
+        <location filename="../patchbay/port_menu.py" line="830"/>
         <source>Split to Monos</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../patchbay/patchcanvas/port_widget.py" line="270"/>
-        <source>Set as Stereo with</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../patchbay/patchcanvas/port_widget.py" line="307"/>
+        <location filename="../patchbay/port_menu.py" line="884"/>
         <source>Get &amp;Info</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../patchbay/patchcanvas/port_widget.py" line="309"/>
-        <source>&amp;Rename</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../patchbay/canvas_menu.py" line="179"/>
+        <location filename="../patchbay/canvas_menu.py" line="259"/>
         <source>AUDIO | MIDI | CV</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../patchbay/canvas_menu.py" line="62"/>
+        <location filename="../patchbay/canvas_menu.py" line="103"/>
         <source>AUDIO only</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../patchbay/canvas_menu.py" line="83"/>
+        <location filename="../patchbay/canvas_menu.py" line="124"/>
         <source>ALSA only</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../patchbay/canvas_menu.py" line="176"/>
+        <location filename="../patchbay/canvas_menu.py" line="256"/>
         <source>AUDIO | MIDI | CV | ALSA</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../patchbay/port_info_dialog.py" line="44"/>
+        <location filename="../patchbay/port_info_dialog.py" line="46"/>
         <source>ALSA</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../patchbay/canvas_menu.py" line="71"/>
+        <source>Show hidden boxes</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../patchbay/canvas_menu.py" line="309"/>
+        <source>Display all boxes</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../patchbay/canvas_menu.py" line="315"/>
+        <source>All boxes are visible.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../patchbay/group_menu.py" line="191"/>
+        <source>Hide</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../patchbay/patchbay_manager.py" line="1720"/>
+        <source>Change view %i -&gt; %i</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../patchbay/port_menu.py" line="790"/>
+        <source>Disconnect All (visible)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../patchbay/port_menu.py" line="836"/>
+        <source>Set as stereo with...</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
     <name>patchbay_theme</name>
     <message>
-        <location filename="../patchbay/options_dialog.py" line="127"/>
+        <location filename="../patchbay/options_dialog.py" line="161"/>
         <source>New Theme Name</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../patchbay/options_dialog.py" line="127"/>
+        <location filename="../patchbay/options_dialog.py" line="161"/>
         <source>Choose a name for the new theme :</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../patchbay/options_dialog.py" line="139"/>
+        <location filename="../patchbay/options_dialog.py" line="173"/>
         <source>The copy of the theme directory failed</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../patchbay/options_dialog.py" line="142"/>
+        <location filename="../patchbay/options_dialog.py" line="176"/>
         <source>Copy failed !</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>sel_boxes_menu</name>
+    <message>
+        <location filename="../patchbay/selected_boxes_menu.py" line="23"/>
+        <source>Selected boxes</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../patchbay/selected_boxes_menu.py" line="34"/>
+        <source>Put in a new exclusive view</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../patchbay/selected_boxes_menu.py" line="40"/>
+        <source>Hide boxes</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../patchbay/selected_boxes_menu.py" line="46"/>
+        <source>Invert selection</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
     <name>tool_bar</name>
     <message>
-        <location filename="../patchbay/tool_bar.py" line="50"/>
+        <location filename="../patchbay/tools_widgets.py" line="101"/>
         <source>Type filter</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../patchbay/tool_bar.py" line="53"/>
+        <location filename="../patchbay/tools_widgets.py" line="104"/>
         <source>Zoom slider</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../patchbay/tool_bar.py" line="56"/>
+        <location filename="../patchbay/tools_widgets.py" line="107"/>
         <source>Transport clock</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../patchbay/tool_bar.py" line="59"/>
+        <location filename="../patchbay/tools_widgets.py" line="110"/>
         <source>Transport Play/Stop</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../patchbay/tool_bar.py" line="62"/>
+        <location filename="../patchbay/tools_widgets.py" line="113"/>
         <source>Transport Tempo</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../patchbay/tool_bar.py" line="65"/>
+        <location filename="../patchbay/tools_widgets.py" line="116"/>
         <source>Buffer size</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../patchbay/tool_bar.py" line="68"/>
+        <location filename="../patchbay/tools_widgets.py" line="119"/>
         <source>Sample rate</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../patchbay/tool_bar.py" line="71"/>
+        <location filename="../patchbay/tools_widgets.py" line="122"/>
         <source>Latency</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../patchbay/tool_bar.py" line="74"/>
+        <location filename="../patchbay/tools_widgets.py" line="125"/>
         <source>Xruns</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../patchbay/tool_bar.py" line="77"/>
+        <location filename="../patchbay/tools_widgets.py" line="128"/>
         <source>DSP Load</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../patchbay/tool_bar.py" line="83"/>
+        <location filename="../patchbay/tools_widgets.py" line="135"/>
         <source>Displayed tools</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../patchbay/tools_widgets.py" line="92"/>
+        <source>Undo / Redo</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../patchbay/tools_widgets.py" line="95"/>
+        <source>Views selector</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../patchbay/tools_widgets.py" line="98"/>
+        <source>Hidden boxes</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../patchbay/tools_widgets.py" line="231"/>
+        <source>Display text beside icons</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
     <name>transport</name>
     <message>
-        <location filename="../patchbay/surclassed_widgets.py" line="175"/>
+        <location filename="../patchbay/surclassed_widgets.py" line="193"/>
         <source>Hours:Minutes:Seconds</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../patchbay/surclassed_widgets.py" line="177"/>
+        <location filename="../patchbay/surclassed_widgets.py" line="195"/>
         <source>Beat|Bar|Tick</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../patchbay/surclassed_widgets.py" line="179"/>
+        <location filename="../patchbay/surclassed_widgets.py" line="197"/>
         <source>Frames</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>undo</name>
+    <message>
+        <location filename="../patchbay/bar_widget_canvas.py" line="61"/>
+        <source>Undo</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../patchbay/bar_widget_canvas.py" line="70"/>
+        <source>Redo</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../patchbay/calbacker.py" line="81"/>
+        <source>Move %i boxes</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../patchbay/calbacker.py" line="89"/>
+        <source>Move %s</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../patchbay/calbacker.py" line="114"/>
+        <source>Wrap &quot;%s&quot;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../patchbay/calbacker.py" line="117"/>
+        <source>Unwrap &quot;%s&quot;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../patchbay/type_filter_frame.py" line="88"/>
+        <source>Change visible port types from %s to %s</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../patchbay/hiddens_indicator.py" line="417"/>
+        <source>Restore &quot;%s&quot;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../patchbay/group_menu.py" line="219"/>
+        <source>Join &quot;%s&quot;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../patchbay/group_menu.py" line="234"/>
+        <source>Split &quot;%s&quot;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../patchbay/group_menu.py" line="246"/>
+        <source>Set auto layout for &quot;%s&quot;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../patchbay/group_menu.py" line="264"/>
+        <source>Set &quot;%s&quot; layout to %s</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../patchbay/group_menu.py" line="270"/>
+        <source>Hide &quot;%s&quot;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../patchbay/view_selector_frame.py" line="443"/>
+        <source>Remove view n°%i</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../patchbay/views_menu.py" line="162"/>
+        <source>Change view number %i to %i</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../patchbay/views_menu.py" line="147"/>
+        <source>View %i renamed to &quot;%s&quot;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../patchbay/views_menu.py" line="127"/>
+        <source>Change view %i -&gt; %i</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>views</name>
+    <message>
+        <location filename="../patchbay/view_selector_frame.py" line="420"/>
+        <source>Change view %i -&gt; %i</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../patchbay/view_selector_frame.py" line="341"/>
+        <source>View %i</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>views_menu</name>
+    <message>
+        <location filename="../patchbay/view_selector_frame.py" line="298"/>
+        <source>Arrange</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../patchbay/view_selector_frame.py" line="301"/>
+        <source>Follow the signal chain</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../patchbay/view_selector_frame.py" line="305"/>
+        <source>Two columns facing each other</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../patchbay/views_menu.py" line="63"/>
+        <source>Rename</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../patchbay/views_menu.py" line="68"/>
+        <source>Remove</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../patchbay/view_selector_frame.py" line="265"/>
+        <source>Forget the positions of those absents</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../patchbay/views_menu.py" line="78"/>
+        <source>Change view number to...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../patchbay/views_menu.py" line="106"/>
+        <source>Remove all other views</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../patchbay/view_selector_frame.py" line="317"/>
+        <source>New View</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../patchbay/views_menu.py" line="20"/>
+        <source>Views</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../patchbay/views_menu.py" line="49"/>
+        <source>View n°%i</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../patchbay/views_menu.py" line="73"/>
+        <source>Forget the positions of those absent</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../patchbay/views_menu.py" line="111"/>
+        <source>New view</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../patchbay/views_menu.py" line="139"/>
+        <source>Rename view</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../patchbay/views_menu.py" line="139"/>
+        <source>New view name :</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
