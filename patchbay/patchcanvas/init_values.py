@@ -197,7 +197,7 @@ class CanvasItemType(IntEnum):
 
 # Canvas options
 class CanvasOptionsObject:
-    theme_name = ""
+    theme_name = ''
     auto_hide_groups = True
     auto_select_items = False
     show_shadows = False

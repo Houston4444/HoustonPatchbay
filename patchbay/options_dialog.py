@@ -144,7 +144,7 @@ class CanvasOptionsDialog(QDialog):
         patchcanvas.zoom_reset()
 
     def _theme_box_activated(self):
-        current_theme_ref_id = self.ui.comboBoxTheme.currentData(
+        current_theme_ref_id: str = self.ui.comboBoxTheme.currentData(
             Qt.ItemDataRole.UserRole)
         if current_theme_ref_id == self._current_theme_ref:
             return
