@@ -2,15 +2,18 @@
 from enum import IntEnum, IntFlag
 from typing import TYPE_CHECKING, Union
 
-from qtpy.QtWidgets import (
-    QMenu, QCheckBox, QFrame, QLabel, QHBoxLayout,
-    QSpacerItem, QSizePolicy, QWidgetAction,
-    QApplication, QAction)
+from qtpy.QtCore import Qt, QSize, Slot, QEvent, QPoint
 from qtpy.QtGui import (
     QIcon, QColor, QKeyEvent, QPixmap, QMouseEvent,
     QCursor, QFocusEvent, QPaintEvent, QPainter,
     QPen, QBrush)
-from qtpy.QtCore import Qt, QSize, Slot, QEvent, QPoint
+if TYPE_CHECKING:
+    # FIX : QAction not found by pylance
+    from qtpy.QtGui import QAction
+from qtpy.QtWidgets import (
+    QMenu, QCheckBox, QFrame, QLabel, QHBoxLayout,
+    QSpacerItem, QSizePolicy, QWidgetAction,
+    QApplication, QAction)
 
 from .patchcanvas import canvas, CallbackAct, BoxType, options
 from .patchcanvas.theme import StyleAttributer

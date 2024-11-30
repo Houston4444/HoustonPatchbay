@@ -91,14 +91,14 @@ class ThemeManager:
         canvas.theme.read_theme(theme_dict, self.current_theme_file)
         canvas.scene.update_theme()
         
-        theme_ref = os.path.basename(os.path.dirname(self.current_theme_file))
+        theme_ref = self.current_theme_file.parent.name
         canvas.callback(CallbackAct.THEME_CHANGED, theme_ref)
         return True
     
     @staticmethod
     def _convert_configparser_object_to_dict(conf: dict) -> dict:
         def type_convert(value):
-            ''' returns an int, a float, or the unchanged given value '''
+            '''return an int, a float, or the unchanged given value'''
             try:
                 value = int(value)
             except:

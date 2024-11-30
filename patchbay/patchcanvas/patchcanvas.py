@@ -193,7 +193,7 @@ def init(view: PatchGraphicsView, callback: Callable,
         if not canvas.theme_manager.set_theme(options.theme_name):
             if canvas.theme_manager.set_theme(fallback_theme):
                 _logger.warning(
-                f"theme {options.theme_name}' has not been found,"
+                f"theme '{options.theme_name}' has not been found,"
                 f"use '{fallback_theme}' instead.")
             else:
                 _logger.warning(
@@ -1053,7 +1053,10 @@ def list_themes() -> list[dict]:
 
 @patchbay_api
 def change_theme(theme_name='') -> bool:
-    return canvas.theme_manager.set_theme(theme_name)
+    ret = canvas.theme_manager.set_theme(theme_name)
+    if ret:
+        options.theme_name = theme_name
+    return ret
 
 @patchbay_api
 def copy_and_load_current_theme(new_theme_name: str) -> int:

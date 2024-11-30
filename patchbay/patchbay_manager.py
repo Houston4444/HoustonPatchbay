@@ -49,8 +49,10 @@ JACK_METADATA_PORT_GROUP = _JACK_METADATA_PREFIX + "port-group"
 JACK_METADATA_PRETTY_NAME = _JACK_METADATA_PREFIX + "pretty-name"
 JACK_METADATA_SIGNAL_TYPE = _JACK_METADATA_PREFIX + "signal-type"
 
+
 _translate = QGuiApplication.translate
 _logger = logging.getLogger(__name__)
+
 
 def enum_to_flag(enum_int: int) -> int:
     if enum_int <= 0:
@@ -154,9 +156,9 @@ class PatchbayManager:
 
         self.set_graceful_names(settings.value(
             'Canvas/use_graceful_names', True, type=bool))
-        self.group_a2j_hw = settings.value(
+        self.group_a2j_hw: bool = settings.value(
             'Canvas/group_a2j_ports', True, type=bool)
-        self.alsa_midi_enabled = settings.value(
+        self.alsa_midi_enabled: bool = settings.value(
             'Canvas/alsa_midi_enabled', False, type=bool)
 
         # all patchbay events are delayed
@@ -212,39 +214,7 @@ class PatchbayManager:
         if options is None:
             options = patchcanvas.CanvasOptionsObject()
             if isinstance(self._settings, QSettings):
-                options.theme_name = self._settings.value(
-                    'Canvas/theme', default_theme_name, type=str)
-                options.show_shadows = self._settings.value(
-                    'Canvas/box_shadows', False, type=bool)
-                try:
-                    grid_style_name = self._settings.value(
-                        'Canvas/grid_style', 'NONE', type=str)
-                    grid_style = GridStyle[grid_style_name]
-                except:
-                    grid_style = GridStyle.NONE
-                options.grid_style = grid_style    
-                
-                options.auto_select_items = self._settings.value(
-                    'Canvas/auto_select_items', False, type=bool)
-                options.inline_displays = False
-                options.elastic = self._settings.value(
-                    'Canvas/elastic', True, type=bool)
-                options.borders_navigation = self._settings.value(
-                    'Canvas/borders_navigation', True, type=bool)
-                options.prevent_overlap = self._settings.value(
-                    'Canvas/prevent_overlap', True, type=bool)
-                options.max_port_width = self._settings.value(
-                    'Canvas/max_port_width', 160, type=int)
-                options.semi_hide_opacity = self._settings.value(
-                    'Canvas/semi_hide_opacity', 0.17, type=float)
-                options.default_zoom = self._settings.value(
-                    'Canvas/default_zoom', 100, type=int)
-                options.box_grouped_auto_layout_ratio = self._settings.value(
-                    'Canvas/grouped_box_auto_layout_ratio', 1.0, type=float)
-                options.cell_width = self._settings.value(
-                    'Canvas/grid_width', 16, type=int)
-                options.cell_height = self._settings.value(
-                    'Canvas/grid_height', 12, type=int)
+                options.set_from_settings(self._settings)
         
         if features is None:
             features = CanvasFeaturesObject()
@@ -298,6 +268,18 @@ class PatchbayManager:
     @staticmethod
     def save_patchcanvas_cache():
         patchcanvas.save_cache()
+    
+    def save_settings(self):
+        if self._settings is None:
+            return
+        
+        self._settings.setValue('Canvas/use_graceful_names',
+                                self.use_graceful_names)
+        self._settings.setValue('Canvas/group_a2j_ports',
+                                self.group_a2j_hw)
+        self._settings.setValue('Canvas/alsa_midi_enabled',
+                                self.alsa_midi_enabled)
+        patchcanvas.options.save_to_settings(self._settings)
 
     def set_use_graceful_names(self, yesno: bool):
         self.use_graceful_names = yesno

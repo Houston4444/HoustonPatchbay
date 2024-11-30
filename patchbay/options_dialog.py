@@ -32,10 +32,7 @@ class CanvasOptionsDialog(QDialog):
         self.ui = Ui_CanvasOptions()
         self.ui.setupUi(self)
         
-        self.manager = manager
-        sg = manager.sg
-        self._settings = settings
-        self._theme_changed = sg.theme_changed
+        self.mng = manager
         
         box_layout_dict = {
             1.0: _translate('box_layout', 'Choose the smallest area'),
@@ -58,54 +55,7 @@ class CanvasOptionsDialog(QDialog):
             self.ui.comboBoxGridStyle.addItem(
                 grid_style_dict[grid_style], grid_style)
 
-        if settings is not None:
-            self.ui.checkBoxGracefulNames.setChecked(
-                settings.value('Canvas/use_graceful_names', True, type=bool))
-            self.ui.checkBoxA2J.setChecked(
-                settings.value('Canvas/group_a2j_ports', True, type=bool))
-            self.ui.checkBoxAlsa.setChecked(
-                settings.value('Canvas/alsa_midi_enabled', False, type=bool))
-            self.ui.checkBoxShadows.setChecked(
-                settings.value('Canvas/box_shadows', False, type=bool))
-
-            grid_style_name: str = settings.value(
-                'Canvas/grid_style', 'NONE', type=str)
-            try:
-                grid_style = GridStyle[grid_style_name.upper()]
-            except:
-                grid_style = GridStyle.NONE
-                
-            self.ui.comboBoxGridStyle.setCurrentIndex(grid_style.value)
-
-            self.ui.checkBoxAutoSelectItems.setChecked(
-                settings.value('Canvas/auto_select_items', False, type=bool))
-            self.ui.checkBoxElastic.setChecked(
-                settings.value('Canvas/elastic', True, type=bool))
-            self.ui.checkBoxBordersNavigation.setChecked(
-                settings.value('Canvas/borders_navigation', True, type=bool))
-            self.ui.checkBoxPreventOverlap.setChecked(
-                settings.value('Canvas/prevent_overlap', True, type=bool))
-            self.ui.spinBoxMaxPortWidth.setValue(
-                settings.value('Canvas/max_port_width', 170, type=int))
-            self.ui.spinBoxDefaultZoom.setValue(
-                settings.value('Canvas/default_zoom', 100, type=int))
-            self.ui.spinBoxGridWidth.setValue(
-                settings.value('Canvas/grid_width', 16, type=int))
-            self.ui.spinBoxGridHeight.setValue(
-                settings.value('Canvas/grid_height', 12, type=int))
-            layout_ratio = settings.value(
-                'Canvas/grouped_box_auto_layout_ratio', 1.0, type=float)
-            
-            if layout_ratio <= 1.0:
-                box_index = 0
-            elif layout_ratio <= 1.3:
-                box_index = 1
-            elif layout_ratio < 2.0:
-                box_index = 2
-            else:
-                box_index = 3
-                
-            self.ui.comboBoxBoxesAutoLayout.setCurrentIndex(box_index)
+        self.set_values()
 
         self.ui.comboBoxTheme.activated.connect(self._theme_box_activated)
         self.ui.pushButtonEditTheme.clicked.connect(self._edit_theme)
@@ -145,12 +95,57 @@ class CanvasOptionsDialog(QDialog):
         self.ui.spinBoxGridHeight.valueChanged.connect(
             self._grid_height_changed)
 
+    def set_values(self):
+        self.ui.checkBoxGracefulNames.setChecked(
+            self.mng.use_graceful_names)
+        self.ui.checkBoxA2J.setChecked(
+            self.mng.group_a2j_hw)
+        self.ui.checkBoxAlsa.setChecked(
+            self.mng.alsa_midi_enabled)
+        
+        options = patchcanvas.options
+        
+        self.ui.checkBoxShadows.setChecked(
+            options.show_shadows)
+        self.ui.comboBoxGridStyle.setCurrentIndex(
+            options.grid_style.value)
+        self.ui.checkBoxAutoSelectItems.setChecked(
+            options.auto_select_items)
+        self.ui.checkBoxElastic.setChecked(
+            options.elastic)
+        self.ui.checkBoxBordersNavigation.setChecked(
+            options.borders_navigation)
+        self.ui.checkBoxPreventOverlap.setChecked(
+            options.prevent_overlap)
+        self.ui.spinBoxMaxPortWidth.setValue(
+            options.max_port_width)
+        self.ui.spinBoxDefaultZoom.setValue(
+            options.default_zoom)
+        self.ui.spinBoxGridWidth.setValue(
+            options.cell_width)
+        self.ui.spinBoxGridHeight.setValue(
+            options.cell_height)
+        
+        layout_ratio = options.box_grouped_auto_layout_ratio
+        
+        if layout_ratio <= 1.0:
+            box_index = 0
+        elif layout_ratio <= 1.3:
+            box_index = 1
+        elif layout_ratio < 2.0:
+            box_index = 2
+        else:
+            box_index = 3
+            
+        self.ui.comboBoxBoxesAutoLayout.setCurrentIndex(box_index)
+
     def _change_default_zoom(self, value: int):
         patchcanvas.set_default_zoom(value)
         patchcanvas.zoom_reset()
 
     def _theme_box_activated(self):
-        current_theme_ref_id = self.ui.comboBoxTheme.currentData(Qt.ItemDataRole.UserRole)
+        current_theme_ref_id = self.ui.comboBoxTheme.currentData(
+            Qt.ItemDataRole.UserRole)
         if current_theme_ref_id == self._current_theme_ref:
             return
         
@@ -159,7 +154,7 @@ class CanvasOptionsDialog(QDialog):
                 self.ui.pushButtonEditTheme.setEnabled(theme_data.editable)
                 break
 
-        self._theme_changed.emit(current_theme_ref_id)
+        self.mng.sg.theme_changed.emit(current_theme_ref_id)
         
     def _duplicate_theme(self):        
         new_theme_name, ok = QInputDialog.getText(
@@ -204,14 +199,16 @@ class CanvasOptionsDialog(QDialog):
         
         ret, ok = QFileDialog.getSaveFileName(
             self,
-            _translate('file_dialog', 'Where do you want to save this patchbay scene ?'),
+            _translate(
+                'file_dialog',
+                'Where do you want to save this patchbay scene ?'),
             str(scenes_dir),
             _translate('file_dialog', 'Patchichi files (*.patchichi.json)'))
 
         if not ok:
             return
         
-        self.manager.export_to_patchichi_json(Path(ret))
+        self.mng.export_to_patchichi_json(Path(ret))
 
     def set_theme_list(self, theme_list: list[ThemeData]):
         self.ui.comboBoxTheme.clear()
@@ -226,11 +223,13 @@ class CanvasOptionsDialog(QDialog):
                 self.ui.comboBoxTheme.addItem(
                     user_icon, theme_data.name, theme_data.ref_id)
             else:
-                self.ui.comboBoxTheme.addItem(theme_data.name, theme_data.ref_id)
+                self.ui.comboBoxTheme.addItem(
+                    theme_data.name, theme_data.ref_id)
 
     def set_theme(self, theme_ref: str):
         for i in range(self.ui.comboBoxTheme.count()):
-            ref_id = self.ui.comboBoxTheme.itemData(i, Qt.ItemDataRole.UserRole)
+            ref_id = self.ui.comboBoxTheme.itemData(
+                i, Qt.ItemDataRole.UserRole)
             if ref_id == theme_ref:
                 self.ui.comboBoxTheme.setCurrentIndex(i)
                 break
@@ -239,7 +238,8 @@ class CanvasOptionsDialog(QDialog):
             # update the list and select it if it exists
             self.set_theme_list(patchcanvas.list_themes())
             for i in range(self.ui.comboBoxTheme.count()):
-                ref_id = self.ui.comboBoxTheme.itemData(i, Qt.ItemDataRole.UserRole)
+                ref_id = self.ui.comboBoxTheme.itemData(
+                    i, Qt.ItemDataRole.UserRole)
                 if ref_id == theme_ref:
                     self.ui.comboBoxTheme.setCurrentIndex(i)
                     
@@ -257,9 +257,10 @@ class CanvasOptionsDialog(QDialog):
             self.ui.checkBoxAlsa.setToolTip('')
         else:
             self.ui.checkBoxAlsa.setToolTip(
-                _translate('alsa_midi', 
-                           "ALSA python lib version is not present or too old.\n"
-                           "Ensure to have python3-pyalsa >= 1.2.4"))
+                _translate(
+                    'alsa_midi', 
+                    "ALSA python lib version is not present or too old.\n"
+                    "Ensure to have python3-pyalsa >= 1.2.4"))
 
     def _grouped_box_auto_layout_changed(self, index: int):
         patchcanvas.set_grouped_box_layout_ratio(
@@ -278,40 +279,8 @@ class CanvasOptionsDialog(QDialog):
     def showEvent(self, event):
         self.set_theme_list(patchcanvas.list_themes())
         self.set_theme(patchcanvas.get_theme())
+        self.set_values()
         QDialog.showEvent(self, event)
 
     def closeEvent(self, event):
-        if self._settings is not None:
-            self._settings.setValue('Canvas/use_graceful_names',
-                                    self.ui.checkBoxGracefulNames.isChecked())
-            self._settings.setValue('Canvas/group_a2j_ports',
-                                    self.ui.checkBoxA2J.isChecked())
-            self._settings.setValue('Canvas/alsa_midi_enabled',
-                                    self.ui.checkBoxAlsa.isChecked())
-            self._settings.setValue('Canvas/box_shadows',
-                                    self.ui.checkBoxShadows.isChecked())
-            
-            grid_style: GridStyle = self.ui.comboBoxGridStyle.currentData()
-            self._settings.setValue('Canvas/grid_style', grid_style.name)
-
-            self._settings.setValue('Canvas/auto_select_items',
-                                    self.ui.checkBoxAutoSelectItems.isChecked())
-            self._settings.setValue('Canvas/elastic',
-                                    self.ui.checkBoxElastic.isChecked())
-            self._settings.setValue('Canvas/borders_navigation',
-                                    self.ui.checkBoxBordersNavigation.isChecked())
-            self._settings.setValue('Canvas/prevent_overlap',
-                                    self.ui.checkBoxPreventOverlap.isChecked())
-            self._settings.setValue('Canvas/max_port_width',
-                                    self.ui.spinBoxMaxPortWidth.value())
-            self._settings.setValue('Canvas/default_zoom',
-                                    self.ui.spinBoxDefaultZoom.value())
-            self._settings.setValue('Canvas/theme',
-                                    self.ui.comboBoxTheme.currentData())
-            self._settings.setValue('Canvas/grouped_box_auto_layout_ratio',
-                                    self.ui.comboBoxBoxesAutoLayout.currentData())
-            self._settings.setValue('Canvas/grid_width',
-                                    self.ui.spinBoxGridWidth.value())
-            self._settings.setValue('Canvas/grid_height',
-                                    self.ui.spinBoxGridHeight.value())
         QDialog.closeEvent(self, event)

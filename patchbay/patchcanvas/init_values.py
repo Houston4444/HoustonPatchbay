@@ -17,7 +17,7 @@
 #
 # For a full copy of the GNU General Public License see the doc/GPL.txt file.
 
-from typing import TYPE_CHECKING, Iterator, Optional
+from typing import TYPE_CHECKING, Iterator, Optional, Callable
 from enum import Enum, Flag, IntEnum, auto
 import logging
 
@@ -212,6 +212,47 @@ class CanvasOptionsObject:
     box_grouped_auto_layout_ratio = 1.0
     cell_width = 16
     cell_height = 12
+    
+    def set_from_settings(self, settings: QSettings):
+        for key, value in CanvasOptionsObject.__dict__.items():
+            if key.startswith('_') or isinstance(value, Callable):
+                continue
+            
+            try:
+                if isinstance(value, Enum):
+                    setg_value = settings.value(
+                        f'Canvas/{key}', value.name, type=str)
+                    
+                    self.__setattr__(key, type(value)[setg_value])
+                else:
+                    setg_value = settings.value(
+                        f'Canvas/{key}', value, type=type(value))
+                    self.__setattr__(key, type(value)(setg_value))
+
+            except TypeError:
+                _logger.error(
+                    f'wrong type in settings for Canvas/{key}, '
+                    f'should be {type(value)}')
+            
+    def save_to_settings(self, settings: QSettings):
+        for key, value in self.__dict__.items():
+            if key.startswith('_') or isinstance(value, Callable):
+                continue
+            
+            try:
+                if isinstance(value, Enum):
+                    settings.setValue(
+                        f'Canvas/{key}', value.name)
+                
+                elif isinstance(value, (bool, int, float, str)):
+                    settings.setValue(
+                        f'Canvas/{key}', value)
+                else:
+                    _logger.warning(
+                        f'unknown value type for {key}: {type(value)}')
+            except:
+                _logger.warning(
+                    f'Failed to save value {value} for key {key}')
 
 
 # Canvas features
