@@ -65,11 +65,11 @@ class ItemmDeleg(QAbstractItemDelegate):
                 view_name = self.mng.views[view_num].name
                         
             font = QFont()
-            name_width = QFontMetricsF(font).width(view_name)
+            name_width = QFontMetricsF(font).horizontalAdvance(view_name)
             if 1 <= view_num <= 9:
-                num_width = QFontMetricsF(itafont).width(f'Alt+{view_num}')
+                num_width = QFontMetricsF(itafont).horizontalAdvance(f'Alt+{view_num}')
             else:
-                num_width = QFontMetricsF(font).width(str(view_num))
+                num_width = QFontMetricsF(font).horizontalAdvance(str(view_num))
             
             needed_width = max(needed_width, name_width + num_width + 102.0)
             
@@ -163,7 +163,7 @@ class ItemmDeleg(QAbstractItemDelegate):
             font.setItalic(True)
             painter.setFont(font)
 
-        num_pos.setX(self._width - QFontMetricsF(font).width(num_text) - 42.0)
+        num_pos.setX(self._width - QFontMetricsF(font).horizontalAdvance(num_text) - 42.0)
         painter.drawText(num_pos, num_text)
         
         if self.mng is not None:

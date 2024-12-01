@@ -114,7 +114,6 @@ class PortWidget(ConnectableWidget):
         self._name_truncked = False
 
         if width_limited:
-            #sizer = QFontMetrics(self._port_font)
             long_size = self._theme.get_text_width(self._print_name)
             
             if long_size > width_limited:
@@ -488,7 +487,7 @@ class PortWidget(ConnectableWidget):
         painter.setFont(self._port_font)
 
         sizer = QFontMetrics(self._port_font)
-        sep_width = sizer.width(self._trunck_sep)
+        sep_width = sizer.horizontalAdvance(self._trunck_sep)
 
         if self._portgrp_id:
             print_name_size = self.get_text_width()
@@ -506,7 +505,7 @@ class PortWidget(ConnectableWidget):
         painter.drawText(text_pos, self._print_name)
         
         if self._name_truncked:
-            sep_x = text_pos.x() + sizer.width(self._print_name)
+            sep_x = text_pos.x() + sizer.horizontalAdvance(self._print_name)
             
             painter.drawText(QPointF(sep_x + sep_width, text_pos.y()),
                              self._print_name_right)

@@ -426,7 +426,7 @@ class StyleAttributer:
             if s in self._font_metrics_cache.keys():
                 tot_size += self._font_metrics_cache[s]
             else:
-                letter_size = QFontMetricsF(self.font()).width(s)
+                letter_size = QFontMetricsF(self.font()).horizontalAdvance(s)
                 self._font_metrics_cache[s] = letter_size
                 tot_size += letter_size
         

@@ -1104,8 +1104,8 @@ class BoxWidgetMoth(QGraphicsItem):
                 x_pos = title_line.x
                 if pre_text:
                     t_font = title_line.get_font()
-                    x_pos += QFontMetrics(t_font).width(pre_text)
-                    x_pos += QFontMetrics(t_font).width(' ')
+                    x_pos += QFontMetrics(t_font).horizontalAdvance(pre_text)
+                    x_pos += QFontMetrics(t_font).horizontalAdvance(' ')
 
                 painter.setPen(QPen(canvas.theme.monitor_color, 0))
                 painter.drawText(ceil(x_pos), ceil(title_line.y), 'Monitor')

@@ -91,7 +91,7 @@ class CanvasPortInfoDialog(QDialog):
     def showEvent(self, event: QShowEvent) -> None:
         self.resize(0, 0)
         self.ui.lineEditFullPortName.setMinimumWidth(
-            QFontMetrics(QFont()).width(
+            QFontMetrics(QFont()).horizontalAdvance(
             self.ui.lineEditFullPortName.text()) + 20
         )
         super().showEvent(event)

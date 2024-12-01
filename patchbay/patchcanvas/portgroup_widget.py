@@ -116,7 +116,6 @@ class PortgroupWidget(ConnectableWidget):
         self._name_truncked = False
 
         if width_limited:
-            #sizer = QFontMetrics(self._port_font)
             long_size = self._theme.get_text_width(self._print_name)
             
             if long_size > width_limited:
@@ -403,8 +402,8 @@ class PortgroupWidget(ConnectableWidget):
         painter.drawText(text_pos, self._print_name)
         if self._name_truncked:
             sizer = QFontMetrics(self._portgrp_font)
-            sep_x = text_pos.x() + sizer.width(self._print_name)
-            sep_width = sizer.width(self._trunck_sep)
+            sep_x = text_pos.x() + sizer.horizontalAdvance(self._print_name)
+            sep_width = sizer.horizontalAdvance(self._trunck_sep)
 
             painter.drawText(QPointF(sep_x + sep_width, text_pos.y()),
                              self._print_name_right)
