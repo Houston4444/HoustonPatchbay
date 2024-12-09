@@ -1354,8 +1354,9 @@ class BoxWidgetMoth(QGraphicsItem):
             self._plugin_inline = InlineDisplay.CACHED
 
         if self._inline_image is None:
-            sys.stderr.write("ERROR: inline display image is None for\n",
-                             self._plugin_id, self._group_name)
+            _logger.warning(
+                'inline display image is None for '
+                f'{self._plugin_id}, {self._group_name}')
             return
 
         swidth = self._inline_image.width() / scaling
