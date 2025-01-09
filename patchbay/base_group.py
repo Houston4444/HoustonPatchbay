@@ -28,6 +28,7 @@ class Group:
         self.group_id = group_id
         self.name = name
         self.display_name = name
+        self.pretty_name = ''
         self.ports = list[Port]()
         self.portgroups = list[Portgroup]()
         self._is_hardware = False
@@ -133,10 +134,14 @@ class Group:
         if not self.in_canvas:
             return
         
-        display_name = self.name
-        if self.manager.use_graceful_names:
-            display_name = self.display_name
-        self.cnv_name = display_name
+        if self.pretty_name:
+            display_name = self.pretty_name
+            self.cnv_name =self.pretty_name
+        else:
+            display_name = self.name
+            if self.manager.use_graceful_names:
+                display_name = self.display_name
+            self.cnv_name = display_name
         
         patchcanvas.rename_group(self.group_id, display_name)
 

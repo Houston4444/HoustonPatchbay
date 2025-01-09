@@ -47,7 +47,7 @@ class Callbacker:
     def _group_info(self, group_id: int):
         ...
     
-    def _group_rename(self, group_id: int):
+    def _group_rename(self, group_id: int, pretty_name: str):
         ...
 
     def _group_pos_modified(self, group_id: int):
@@ -197,7 +197,7 @@ class Callbacker:
         dialog.set_port(port)
         dialog.show()
 
-    def _port_rename(self, group_id: int, port_id: int):
+    def _port_rename(self, group_id: int, port_id: int, pretty_name: str):
         ...
     
     def _ports_connect(self, group_out_id: int, port_out_id: int,
