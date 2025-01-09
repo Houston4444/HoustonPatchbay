@@ -1262,7 +1262,7 @@ class PatchbayManager:
 
     @later_by_batch(sort_group=True)
     def metadata_update(self, uuid: int, key: str, value: str) -> Optional[int]:
-        ''' remember metadata and returns the group_id'''
+        ''' remember metadata and returns the group_id'''        
         if key == JACK_METADATA_ORDER:
             port = self.get_port_from_uuid(uuid)
             if port is None:
@@ -1281,12 +1281,16 @@ class PatchbayManager:
 
         elif key == JACK_METADATA_PRETTY_NAME:
             port = self.get_port_from_uuid(uuid)
-            if port is None:
-                return
+            if port is not None:
+                port.pretty_name = value
+                port.rename_in_canvas()
+                return port.group_id
 
-            port.pretty_name = value
-            port.rename_in_canvas()
-            return port.group_id
+            for group in self.groups:
+                if group.uuid == uuid:
+                    group.pretty_name = value
+                    group.update_name_in_canvas()
+                    return group.group_id
 
         elif key == JACK_METADATA_PORT_GROUP:
             port = self.get_port_from_uuid(uuid)

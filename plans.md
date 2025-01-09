@@ -53,6 +53,3 @@ This method has the advantage of not disturbing the rest of the ecosystem. At th
 
 *the patchbay module has no JACK client, but it is connected to a JACK client in the main program (RaySession or Patchance).
 
-## Responsive design tool bar (quick)
-
-If we add features, we may add widgets to the tool bar, if the user wants to display all widgets, we will need to be able to split the title bar in two lines (at least). This the way I done RaySession client widgets (left panel).

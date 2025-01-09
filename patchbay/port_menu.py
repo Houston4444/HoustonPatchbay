@@ -7,6 +7,8 @@ from qtpy.QtGui import (
     QIcon, QColor, QKeyEvent, QPixmap, QMouseEvent,
     QCursor, QFocusEvent, QPaintEvent, QPainter,
     QPen, QBrush)
+
+from .rename_group_dialog import RenameGroupDialog
 if TYPE_CHECKING:
     # FIX : QAction not found by pylance
     from qtpy.QtGui import QAction
@@ -36,9 +38,14 @@ _translate = QApplication.translate
 def theme_css(theme: StyleAttributer) -> str:
     pen = theme.fill_pen()
     
-    return (f"background-color: {theme.background_color().name(QColor.NameFormat.HexArgb)};"
-            f"color: {theme.text_color().name(QColor.NameFormat.HexArgb)};"
-            f"border: {pen.widthF()}px solid {pen.color().name(QColor.NameFormat.HexArgb)}")
+    return (
+        "background-color: "
+        f"{theme.background_color().name(QColor.NameFormat.HexArgb)};"
+        "color: "
+        f"{theme.text_color().name(QColor.NameFormat.HexArgb)};"
+        "border: "
+        f"{pen.widthF()}px solid {pen.color().name(QColor.NameFormat.HexArgb)}"
+    )
 
 
 class ConnState(IntEnum):
@@ -883,6 +890,12 @@ class PoMenu(AbstractConnectionsMenu):
                 if previous_port or next_port:
                     self.addMenu(set_as_stereo_menu)
         
+        # add Rename
+        if isinstance(self._po, Port):
+            port_rename_act = self.addAction(_translate('patchbay', 'Rename'))
+            port_rename_act.setIcon(QIcon.fromTheme('edit-rename'))
+            port_rename_act.triggered.connect(self._rename_port)
+        
         # add info dialog command
         if isinstance(self._po, Port):
             port_info_act = self.addAction(_translate('patchbay', "Get &Info"))
@@ -962,7 +975,21 @@ class PoMenu(AbstractConnectionsMenu):
         canvas.callback(CallbackAct.PORTGROUP_ADD, port.group_id,
                         port.mode(), port.type,
                         (self._po.port_id, port.port_id))
+    
+    @Slot()
+    def _rename_port(self):
+        if not isinstance(self._po, Port):
+            return
+
+        dialog = RenameGroupDialog(self._mng.main_win, self._po.short_name())
+        dialog.exec()
         
+        pretty_name = dialog.pretty_name()
+        
+        canvas.callback(
+            CallbackAct.PORT_RENAME,
+            self._po.group_id, self._po.port_id, pretty_name)
+    
     @Slot()
     def _display_port_infos(self):
         if not isinstance(self._po, Port):

@@ -8,9 +8,11 @@ from .cancel_mng import CancelOp, CancellableAction
 from .patchcanvas.patshared import PortMode, BoxLayoutMode
 from .base_group import Group
 from .patchcanvas import canvas, CallbackAct, patchcanvas, utils
+from .rename_group_dialog import RenameGroupDialog
 
 if TYPE_CHECKING:
     from .patchbay_manager import PatchbayManager
+
 
 _translate = QApplication.translate
 
@@ -192,11 +194,16 @@ class GroupMenu(QMenu):
             _translate('patchbay', 'Hide'))
         hide_box_act.setIcon(QIcon.fromTheme('hide_table_row'))
         
+        rename_act = self.addAction(
+            _translate('patchbay', 'Rename'))
+        rename_act.setIcon(QIcon.fromTheme('edit-rename'))
+        
         disco_all_act.triggered.connect(self._disconnect_all)
         wrap_act.triggered.connect(self._wrap)
         auto_layout_act.triggered.connect(self._auto_layout)
         change_layout_act.triggered.connect(self._change_layout)
         hide_box_act.triggered.connect(self._hide_box)
+        rename_act.triggered.connect(self._rename)
     
     def _disconnect_all(self):
         if self._port_mode & PortMode.OUTPUT:
@@ -270,3 +277,12 @@ class GroupMenu(QMenu):
             a.name = _translate('undo', 'Hide "%s"') \
                 % self._group.cnv_name
             self._group.hide(self._port_mode)
+            
+    @Slot()
+    def _rename(self):
+        dialog = RenameGroupDialog(self._mng.main_win, self._group.name)
+        dialog.exec()
+        
+        pretty_name = dialog.pretty_name()
+        canvas.callback(
+            CallbackAct.GROUP_RENAME, self._group.group_id, pretty_name)
