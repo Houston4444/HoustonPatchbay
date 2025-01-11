@@ -43,7 +43,6 @@ class Group:
 
         self.mdata_icon = ''
 
-        self.cnv_name = ''
         self.cnv_box_type = BoxType.APPLICATION
         self.cnv_icon_name = ''
         
@@ -99,16 +98,11 @@ class Group:
         self.display_name = \
             self.display_name.replace('.0/', '/').replace('_', ' ')
         
-        display_name = self.name
-        if self.manager.use_graceful_names:
-            display_name = self.display_name
-        
-        self.cnv_name = display_name
         self.cnv_box_type = box_type
         self.cnv_icon_name = icon_name
         
         patchcanvas.add_group(
-            self.group_id, display_name, splitted,
+            self.group_id, self.cnv_name, splitted,
             box_type, icon_name, gpos)
 
         self.in_canvas = True
@@ -116,6 +110,14 @@ class Group:
         if self.has_gui:
             patchcanvas.set_optional_gui_state(
                 self.group_id, self.gui_visible)
+
+    @property
+    def cnv_name(self):
+        if self.manager.use_graceful_names:
+            if self.pretty_name:
+                return self.pretty_name
+            return self.display_name
+        return self.name
 
     def remove_from_canvas(self):
         if not self.in_canvas:
@@ -134,16 +136,24 @@ class Group:
         if not self.in_canvas:
             return
         
-        if self.pretty_name:
-            display_name = self.pretty_name
-            self.cnv_name =self.pretty_name
-        else:
-            display_name = self.name
-            if self.manager.use_graceful_names:
-                display_name = self.display_name
-            self.cnv_name = display_name
+        # if self.pretty_name:
+        #     display_name = self.pretty_name
+        #     self.cnv_name =self.pretty_name
+        # else:
+        #     display_name = self.name
+        #     if self.manager.use_graceful_names:
+        #         display_name = self.display_name
+        #     self.cnv_name = display_name
         
-        patchcanvas.rename_group(self.group_id, display_name)
+        # if self.manager.use_graceful_names:
+        #     if self.pretty_name:
+        #         self.cnv_name = self.pretty_name
+        #     else:
+        #         self.cnv_name = self.display_name
+        # else:
+        #     self.cnv_name = self.name
+        
+        patchcanvas.rename_group(self.group_id, self.cnv_name)
 
     def _get_box_type_and_icon(self) -> tuple[BoxType, str]:
         box_type = BoxType.APPLICATION

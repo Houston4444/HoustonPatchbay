@@ -25,6 +25,7 @@ class Port:
 
     # given by JACK metadatas
     pretty_name = ''
+    '''can be given from metadata or from the PrettyNames base'''
     mdata_portgroup = ''
     mdata_signal_type = ''
 
