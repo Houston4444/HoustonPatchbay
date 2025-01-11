@@ -7,7 +7,7 @@ from typing import Any, Callable, Iterator, Optional, Union
 
 from qtpy.QtGui import QCursor, QGuiApplication, QKeyEvent
 from qtpy.QtWidgets import QMainWindow, QMessageBox, QWidget
-from qtpy.QtCore import QTimer, QSettings, QThread, Qt
+from qtpy.QtCore import QTimer, QSettings, QThread, Qt, Slot
 
 from .patchcanvas import arranger, patchcanvas
 from .patchcanvas.utils import get_new_group_positions
@@ -15,7 +15,7 @@ from .patchcanvas.scene_view import PatchGraphicsView
 from .patchcanvas.patshared import (
     PortType, PortSubType, PortMode,
     PortTypesViewFlag, GroupPos, from_json_to_str,
-    ViewsDict, ViewData, PortgroupsDict, PortgroupMem)
+    ViewsDict, ViewData, PortgroupsDict, PortgroupMem, PrettyNames)
 from .patchcanvas.init_values import (
     AliasingReason, CallbackAct, CanvasFeaturesObject,
     CanvasOptionsObject, GridStyle)
@@ -27,27 +27,13 @@ from .canvas_menu import CanvasMenu
 from .options_dialog import CanvasOptionsDialog
 from .filter_frame import FilterFrame
 from .base_elements import (
-    JackPortFlag, ToolDisplayed, TransportPosition)
+    JackPortFlag, ToolDisplayed, TransportPosition, JackMetadata)
 from .base_group import Group
 from .base_connection import Connection
 from .base_port import Port
 from .base_portgroup import Portgroup
 from .conns_clipboard import ConnClipboard
 from .calbacker import Callbacker
-
-
-# Meta data (taken from pyjacklib)
-_JACK_METADATA_PREFIX = "http://jackaudio.org/metadata/"
-JACK_METADATA_CONNECTED = _JACK_METADATA_PREFIX + "connected"
-JACK_METADATA_EVENT_TYPES = _JACK_METADATA_PREFIX + "event-types"
-JACK_METADATA_HARDWARE = _JACK_METADATA_PREFIX + "hardware"
-JACK_METADATA_ICON_LARGE = _JACK_METADATA_PREFIX + "icon-large"
-JACK_METADATA_ICON_NAME = _JACK_METADATA_PREFIX + "icon-name"
-JACK_METADATA_ICON_SMALL = _JACK_METADATA_PREFIX + "icon-small"
-JACK_METADATA_ORDER = _JACK_METADATA_PREFIX + "order"
-JACK_METADATA_PORT_GROUP = _JACK_METADATA_PREFIX + "port-group"
-JACK_METADATA_PRETTY_NAME = _JACK_METADATA_PREFIX + "pretty-name"
-JACK_METADATA_SIGNAL_TYPE = _JACK_METADATA_PREFIX + "signal-type"
 
 
 _translate = QGuiApplication.translate
@@ -70,11 +56,11 @@ class DelayedOrder:
     clear_conns: bool
 
     
-def later_by_batch(draw_group=False, sort_group=False, clear_conns=False):
+def later_by_batch(draw_group=False, sort_group=False,
+                   clear_conns=False, pretty_names=False):
     def decorator(func: Callable):
         def wrapper(*args, **kwargs):
-            mng = args[0]
-            assert isinstance(mng, PatchbayManager)
+            mng: PatchbayManager = args[0]
             if mng.very_fast_operation:
                 return func(*args, **kwargs)
 
@@ -128,6 +114,7 @@ class PatchbayManager:
     views = ViewsDict()
     
     portgroups_memory = PortgroupsDict()
+    pretty_names = PrettyNames()
     
     delayed_orders = list[DelayedOrder]()
 
@@ -1100,21 +1087,18 @@ class PatchbayManager:
     @later_by_batch(draw_group=True)
     def add_port(self, name: str, port_type_int: int, flags: int, uuid: int) -> int:
         '''adds port and returns the group_id'''
-        port_type = PortType.NULL
-
-        if port_type_int == PortType.AUDIO_JACK.value:
-            port_type = PortType.AUDIO_JACK
-        elif port_type_int == PortType.MIDI_JACK.value:
-            port_type = PortType.MIDI_JACK
-        elif port_type_int == PortType.MIDI_ALSA.value:
-            port_type = PortType.MIDI_ALSA
-        elif port_type_int == PortType.VIDEO.value:
-            port_type = PortType.VIDEO
+        
+        port_type = PortType(port_type_int)
 
         port = Port(self, self._next_port_id, name, port_type, flags, uuid)
         self._next_port_id += 1
         
         full_port_name = name
+
+        ptov = self.pretty_names.ports.get(full_port_name)
+        if ptov is not None:
+            port.pretty_name = ptov.pretty
+        
         group_name, colon, port_name = full_port_name.partition(':')
 
         is_a2j_group = False
@@ -1153,7 +1137,13 @@ class PatchbayManager:
             # port is in an non existing group, create the group
             gpos = self.get_group_position(group_name)
             group = Group(self, self._next_group_id, group_name, gpos)
+            
+            ptov = self.pretty_names.groups.get(group_name)
+            if ptov is not None:
+                group.pretty_name = ptov.pretty
+            
             group.a2j_group = is_a2j_group
+            
             self.set_group_as_nsm_client(group)
 
             self._next_group_id += 1
@@ -1204,12 +1194,17 @@ class PatchbayManager:
         
         return group.group_id
 
-    @later_by_batch(draw_group=True)
+    @later_by_batch(draw_group=True, pretty_names=True)
     def rename_port(self, name: str, new_name: str) -> Union[int, None]:
         port = self.get_port_from_name(name)
         if port is None:
             _logger.warning(f"rename_port to '{new_name}', no port named '{name}'")
             return
+
+        # change port pretty_name from database
+        ptov = self.pretty_names.ports.get(new_name)
+        if ptov is not None:
+            port.pretty_name = ptov.pretty
 
         # change port key in self._ports_by_name dict
         self._ports_by_name.pop(name)
@@ -1249,11 +1244,6 @@ class PatchbayManager:
 
         group = self.get_group_from_id(port.group_id)
         if group is not None:
-            # because many ports may be renamed quicky
-            # It is prefferable to rename all theses ports together.
-            # It prevents too much widget update in canvas,
-            # renames now could also prevent to find stereo detected portgroups
-            # if one of the two ports has been renamed and not the other one.
             port.full_name = new_name
             group.graceful_port(port)
             port.rename_in_canvas()
@@ -1263,7 +1253,7 @@ class PatchbayManager:
     @later_by_batch(sort_group=True)
     def metadata_update(self, uuid: int, key: str, value: str) -> Optional[int]:
         ''' remember metadata and returns the group_id'''        
-        if key == JACK_METADATA_ORDER:
+        if key == JackMetadata.ORDER:
             port = self.get_port_from_uuid(uuid)
             if port is None:
                 return
@@ -1279,7 +1269,7 @@ class PatchbayManager:
             port.order = port_order
             return port.group_id
 
-        elif key == JACK_METADATA_PRETTY_NAME:
+        elif key == JackMetadata.PRETTY_NAME:
             port = self.get_port_from_uuid(uuid)
             if port is not None:
                 port.pretty_name = value
@@ -1292,7 +1282,14 @@ class PatchbayManager:
                     group.update_name_in_canvas()
                     return group.group_id
 
-        elif key == JACK_METADATA_PORT_GROUP:
+        elif key == JackMetadata.MIDI_BRIDGE_GROUP_PRETTY_NAME:
+            port = self.get_port_from_uuid(uuid)
+            if port is not None and port.group.a2j_group:
+                port.group.pretty_name = value
+                port.group.update_name_in_canvas()
+                return port.group.group_id
+
+        elif key == JackMetadata.PORT_GROUP:
             port = self.get_port_from_uuid(uuid)
             if port is None:
                 return
@@ -1300,13 +1297,13 @@ class PatchbayManager:
             port.mdata_portgroup = value
             return port.group_id
 
-        elif key == JACK_METADATA_ICON_NAME:
+        elif key == JackMetadata.ICON_NAME:
             for group in self.groups:
                 if group.uuid == uuid:
                     group.set_client_icon(value, from_metadata=True)
                     return group.group_id
 
-        elif key == JACK_METADATA_SIGNAL_TYPE:
+        elif key == JackMetadata.SIGNAL_TYPE:
             port = self.get_port_from_uuid(uuid)
             if port is None:
                 return
@@ -1471,12 +1468,19 @@ class PatchbayManager:
         if self._tools_widget is not None:
             self._tools_widget.set_samplerate(samplerate)
 
+    # @Slot()
     def _delayed_orders_timeout(self):
+        '''This method is called by the QTimer self._delayed_orders_timer
+        when no graph event happens during 50ms.
+        It executes in the main thread all methods called since last time,
+        then, it updates the canvas with new contents.'''
+
         self.optimize_operation(True)
         group_ids_to_update = set()
         group_ids_to_sort = set()
         some_groups_removed = False
         clear_conns = False
+        pretty_names_check = False
         
         for oq in self.delayed_orders:
             group_id = oq.func(*oq.args, **oq.kwargs)
@@ -1514,8 +1518,7 @@ class PatchbayManager:
                     
             for conn in conns_to_clean:
                 self.connections.remove(conn)
-        
-        
+
         self.optimize_operation(False)
         self.delayed_orders.clear()
 
@@ -1570,10 +1573,12 @@ class PatchbayManager:
                     if group is not None:
                         group_attrs = list[str]()
                         if group.client_icon:
-                            group_attrs.append(f'CLIENT_ICON={slcol(group.client_icon)}')
+                            group_attrs.append(
+                                f'CLIENT_ICON={slcol(group.client_icon)}')
                             
                         if group.mdata_icon:
-                            group_attrs.append(f'ICON_NAME={slcol(group.mdata_icon)}')
+                            group_attrs.append(
+                                f'ICON_NAME={slcol(group.mdata_icon)}')
 
                         if group.has_gui:
                             if group.gui_visible:
@@ -1609,13 +1614,15 @@ class PatchbayManager:
                 
                 if port.mdata_signal_type != signal_type:
                     if port.mdata_signal_type:
-                        contents += f':SIGNAL_TYPE={slcol(port.mdata_signal_type)}\n'
+                        contents += \
+                            f':SIGNAL_TYPE={slcol(port.mdata_signal_type)}\n'
                     else:
                         contents += ':~SIGNAL_TYPE\n'
                 
                 if port.mdata_portgroup != pg_name:
                     if port.mdata_portgroup:
-                        contents += f':PORTGROUP={slcol(port.mdata_portgroup)}\n'
+                        contents += \
+                            f':PORTGROUP={slcol(port.mdata_portgroup)}\n'
                     else:
                         contents += ':~PORTGROUP\n'
                     pg_name = port.mdata_portgroup

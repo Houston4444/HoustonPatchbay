@@ -33,6 +33,9 @@ class PortType(IntFlag):
     MIDI_ALSA = 0x04
     VIDEO = 0x08
     PARAMETER = 0x10
+    
+    def _missing_(self) -> 'PortType':
+        return PortType.NULL
 
 
 class PortSubType(IntFlag):
