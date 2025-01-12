@@ -24,8 +24,8 @@ class Connection:
         return self.port_out.type
 
     def full_type(self) -> tuple[PortType, PortSubType]:
-        port_out_type, port_out_subtype = self.port_out.full_type()
-        port_in_type, port_in_subtype = self.port_in.full_type()
+        port_out_type, port_out_subtype = self.port_out.full_type
+        port_in_type, port_in_subtype = self.port_in.full_type
         return (port_out_type, port_out_subtype | port_in_subtype)
         
     def shown_in_port_types_view(
