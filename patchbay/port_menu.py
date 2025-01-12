@@ -20,7 +20,7 @@ from qtpy.QtWidgets import (
 from .patchcanvas import canvas, CallbackAct, BoxType, options
 from .patchcanvas.theme import StyleAttributer
 from .patchcanvas.utils import (
-    get_portgroup_name_from_ports_names, get_icon, is_dark_theme)
+    get_portgroup_name_from_ports_names, get_icon, is_dark_theme, portgroup_name_splitted)
 from .patchcanvas.patshared import (
     PortType, PortSubType, PortMode)
 from .base_group import Group
@@ -840,7 +840,8 @@ class PoMenu(AbstractConnectionsMenu):
             if isinstance(self._po, Portgroup):
                 self.split_to_monos_act = QAction(
                     _translate('patchbay', 'Split to Monos'))
-                self.split_to_monos_act.triggered.connect(self._split_to_monos)
+                self.split_to_monos_act.triggered.connect(
+                    self._split_to_monos)
                 self.addAction(self.split_to_monos_act)
             
             elif isinstance(self._po, Port) and not self._po.portgroup_id:
@@ -891,14 +892,15 @@ class PoMenu(AbstractConnectionsMenu):
                     self.addMenu(set_as_stereo_menu)
         
         # add Rename
-        if isinstance(self._po, Port):
-            port_rename_act = self.addAction(_translate('patchbay', 'Rename'))
-            port_rename_act.setIcon(QIcon.fromTheme('edit-rename'))
-            port_rename_act.triggered.connect(self._rename_port)
+        # if isinstance(self._po, Port):
+        port_rename_act = self.addAction(_translate('patchbay', 'Rename'))
+        port_rename_act.setIcon(QIcon.fromTheme('edit-rename'))
+        port_rename_act.triggered.connect(self._rename)
         
         # add info dialog command
         if isinstance(self._po, Port):
-            port_info_act = self.addAction(_translate('patchbay', "Get &Info"))
+            port_info_act = self.addAction(
+                _translate('patchbay', "Get &Info"))
             port_info_act.setIcon(QIcon.fromTheme('dialog-information'))            
             port_info_act.triggered.connect(self._display_port_infos)
     
@@ -977,19 +979,62 @@ class PoMenu(AbstractConnectionsMenu):
                         (self._po.port_id, port.port_id))
     
     @Slot()
-    def _rename_port(self):
-        if not isinstance(self._po, Port):
-            return
+    def _rename(self):
+        if isinstance(self._po, Port):
+            ptov = self._mng.pretty_names.ports.get(self._po.full_name)
+            if ptov is not None:
+                suggest = ptov.pretty
+            elif self._po.mdata_pretty_name:
+                suggest = self._po.mdata_pretty_name
+            else:
+                suggest = self._po.display_name
+            
+            dialog = RenameGroupDialog(
+                self._mng.main_win, self._po.short_name(),
+                suggest)
+            if not dialog.exec():
+                return
+            
+            pretty_name = dialog.pretty_name()
+            
+            self._mng.pretty_names.save_port(
+                self._po.full_name, pretty_name, self._po.mdata_pretty_name)
+            self._po.rename_in_canvas()
+            
+            canvas.callback(
+                CallbackAct.PORT_RENAME,
+                self._po.group_id, self._po.port_id, pretty_name)
+        
+        elif isinstance(self._po, Portgroup):
+            pg_name, suffixes = portgroup_name_splitted(
+                *[p.cnv_name for p in self._po.ports])
 
-        dialog = RenameGroupDialog(self._mng.main_win, self._po.short_name())
-        dialog.exec()
-        
-        pretty_name = dialog.pretty_name()
-        
-        canvas.callback(
-            CallbackAct.PORT_RENAME,
-            self._po.group_id, self._po.port_id, pretty_name)
-    
+            dialog = RenameGroupDialog(
+                self._mng.main_win, pg_name + '|'.join(suffixes),
+                pg_name.strip())
+
+            if not dialog.exec():
+                return
+            
+            pretty_name = dialog.pretty_name()
+            
+            for i in range(len(self._po.ports)):
+                port = self._po.ports[i]
+                suffix = suffixes[i]
+                if pretty_name:
+                    port_pretty_name = f'{pretty_name} {suffix}'
+                else:
+                    # clear portgroup, send empty metadata value
+                    port_pretty_name = ''
+
+                self._mng.pretty_names.save_port(
+                    port.full_name, port_pretty_name, port.mdata_pretty_name)
+                port.rename_in_canvas()
+
+                canvas.callback(
+                    CallbackAct.PORT_RENAME,
+                    port.group_id, port.port_id, port_pretty_name)
+
     @Slot()
     def _display_port_infos(self):
         if not isinstance(self._po, Port):

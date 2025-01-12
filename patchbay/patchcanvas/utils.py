@@ -134,7 +134,7 @@ def get_new_group_positions() -> dict[PortMode, tuple[int, int]]:
             PortMode.INPUT: (400, int(y)),
             PortMode.OUTPUT: (0, int(y))}
 
-def get_portgroup_name_from_ports_names(ports_names: list[str]):
+def get_portgroup_name_from_ports_names(ports_names: list[str]) -> str:
     if len(ports_names) < 2:
         return ''
 
@@ -158,6 +158,42 @@ def get_portgroup_name_from_ports_names(ports_names: list[str]):
         portgrp_name = portgrp_name[:-1]
     
     return portgrp_name
+
+def portgroup_name_splitted(
+        *port_names: str) -> tuple[str, tuple[str]]:
+    '''return a tuple of two elements,
+    the first element is the portgroup name,
+    the second is another tuple containing a suffix for each port. 
+    '''
+    if len(port_names) <= 0:
+        return ('', ())
+    if len(port_names) <= 1:
+        return (port_names[0], ('',))
+
+    # set portgrp name
+    portgrp_name = ''
+
+    for c in port_names[0]:
+        for eachname in port_names:
+            if not eachname.startswith(portgrp_name + c):
+                break
+        else:
+            portgrp_name += c
+    
+    # reduce portgrp name until it ends with one of the patterns
+    # in portgrp_name_ends
+    while portgrp_name:
+        if (portgrp_name.endswith((_PG_NAME_ENDS))
+                or portgrp_name in port_names):
+            break
+        
+        portgrp_name = portgrp_name[:-1]
+    
+    port_suffixes = list[str]()
+    for port_name in port_names:
+        port_suffixes.append(port_name.replace(portgrp_name, '', 1))
+    
+    return (portgrp_name, tuple(port_suffixes))
 
 def get_icon(icon_type: BoxType, icon_name: str,
              port_mode: PortMode, dark=True) -> QIcon:

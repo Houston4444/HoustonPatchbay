@@ -20,12 +20,9 @@ class Port:
     order = None
     uuid = 0
     'contains the real JACK uuid'
-    
-    cnv_name = ''
 
     # given by JACK metadatas
-    pretty_name = ''
-    '''can be given from metadata or from the PrettyNames base'''
+    mdata_pretty_name = ''
     mdata_portgroup = ''
     mdata_signal_type = ''
 
@@ -88,6 +85,20 @@ class Port:
 
         return self.full_name.partition(':')[2]
 
+    @property
+    def cnv_name(self):
+        if self.manager.use_graceful_names:
+            if self.mdata_pretty_name:
+                return self.mdata_pretty_name
+
+            internal_pretty_name = self.manager.pretty_names.pretty_port(
+                self.full_name)
+            if internal_pretty_name:
+                return internal_pretty_name
+
+            return self.display_name
+        return self.short_name()
+
     def add_the_last_digit(self):
         self.display_name += ' ' + self.last_digit_to_add
         self.last_digit_to_add = ''
@@ -100,16 +111,6 @@ class Port:
         if self.in_canvas:
             return
 
-        cnv_name = self.display_name
-        
-        if self.pretty_name:
-            cnv_name = self.pretty_name
-        
-        if not self.manager.use_graceful_names:
-            cnv_name = self.short_name()
-
-        self.cnv_name = cnv_name
-
         if not self.manager.port_type_shown(self.full_type()):
             return
 
@@ -121,7 +122,7 @@ class Port:
                 return
 
         patchcanvas.add_port(
-            self.group_id, self.port_id, cnv_name,
+            self.group_id, self.port_id, self.cnv_name,
             self.mode(), self.type, self.subtype)
 
         self.in_canvas = True
@@ -162,20 +163,11 @@ class Port:
                         continue
 
     def rename_in_canvas(self):
-        display_name = self.display_name
-        if self.pretty_name:
-            display_name = self.pretty_name
-
-        if not self.manager.use_graceful_names:
-            display_name = self.short_name()
-
-        self.cnv_name = display_name
-
         if not self.in_canvas:
             return
         
         patchcanvas.rename_port(
-            self.group_id, self.port_id, display_name)
+            self.group_id, self.port_id, self.cnv_name)
 
     def select_in_canvas(self):
         if not self.in_canvas:

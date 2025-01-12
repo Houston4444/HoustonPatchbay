@@ -1062,7 +1062,7 @@ class PatchbayManager:
         self.optimize_operation(True)
         for group in self.groups:
             group.update_ports_in_canvas()
-            group.update_name_in_canvas()
+            group.rename_in_canvas()
         self.optimize_operation(False)
         patchcanvas.redraw_all_groups()
 
@@ -1094,10 +1094,6 @@ class PatchbayManager:
         self._next_port_id += 1
         
         full_port_name = name
-
-        ptov = self.pretty_names.ports.get(full_port_name)
-        if ptov is not None:
-            port.pretty_name = ptov.pretty
         
         group_name, colon, port_name = full_port_name.partition(':')
 
@@ -1137,10 +1133,6 @@ class PatchbayManager:
             # port is in an non existing group, create the group
             gpos = self.get_group_position(group_name)
             group = Group(self, self._next_group_id, group_name, gpos)
-            
-            ptov = self.pretty_names.groups.get(group_name)
-            if ptov is not None:
-                group.pretty_name = ptov.pretty
             
             group.a2j_group = is_a2j_group
             
@@ -1201,11 +1193,6 @@ class PatchbayManager:
             _logger.warning(f"rename_port to '{new_name}', no port named '{name}'")
             return
 
-        # change port pretty_name from database
-        ptov = self.pretty_names.ports.get(new_name)
-        if ptov is not None:
-            port.pretty_name = ptov.pretty
-
         # change port key in self._ports_by_name dict
         self._ports_by_name.pop(name)
         self._ports_by_name[new_name] = port
@@ -1242,13 +1229,10 @@ class PatchbayManager:
             port.add_to_canvas()
             return group.group_id
 
-        group = self.get_group_from_id(port.group_id)
-        if group is not None:
-            port.full_name = new_name
-            group.graceful_port(port)
-            port.rename_in_canvas()
-
-            return group.group_id
+        port.full_name = new_name
+        port.group.graceful_port(port)
+        port.rename_in_canvas()
+        return port.group.group_id
 
     @later_by_batch(sort_group=True)
     def metadata_update(self, uuid: int, key: str, value: str) -> Optional[int]:
@@ -1272,21 +1256,21 @@ class PatchbayManager:
         elif key == JackMetadata.PRETTY_NAME:
             port = self.get_port_from_uuid(uuid)
             if port is not None:
-                port.pretty_name = value
+                port.mdata_pretty_name = value
                 port.rename_in_canvas()
                 return port.group_id
 
             for group in self.groups:
                 if group.uuid == uuid:
-                    group.pretty_name = value
-                    group.update_name_in_canvas()
+                    group.mdata_pretty_name = value
+                    group.rename_in_canvas()
                     return group.group_id
 
         elif key == JackMetadata.MIDI_BRIDGE_GROUP_PRETTY_NAME:
             port = self.get_port_from_uuid(uuid)
             if port is not None and port.group.a2j_group:
-                port.group.pretty_name = value
-                port.group.update_name_in_canvas()
+                port.group.mdata_pretty_name = value
+                port.group.rename_in_canvas()
                 return port.group.group_id
 
         elif key == JackMetadata.PORT_GROUP:
@@ -1634,10 +1618,10 @@ class PatchbayManager:
 
                 contents += f'{port_short_name}\n'
                 
-                if port.pretty_name or port.order:
+                if port.mdata_pretty_name or port.order:
                     port_attrs = list[str]()
-                    if port.pretty_name:
-                        port_attrs.append(f'PRETTY_NAME={slcol(port.pretty_name)}')
+                    if port.mdata_pretty_name:
+                        port_attrs.append(f'PRETTY_NAME={slcol(port.mdata_pretty_name)}')
                     if port.order:
                         port_attrs.append(f'ORDER={port.order}')
                     contents += ':'

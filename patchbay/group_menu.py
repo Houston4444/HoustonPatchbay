@@ -280,9 +280,23 @@ class GroupMenu(QMenu):
             
     @Slot()
     def _rename(self):
-        dialog = RenameGroupDialog(self._mng.main_win, self._group.name)
-        dialog.exec()
+        pretty_name = self._mng.pretty_names.pretty_group(self._group.name)
+        if pretty_name:
+            suggest = pretty_name
+        elif self._group.mdata_pretty_name:
+            suggest = self._group.mdata_pretty_name
+        else:
+            suggest = self._group.display_name
+        
+        dialog = RenameGroupDialog(
+            self._mng.main_win, self._group.name, suggest)
+        if not dialog.exec():
+            return
         
         pretty_name = dialog.pretty_name()
+        self._mng.pretty_names.save_group(
+            self._group.name, pretty_name, self._group.mdata_pretty_name)
+        self._group.rename_in_canvas()
+        
         canvas.callback(
             CallbackAct.GROUP_RENAME, self._group.group_id, pretty_name)
