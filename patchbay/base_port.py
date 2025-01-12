@@ -57,6 +57,7 @@ class Port:
         else:
             return PortMode.NULL
 
+    @property
     def full_type(self) -> tuple[PortType, PortSubType]:
         return (self.type, self.subtype)
     
@@ -112,7 +113,7 @@ class Port:
         if self.in_canvas:
             return
 
-        if not self.manager.port_type_shown(self.full_type()):
+        if not self.manager.port_type_shown(self.full_type):
             return
 
         if ignore_gpos:

@@ -95,13 +95,13 @@ class PortCheckBox(QCheckBox):
         if isinstance(po, Portgroup):
             theme = full_theme.portgroup
             
-        if po.full_type()[0] is PortType.AUDIO_JACK:
+        if po.full_type[0] is PortType.AUDIO_JACK:
             theme = theme.audio
             line_theme = line_theme.audio
-        elif po.full_type()[0] is PortType.MIDI_JACK:
+        elif po.full_type[0] is PortType.MIDI_JACK:
             theme = theme.midi
             line_theme = line_theme.midi
-        elif po.full_type()[0] is PortType.MIDI_ALSA:
+        elif po.full_type[0] is PortType.MIDI_ALSA:
             theme = theme.alsa
             line_theme = line_theme.alsa
 
@@ -233,13 +233,13 @@ class CheckFrame(QFrame):
         if isinstance(po, Portgroup):
             theme = full_theme.portgroup
         
-        if po.full_type()[0] is PortType.AUDIO_JACK:
-            theme = theme.cv if po.full_type()[1] is PortSubType.CV else theme.audio
+        if po.full_type[0] is PortType.AUDIO_JACK:
+            theme = theme.cv if po.full_type[1] is PortSubType.CV else theme.audio
             
-        elif po.full_type()[0] is PortType.MIDI_JACK:
+        elif po.full_type[0] is PortType.MIDI_JACK:
             theme = theme.midi
             
-        elif po.full_type()[0] is PortType.MIDI_ALSA:
+        elif po.full_type[0] is PortType.MIDI_ALSA:
             theme = theme.alsa
 
         self._theme = theme
@@ -330,7 +330,7 @@ class CheckFrame(QFrame):
 class DangerousMenu(QMenu):
     def __init__(self, parent, po: Union[Port, Portgroup]):
         QMenu.__init__(self, parent)
-        if po.full_type()[1] is PortSubType.CV:
+        if po.full_type[1] is PortSubType.CV:
             dangerous_name = _translate(
                 'patchbay', 'Audio | DANGEROUS !!!')
         else:
@@ -421,7 +421,7 @@ class AbstractConnectionsMenu(QMenu):
         return action
     
     def _display_name(self, port: Port) -> str:
-        if port.full_type() == (PortType.AUDIO_JACK, PortSubType.CV):
+        if port.full_type == (PortType.AUDIO_JACK, PortSubType.CV):
             return f"CV | {port.cnv_name}"
         return port.cnv_name
     
@@ -554,8 +554,8 @@ class ConnectMenu(AbstractConnectionsMenu):
         self._patch_may_have_change()
     
     def _is_connection_dangerous(self, port: Port) -> bool:
-        t_type, t_subtype = self._po.full_type()
-        p_type, p_subtype = port.full_type()
+        t_type, t_subtype = self._po.full_type
+        p_type, p_subtype = port.full_type
         
         if t_type is not PortType.AUDIO_JACK:
             return False
@@ -836,7 +836,7 @@ class PoMenu(AbstractConnectionsMenu):
         self.addSeparator()
         
         # Add mono <-> stereo tools
-        if self._po.full_type() == (PortType.AUDIO_JACK, PortSubType.REGULAR):
+        if self._po.full_type == (PortType.AUDIO_JACK, PortSubType.REGULAR):
             if isinstance(self._po, Portgroup):
                 self.split_to_monos_act = QAction(
                     _translate('patchbay', 'Split to Monos'))
@@ -858,7 +858,7 @@ class PoMenu(AbstractConnectionsMenu):
                     port_found = False
                     
                     for port in group.ports:
-                        if port.full_type() != self._po.full_type():
+                        if port.full_type != self._po.full_type:
                             continue
                         
                         if port.mode() is not self._po.mode():

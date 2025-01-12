@@ -33,11 +33,12 @@ class Portgroup:
 
         return self.ports[0].type
 
+    @property
     def full_type(self) -> tuple[PortType, PortSubType]:
         if not self.ports:
             return (PortType.NULL, PortSubType.REGULAR)
         
-        return self.ports[0].full_type()
+        return self.ports[0].full_type
 
     def update_ports_in_canvas(self):
         for port in self.ports:
@@ -55,7 +56,7 @@ class Portgroup:
         if self.in_canvas:
             return
     
-        if not self.manager.port_type_shown(self.full_type()):
+        if not self.manager.port_type_shown(self.full_type):
             return
 
         if len(self.ports) < 2:

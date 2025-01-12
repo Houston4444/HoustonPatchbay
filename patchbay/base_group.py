@@ -245,7 +245,7 @@ class Group:
 
         self.ports.append(port)
         
-        port_type, port_sub_type = port.full_type()
+        port_type, port_sub_type = port.full_type
         if port_type is PortType.AUDIO_JACK:
             if port_sub_type is PortSubType.CV:
                 ptv_flag = PortTypesViewFlag.CV
@@ -600,11 +600,11 @@ class Group:
         self.add_to_canvas()
 
         for portgroup in self.portgroups:
-            if not self.manager.port_type_shown(portgroup.full_type()):
+            if not self.manager.port_type_shown(portgroup.full_type):
                 portgroup.remove_from_canvas()
 
         for port in self.ports:
-            if not self.manager.port_type_shown(port.full_type()):
+            if not self.manager.port_type_shown(port.full_type):
                 port.remove_from_canvas()
 
         for port in self.ports:
