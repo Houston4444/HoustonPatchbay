@@ -60,6 +60,7 @@ class Port:
     def full_type(self) -> tuple[PortType, PortSubType]:
         return (self.type, self.subtype)
     
+    @property
     def short_name(self) -> str:
         if (self.type is PortType.MIDI_ALSA
                 and self.full_name.startswith((':ALSA_IN:', ':ALSA_OUT:'))):
@@ -97,7 +98,7 @@ class Port:
                 return internal_pretty_name
 
             return self.display_name
-        return self.short_name()
+        return self.short_name
 
     def add_the_last_digit(self):
         self.display_name += ' ' + self.last_digit_to_add

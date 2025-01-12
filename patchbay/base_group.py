@@ -295,7 +295,7 @@ class Group:
                 continue
 
             for port in portgroup.ports:
-                if port.short_name() in portgroup_mem.port_names:
+                if port.short_name in portgroup_mem.port_names:
                     remove_set.add(portgroup)
 
         for portgroup in remove_set:
@@ -309,7 +309,7 @@ class Group:
                     or port.type is not portgroup_mem.port_type):
                 continue
 
-            if port.short_name() == portgroup_mem.port_names[len(port_list)]:
+            if port.short_name == portgroup_mem.port_names[len(port_list)]:
                 port_list.append(port)
 
                 if len(port_list) == len(portgroup_mem.port_names):
@@ -435,7 +435,7 @@ class Group:
                 and port.flags & JackPortFlag.IS_PHYSICAL):
             client_name = 'a2j'
 
-        display_name = port.short_name()
+        display_name = port.short_name
         s_display_name = display_name
 
         if client_name == 'firewire_pcm':
@@ -637,7 +637,7 @@ class Group:
                     and not other_port.prevent_stereo):
                 for pg_mem in self.manager.portgroups_memory.iter_portgroups(
                         self.name, port.type, port.mode()):
-                    if other_port.short_name() in pg_mem.port_names:
+                    if other_port.short_name in pg_mem.port_names:
                         # other_port (left) is in a remembered portgroup
                         # prevent stereo detection
                         return
@@ -725,7 +725,7 @@ class Group:
             return
 
         last_port = self.ports[-1]
-        last_port_name = last_port.short_name()
+        last_port_name = last_port.short_name
 
         # check in the saved portgroups if we need to make a portgroup
         # or prevent stereo detection
@@ -745,7 +745,7 @@ class Group:
                 if (port.type is last_port.type
                         and port.mode() is last_port.mode()):
                     if (len(pg_mem.port_names) > len(port_list)
-                            and port.short_name()
+                            and port.short_name
                             == pg_mem.port_names[len(port_list)]):
                         port_list.append(port)
 
@@ -895,7 +895,7 @@ class Group:
                         if (not port.portgroup_id
                                 and port.type is port_type
                                 and port.mode() is port_mode
-                                and port.short_name()
+                                and port.short_name
                                     == portgroup_mem.port_names[len(founded_ports)]):
                             founded_ports.append(port)
                             if len(founded_ports) == len(portgroup_mem.port_names):
@@ -958,7 +958,7 @@ class Group:
                         if (not port.portgroup_id
                                 and port.type is port_type
                                 and port.mode() is port_mode
-                                and port.short_name()
+                                and port.short_name
                                     == portgroup_mem.port_names[len(founded_ports)]):
                             founded_ports.append(port)
                             if len(founded_ports) == len(portgroup_mem.port_names):
