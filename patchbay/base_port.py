@@ -49,6 +49,7 @@ class Port:
     def __repr__(self) -> str:
             return f"Port({self.full_name})"
 
+    @property
     def mode(self) -> PortMode:
         if self.flags & JackPortFlag.IS_OUTPUT:
             return PortMode.OUTPUT
@@ -117,15 +118,15 @@ class Port:
             return
 
         if ignore_gpos:
-            if hidden_sides & self.mode():
+            if hidden_sides & self.mode:
                 return
         else:
-            if self.group.current_position.hidden_port_modes() & self.mode():
+            if self.group.current_position.hidden_port_modes() & self.mode:
                 return
 
         patchcanvas.add_port(
             self.group_id, self.port_id, self.cnv_name,
-            self.mode(), self.type, self.subtype)
+            self.mode, self.type, self.subtype)
 
         self.in_canvas = True
         

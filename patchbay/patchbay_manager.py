@@ -355,7 +355,7 @@ class PatchbayManager:
                     portgroup.remove_from_canvas()
                     
             for port in group.ports:
-                if hidden_port_mode & port.mode():
+                if hidden_port_mode & port.mode:
                     port.remove_from_canvas()
             
             if group.outs_ptv is PortTypesViewFlag.NONE:
@@ -400,7 +400,7 @@ class PatchbayManager:
                     portgroup.remove_from_canvas()
                     
             for port in group.ports:
-                if port.mode() is PortMode.OUTPUT:
+                if port.mode is PortMode.OUTPUT:
                     port.remove_from_canvas()
                     
             for conn in self.connections:
@@ -417,7 +417,7 @@ class PatchbayManager:
                     portgroup.remove_from_canvas()
                     
             for port in group.ports:
-                if port.mode() is PortMode.INPUT:
+                if port.mode is PortMode.INPUT:
                     port.remove_from_canvas()
                     
             for conn in self.connections:
@@ -783,7 +783,7 @@ class PatchbayManager:
                             portgroup.remove_from_canvas()
                     
                     for port in group.ports:
-                        if port.mode() & redraw_mode:
+                        if port.mode & redraw_mode:
                             port.remove_from_canvas()
                 
                 if (new_gpos.is_splitted()
@@ -1582,7 +1582,7 @@ class PatchbayManager:
                     contents += ':~PHYSICAL\n'
                     physical = False
 
-                if last_type_and_mode != (port.type, port.mode()):
+                if last_type_and_mode != (port.type, port.mode):
                     if port.type is PortType.AUDIO_JACK:
                         if port.flags & JackPortFlag.IS_CONTROL_VOLTAGE:
                             contents += ':CV'
@@ -1593,8 +1593,8 @@ class PatchbayManager:
                     elif port.type is PortType.MIDI_ALSA:
                         contents += ':ALSA'
 
-                    contents += f':{port.mode().name}\n'
-                    last_type_and_mode = (port.type, port.mode())
+                    contents += f':{port.mode.name}\n'
+                    last_type_and_mode = (port.type, port.mode)
                 
                 if port.mdata_signal_type != signal_type:
                     if port.mdata_signal_type:
@@ -1664,7 +1664,7 @@ class PatchbayManager:
                         for port_str in pg_mem.port_names:
                             for port in group.ports:
                                 if (port.type is port_type
-                                        and port.mode() is port_mode
+                                        and port.mode is port_mode
                                         and port.short_name == port_str):
                                     pg_list.append(pg_mem.as_new_dict())
                                     one_port_found = True

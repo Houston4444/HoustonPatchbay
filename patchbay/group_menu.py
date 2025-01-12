@@ -145,7 +145,7 @@ class GroupMenu(QMenu):
         current_port_mode = PortMode.NULL
         for port in self._group.ports:
             if port.in_canvas:
-                current_port_mode |= port.mode()
+                current_port_mode |= port.mode
                 if current_port_mode is PortMode.BOTH:
                     break
 

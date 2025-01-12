@@ -20,13 +20,13 @@ class ConnClipboard:
         self.all_ports.clear()
         
         for port in ports:
-            if port.mode() is PortMode.OUTPUT:
+            if port.mode is PortMode.OUTPUT:
                 self.all_ports.append(
                     (port, 
                      [c.port_in for c in self._mng.connections
                       if c.port_out is port and c.in_canvas]))
 
-            elif port.mode() is PortMode.INPUT:
+            elif port.mode is PortMode.INPUT:
                 self.all_ports.append(
                     (port, 
                      [c.port_out for c in self._mng.connections
@@ -43,7 +43,7 @@ class ConnClipboard:
             # ports are incompatibles with themselves
             return False
 
-        return orig_port.type is port.type and orig_port.mode() is port.mode()    
+        return orig_port.type is port.type and orig_port.mode is port.mode
 
     def cb_cut(self, ports: list[Port]):
         self._write(ports)
@@ -59,13 +59,13 @@ class ConnClipboard:
         
         if self.cut:
             for orig_port, conn_ports in self.all_ports:
-                if orig_port.mode() is PortMode.OUTPUT:
+                if orig_port.mode is PortMode.OUTPUT:
                     for conn in self._mng.connections:
                         if (conn.port_out is orig_port
                                 and conn.port_in in conn_ports):
                             canvas.callback(CallbackAct.PORTS_DISCONNECT,
                                             conn.connection_id)
-                elif orig_port.mode() is PortMode.OUTPUT:
+                elif orig_port.mode is PortMode.OUTPUT:
                     for conn in self._mng.connections:
                         if (conn.port_in is orig_port
                                 and conn.port_out in conn_ports):
@@ -84,7 +84,7 @@ class ConnClipboard:
                 
                 orig_port, conn_ports = self.all_ports[j]
                 
-                if port.mode() is PortMode.OUTPUT:
+                if port.mode is PortMode.OUTPUT:
                     for conn_port in conn_ports:
                         if not conn_port.in_canvas:
                             continue
@@ -96,7 +96,7 @@ class ConnClipboard:
                                 port.group_id, port.port_id,
                                 conn_port.group_id, conn_port.port_id)
 
-                elif port.mode() is PortMode.INPUT:
+                elif port.mode is PortMode.INPUT:
                     for conn_port in conn_ports:
                         if not conn_port.in_canvas:
                             continue
