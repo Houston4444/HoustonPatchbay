@@ -11,7 +11,7 @@ _translate = QApplication.translate
 
 
 class RenameGroupDialog(QDialog):
-    def __init__(self, parent, group_name: str):
+    def __init__(self, parent, group_name: str, pretty_name: str):
         super().__init__(parent)
         self.ui = Ui_RenameGroupDialog()
         self.ui.setupUi(self)
@@ -22,6 +22,8 @@ class RenameGroupDialog(QDialog):
         self._ok_text = ok_button.text()
         self._ok_icon = ok_button.icon()
         
+        self.ui.lineEditPrettyName.setText(pretty_name)
+        self.ui.lineEditPrettyName.selectAll()
         self.ui.lineEditPrettyName.textEdited.connect(self._text_edited)
 
     @Slot(str)    

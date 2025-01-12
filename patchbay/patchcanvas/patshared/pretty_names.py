@@ -56,7 +56,7 @@ class PrettyNames:
     def save_port(self, port_name: str, pretty_name: str, over_pretty: str):
         self.ports[port_name] = _PrettyAndOver(pretty_name, over_pretty)
 
-    def pretty_group(self, group_name: str, cur_pretty_name: str) -> str:
+    def pretty_group(self, group_name: str, cur_pretty_name='') -> str:
         '''return the group (client) pretty_name if conditions are full,
         otherwire empty string'''
         ptov = self.groups.get(group_name)
@@ -70,7 +70,7 @@ class PrettyNames:
             return ''
         return ptov.pretty
     
-    def pretty_port(self, port_name: str, cur_pretty_name: str) -> str:
+    def pretty_port(self, port_name: str, cur_pretty_name='') -> str:
         '''return the port pretty_name if conditions are full,
         otherwire empty string'''
         ptov = self.ports.get(port_name)

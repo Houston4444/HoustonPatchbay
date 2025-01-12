@@ -28,7 +28,7 @@ class Group:
         self.group_id = group_id
         self.name = name
         self.display_name = name
-        self.pretty_name = ''
+        self.mdata_pretty_name = ''
         self.ports = list[Port]()
         self.portgroups = list[Portgroup]()
         self._is_hardware = False
@@ -114,8 +114,13 @@ class Group:
     @property
     def cnv_name(self):
         if self.manager.use_graceful_names:
-            if self.pretty_name:
-                return self.pretty_name
+            if self.mdata_pretty_name:
+                return self.mdata_pretty_name
+            
+            pretty_group = self.manager.pretty_names.pretty_group(self.name)
+            if pretty_group:
+                return pretty_group
+            
             return self.display_name
         return self.name
 
@@ -132,26 +137,9 @@ class Group:
         
         patchcanvas.redraw_group(self.group_id)
 
-    def update_name_in_canvas(self):
+    def rename_in_canvas(self):
         if not self.in_canvas:
             return
-        
-        # if self.pretty_name:
-        #     display_name = self.pretty_name
-        #     self.cnv_name =self.pretty_name
-        # else:
-        #     display_name = self.name
-        #     if self.manager.use_graceful_names:
-        #         display_name = self.display_name
-        #     self.cnv_name = display_name
-        
-        # if self.manager.use_graceful_names:
-        #     if self.pretty_name:
-        #         self.cnv_name = self.pretty_name
-        #     else:
-        #         self.cnv_name = self.display_name
-        # else:
-        #     self.cnv_name = self.name
         
         patchcanvas.rename_group(self.group_id, self.cnv_name)
 
