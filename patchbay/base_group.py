@@ -260,7 +260,7 @@ class Group:
         else:
             ptv_flag = PortTypesViewFlag.NONE
         
-        if port.mode() is PortMode.OUTPUT:
+        if port.mode is PortMode.OUTPUT:
             self.outs_ptv |= ptv_flag
         else:
             self.ins_ptv |= ptv_flag
@@ -305,7 +305,7 @@ class Group:
         port_list = list[Port]()
 
         for port in self.ports:
-            if (port.mode() is not portgroup_mem.port_mode
+            if (port.mode is not portgroup_mem.port_mode
                     or port.type is not portgroup_mem.port_type):
                 continue
 
@@ -315,7 +315,7 @@ class Group:
                 if len(port_list) == len(portgroup_mem.port_names):
                     # all ports are presents, create the portgroup
                     portgroup = self.manager.new_portgroup(
-                        self.group_id, port.mode(), port_list)
+                        self.group_id, port.mode, port_list)
                     self.portgroups.append(portgroup)
                     portgroup.add_to_canvas()
                     break
@@ -632,11 +632,11 @@ class Group:
 
             if (other_port.type is port.type
                     and other_port.subtype is port.subtype
-                    and other_port.mode() is port.mode()
+                    and other_port.mode is port.mode
                     and not other_port.portgroup_id
                     and not other_port.prevent_stereo):
                 for pg_mem in self.manager.portgroups_memory.iter_portgroups(
-                        self.name, port.type, port.mode()):
+                        self.name, port.type, port.mode):
                     if other_port.short_name in pg_mem.port_names:
                         # other_port (left) is in a remembered portgroup
                         # prevent stereo detection
@@ -730,7 +730,7 @@ class Group:
         # check in the saved portgroups if we need to make a portgroup
         # or prevent stereo detection
         for pg_mem in self.manager.portgroups_memory.iter_portgroups(
-                self.name, last_port.type, last_port.mode()):
+                self.name, last_port.type, last_port.mode):
             if last_port_name != pg_mem.port_names[-1]:
                 continue
 
@@ -743,7 +743,7 @@ class Group:
 
             for port in self.ports:
                 if (port.type is last_port.type
-                        and port.mode() is last_port.mode()):
+                        and port.mode is last_port.mode):
                     if (len(pg_mem.port_names) > len(port_list)
                             and port.short_name
                             == pg_mem.port_names[len(port_list)]):
@@ -751,7 +751,7 @@ class Group:
 
                         if len(port_list) == len(pg_mem.port_names):
                             portgroup = self.manager.new_portgroup(
-                                self.group_id, port.mode(), port_list)
+                                self.group_id, port.mode, port_list)
                             self.portgroups.append(portgroup)
                             for port in port_list:
                                 if not port.in_canvas:
@@ -766,7 +766,7 @@ class Group:
         other_port = self.stereo_detection(last_port)
         if other_port is not None:
             portgroup = self.manager.new_portgroup(
-                self.group_id, last_port.mode(), (other_port, last_port))
+                self.group_id, last_port.mode, (other_port, last_port))
             self.add_portgroup(portgroup)
 
             if self.in_canvas:
@@ -783,8 +783,8 @@ class Group:
             return
 
         for port in reversed(self.ports[:-1]):
-            if (port.type == last_port.type
-                    and port.mode() == last_port.mode()
+            if (port.type is last_port.type
+                    and port.mode is last_port.mode
                     and port is not last_port):
                 if (port.full_name[:-1] == last_port.full_name[:-1]
                         and ((port.last_digit_to_add == '0'
@@ -855,8 +855,8 @@ class Group:
                 elif search_index:
                     if (seems_ok
                             and (port.mdata_portgroup != previous_port.mdata_portgroup
-                                 or port.type != portgroup.port_type()
-                                 or port.mode() != portgroup.port_mode)):
+                                 or port.type is not portgroup.port_type()
+                                 or port.mode is not portgroup.port_mode)):
                         # port after the portgroup has not to make
                         # the portgroup higher. We keep this portgroup
                         break
@@ -894,13 +894,13 @@ class Group:
                     for port in self.ports:
                         if (not port.portgroup_id
                                 and port.type is port_type
-                                and port.mode() is port_mode
+                                and port.mode is port_mode
                                 and port.short_name
                                     == portgroup_mem.port_names[len(founded_ports)]):
                             founded_ports.append(port)
                             if len(founded_ports) == len(portgroup_mem.port_names):
                                 new_portgroup = self.manager.new_portgroup(
-                                    self.group_id, port.mode(), founded_ports)
+                                    self.group_id, port.mode, founded_ports)
                                 self.portgroups.append(new_portgroup)
                                 break
 
@@ -920,13 +920,13 @@ class Group:
                     if (pg_mdata is not None
                             and pg_mdata['pg_name'] == port.mdata_portgroup
                             and pg_mdata['port_type'] == port.type
-                            and pg_mdata['port_mode'] == port.mode()):
+                            and pg_mdata['port_mode'] == port.mode):
                         pg_mdata['ports'].append(port)
                     else:
                         portgroups_mdata.append(
                             {'pg_name': port.mdata_portgroup,
                              'port_type': port.type,
-                             'port_mode': port.mode(),
+                             'port_mode': port.mode,
                              'ports':[port]})
         
         for pg_mdata in portgroups_mdata:
@@ -957,13 +957,13 @@ class Group:
                     for port in self.ports:
                         if (not port.portgroup_id
                                 and port.type is port_type
-                                and port.mode() is port_mode
+                                and port.mode is port_mode
                                 and port.short_name
                                     == portgroup_mem.port_names[len(founded_ports)]):
                             founded_ports.append(port)
                             if len(founded_ports) == len(portgroup_mem.port_names):
                                 new_portgroup = self.manager.new_portgroup(
-                                    self.group_id, port.mode(), founded_ports)
+                                    self.group_id, port.mode, founded_ports)
                                 self.portgroups.append(new_portgroup)
                                 break
 

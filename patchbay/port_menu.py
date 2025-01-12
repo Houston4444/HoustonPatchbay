@@ -443,7 +443,7 @@ class AbstractConnectionsMenu(QMenu):
     def _port_mode(self) -> PortMode:
         if isinstance(self._po, Portgroup):
             return self._po.port_mode
-        return self._po.mode()
+        return self._po.mode
 
     def _get_connection_status(
             self, po_conns: list[Connection],
@@ -567,7 +567,7 @@ class ConnectMenu(AbstractConnectionsMenu):
             return self._port_mode() is PortMode.OUTPUT
         
         if p_subtype is PortSubType.CV:
-            return port.mode() is PortMode.OUTPUT
+            return port.mode is PortMode.OUTPUT
         
         return False
     
@@ -584,7 +584,7 @@ class ConnectMenu(AbstractConnectionsMenu):
             
             for port in group.ports:
                 if (port.type is self._port_type()
-                        and port.mode() is self._port_mode().opposite()):
+                        and port.mode is self._port_mode().opposite()):
                     if self._is_connection_dangerous(port) != dangerous:
                         has_dangerous_ports = True
                         continue
@@ -861,7 +861,7 @@ class PoMenu(AbstractConnectionsMenu):
                         if port.full_type != self._po.full_type:
                             continue
                         
-                        if port.mode() is not self._po.mode():
+                        if port.mode is not self._po.mode:
                             continue
                         
                         if not port_found:
@@ -975,7 +975,7 @@ class PoMenu(AbstractConnectionsMenu):
         port: Port = self.sender().data()
         
         canvas.callback(CallbackAct.PORTGROUP_ADD, port.group_id,
-                        port.mode(), port.type,
+                        port.mode, port.type,
                         (self._po.port_id, port.port_id))
     
     @Slot()

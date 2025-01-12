@@ -8,8 +8,7 @@ if TYPE_CHECKING:
     from .patchbay_manager import PatchbayManager
 
 class Portgroup:
-    # Portgroup is a stereo pair of ports
-    # but could be a group of more ports
+    '''Portgroup is a group of ports, in most cases a stereo pair'''
     def __init__(self, manager: 'PatchbayManager', group_id: int,
                  portgroup_id: int, port_mode: PortMode, ports: tuple[Port]):
         self.manager = manager

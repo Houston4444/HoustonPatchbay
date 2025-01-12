@@ -1,10 +1,6 @@
 from typing import TYPE_CHECKING
 
-from .patchcanvas.patshared import (
-    PortType,
-    PortSubType,
-    PortTypesViewFlag
-)
+from .patchcanvas.patshared import PortType
 from .patchcanvas import patchcanvas
 
 if TYPE_CHECKING:
@@ -20,29 +16,9 @@ class Connection:
         self.port_in = port_in
         self.in_canvas = False
 
+    @property
     def port_type(self) -> PortType:
         return self.port_out.type
-
-    def full_type(self) -> tuple[PortType, PortSubType]:
-        port_out_type, port_out_subtype = self.port_out.full_type
-        port_in_type, port_in_subtype = self.port_in.full_type
-        return (port_out_type, port_out_subtype | port_in_subtype)
-        
-    def shown_in_port_types_view(
-            self, port_types_view: PortTypesViewFlag) -> bool:
-        if self.port_out.type is PortType.MIDI_JACK:
-            return bool(port_types_view & PortTypesViewFlag.MIDI)
-        
-        if (self.port_out.type is PortType.AUDIO_JACK
-                and self.port_in.type is PortType.AUDIO_JACK):
-            if (self.port_out.subtype is PortSubType.CV
-                    and self.port_in.subtype is PortSubType.CV): 
-                return bool(port_types_view & PortTypesViewFlag.CV)
-            if (self.port_out.subtype is PortSubType.REGULAR
-                    and self.port_in.subtype is PortSubType.REGULAR):
-                return bool(port_types_view & PortTypesViewFlag.AUDIO)
-        
-        return False
 
     def add_to_canvas(self):
         if self.manager.very_fast_operation:
