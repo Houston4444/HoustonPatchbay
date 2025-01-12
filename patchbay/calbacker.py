@@ -162,7 +162,7 @@ class Callbacker:
         pg_mem.port_mode = port_mode
         
         pg_mem.above_metadatas = above_metadatas
-        pg_mem.port_names = [p.short_name() for p in port_list]
+        pg_mem.port_names = [p.short_name for p in port_list]
 
         self.mng.add_portgroup_memory(pg_mem)
         self.mng.save_portgroup_memory(pg_mem)
@@ -183,7 +183,7 @@ class Callbacker:
                     pg_mem.port_type = port.type
                     pg_mem.port_mode = portgroup.port_mode
                     pg_mem.above_metadatas = bool(port.mdata_portgroup)
-                    pg_mem.port_names = [port.short_name()]
+                    pg_mem.port_names = [port.short_name]
                     self.mng.add_portgroup_memory(pg_mem)
                     self.mng.save_portgroup_memory(pg_mem)
                 break

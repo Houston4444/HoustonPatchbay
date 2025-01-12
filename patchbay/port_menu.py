@@ -990,7 +990,7 @@ class PoMenu(AbstractConnectionsMenu):
                 suggest = self._po.display_name
             
             dialog = RenameGroupDialog(
-                self._mng.main_win, self._po.short_name(),
+                self._mng.main_win, self._po.short_name,
                 suggest)
             if not dialog.exec():
                 return

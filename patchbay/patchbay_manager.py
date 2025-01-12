@@ -1665,7 +1665,7 @@ class PatchbayManager:
                             for port in group.ports:
                                 if (port.type is port_type
                                         and port.mode() is port_mode
-                                        and port.short_name() == port_str):
+                                        and port.short_name == port_str):
                                     pg_list.append(pg_mem.as_new_dict())
                                     one_port_found = True
                                     break
