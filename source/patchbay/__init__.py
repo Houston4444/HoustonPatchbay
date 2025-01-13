@@ -1,3 +1,8 @@
+import sys
+from pathlib import Path
+
+sys.path.insert(1, str(Path(__file__).parents[1]))
+
 from .patchbay_manager import PatchbayManager, patchcanvas
 from .base_port import Port
 from .base_portgroup import Portgroup

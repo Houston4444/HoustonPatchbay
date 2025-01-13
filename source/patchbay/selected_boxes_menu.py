@@ -5,7 +5,7 @@ from qtpy.QtWidgets import QMenu, QApplication
 
 
 from . import patchcanvas
-from .patchcanvas.patshared import PortMode
+from patshared import PortMode
 from .cancel_mng import CancelOp, CancellableAction
 
 if TYPE_CHECKING:

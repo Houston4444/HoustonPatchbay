@@ -24,7 +24,7 @@ from qtpy.QtGui import (QColor, QLinearGradient,
                          QPainterPath, QPen, QBrush)
 from qtpy.QtWidgets import QGraphicsPathItem
 
-from .patshared import PortType, PortMode
+from patshared import PortType, PortMode
 from .init_values import (
     ConnectionThemeState,
     BoxHidding,

@@ -25,7 +25,7 @@ from qtpy.QtGui import (QColor, QLinearGradient,
                         QPainterPath, QPen, QBrush)
 from qtpy.QtWidgets import QGraphicsPathItem
 
-from .patshared import PortType
+from patshared import PortType
 from .init_values import (
     canvas,
     options,

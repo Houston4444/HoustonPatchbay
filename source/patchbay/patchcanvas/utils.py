@@ -25,7 +25,7 @@ from qtpy.QtCore import QPointF, QFile, QRectF
 from qtpy.QtGui import QIcon, QPalette
 from qtpy.QtWidgets import QWidget
 
-from .patshared import PortMode, BoxType
+from patshared import PortMode, BoxType
 from .init_values import canvas, options, CallbackAct
 
 if TYPE_CHECKING:

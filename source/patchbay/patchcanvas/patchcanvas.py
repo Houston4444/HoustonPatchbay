@@ -25,7 +25,7 @@ from typing import Callable
 from qtpy.QtCore import (Slot, QObject, QPointF, QRectF,
                           QSettings, QTimer, Signal)
 
-from .patshared import (
+from patshared import (
     PortMode,
     BoxLayoutMode,
     BoxType,

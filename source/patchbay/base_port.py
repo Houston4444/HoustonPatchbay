@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING
 
-from .patchcanvas.patshared import PortMode, PortType, PortSubType
+from patshared import PortMode, PortType, PortSubType
 from .patchcanvas import patchcanvas
 from .base_elements import JackPortFlag
 from .base_connection import Connection

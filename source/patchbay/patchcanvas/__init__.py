@@ -30,4 +30,4 @@ def make_logger():
 make_logger()
 
 from .patchcanvas import *
-from .patshared import *
+from patshared import *

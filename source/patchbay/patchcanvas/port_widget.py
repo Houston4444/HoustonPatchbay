@@ -29,7 +29,7 @@ from qtpy.QtWidgets import QGraphicsItem, QApplication
 
 
 # Imports (Custom)
-from .patshared import PortMode, PortType, PortSubType
+from patshared import PortMode, PortType, PortSubType
 from .init_values import (
     CanvasItemType, PortObject, canvas, CallbackAct, ZvBox)
 from .utils import canvas_callback

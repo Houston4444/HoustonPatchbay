@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING, Optional, Union
 
-from .patchcanvas.patshared import (
+from patshared import (
     BoxType,
     GroupPos,
     BoxLayoutMode,

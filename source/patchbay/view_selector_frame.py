@@ -9,7 +9,7 @@ from qtpy.QtGui import (
     QResizeEvent, QColor, QPixmap)
 from qtpy.QtCore import Slot, Qt, QSize, QPointF, QRect, QRectF, QModelIndex
 
-from .patchcanvas.patshared import PortTypesViewFlag
+from patshared import PortTypesViewFlag
 from .patchcanvas import canvas
 from .cancel_mng import CancelOp, CancellableAction
 

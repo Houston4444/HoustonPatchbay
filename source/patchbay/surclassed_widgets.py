@@ -16,7 +16,7 @@ from qtpy.QtWidgets import (
     QComboBox, QFrame, QWidget)
 
 
-from .patchcanvas.patshared import PortTypesViewFlag
+from patshared import PortTypesViewFlag
 from .patchcanvas import patchcanvas, AliasingReason
 from .base_elements import TransportViewMode
 

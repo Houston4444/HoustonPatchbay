@@ -23,7 +23,7 @@ from typing import Optional, Union
 from qtpy.QtCore import QRectF, QMarginsF, Qt
 from qtpy.QtWidgets import QGraphicsView
 
-from .patshared import PortMode
+from patshared import PortMode
 from .init_values import canvas, options, Direction
 from .utils import (previous_left_on_grid, next_left_on_grid,
                     previous_top_on_grid, next_top_on_grid)

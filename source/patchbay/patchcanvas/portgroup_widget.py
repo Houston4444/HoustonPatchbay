@@ -28,7 +28,7 @@ from qtpy.QtGui import (QFontMetrics, QPainter, QBrush,
 from qtpy.QtWidgets import QApplication, QGraphicsItem
 
 from .connectable_widget import ConnectableWidget
-from .patshared import PortMode, PortType, PortSubType
+from patshared import PortMode, PortType, PortSubType
 from .init_values import (
     CanvasItemType, PortgrpObject, ZvBox, canvas, CallbackAct)
 

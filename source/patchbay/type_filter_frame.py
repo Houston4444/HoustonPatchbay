@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING
 from qtpy.QtWidgets import QFrame, QApplication
 
 
-from .patchcanvas.patshared import PortTypesViewFlag
+from patshared import PortTypesViewFlag
 from .cancel_mng import CancelOp, CancellableAction
 
 from .ui.type_filter_frame import Ui_FrameTypesFilter

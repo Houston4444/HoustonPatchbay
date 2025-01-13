@@ -23,7 +23,7 @@ from qtpy.QtCore import Qt, QPointF
 from qtpy.QtGui import QPainter, QPainterPath
 from qtpy.QtWidgets import QGraphicsPathItem
 
-from .patshared import PortMode, PortType
+from patshared import PortMode, PortType
 from .init_values import canvas, CanvasItemType, Zv
 
 # only to get parent type in IDE

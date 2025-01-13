@@ -12,7 +12,7 @@ from qtpy.QtCore import QTimer, QSettings, QThread, Qt, Slot
 from .patchcanvas import arranger, patchcanvas
 from .patchcanvas.utils import get_new_group_positions
 from .patchcanvas.scene_view import PatchGraphicsView
-from .patchcanvas.patshared import (
+from patshared import (
     PortType, PortSubType, PortMode,
     PortTypesViewFlag, GroupPos, from_json_to_str,
     ViewsDict, ViewData, PortgroupsDict, PortgroupMem, PrettyNames)

@@ -21,7 +21,7 @@ from .patchcanvas import canvas, CallbackAct, BoxType, options
 from .patchcanvas.theme import StyleAttributer
 from .patchcanvas.utils import (
     get_portgroup_name_from_ports_names, get_icon, is_dark_theme, portgroup_name_splitted)
-from .patchcanvas.patshared import (
+from patshared import (
     PortType, PortSubType, PortMode)
 from .base_group import Group
 from .base_port import Port

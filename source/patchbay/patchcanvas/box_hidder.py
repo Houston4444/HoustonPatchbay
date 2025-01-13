@@ -3,7 +3,7 @@ from qtpy.QtWidgets import QGraphicsItem
 from qtpy.QtGui import QPainter, QPen, QBrush, QPolygonF
 from qtpy.QtCore import QRectF, Qt, QPointF
 
-from .patshared import PortMode
+from patshared import PortMode
 from .init_values import canvas, ZvBox
 
 if TYPE_CHECKING:

@@ -5,7 +5,7 @@ from qtpy.QtGui import QCursor
 from qtpy.QtWidgets import QApplication
 
 from . import patchcanvas
-from .patchcanvas.patshared import (
+from patshared import (
     PortMode, PortType, BoxLayoutMode, GroupPos,
     PortgroupMem, BoxPos)
 from .patchcanvas import CallbackAct, PortMode, PortType, BoxLayoutMode

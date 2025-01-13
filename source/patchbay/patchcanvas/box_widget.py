@@ -4,7 +4,7 @@ from qtpy.QtCore import QRectF
 from qtpy.QtGui import QPainterPath
 from qtpy.QtWidgets import QGraphicsItem
 
-from .patshared import (
+from patshared import (
     BoxLayoutMode, PortMode, PortType, PortSubType, BoxType)
 from .init_values import (
     canvas, options, InlineDisplay, GroupObject)

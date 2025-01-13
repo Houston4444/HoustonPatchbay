@@ -37,7 +37,7 @@ from qtpy.QtGui import (QCursor, QFontMetrics, QImage, QFont,
                          QColor, QPainterPath, QBrush)
 from qtpy.QtWidgets import QGraphicsItem, QApplication
 
-from .patshared import PortMode, BoxLayoutMode, BoxType
+from patshared import PortMode, BoxLayoutMode, BoxType
 from .init_values import (
     AliasingReason,
     CanvasItemType,

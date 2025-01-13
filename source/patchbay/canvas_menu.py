@@ -7,7 +7,7 @@ from qtpy.QtCore import QLocale, QUrl, Slot
 
 from . import patchcanvas
 from .patchcanvas import utils
-from .patchcanvas.patshared import PortTypesViewFlag, PortMode
+from patshared import PortTypesViewFlag, PortMode
 from .views_menu import ViewsMenu
 from .selected_boxes_menu import SelectedBoxesMenu
 from .cancel_mng import CancelOp, CancellableAction

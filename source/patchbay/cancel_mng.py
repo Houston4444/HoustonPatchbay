@@ -1,7 +1,7 @@
 from enum import Enum, auto
 from typing import TYPE_CHECKING, Callable
 
-from .patchcanvas.patshared import ViewData, ViewsDict, PortTypesViewFlag
+from patshared import ViewData, ViewsDict, PortTypesViewFlag
 
 if TYPE_CHECKING:
     from patchbay_manager import PatchbayManager    

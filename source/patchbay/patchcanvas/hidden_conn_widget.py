@@ -4,7 +4,7 @@ from qtpy.QtWidgets import QGraphicsPathItem
 from qtpy.QtGui import QPolygonF, QPen, QColor, QBrush, QPainter, QPainterPath
 from qtpy.QtCore import QPointF, Qt
 
-from .patshared import PortMode, PortType
+from patshared import PortMode, PortType
 from .init_values import canvas, CanvasItemType, options, Zv
 
 if TYPE_CHECKING:

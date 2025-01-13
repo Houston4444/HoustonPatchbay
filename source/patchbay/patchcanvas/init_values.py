@@ -24,7 +24,7 @@ import logging
 from qtpy.QtCore import QPointF, QRectF, QSettings, QPoint
 from qtpy.QtWidgets import QGraphicsItem
 
-from .patshared import (
+from patshared import (
     PortMode, PortType, PortSubType, BoxType, BoxPos, GroupPos)
 
 if TYPE_CHECKING:

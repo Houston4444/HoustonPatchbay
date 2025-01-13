@@ -30,7 +30,7 @@ from qtpy.QtWidgets import (
     QGraphicsRectItem, QGraphicsScene, QApplication,
     QGraphicsItem, QGraphicsView)
 
-from .patshared import PortMode
+from patshared import PortMode
 from .init_values import (
     AliasingReason,
     BoxHidding,

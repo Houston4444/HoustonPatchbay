@@ -22,3 +22,4 @@ source/patchbay/*/.*
 source/patchbay/__pycache__/
 source/patchbay/*/__pycache__/
 source/patchbay/*/*/__pycache__/
+source/patshared/__pycache__/

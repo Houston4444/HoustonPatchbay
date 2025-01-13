@@ -5,7 +5,7 @@ from qtpy.QtCore import Slot
 from qtpy.QtGui import QIcon, QPixmap
 
 from .cancel_mng import CancelOp, CancellableAction
-from .patchcanvas.patshared import PortMode, BoxLayoutMode
+from patshared import PortMode, BoxLayoutMode
 from .base_group import Group
 from .patchcanvas import canvas, CallbackAct, patchcanvas, utils
 from .rename_group_dialog import RenameGroupDialog

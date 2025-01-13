@@ -29,7 +29,7 @@ try:
 except:
     from qtpy.QtSvg import QGraphicsSvgItem
 
-from .patshared import BoxType, PortMode
+from patshared import BoxType, PortMode
 from .init_values import canvas, CanvasItemType
 
 
