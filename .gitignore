@@ -6,19 +6,19 @@
 build_config
 
 #UI builds
-/patchbay/ui/*.py
+source/patchbay/ui/*.py
 
 #resources qt build
 build_config
-/patchbay/resources_rc.py
+source/patchbay/resources_rc.py
 
-/patchbay/.*
-/patchbay/*/.*
+source/patchbay/.*
+source/patchbay/*/.*
 
 #translations
 /locale/*.qm
 
 #python cache
-/patchbay/__pycache__/
-/patchbay/*/__pycache__/
-/patchbay/*/*/__pycache__/
+source/patchbay/__pycache__/
+source/patchbay/*/__pycache__/
+source/patchbay/*/*/__pycache__/

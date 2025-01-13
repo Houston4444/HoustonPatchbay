@@ -1061,7 +1061,7 @@ class PatchbayManager:
         self.set_use_graceful_names(not self.use_graceful_names)
         self.optimize_operation(True)
         for group in self.groups:
-            group.update_ports_in_canvas()
+            group.rename_ports_in_canvas()
             group.rename_in_canvas()
         self.optimize_operation(False)
         patchcanvas.redraw_all_groups()

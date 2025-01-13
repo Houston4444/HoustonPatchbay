@@ -43,26 +43,26 @@ QT_PREPARE:
 
     ifeq ($(QT_API), $(QT_API_INST))
     else
-		rm -f *~ patchbay/resources_rc.py \
+		rm -f *~ source/patchbay/resources_rc.py \
 			 locale/*.qm patchbay/ui/*.py
     endif
-	install -d patchbay/ui/
+	install -d source/patchbay/ui/
 
 # ---------------------
 # Resources
 
-RES: patchbay/resources_rc.py
+RES: source/patchbay/resources_rc.py
 
-patchbay/resources_rc.py: resources/resources.qrc
+source/patchbay/resources_rc.py: resources/resources.qrc
 	rcc -g python $< |sed 's/ PySide. / qtpy /' > $@
 
 # ---------------------
 # UI code
 
 UI: $(shell \
-	ls resources/ui/*.ui| sed 's|\.ui$$|.py|'| sed 's|^resources/|patchbay/|')
+	ls resources/ui/*.ui| sed 's|\.ui$$|.py|'| sed 's|^resources/|source/patchbay/|')
 
-patchbay/ui/%.py: resources/ui/%.ui
+source/patchbay/ui/%.py: resources/ui/%.ui
 ifeq ($(PYUIC), pyuic6)
 	$(PYUIC) $< > $@
 	echo 'from .. import resources_rc' >> $@
@@ -85,12 +85,12 @@ locale/%.qm: locale/%.ts
 # -------------------------
 
 clean:
-	rm -f *~ patchbay/resources_rc.py \
+	rm -f *~ source/patchbay/resources_rc.py \
 			 locale/*.qm
-	rm -f -R patchbay/ui \
-			 patchbay/__pycache__ \
-			 patchbay/*/__pycache__ \
-			 patchbay/*/*/__pycache__
+	rm -f -R source/patchbay/ui \
+			 source/patchbay/__pycache__ \
+			 source/patchbay/*/__pycache__ \
+			 source/patchbay/*/*/__pycache__
 
 # -------------------------
 
