@@ -185,7 +185,7 @@ class PatchSceneMoth(QGraphicsScene):
         self._grid_widget: Optional[GridWidget] = None
 
         self.sceneRectChanged.connect(self.update_grid_widget)
-        self.selectionChanged.connect(self._slot_selection_changed)
+        # self.selectionChanged.connect(self._slot_selection_changed)
 
     def deplace_boxes_from_repulsers(self, repulser_boxes: list[BoxWidget],
                                      wanted_direction=Direction.NONE,

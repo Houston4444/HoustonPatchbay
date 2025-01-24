@@ -50,10 +50,10 @@ class PrettyNames:
         
         return {'groups': gp_dict, 'ports': pt_dict}
     
-    def save_group(self, group_name: str, pretty_name: str, over_pretty: str):
+    def save_group(self, group_name: str, pretty_name: str, over_pretty=''):
         self.groups[group_name] = _PrettyAndOver(pretty_name, over_pretty)
     
-    def save_port(self, port_name: str, pretty_name: str, over_pretty: str):
+    def save_port(self, port_name: str, pretty_name: str, over_pretty=''):
         self.ports[port_name] = _PrettyAndOver(pretty_name, over_pretty)
 
     def pretty_group(self, group_name: str, cur_pretty_name='') -> str:
@@ -83,3 +83,13 @@ class PrettyNames:
         if ptov.above_pretty != cur_pretty_name:
             return ''
         return ptov.pretty
+        
+    def copy(self) -> 'PrettyNames':
+        ret = PrettyNames()
+        ret.groups = self.groups.copy()
+        ret.ports = self.ports.copy()
+        return ret
+    
+    def clear(self):
+        self.groups.clear()
+        self.ports.clear()
