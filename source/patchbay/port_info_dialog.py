@@ -56,7 +56,8 @@ class CanvasPortInfoDialog(QDialog):
             JackPortFlag.IS_PHYSICAL: _translate('patchbay', 'Physical'),
             JackPortFlag.CAN_MONITOR: _translate('patchbay', 'Monitor'),
             JackPortFlag.IS_TERMINAL: _translate('patchbay', 'Terminal'),
-            JackPortFlag.IS_CONTROL_VOLTAGE: _translate('patchbay', 'Control Voltage')}
+            JackPortFlag.IS_CONTROL_VOLTAGE:
+                _translate('patchbay', 'Control Voltage')}
 
         for key in dict_flag_str.keys():
             if self._port.flags & key:

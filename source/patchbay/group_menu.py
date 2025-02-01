@@ -4,11 +4,13 @@ from qtpy.QtWidgets import QMenu, QApplication
 from qtpy.QtCore import Slot
 from qtpy.QtGui import QIcon, QPixmap
 
-from .cancel_mng import CancelOp, CancellableAction
 from patshared import PortMode, BoxLayoutMode
+
+from .cancel_mng import CancelOp, CancellableAction
 from .base_group import Group
 from .patchcanvas import canvas, CallbackAct, patchcanvas, utils
 from .rename_group_dialog import RenameGroupDialog
+from .group_info_dialog import GroupInfoDialog
 
 if TYPE_CHECKING:
     from .patchbay_manager import PatchbayManager
@@ -198,12 +200,17 @@ class GroupMenu(QMenu):
             _translate('patchbay', 'Rename'))
         rename_act.setIcon(QIcon.fromTheme('edit-rename'))
         
+        get_info_act = self.addAction(
+            _translate('patchbay', 'Get &Info'))
+        get_info_act.setIcon(QIcon.fromTheme('dialog-information'))
+        
         disco_all_act.triggered.connect(self._disconnect_all)
         wrap_act.triggered.connect(self._wrap)
         auto_layout_act.triggered.connect(self._auto_layout)
         change_layout_act.triggered.connect(self._change_layout)
         hide_box_act.triggered.connect(self._hide_box)
         rename_act.triggered.connect(self._rename)
+        get_info_act.triggered.connect(self._get_info)
     
     def _disconnect_all(self):
         if self._port_mode & PortMode.OUTPUT:
@@ -300,3 +307,8 @@ class GroupMenu(QMenu):
         
         canvas.callback(
             CallbackAct.GROUP_RENAME, self._group.group_id, pretty_name)
+        
+    @Slot()
+    def _get_info(self):
+        dialog = GroupInfoDialog(self._mng.main_win, self._group)
+        dialog.exec()

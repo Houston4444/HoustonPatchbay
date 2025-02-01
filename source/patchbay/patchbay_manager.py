@@ -120,6 +120,8 @@ class PatchbayManager:
     pretty_names = PrettyNames()
     
     delayed_orders = Queue[DelayedOrder]()
+    
+    jack_metadatas = dict[int, dict[str, str]]()
 
     def __init__(self, settings: QSettings):
         self.callbacker = Callbacker(self)
@@ -1240,7 +1242,18 @@ class PatchbayManager:
     @later_by_batch(metadata_change=True)
     def metadata_update(
             self, uuid: int, key: str, value: str) -> Optional[int]:
-        '''remember metadata and return the group_id'''        
+        '''remember metadata and return the group_id'''
+        
+        # first store metadata
+        uuid_dict = self.jack_metadatas.get(uuid)
+        if uuid_dict is None:
+            uuid_dict = self.jack_metadatas[uuid] = dict[str, str]()
+        if value:
+            uuid_dict[key] = value
+        else:
+            if key in uuid_dict:
+                uuid_dict.pop(key)
+        
         if key == JackMetadata.ORDER:
             port = self.get_port_from_uuid(uuid)
             if port is None:
