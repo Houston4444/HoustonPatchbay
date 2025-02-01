@@ -311,4 +311,4 @@ class GroupMenu(QMenu):
     @Slot()
     def _get_info(self):
         dialog = GroupInfoDialog(self._mng.main_win, self._group)
-        dialog.exec()
+        dialog.show()
