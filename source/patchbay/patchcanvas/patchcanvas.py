@@ -292,7 +292,12 @@ def rename_group(group_id: int, new_group_name: str):
 
     group.group_name = new_group_name    
     for box in group.widgets:
-        box.set_group_name(new_group_name)
+        box._group_name = new_group_name
+        if not canvas.loading_items:
+            box.update_positions()
+
+    if canvas.loading_items:
+        return
 
     QTimer.singleShot(0, canvas.scene.update)
 

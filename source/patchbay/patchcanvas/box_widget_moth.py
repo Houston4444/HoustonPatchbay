@@ -321,10 +321,6 @@ class BoxWidgetMoth(QGraphicsItem):
         self._gui_visible = visible
         self.update()
 
-    def set_group_name(self, group_name: str):
-        self._group_name = group_name
-        self.update_positions()
-
     def set_shadow_opacity(self, opacity):
         if self.shadow:
             self.shadow.set_opacity(opacity)

@@ -4,6 +4,7 @@ import operator
 from pathlib import Path
 from dataclasses import dataclass
 from typing import Any, Callable, Iterator, Optional, Union
+from queue import Queue
 
 from qtpy.QtGui import QCursor, QGuiApplication, QKeyEvent
 from qtpy.QtWidgets import QMainWindow, QMessageBox, QWidget
@@ -54,21 +55,23 @@ class DelayedOrder:
     draw_group: bool
     sort_group: bool
     clear_conns: bool
+    metadata_change: bool
 
     
 def later_by_batch(draw_group=False, sort_group=False,
-                   clear_conns=False, pretty_names=False):
+                   clear_conns=False, metadata_change=False):
     def decorator(func: Callable):
         def wrapper(*args, **kwargs):
             mng: PatchbayManager = args[0]
             if mng.very_fast_operation:
                 return func(*args, **kwargs)
 
-            mng.delayed_orders.append(
+            mng.delayed_orders.put(
                 DelayedOrder(func, args, kwargs,
                              draw_group or sort_group,
                              sort_group,
-                             clear_conns))
+                             clear_conns,
+                             metadata_change))
 
             if QThread.currentThread() is QGuiApplication.instance().thread():
                 mng._delayed_orders_timer.start()
@@ -116,7 +119,7 @@ class PatchbayManager:
     portgroups_memory = PortgroupsDict()
     pretty_names = PrettyNames()
     
-    delayed_orders = list[DelayedOrder]()
+    delayed_orders = Queue[DelayedOrder]()
 
     def __init__(self, settings: QSettings):
         self.callbacker = Callbacker(self)
@@ -1186,7 +1189,7 @@ class PatchbayManager:
         
         return group.group_id
 
-    @later_by_batch(draw_group=True, pretty_names=True)
+    @later_by_batch(draw_group=True)
     def rename_port(self, name: str, new_name: str) -> Union[int, None]:
         port = self.get_port_from_name(name)
         if port is None:
@@ -1234,9 +1237,10 @@ class PatchbayManager:
         port.rename_in_canvas()
         return port.group.group_id
 
-    @later_by_batch(sort_group=True)
-    def metadata_update(self, uuid: int, key: str, value: str) -> Optional[int]:
-        ''' remember metadata and returns the group_id'''        
+    @later_by_batch(metadata_change=True)
+    def metadata_update(
+            self, uuid: int, key: str, value: str) -> Optional[int]:
+        '''remember metadata and return the group_id'''        
         if key == JackMetadata.ORDER:
             port = self.get_port_from_uuid(uuid)
             if port is None:
@@ -1464,12 +1468,19 @@ class PatchbayManager:
         group_ids_to_sort = set()
         some_groups_removed = False
         clear_conns = False
-        pretty_names_check = False
-        
-        for oq in self.delayed_orders:
+    
+        while self.delayed_orders.qsize():
+            oq = self.delayed_orders.get()
             group_id = oq.func(*oq.args, **oq.kwargs)
-            if oq.sort_group and group_id is not None:
-                group_ids_to_sort.add(group_id)
+            if oq.metadata_change and group_id is not None:
+                key = oq.args[2]
+                if key == JackMetadata.PRETTY_NAME:
+                    group_ids_to_update.add(group_id)
+                elif key == JackMetadata.ICON_NAME:
+                    group_ids_to_update.add(group_id)
+                elif key == JackMetadata.ORDER:
+                    group_ids_to_sort.add(group_id)
+
             if oq.draw_group:
                 if group_id is not None:
                     group_ids_to_update.add(group_id)
@@ -1504,7 +1515,6 @@ class PatchbayManager:
                 self.connections.remove(conn)
 
         self.optimize_operation(False)
-        self.delayed_orders.clear()
 
         for group in self.groups:
             if group.group_id in group_ids_to_update:
