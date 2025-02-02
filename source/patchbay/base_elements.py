@@ -1,8 +1,5 @@
 from dataclasses import dataclass
-from enum import IntFlag, IntEnum, auto
-from patshared import JackMetadata
-
-
+from enum import IntFlag, IntEnum, auto, Flag
 
 
 class JackPortFlag(IntFlag):
@@ -97,6 +94,31 @@ class ToolDisplayed(IntFlag):
         return return_td
         
 
+class Naming(Flag):
+    '''Define the way clients and ports should be named.'''
+    TRUE_NAME = 0x0
+    'True JACK or ALSA item name'
+    
+    GRACEFUL = 0x1
+    '''Shorter than TRUE_NAME, more readable name without underscores
+    and with custom arrangements depending on the client name.'''
+    
+    INTERNAL_PRETTY = 0x2
+    'The pretty name saved internally when user renames a port or a group'
+    
+    METADATA_PRETTY = 0x4
+    '''The pretty name contained in JACK metadatas
+    (http://jackaudio.org/metadata/pretty-name)'''
+    
+    ALL = METADATA_PRETTY|INTERNAL_PRETTY|GRACEFUL
 
-
+    @classmethod
+    def from_config_str(cls, string: str) -> 'Naming':
+        naming = cls.TRUE_NAME
+        for s in string.split('|'):
+            try:
+                naming |= Naming[s]
+            except:
+                continue
+        return naming
 

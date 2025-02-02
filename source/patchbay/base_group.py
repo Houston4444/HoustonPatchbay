@@ -10,7 +10,7 @@ from patshared import (
     PortTypesViewFlag,
     PortgroupMem    
 )
-from .base_elements import JackPortFlag
+from .base_elements import JackPortFlag, Naming
 from .base_port import Port
 from .base_portgroup import Portgroup
 from .base_connection import Connection
@@ -80,10 +80,6 @@ class Group:
     def is_in_port_types_view(self, ptv: PortTypesViewFlag) -> bool:
         return bool(self.outs_ptv & ptv or self.ins_ptv & ptv)
 
-    def rename_ports_in_canvas(self):
-        for port in self.ports:
-            port.rename_in_canvas()
-
     def add_to_canvas(self, gpos: Optional[GroupPos]=None):
         if self.in_canvas:
             return
@@ -113,15 +109,18 @@ class Group:
 
     @property
     def cnv_name(self):
-        if self.manager.use_graceful_names:
+        if self.manager.naming & Naming.METADATA_PRETTY:
             if self.mdata_pretty_name:
                 return self.mdata_pretty_name
             
-            pretty_group = self.manager.pretty_names.pretty_group(self.name)
-            if pretty_group:
-                return pretty_group
+        if self.manager.naming & Naming.INTERNAL_PRETTY:
+            pretty = self.manager.pretty_names.pretty_group(self.name)
+            if pretty:
+                return pretty
             
+        if self.manager.naming & Naming.GRACEFUL:
             return self.display_name
+
         return self.name
 
     def remove_from_canvas(self):

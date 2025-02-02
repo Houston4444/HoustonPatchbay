@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>260</width>
-    <height>303</height>
+    <width>331</width>
+    <height>275</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -39,23 +39,19 @@
        <item>
         <widget class="QTabWidget" name="tabWidget">
          <property name="currentIndex">
-          <number>1</number>
+          <number>0</number>
          </property>
          <widget class="QWidget" name="General">
           <attribute name="title">
            <string>General</string>
           </attribute>
           <layout class="QVBoxLayout" name="verticalLayout_4">
-           <item>
-            <widget class="QCheckBox" name="checkBoxGracefulNames">
-             <property name="toolTip">
-              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Display shorter and more readable ports and groups names.&lt;/p&gt;&lt;p&gt;If unchecked, displayed port names will be the trought port names.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-             </property>
-             <property name="text">
-              <string>Use graceful names</string>
-             </property>
-            </widget>
-           </item>
+           <property name="spacing">
+            <number>6</number>
+           </property>
+           <property name="leftMargin">
+            <number>6</number>
+           </property>
            <item>
             <widget class="QCheckBox" name="checkBoxA2J">
              <property name="text">
@@ -174,6 +170,98 @@
             </spacer>
            </item>
           </layout>
+         </widget>
+         <widget class="QWidget" name="Naming">
+          <attribute name="title">
+           <string>Naming</string>
+          </attribute>
+          <layout class="QVBoxLayout" name="verticalLayout_7">
+           <item>
+            <widget class="QLabel" name="label_4">
+             <property name="text">
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Naming used for groups and ports,&lt;br&gt;by priority order.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QCheckBox" name="checkBoxJackPrettyNames">
+             <property name="toolTip">
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;choose the pretty-name JACK metadata (http://jackaudio.org/metadata/pretty-name) to name clients and ports.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             </property>
+             <property name="text">
+              <string>JACK pretty names</string>
+             </property>
+             <property name="checked">
+              <bool>true</bool>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QCheckBox" name="checkBoxInternalPrettyNames">
+             <property name="toolTip">
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Choose internal pretty-name defined by user with the &amp;quot;rename&amp;quot; context entry to name clients and ports.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             </property>
+             <property name="text">
+              <string>Internal pretty names</string>
+             </property>
+             <property name="checked">
+              <bool>true</bool>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QCheckBox" name="checkBoxGracefulNames_2">
+             <property name="toolTip">
+              <string>Use arranged names, which replace all underscores with spaces,
+cut some useless characters depending on the client name.
+It provides a shorter name than the original.</string>
+             </property>
+             <property name="text">
+              <string>Graceful names</string>
+             </property>
+             <property name="checked">
+              <bool>true</bool>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="Line" name="line_2">
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QCheckBox" name="checkBoxExportPrettyNames">
+             <property name="text">
+              <string>Export internal pretty names to JACK</string>
+             </property>
+             <property name="checked">
+              <bool>true</bool>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <spacer name="verticalSpacer_2">
+             <property name="orientation">
+              <enum>Qt::Vertical</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>20</width>
+               <height>40</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+          </layout>
+          <zorder>checkBoxGracefulNames_2</zorder>
+          <zorder>checkBoxJackPrettyNames</zorder>
+          <zorder>verticalSpacer_2</zorder>
+          <zorder>checkBoxInternalPrettyNames</zorder>
+          <zorder>label_4</zorder>
+          <zorder>line_2</zorder>
+          <zorder>checkBoxExportPrettyNames</zorder>
          </widget>
          <widget class="QWidget" name="Theme">
           <attribute name="title">

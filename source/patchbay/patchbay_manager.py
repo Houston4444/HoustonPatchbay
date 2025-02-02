@@ -14,12 +14,12 @@ from .patchcanvas import arranger, patchcanvas
 from .patchcanvas.utils import get_new_group_positions
 from .patchcanvas.scene_view import PatchGraphicsView
 from patshared import (
-    PortType, PortSubType, PortMode,
+    PortType, PortSubType, PortMode, JackMetadata,
     PortTypesViewFlag, GroupPos, from_json_to_str,
     ViewsDict, ViewData, PortgroupsDict, PortgroupMem, PrettyNames)
 from .patchcanvas.init_values import (
     AliasingReason, CallbackAct, CanvasFeaturesObject,
-    CanvasOptionsObject, GridStyle)
+    CanvasOptionsObject)
 
 from .cancel_mng import CancelMng, CancelOp, CancellableAction
 from .patchbay_signals import SignalsObject
@@ -28,7 +28,7 @@ from .canvas_menu import CanvasMenu
 from .options_dialog import CanvasOptionsDialog
 from .filter_frame import FilterFrame
 from .base_elements import (
-    JackPortFlag, ToolDisplayed, TransportPosition, JackMetadata)
+    JackPortFlag, Naming, ToolDisplayed, TransportPosition)
 from .base_group import Group
 from .base_connection import Connection
 from .base_port import Port
@@ -85,8 +85,7 @@ def later_by_batch(draw_group=False, sort_group=False,
 def in_main_thread():
     def decorator(func: Callable):
         def wrapper(*args, **kwargs):
-            mng = args[0]
-            assert isinstance(mng, PatchbayManager)
+            mng: PatchbayManager = args[0]
             
             if QThread.currentThread() is QGuiApplication.instance().thread():
                 return func(*args, **kwargs)
@@ -97,7 +96,7 @@ def in_main_thread():
 
 
 class PatchbayManager:
-    use_graceful_names = True
+    naming = Naming.ALL
     port_types_view = PortTypesViewFlag.ALL
     
     optimized_operation = False
@@ -146,8 +145,8 @@ class PatchbayManager:
         self._next_connection_id = 0
         self._next_portgroup_id = 1
 
-        self.set_graceful_names(settings.value(
-            'Canvas/use_graceful_names', True, type=bool))
+        self.naming = Naming.from_config_str(settings.value(
+            'Canvas/naming', 'ALL', type=str))
         self.group_a2j_hw: bool = settings.value(
             'Canvas/group_a2j_ports', True, type=bool)
         self.alsa_midi_enabled: bool = settings.value(
@@ -169,7 +168,6 @@ class PatchbayManager:
         
         self.sg.theme_changed.connect(self.change_theme)
         
-        self.sg.graceful_names_changed.connect(self.set_graceful_names)
         self.sg.a2j_grouped_changed.connect(self.set_a2j_grouped)
         self.sg.alsa_midi_enabled_changed.connect(self.set_alsa_midi_enabled)
         self.sg.group_shadows_changed.connect(self.set_group_shadows)
@@ -264,17 +262,13 @@ class PatchbayManager:
     def save_settings(self):
         if self._settings is None:
             return
-        
-        self._settings.setValue('Canvas/use_graceful_names',
-                                self.use_graceful_names)
+
+        self._settings.setValue('Canvas/naming', self.naming.name)
         self._settings.setValue('Canvas/group_a2j_ports',
                                 self.group_a2j_hw)
         self._settings.setValue('Canvas/alsa_midi_enabled',
                                 self.alsa_midi_enabled)
         patchcanvas.options.save_to_settings(self._settings)
-
-    def set_use_graceful_names(self, yesno: bool):
-        self.use_graceful_names = yesno
 
     def optimize_operation(self, yesno: bool):
         self.optimized_operation = yesno
@@ -998,10 +992,6 @@ class PatchbayManager:
 
     # --- options triggers ---
 
-    def set_graceful_names(self, yesno: int):
-        if self.use_graceful_names != yesno:
-            self.toggle_graceful_names()
-
     def set_a2j_grouped(self, yesno: int):
         if self.group_a2j_hw != bool(yesno):
             self.group_a2j_hw = bool(yesno)
@@ -1019,6 +1009,42 @@ class PatchbayManager:
 
     def set_auto_select_items(self, yesno: int):
         patchcanvas.set_auto_select_items(bool(yesno))
+
+    def change_naming(self, naming: Naming):
+        if naming is self.naming:
+            return
+        
+        groups_dict = dict[Group, str]()
+        ports_dict = dict[Port, str]()
+        group_ids_to_redraw = set[int]()
+        
+        for group in self.groups:
+            groups_dict[group] = group.cnv_name
+            for port in group.ports:
+                ports_dict[port] = port.cnv_name
+        
+        self.naming = naming
+        self.optimize_operation(True)
+
+        for group in self.groups:
+            if not group.in_canvas:
+                continue
+            
+            if group.cnv_name != groups_dict[group]:
+                group_ids_to_redraw.add(group.group_id)
+                group.rename_in_canvas()
+
+            for port in group.ports:
+                if not port.in_canvas:
+                    continue
+                if port.cnv_name != ports_dict[port]:
+                    group_ids_to_redraw.add(group.group_id)
+                    port.rename_in_canvas()
+
+        self.optimize_operation(False)
+        
+        for group_id in group_ids_to_redraw:
+            patchcanvas.redraw_group(group_id)
 
     def change_theme(self, theme_name: str):
         if not theme_name:
@@ -1061,15 +1087,6 @@ class PatchbayManager:
 
     def set_prevent_overlap(self, yesno: int):
         patchcanvas.set_prevent_overlap(bool(yesno))
-
-    def toggle_graceful_names(self):
-        self.set_use_graceful_names(not self.use_graceful_names)
-        self.optimize_operation(True)
-        for group in self.groups:
-            group.rename_ports_in_canvas()
-            group.rename_in_canvas()
-        self.optimize_operation(False)
-        patchcanvas.redraw_all_groups()
 
     def set_zoom(self, zoom: float):
         patchcanvas.canvas.scene.zoom_ratio(zoom)

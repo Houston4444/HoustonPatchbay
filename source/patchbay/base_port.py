@@ -2,7 +2,7 @@ from typing import TYPE_CHECKING
 
 from patshared import PortMode, PortType, PortSubType
 from .patchcanvas import patchcanvas
-from .base_elements import JackPortFlag
+from .base_elements import JackPortFlag, Naming
 from .base_connection import Connection
 
 if TYPE_CHECKING:
@@ -90,16 +90,18 @@ class Port:
 
     @property
     def cnv_name(self):
-        if self.manager.use_graceful_names:
+        if self.manager.naming & Naming.METADATA_PRETTY:
             if self.mdata_pretty_name:
                 return self.mdata_pretty_name
-
-            internal_pretty_name = self.manager.pretty_names.pretty_port(
-                self.full_name)
-            if internal_pretty_name:
-                return internal_pretty_name
-
+        
+        if self.manager.naming & Naming.INTERNAL_PRETTY:
+            pretty = self.manager.pretty_names.pretty_port(self.full_name)
+            if pretty:
+                return pretty
+        
+        if self.manager.naming & Naming.GRACEFUL:
             return self.display_name
+
         return self.short_name
 
     def add_the_last_digit(self):

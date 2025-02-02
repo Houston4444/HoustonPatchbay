@@ -2,7 +2,7 @@
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from qtpy.QtCore import Qt, QProcess, QSettings
+from qtpy.QtCore import Qt, QProcess, QSettings, Slot
 from qtpy.QtGui import QIcon, QPixmap
 if TYPE_CHECKING:
     # FIX : QAction not found by pylance
@@ -14,8 +14,8 @@ from qtpy.QtWidgets import (QDialog, QApplication, QInputDialog,
 from .patchcanvas import patchcanvas, xdg
 from .patchcanvas.theme_manager import ThemeData
 from .patchcanvas.init_values import GridStyle
-from .cancel_mng import CancelOp, CancellableAction
 from .tools_widgets import is_dark_theme
+from .base_elements import Naming
 from .ui.canvas_options import Ui_CanvasOptions
 
 if TYPE_CHECKING:
@@ -66,12 +66,18 @@ class CanvasOptionsDialog(QDialog):
         self._theme_list = list[ThemeData]()
         
         # connect checkboxs and spinbox signals to patchbays signals
-        self.ui.checkBoxGracefulNames.stateChanged.connect(
-            manager.sg.graceful_names_changed)
         self.ui.checkBoxA2J.stateChanged.connect(
             manager.sg.a2j_grouped_changed)
         self.ui.checkBoxAlsa.stateChanged.connect(
             manager.sg.alsa_midi_enabled_changed)
+        
+        self.ui.checkBoxJackPrettyNames.stateChanged.connect(
+            self._naming_changed)
+        self.ui.checkBoxInternalPrettyNames.stateChanged.connect(
+            self._naming_changed)
+        self.ui.checkBoxGracefulNames_2.stateChanged.connect(
+            self._naming_changed)
+        
         self.ui.checkBoxShadows.stateChanged.connect(
             manager.sg.group_shadows_changed)
         self.ui.comboBoxGridStyle.currentIndexChanged.connect(
@@ -96,12 +102,17 @@ class CanvasOptionsDialog(QDialog):
             self._grid_height_changed)
 
     def set_values(self):
-        self.ui.checkBoxGracefulNames.setChecked(
-            self.mng.use_graceful_names)
         self.ui.checkBoxA2J.setChecked(
             self.mng.group_a2j_hw)
         self.ui.checkBoxAlsa.setChecked(
             self.mng.alsa_midi_enabled)
+        
+        self.ui.checkBoxJackPrettyNames.setChecked(
+            Naming.METADATA_PRETTY in self.mng.naming)
+        self.ui.checkBoxInternalPrettyNames.setChecked(
+            Naming.INTERNAL_PRETTY in self.mng.naming)
+        self.ui.checkBoxGracefulNames_2.setChecked(
+            Naming.GRACEFUL in self.mng.naming)
         
         options = patchcanvas.options
         
@@ -138,6 +149,18 @@ class CanvasOptionsDialog(QDialog):
             box_index = 3
             
         self.ui.comboBoxBoxesAutoLayout.setCurrentIndex(box_index)
+
+    @Slot(int)
+    def _naming_changed(self, state: int):
+        naming = Naming.TRUE_NAME
+        if self.ui.checkBoxJackPrettyNames.isChecked():
+            naming |= Naming.METADATA_PRETTY
+        if self.ui.checkBoxInternalPrettyNames.isChecked():
+            naming |= Naming.INTERNAL_PRETTY
+        if self.ui.checkBoxGracefulNames_2.isChecked():
+            naming |= Naming.GRACEFUL
+        
+        self.mng.change_naming(naming)
 
     def _change_default_zoom(self, value: int):
         patchcanvas.set_default_zoom(value)
@@ -176,7 +199,8 @@ class CanvasOptionsDialog(QDialog):
                 self, _translate('patchbay_theme', 'Copy failed !'), message)
 
     def _edit_theme(self):
-        current_theme_ref_id = self.ui.comboBoxTheme.currentData(Qt.ItemDataRole.UserRole)
+        current_theme_ref_id = self.ui.comboBoxTheme.currentData(
+            Qt.ItemDataRole.UserRole)
         
         for theme_data in self._theme_list:
             if (theme_data.ref_id == current_theme_ref_id

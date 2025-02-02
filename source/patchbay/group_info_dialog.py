@@ -16,7 +16,7 @@ class GroupInfoDialog(QDialog):
         self.ui.labelAlsaClientIdNum.setVisible(False)
         
         self._fill_contents()
-        self.ui.toolButtonRefresh.triggered.connect(self._fill_contents)
+        self.ui.toolButtonRefresh.clicked.connect(self._fill_contents)
         
     def _fill_contents(self):
         self.ui.lineEditClientName.setText(self.group.name)

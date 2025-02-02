@@ -45,7 +45,6 @@ class SignalsObject(QObject):
 
     # theses signals send int because they are related to checkboxes
     # but the int value is 0 or 1
-    graceful_names_changed = Signal(int)
     a2j_grouped_changed = Signal(int)
     alsa_midi_enabled_changed = Signal(int)
     group_shadows_changed = Signal(int)
