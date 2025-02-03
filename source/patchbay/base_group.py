@@ -110,8 +110,10 @@ class Group:
     @property
     def cnv_name(self):
         if self.manager.naming & Naming.METADATA_PRETTY:
-            if self.mdata_pretty_name:
-                return self.mdata_pretty_name
+            if self.uuid:
+                pretty = self.manager.jack_metadatas.pretty_name(self.uuid)
+                if pretty:
+                    return pretty
             
         if self.manager.naming & Naming.INTERNAL_PRETTY:
             pretty = self.manager.pretty_names.pretty_group(self.name)

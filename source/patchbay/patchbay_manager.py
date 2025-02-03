@@ -14,7 +14,7 @@ from .patchcanvas import arranger, patchcanvas
 from .patchcanvas.utils import get_new_group_positions
 from .patchcanvas.scene_view import PatchGraphicsView
 from patshared import (
-    PortType, PortSubType, PortMode, JackMetadata,
+    PortType, PortSubType, PortMode, JackMetadata, JackMetadatas,
     PortTypesViewFlag, GroupPos, from_json_to_str,
     ViewsDict, ViewData, PortgroupsDict, PortgroupMem, PrettyNames)
 from .patchcanvas.init_values import (
@@ -120,7 +120,7 @@ class PatchbayManager:
     
     delayed_orders = Queue[DelayedOrder]()
     
-    jack_metadatas = dict[int, dict[str, str]]()
+    jack_metadatas = JackMetadatas()
 
     def __init__(self, settings: QSettings):
         self.callbacker = Callbacker(self)
@@ -1262,14 +1262,7 @@ class PatchbayManager:
         '''remember metadata and return the group_id'''
         
         # first store metadata
-        uuid_dict = self.jack_metadatas.get(uuid)
-        if uuid_dict is None:
-            uuid_dict = self.jack_metadatas[uuid] = dict[str, str]()
-        if value:
-            uuid_dict[key] = value
-        else:
-            if key in uuid_dict:
-                uuid_dict.pop(key)
+        self.jack_metadatas.add(uuid, key, value)
         
         if key == JackMetadata.ORDER:
             port = self.get_port_from_uuid(uuid)

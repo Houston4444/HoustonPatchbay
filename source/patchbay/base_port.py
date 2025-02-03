@@ -91,8 +91,10 @@ class Port:
     @property
     def cnv_name(self):
         if self.manager.naming & Naming.METADATA_PRETTY:
-            if self.mdata_pretty_name:
-                return self.mdata_pretty_name
+            if self.uuid:
+                pretty = self.manager.jack_metadatas.pretty_name(self.uuid)
+                if pretty:
+                    return pretty
         
         if self.manager.naming & Naming.INTERNAL_PRETTY:
             pretty = self.manager.pretty_names.pretty_port(self.full_name)
@@ -103,6 +105,12 @@ class Port:
             return self.display_name
 
         return self.short_name
+
+    # @property
+    # def mdata_pretty_name(self) -> str:
+    #     if not self.uuid:
+    #         return ''
+    #     return self.manager.jack_metadatas.pretty_name(self.uuid)
 
     def add_the_last_digit(self):
         self.display_name += ' ' + self.last_digit_to_add
