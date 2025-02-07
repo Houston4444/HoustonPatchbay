@@ -1,6 +1,5 @@
 
 from dataclasses import dataclass
-from typing import Iterator
 
 
 @dataclass()
@@ -14,6 +13,7 @@ class _PrettyAndOver:
 
 
 class PrettyNames:
+    'Container for internal pretty names'
     def __init__(self):
         self.groups = dict[str, _PrettyAndOver]()
         self.ports = dict[str, _PrettyAndOver]()
@@ -66,6 +66,9 @@ class PrettyNames:
         if ptov.pretty == cur_pretty_name:
             return ''
         
+        if not cur_pretty_name:
+            return ptov.pretty
+        
         if ptov.above_pretty != cur_pretty_name:
             return ''
         return ptov.pretty
@@ -79,6 +82,9 @@ class PrettyNames:
         
         if ptov.pretty == cur_pretty_name:
             return ''
+        
+        if not cur_pretty_name:
+            return ptov.pretty
         
         if ptov.above_pretty != cur_pretty_name:
             return ''

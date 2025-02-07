@@ -1,6 +1,8 @@
+from posixpath import split
 from typing import TYPE_CHECKING
 
 from patshared import PortMode, PortType, PortSubType
+from patshared.jack_metadata import JackMetadata
 from .patchcanvas import patchcanvas
 from .base_elements import JackPortFlag, Naming
 from .base_connection import Connection
@@ -22,8 +24,6 @@ class Port:
     'contains the real JACK uuid'
 
     # given by JACK metadatas
-    mdata_pretty_name = ''
-    mdata_portgroup = ''
     mdata_signal_type = ''
 
     def __init__(self, manager: 'PatchbayManager', port_id: int, name: str,
@@ -47,16 +47,15 @@ class Port:
         self.conns_hidden_in_canvas = set[Connection]()
 
     def __repr__(self) -> str:
-            return f"Port({self.full_name})"
+        return f"Port({self.full_name})"
 
     @property
     def mode(self) -> PortMode:
         if self.flags & JackPortFlag.IS_OUTPUT:
             return PortMode.OUTPUT
-        elif self.flags & JackPortFlag.IS_INPUT:
+        if self.flags & JackPortFlag.IS_INPUT:
             return PortMode.INPUT
-        else:
-            return PortMode.NULL
+        return PortMode.NULL
 
     @property
     def full_type(self) -> tuple[PortType, PortSubType]:
@@ -106,11 +105,37 @@ class Port:
 
         return self.short_name
 
-    # @property
-    # def mdata_pretty_name(self) -> str:
-    #     if not self.uuid:
-    #         return ''
-    #     return self.manager.jack_metadatas.pretty_name(self.uuid)
+    @property
+    def mdata_pretty_name(self) -> str:
+        if not self.uuid:
+            return ''
+        return self.manager.jack_metadatas.pretty_name(self.uuid)
+
+    @property
+    def mdata_portgroup(self) -> str:
+        if not self.uuid:
+            return ''
+        return self.manager.jack_metadatas.str_for_key(
+            self.uuid, JackMetadata.PORT_GROUP)
+
+    @property
+    def mdata_signal_type(self) -> str:
+        if not self.uuid:
+            return ''
+        return self.manager.jack_metadatas.str_for_key(
+            self.uuid, JackMetadata.SIGNAL_TYPE)
+
+    @property
+    def alsa_client_id(self) -> int:
+        if self.type is not PortType.MIDI_ALSA:
+            return -1
+        splitted_name = self.full_name.split(':')
+        if len(splitted_name) < 6:
+            return -1
+        alsa_client_id_str = splitted_name[2]
+        if not alsa_client_id_str.isdigit():
+            return -1
+        return int(alsa_client_id_str)
 
     def add_the_last_digit(self):
         self.display_name += ' ' + self.last_digit_to_add

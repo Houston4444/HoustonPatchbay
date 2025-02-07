@@ -28,7 +28,6 @@ class Group:
         self.group_id = group_id
         self.name = name
         self.display_name = name
-        self.mdata_pretty_name = ''
         self.ports = list[Port]()
         self.portgroups = list[Portgroup]()
         self._is_hardware = False
@@ -40,8 +39,6 @@ class Group:
 
         self.has_gui = False
         self.gui_visible = False
-
-        self.mdata_icon = ''
 
         self.cnv_box_type = BoxType.APPLICATION
         self.cnv_icon_name = ''
@@ -125,6 +122,20 @@ class Group:
 
         return self.name
 
+    @property
+    def mdata_pretty_name(self) -> str:
+        if not self.uuid:
+            return ''
+        
+        return self.manager.jack_metadatas.pretty_name(self.uuid)
+    
+    @property
+    def mdata_icon(self) -> str:
+        if not self.uuid:
+            return ''
+        
+        return self.manager.jack_metadatas.icon_name(self.uuid)
+    
     def remove_from_canvas(self):
         if not self.in_canvas:
             return
@@ -365,9 +376,7 @@ class Group:
         patchcanvas.wrap_group_box(self.group_id, port_mode, yesno)
 
     def set_client_icon(self, icon_name: str, from_metadata=False):
-        if from_metadata:
-            self.mdata_icon = icon_name
-        else:
+        if not from_metadata:
             self.client_icon = icon_name
         
         box_type, ex_icon_name = self._get_box_type_and_icon()

@@ -34,12 +34,15 @@ class JackMetadatas(dict[int, dict[str, str]]):
         elif uuid_dict.get(key) is not None:
             uuid_dict.pop(key)
     
-    def pretty_name(self, uuid: int) -> str:
+    def str_for_key(self, uuid: int, key: JackMetadata) -> str:
         uuid_dict = self.get(uuid)
         if uuid_dict is None:
             return ''
         
-        pretty_name = uuid_dict.get(JackMetadata.PRETTY_NAME)
-        if pretty_name is None:
-            return ''
-        return pretty_name
+        return uuid_dict.get(key, '')
+    
+    def pretty_name(self, uuid: int) -> str:
+        return self.str_for_key(uuid, JackMetadata.PRETTY_NAME)
+        
+    def icon_name(self, uuid: int) -> str:
+        return self.str_for_key(uuid, JackMetadata.ICON_NAME)

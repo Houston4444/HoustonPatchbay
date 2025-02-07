@@ -649,8 +649,8 @@ class PatchbayManager:
     def clear_all(self):
         patchcanvas.clear_all()
         self.connections.clear()
+        self.jack_metadatas.clear()
         self._clear_groups()
-
 
         self._next_group_id = 0
         self._next_port_id = 0
@@ -1283,20 +1283,17 @@ class PatchbayManager:
         elif key == JackMetadata.PRETTY_NAME:
             port = self.get_port_from_uuid(uuid)
             if port is not None:
-                port.mdata_pretty_name = value
                 port.rename_in_canvas()
                 return port.group_id
 
             for group in self.groups:
                 if group.uuid == uuid:
-                    group.mdata_pretty_name = value
                     group.rename_in_canvas()
                     return group.group_id
 
         elif key == JackMetadata.MIDI_BRIDGE_GROUP_PRETTY_NAME:
             port = self.get_port_from_uuid(uuid)
             if port is not None and port.group.a2j_group:
-                port.group.mdata_pretty_name = value
                 port.group.rename_in_canvas()
                 return port.group.group_id
 
@@ -1318,8 +1315,6 @@ class PatchbayManager:
             port = self.get_port_from_uuid(uuid)
             if port is None:
                 return
-
-            port.mdata_signal_type = value
 
             if port.type is PortType.AUDIO_JACK:
                 if value == 'CV':
