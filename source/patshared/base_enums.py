@@ -36,6 +36,10 @@ class PortType(IntFlag):
     
     def _missing_(self) -> 'PortType':
         return PortType.NULL
+    
+    @property
+    def is_jack(self) -> bool:
+        return self in (self.AUDIO_JACK, self.MIDI_JACK)
 
 
 class PortSubType(IntFlag):

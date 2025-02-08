@@ -126,6 +126,11 @@ class Port:
             self.uuid, JackMetadata.SIGNAL_TYPE)
 
     @property
+    def pretty_name(self) -> str:
+        'The internal pretty-name of this port, if it exists'
+        return self.manager.pretty_names.pretty_port(self.full_name)
+
+    @property
     def alsa_client_id(self) -> int:
         if self.type is not PortType.MIDI_ALSA:
             return -1

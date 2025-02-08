@@ -136,6 +136,11 @@ class Group:
         
         return self.manager.jack_metadatas.icon_name(self.uuid)
     
+    @property
+    def pretty_name(self) -> str:
+        'The internal pretty-name, if it exists'
+        return self.manager.pretty_names.pretty_group(self.name)
+    
     def remove_from_canvas(self):
         if not self.in_canvas:
             return
@@ -303,7 +308,7 @@ class Group:
         # first remove any existing portgroup with one of the porgroup_mem ports
         for portgroup in self.portgroups:
             if (portgroup.port_mode is not portgroup_mem.port_mode
-                    or portgroup.port_type() is not portgroup_mem.port_type):
+                    or portgroup.type is not portgroup_mem.port_type):
                 continue
 
             for port in portgroup.ports:
@@ -865,7 +870,7 @@ class Group:
                 elif search_index:
                     if (seems_ok
                             and (port.mdata_portgroup != previous_port.mdata_portgroup
-                                 or port.type is not portgroup.port_type()
+                                 or port.type is not portgroup.type
                                  or port.mode is not portgroup.port_mode)):
                         # port after the portgroup has not to make
                         # the portgroup higher. We keep this portgroup

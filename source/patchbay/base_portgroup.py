@@ -26,10 +26,10 @@ class Portgroup:
             for port in self.ports:
                 port.portgroup_id = portgroup_id
 
-    def port_type(self):
+    @property
+    def type(self) -> PortType:
         if not self.ports:
             return PortType.NULL
-
         return self.ports[0].type
 
     @property

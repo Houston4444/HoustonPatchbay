@@ -8,7 +8,7 @@ from qtpy.QtGui import (
     QCursor, QFocusEvent, QPaintEvent, QPainter,
     QPen, QBrush)
 
-from .rename_group_dialog import RenameGroupDialog
+from .rename_group_dialog import PrettyNameDialog
 if TYPE_CHECKING:
     # FIX : QAction not found by pylance
     from qtpy.QtGui import QAction
@@ -284,17 +284,17 @@ class CheckFrame(QFrame):
         
         if self._label_right is not None:
             port_theme = full_theme.port
-            if po.port_type() is PortType.AUDIO_JACK:
+            port_type = po.type
+            if port_type is PortType.AUDIO_JACK:
                 port_theme = port_theme.audio
-            elif po.port_type() is PortType.MIDI_JACK:
+            elif port_type is PortType.MIDI_JACK:
                 port_theme = port_theme.midi
 
             self._label_right.setFont(port_theme.font())
             self._label_right.setStyleSheet(
-                f"QLabel{{margin-left: 3px; margin-right: 0px; padding: 0px; {theme_css(port_theme)}}} "
+                "QLabel{{margin-left: 3px; margin-right: 0px; padding: 0px;"
+                        f" {theme_css(port_theme)}}} "
                 f"QLabel:focus{{{theme_css(port_theme.selected)}}}")
-        
-        
 
     def set_check_state(self, check_state: ConnState):
         self._check_box.setCheckState(
@@ -434,11 +434,6 @@ class AbstractConnectionsMenu(QMenu):
         if isinstance(self._po, Portgroup):
             return list(self._po.ports)
         return [self._po]
-    
-    def _port_type(self) -> PortType:
-        if isinstance(self._po, Portgroup):
-            return self._po.port_type()
-        return self._po.type
     
     def _port_mode(self) -> PortMode:
         if isinstance(self._po, Portgroup):
@@ -583,7 +578,7 @@ class ConnectMenu(AbstractConnectionsMenu):
             last_portgrp_id = 0
             
             for port in group.ports:
-                if (port.type is self._port_type()
+                if (port.type is self._po.type
                         and port.mode is self._port_mode().opposite()):
                     if self._is_connection_dangerous(port) != dangerous:
                         has_dangerous_ports = True
@@ -980,43 +975,26 @@ class PoMenu(AbstractConnectionsMenu):
     
     @Slot()
     def _rename(self):
+        dialog = PrettyNameDialog(self._po)
+        if not dialog.exec():
+            return
+        
+        pretty_name = dialog.pretty_name()
+        save_in_jack = dialog.save_in_metadata()
+        
         if isinstance(self._po, Port):
-            ptov = self._mng.pretty_names.ports.get(self._po.full_name)
-            if ptov is not None:
-                suggest = ptov.pretty
-            elif self._po.mdata_pretty_name:
-                suggest = self._po.mdata_pretty_name
-            else:
-                suggest = self._po.display_name
-            
-            dialog = RenameGroupDialog(
-                self._mng.main_win, self._po.short_name,
-                suggest)
-            if not dialog.exec():
-                return
-            
-            pretty_name = dialog.pretty_name()
-            
             self._mng.pretty_names.save_port(
                 self._po.full_name, pretty_name, self._po.mdata_pretty_name)
             self._po.rename_in_canvas()
             
-            canvas.callback(
-                CallbackAct.PORT_RENAME,
-                self._po.group_id, self._po.port_id, pretty_name)
+            if save_in_jack:
+                canvas.callback(
+                    CallbackAct.PORT_RENAME,
+                    self._po.group_id, self._po.port_id, pretty_name)
         
         elif isinstance(self._po, Portgroup):
             pg_name, suffixes = portgroup_name_splitted(
                 *[p.cnv_name for p in self._po.ports])
-
-            dialog = RenameGroupDialog(
-                self._mng.main_win, pg_name + '|'.join(suffixes),
-                pg_name.strip())
-
-            if not dialog.exec():
-                return
-            
-            pretty_name = dialog.pretty_name()
             
             for i in range(len(self._po.ports)):
                 port = self._po.ports[i]
@@ -1031,9 +1009,10 @@ class PoMenu(AbstractConnectionsMenu):
                     port.full_name, port_pretty_name, port.mdata_pretty_name)
                 port.rename_in_canvas()
 
-                canvas.callback(
-                    CallbackAct.PORT_RENAME,
-                    port.group_id, port.port_id, port_pretty_name)
+                if save_in_jack:
+                    canvas.callback(
+                        CallbackAct.PORT_RENAME,
+                        port.group_id, port.port_id, port_pretty_name)
 
     @Slot()
     def _display_port_infos(self):
