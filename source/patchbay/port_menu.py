@@ -983,7 +983,8 @@ class PoMenu(AbstractConnectionsMenu):
         
         if isinstance(self._po, Port):
             self._mng.pretty_names.save_port(
-                self._po.full_name, pretty_name, self._po.mdata_pretty_name)
+                self._po.full_name_id_free, pretty_name,
+                self._po.mdata_pretty_name)
             self._po.rename_in_canvas()
             
             if save_in_jack:
@@ -1005,7 +1006,8 @@ class PoMenu(AbstractConnectionsMenu):
                     port_pretty_name = ''
 
                 self._mng.pretty_names.save_port(
-                    port.full_name, port_pretty_name, port.mdata_pretty_name)
+                    port.full_name_id_free,
+                    port_pretty_name, port.mdata_pretty_name)
                 port.rename_in_canvas()
 
                 if save_in_jack:

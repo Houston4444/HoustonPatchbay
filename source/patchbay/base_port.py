@@ -1,5 +1,5 @@
-from posixpath import split
 from typing import TYPE_CHECKING
+import time
 
 from patshared import PortMode, PortType, PortSubType
 from patshared.jack_metadata import JackMetadata
@@ -23,9 +23,6 @@ class Port:
     uuid = 0
     'contains the real JACK uuid'
 
-    # given by JACK metadatas
-    mdata_signal_type = ''
-
     def __init__(self, manager: 'PatchbayManager', port_id: int, name: str,
                  port_type: PortType, flags: int, uuid: int):
         self.manager = manager
@@ -43,7 +40,7 @@ class Port:
         elif (self.type is PortType.MIDI_JACK
                 and self.full_name.startswith(('a2j:', 'Midi-Bridge:'))):
             self.subtype = PortSubType.A2J
-            
+
         self.conns_hidden_in_canvas = set[Connection]()
 
     def __repr__(self) -> str:
@@ -90,15 +87,14 @@ class Port:
     @property
     def cnv_name(self):
         if self.manager.naming & Naming.METADATA_PRETTY:
-            if self.uuid:
-                pretty = self.manager.jack_metadatas.pretty_name(self.uuid)
-                if pretty:
-                    return pretty
+            mdata_pretty_name = self.mdata_pretty_name
+            if mdata_pretty_name:
+                return mdata_pretty_name
         
         if self.manager.naming & Naming.INTERNAL_PRETTY:
-            pretty = self.manager.pretty_names.pretty_port(self.full_name)
-            if pretty:
-                return pretty
+            pretty_name = self.pretty_name
+            if pretty_name:
+                return pretty_name
         
         if self.manager.naming & Naming.GRACEFUL:
             return self.display_name
@@ -128,7 +124,7 @@ class Port:
     @property
     def pretty_name(self) -> str:
         'The internal pretty-name of this port, if it exists'
-        return self.manager.pretty_names.pretty_port(self.full_name)
+        return self.manager.pretty_names.pretty_port(self.full_name_id_free)
 
     @property
     def alsa_client_id(self) -> int:
@@ -141,6 +137,16 @@ class Port:
         if not alsa_client_id_str.isdigit():
             return -1
         return int(alsa_client_id_str)
+
+    @property
+    def full_name_id_free(self) -> str:
+        'full_name without alsa client or port id, useful for pretty_names'
+        if self.type is PortType.MIDI_ALSA:
+            names = self.full_name.split(':')
+            names.pop(2)
+            names.pop(2)
+            return ':'.join(names)
+        return self.full_name
 
     def add_the_last_digit(self):
         self.display_name += ' ' + self.last_digit_to_add
