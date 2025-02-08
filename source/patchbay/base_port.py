@@ -143,9 +143,7 @@ class Port:
         'full_name without alsa client or port id, useful for pretty_names'
         if self.type is PortType.MIDI_ALSA:
             names = self.full_name.split(':')
-            names.pop(2)
-            names.pop(2)
-            return ':'.join(names)
+            return ':'.join(names[0:2] + names[4:])
         return self.full_name
 
     def add_the_last_digit(self):

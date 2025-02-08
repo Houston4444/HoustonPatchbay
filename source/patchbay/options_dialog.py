@@ -75,7 +75,7 @@ class CanvasOptionsDialog(QDialog):
             self._naming_changed)
         self.ui.checkBoxInternalPrettyNames.stateChanged.connect(
             self._naming_changed)
-        self.ui.checkBoxGracefulNames_2.stateChanged.connect(
+        self.ui.checkBoxGracefulNames.stateChanged.connect(
             self._naming_changed)
         
         self.ui.checkBoxShadows.stateChanged.connect(
@@ -111,7 +111,7 @@ class CanvasOptionsDialog(QDialog):
             Naming.METADATA_PRETTY in self.mng.naming)
         self.ui.checkBoxInternalPrettyNames.setChecked(
             Naming.INTERNAL_PRETTY in self.mng.naming)
-        self.ui.checkBoxGracefulNames_2.setChecked(
+        self.ui.checkBoxGracefulNames.setChecked(
             Naming.GRACEFUL in self.mng.naming)
         
         options = patchcanvas.options
@@ -157,7 +157,7 @@ class CanvasOptionsDialog(QDialog):
             naming |= Naming.METADATA_PRETTY
         if self.ui.checkBoxInternalPrettyNames.isChecked():
             naming |= Naming.INTERNAL_PRETTY
-        if self.ui.checkBoxGracefulNames_2.isChecked():
+        if self.ui.checkBoxGracefulNames.isChecked():
             naming |= Naming.GRACEFUL
         
         self.mng.change_naming(naming)

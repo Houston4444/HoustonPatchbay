@@ -210,7 +210,7 @@
             </widget>
            </item>
            <item>
-            <widget class="QCheckBox" name="checkBoxGracefulNames_2">
+            <widget class="QCheckBox" name="checkBoxGracefulNames">
              <property name="toolTip">
               <string>Use arranged names, which replace all underscores with spaces,
 cut some useless characters depending on the client name.
@@ -255,7 +255,7 @@ It provides a shorter name than the original.</string>
             </spacer>
            </item>
           </layout>
-          <zorder>checkBoxGracefulNames_2</zorder>
+          <zorder>checkBoxGracefulNames</zorder>
           <zorder>checkBoxJackPrettyNames</zorder>
           <zorder>verticalSpacer_2</zorder>
           <zorder>checkBoxInternalPrettyNames</zorder>
