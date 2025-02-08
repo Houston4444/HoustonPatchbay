@@ -292,8 +292,7 @@ class CheckFrame(QFrame):
 
             self._label_right.setFont(port_theme.font())
             self._label_right.setStyleSheet(
-                "QLabel{{margin-left: 3px; margin-right: 0px; padding: 0px;"
-                        f" {theme_css(port_theme)}}} "
+                f"QLabel{{margin-left: 3px; margin-right: 0px; padding: 0px; {theme_css(port_theme)}}} "
                 f"QLabel:focus{{{theme_css(port_theme.selected)}}}")
 
     def set_check_state(self, check_state: ConnState):
