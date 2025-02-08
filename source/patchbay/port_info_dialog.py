@@ -1,5 +1,6 @@
 from qtpy.QtGui import QShowEvent, QFontMetrics, QFont
-from qtpy.QtWidgets import QApplication, QDialog
+from qtpy.QtWidgets import QApplication, QDialog, QTableWidgetItem
+from qtpy.QtCore import Qt
 
 from patshared import PortType
 from .base_elements import JackPortFlag
@@ -18,6 +19,9 @@ class CanvasPortInfoDialog(QDialog):
         
         self._show_alsa_props(False)
 
+        self._populating = False
+        self.ui.tableWidgetMetadatas.horizontalHeader().\
+            setStretchLastSection(True)
         self.ui.toolButtonRefresh.clicked.connect(
             self.update_contents)
 
@@ -77,22 +81,37 @@ class CanvasPortInfoDialog(QDialog):
             self.ui.lineEditUuid.setVisible(False)
             
         self.ui.lineEditFullPortName.setText(port_full_name)
+        self.ui.labelGracefulNameValue.setText(self._port.display_name)
+        self.ui.labelInternalPrettyNameValue.setText(
+            self._port.manager.pretty_names.pretty_port(self._port.full_name))
         self.ui.lineEditUuid.setText(str(self._port.uuid))
         self.ui.labelPortType.setText(port_type_str)
         self.ui.labelPortFlags.setText(port_flags_str)
-        self.ui.labelPrettyName.setText(self._port.mdata_pretty_name)
-        self.ui.labelPortOrder.setText(str(self._port.order))
-        self.ui.labelPortGroup.setText(self._port.mdata_portgroup)
 
-        self.ui.groupBoxMetadatas.setVisible(bool(
-            self._port.mdata_pretty_name
-            or self._port.order is not None
-            or self._port.mdata_portgroup))
-    
-    def showEvent(self, event: QShowEvent) -> None:
-        self.resize(0, 0)
-        self.ui.lineEditFullPortName.setMinimumWidth(
-            QFontMetrics(QFont()).horizontalAdvance(
-            self.ui.lineEditFullPortName.text()) + 20
-        )
-        super().showEvent(event)
+        if self._port.uuid:
+            uuid_dict = self._port.manager.jack_metadatas.get(self._port.uuid)
+            if uuid_dict is not None:
+                self.ui.tableWidgetMetadatas.setRowCount(len(uuid_dict))
+                row = 0
+                
+                for key, value in uuid_dict.items():                    
+                    key_item = QTableWidgetItem(key)
+                    value_item = QTableWidgetItem(value)
+                    key_item.setData(Qt.ItemDataRole.UserRole, key)
+                    value_item.setData(Qt.ItemDataRole.UserRole, value)
+                    self.ui.tableWidgetMetadatas.setItem(row, 0, key_item)
+                    self.ui.tableWidgetMetadatas.setItem(row, 1, value_item)
+                    row += 1
+                
+            self.ui.tableWidgetMetadatas.resizeColumnToContents(0)
+        
+    def show(self):
+        super().show()
+        self.adjustSize()
+        
+    def _cell_changed(self, row: int, column: int):
+        if self._populating:
+            return
+
+        item = self.ui.tableWidgetMetadatas.item(row, column)
+        item.setText(item.data(Qt.ItemDataRole.UserRole))

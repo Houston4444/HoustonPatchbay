@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>420</width>
-    <height>394</height>
+    <height>431</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -66,24 +66,36 @@
     </widget>
    </item>
    <item>
-    <layout class="QHBoxLayout" name="horizontalLayout"/>
-   </item>
-   <item>
-    <spacer name="verticalSpacer_3">
-     <property name="orientation">
-      <enum>Qt::Vertical</enum>
-     </property>
-     <property name="sizeHint" stdset="0">
-      <size>
-       <width>20</width>
-       <height>40</height>
-      </size>
-     </property>
-    </spacer>
-   </item>
-   <item>
     <layout class="QGridLayout" name="gridLayout">
+     <item row="4" column="0">
+      <widget class="QLabel" name="labelJackUuid">
+       <property name="text">
+        <string>JACK UUID</string>
+       </property>
+      </widget>
+     </item>
      <item row="4" column="1">
+      <widget class="QLabel" name="labelColonJackUuid">
+       <property name="text">
+        <string>:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="6" column="2">
+      <widget class="QLabel" name="labelPortFlags">
+       <property name="text">
+        <string>Port Flags</string>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="1">
+      <widget class="QLabel" name="labelColonAlsaClientId">
+       <property name="text">
+        <string>:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="6" column="1">
       <widget class="QLabel" name="label_3">
        <property name="sizePolicy">
         <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
@@ -96,28 +108,21 @@
        </property>
       </widget>
      </item>
-     <item row="3" column="1">
-      <widget class="QLabel" name="label_6">
+     <item row="0" column="1">
+      <widget class="QLabel" name="labelColonGracefulName">
        <property name="text">
         <string>:</string>
        </property>
       </widget>
      </item>
-     <item row="0" column="0">
-      <widget class="QLabel" name="labelAlsaClientId">
+     <item row="3" column="1">
+      <widget class="QLabel" name="labelColonAlsaPortId">
        <property name="text">
-        <string>ALSA client ID</string>
+        <string>:</string>
        </property>
       </widget>
      </item>
-     <item row="0" column="2">
-      <widget class="QLabel" name="labelAlsaClientIdNum">
-       <property name="text">
-        <string>0</string>
-       </property>
-      </widget>
-     </item>
-     <item row="3" column="0">
+     <item row="5" column="0">
       <widget class="QLabel" name="label_5">
        <property name="sizePolicy">
         <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
@@ -130,73 +135,94 @@
        </property>
       </widget>
      </item>
-     <item row="4" column="0">
-      <widget class="QLabel" name="label_4">
-       <property name="text">
-        <string>Flags</string>
-       </property>
-      </widget>
-     </item>
-     <item row="2" column="0">
-      <widget class="QLabel" name="labelJackUuid">
-       <property name="text">
-        <string>JACK UUID</string>
-       </property>
-      </widget>
-     </item>
-     <item row="2" column="2" colspan="3">
+     <item row="4" column="2">
       <widget class="QLineEdit" name="lineEditUuid">
        <property name="readOnly">
         <bool>true</bool>
        </property>
       </widget>
      </item>
-     <item row="3" column="2" colspan="3">
+     <item row="3" column="2">
+      <widget class="QLabel" name="labelAlsaPortIdNum">
+       <property name="text">
+        <string>0</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="2">
+      <widget class="QLabel" name="labelGracefulNameValue">
+       <property name="text">
+        <string>value</string>
+       </property>
+      </widget>
+     </item>
+     <item row="6" column="0">
+      <widget class="QLabel" name="label_4">
+       <property name="text">
+        <string>Flags</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="0">
+      <widget class="QLabel" name="labelPrettyName_2">
+       <property name="text">
+        <string>Pretty name</string>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="2">
+      <widget class="QLabel" name="labelAlsaClientIdNum">
+       <property name="text">
+        <string>0</string>
+       </property>
+      </widget>
+     </item>
+     <item row="5" column="1">
+      <widget class="QLabel" name="label_6">
+       <property name="text">
+        <string>:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="0">
+      <widget class="QLabel" name="labelAlsaClientId">
+       <property name="text">
+        <string>ALSA client ID</string>
+       </property>
+      </widget>
+     </item>
+     <item row="5" column="2">
       <widget class="QLabel" name="labelPortType">
        <property name="text">
         <string>Audio Port</string>
        </property>
       </widget>
      </item>
-     <item row="2" column="1">
-      <widget class="QLabel" name="labelColonJackUuid">
+     <item row="1" column="1">
+      <widget class="QLabel" name="labelColonPrettyName">
        <property name="text">
         <string>:</string>
        </property>
       </widget>
      </item>
-     <item row="0" column="1">
-      <widget class="QLabel" name="labelColonAlsaClientId">
-       <property name="text">
-        <string>:</string>
-       </property>
-      </widget>
-     </item>
-     <item row="4" column="2" colspan="3">
-      <widget class="QLabel" name="labelPortFlags">
-       <property name="text">
-        <string>Port Flags</string>
-       </property>
-      </widget>
-     </item>
-     <item row="1" column="0">
+     <item row="3" column="0">
       <widget class="QLabel" name="labelAlsaPortId">
        <property name="text">
         <string>ALSA port ID</string>
        </property>
       </widget>
      </item>
-     <item row="1" column="1">
-      <widget class="QLabel" name="labelColonAlsaPortId">
+     <item row="0" column="0">
+      <widget class="QLabel" name="labelGracefulName">
        <property name="text">
-        <string>:</string>
+        <string>Graceful name</string>
        </property>
       </widget>
      </item>
      <item row="1" column="2">
-      <widget class="QLabel" name="labelAlsaPortIdNum">
+      <widget class="QLabel" name="labelInternalPrettyNameValue">
        <property name="text">
-        <string>0</string>
+        <string>value</string>
        </property>
       </widget>
      </item>
@@ -216,93 +242,40 @@
     </spacer>
    </item>
    <item>
-    <widget class="QGroupBox" name="groupBoxMetadatas">
-     <property name="title">
-      <string>Metadatas</string>
+    <widget class="QTableWidget" name="tableWidgetMetadatas">
+     <property name="sizeAdjustPolicy">
+      <enum>QAbstractScrollArea::AdjustToContents</enum>
      </property>
-     <layout class="QGridLayout" name="gridLayout_2">
-      <item row="1" column="1">
-       <widget class="QLabel" name="label_12">
-        <property name="text">
-         <string>:</string>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="0">
-       <widget class="QLabel" name="label_10">
-        <property name="text">
-         <string>Port-Group</string>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="1">
-       <widget class="QLabel" name="label_11">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="text">
-         <string>:</string>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="1">
-       <widget class="QLabel" name="label_13">
-        <property name="text">
-         <string>:</string>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="0">
-       <widget class="QLabel" name="label_9">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="text">
-         <string>Order</string>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="0">
-       <widget class="QLabel" name="label_8">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="text">
-         <string>Pretty name</string>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="2">
-       <widget class="QLabel" name="labelPrettyName">
-        <property name="text">
-         <string/>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="2">
-       <widget class="QLabel" name="labelPortOrder">
-        <property name="text">
-         <string/>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="2">
-       <widget class="QLabel" name="labelPortGroup">
-        <property name="text">
-         <string/>
-        </property>
-       </widget>
-      </item>
-     </layout>
+     <property name="autoScrollMargin">
+      <number>16</number>
+     </property>
+     <property name="editTriggers">
+      <set>QAbstractItemView::AllEditTriggers</set>
+     </property>
+     <property name="rowCount">
+      <number>2</number>
+     </property>
+     <property name="columnCount">
+      <number>2</number>
+     </property>
+     <attribute name="horizontalHeaderVisible">
+      <bool>true</bool>
+     </attribute>
+     <attribute name="verticalHeaderVisible">
+      <bool>false</bool>
+     </attribute>
+     <row/>
+     <row/>
+     <column>
+      <property name="text">
+       <string>Property</string>
+      </property>
+     </column>
+     <column>
+      <property name="text">
+       <string>Value</string>
+      </property>
+     </column>
     </widget>
    </item>
    <item>
