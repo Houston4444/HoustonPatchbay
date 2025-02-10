@@ -85,6 +85,7 @@ class Port:
 
     @property
     def cnv_name(self):
+        'The name of this port in the canvas, depending on Naming options'
         if self.manager.naming & Naming.METADATA_PRETTY:
             mdata_pretty_name = self.mdata_pretty_name
             if mdata_pretty_name:
