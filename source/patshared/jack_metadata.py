@@ -46,3 +46,7 @@ class JackMetadatas(dict[int, dict[str, str]]):
         
     def icon_name(self, uuid: int) -> str:
         return self.str_for_key(uuid, JackMetadata.ICON_NAME)
+
+    def remove_uuid(self, uuid: int):
+        if uuid in self:
+            self.pop(uuid)

@@ -11,11 +11,11 @@ from qtpy.QtWidgets import (QDialog, QApplication, QInputDialog,
                              QMessageBox, QWidget, QFileDialog, QAction)
 
 
+from patshared import Naming
 from .patchcanvas import patchcanvas, xdg
 from .patchcanvas.theme_manager import ThemeData
 from .patchcanvas.init_values import GridStyle
 from .tools_widgets import is_dark_theme
-from .base_elements import Naming
 from .ui.canvas_options import Ui_CanvasOptions
 
 if TYPE_CHECKING:
@@ -77,6 +77,8 @@ class CanvasOptionsDialog(QDialog):
             self._naming_changed)
         self.ui.checkBoxGracefulNames.stateChanged.connect(
             self._naming_changed)
+        self.ui.checkBoxExportPrettyNames.stateChanged.connect(
+            self._jack_export_naming_changed)
         
         self.ui.checkBoxShadows.stateChanged.connect(
             manager.sg.group_shadows_changed)
@@ -113,6 +115,9 @@ class CanvasOptionsDialog(QDialog):
             Naming.INTERNAL_PRETTY in self.mng.naming)
         self.ui.checkBoxGracefulNames.setChecked(
             Naming.GRACEFUL in self.mng.naming)
+        
+        self.ui.checkBoxExportPrettyNames.setChecked(
+            Naming.INTERNAL_PRETTY in self.mng.jack_export_naming)
         
         options = patchcanvas.options
         
@@ -161,6 +166,14 @@ class CanvasOptionsDialog(QDialog):
             naming |= Naming.GRACEFUL
         
         self.mng.change_naming(naming)
+
+    @Slot(int)
+    def _jack_export_naming_changed(self, state: int):
+        jack_exp_naming = Naming.TRUE_NAME
+        if self.ui.checkBoxExportPrettyNames.isChecked():
+            jack_exp_naming |= Naming.INTERNAL_PRETTY 
+        
+        self.mng.change_jack_export_naming(jack_exp_naming)
 
     def _change_default_zoom(self, value: int):
         patchcanvas.set_default_zoom(value)

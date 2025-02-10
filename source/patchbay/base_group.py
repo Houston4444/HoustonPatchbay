@@ -8,9 +8,10 @@ from patshared import (
     PortType,
     PortSubType,
     PortTypesViewFlag,
-    PortgroupMem    
+    PortgroupMem,
+    Naming
 )
-from .base_elements import JackPortFlag, Naming
+from .base_elements import JackPortFlag
 from .base_port import Port
 from .base_portgroup import Portgroup
 from .base_connection import Connection

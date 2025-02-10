@@ -1,10 +1,9 @@
 from typing import TYPE_CHECKING
 import time
 
-from patshared import PortMode, PortType, PortSubType
-from patshared.jack_metadata import JackMetadata
+from patshared import PortMode, PortType, PortSubType, Naming, JackMetadata
 from .patchcanvas import patchcanvas
-from .base_elements import JackPortFlag, Naming
+from .base_elements import JackPortFlag
 from .base_connection import Connection
 
 if TYPE_CHECKING:

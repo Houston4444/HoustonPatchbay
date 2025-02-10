@@ -15,7 +15,7 @@ from .patchcanvas.utils import get_new_group_positions
 from .patchcanvas.scene_view import PatchGraphicsView
 from patshared import (
     PortType, PortSubType, PortMode, JackMetadata, JackMetadatas,
-    PortTypesViewFlag, GroupPos, from_json_to_str,
+    PortTypesViewFlag, GroupPos, from_json_to_str, Naming,
     ViewsDict, ViewData, PortgroupsDict, PortgroupMem, PrettyNames)
 from .patchcanvas.init_values import (
     AliasingReason, CallbackAct, CanvasFeaturesObject,
@@ -28,7 +28,7 @@ from .canvas_menu import CanvasMenu
 from .options_dialog import CanvasOptionsDialog
 from .filter_frame import FilterFrame
 from .base_elements import (
-    JackPortFlag, Naming, ToolDisplayed, TransportPosition)
+    JackPortFlag, ToolDisplayed, TransportPosition)
 from .base_group import Group
 from .base_connection import Connection
 from .base_port import Port
@@ -147,6 +147,9 @@ class PatchbayManager:
 
         self.naming = Naming.from_config_str(settings.value(
             'Canvas/naming', 'ALL', type=str))
+        self.jack_export_naming = Naming.from_config_str(settings.value(
+            'Canvas/jack_export_naming', 'INTERNAL_PRETTY', type=str))
+
         self.group_a2j_hw: bool = settings.value(
             'Canvas/group_a2j_ports', True, type=bool)
         self.alsa_midi_enabled: bool = settings.value(
@@ -264,6 +267,8 @@ class PatchbayManager:
             return
 
         self._settings.setValue('Canvas/naming', self.naming.name)
+        self._settings.setValue('Canvas/jack_export_naming',
+                                self.jack_export_naming.name)
         self._settings.setValue('Canvas/group_a2j_ports',
                                 self.group_a2j_hw)
         self._settings.setValue('Canvas/alsa_midi_enabled',
@@ -1046,6 +1051,9 @@ class PatchbayManager:
         for group_id in group_ids_to_redraw:
             patchcanvas.redraw_group(group_id)
 
+    def change_jack_export_naming(self, naming: Naming):
+        self.jack_export_naming = naming
+
     def change_theme(self, theme_name: str):
         if not theme_name:
             return
@@ -1184,6 +1192,9 @@ class PatchbayManager:
         port = self.get_port_from_name(name)
         if port is None:
             return None
+
+        if port.type.is_jack and port.uuid:
+            self.jack_metadatas.remove_uuid(port.uuid)
 
         group = self.get_group_from_id(port.group_id)
         if group is None:
