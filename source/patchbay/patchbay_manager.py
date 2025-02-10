@@ -1302,12 +1302,6 @@ class PatchbayManager:
                     group.rename_in_canvas()
                     return group.group_id
 
-        elif key == JackMetadata.MIDI_BRIDGE_GROUP_PRETTY_NAME:
-            port = self.get_port_from_uuid(uuid)
-            if port is not None and port.group.a2j_group:
-                port.group.rename_in_canvas()
-                return port.group.group_id
-
         elif key == JackMetadata.PORT_GROUP:
             port = self.get_port_from_uuid(uuid)
             if port is None:

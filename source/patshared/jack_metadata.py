@@ -12,10 +12,6 @@ class JackMetadata:
     PORT_GROUP = _PREFIX + "port-group"
     PRETTY_NAME = _PREFIX + "pretty-name"
     SIGNAL_TYPE = _PREFIX + "signal-type"
-
-    # Specific to HoustonPatchbay
-    MIDI_BRIDGE_GROUP_PRETTY_NAME = \
-        "HoustonPatchbay/midi-bridge-pretty-name"
         
 
 class JackMetadatas(dict[int, dict[str, str]]):
