@@ -81,8 +81,8 @@ class CanvasPortInfoDialog(QDialog):
             self.ui.lineEditUuid.setVisible(False)
             
         self.ui.lineEditFullPortName.setText(port_full_name)
-        self.ui.labelGracefulNameValue.setText(self._port.graceful_name)
-        self.ui.labelInternalPrettyNameValue.setText(
+        self.ui.lineEditGracefulName.setText(self._port.graceful_name)
+        self.ui.lineEditPrettyName.setText(
             self._port.manager.pretty_names.pretty_port(self._port.full_name))
         self.ui.lineEditUuid.setText(str(self._port.uuid))
         self.ui.labelPortType.setText(port_type_str)
@@ -104,6 +104,11 @@ class CanvasPortInfoDialog(QDialog):
                     row += 1
                 
             self.ui.tableWidgetMetadatas.resizeColumnToContents(0)
+        
+        if not self._port.type.is_jack:
+            self.ui.line.setVisible(False)
+            self.ui.labelJackMetadatas.setVisible(False)
+            self.ui.tableWidgetMetadatas.setVisible(False)
         
     def show(self):
         super().show()

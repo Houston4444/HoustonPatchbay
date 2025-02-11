@@ -133,15 +133,11 @@
        </property>
       </widget>
      </item>
-     <item row="2" column="4">
-      <widget class="QLabel" name="labelInternalPrettyNameValue">
-       <property name="text">
-        <string>value</string>
-       </property>
-      </widget>
-     </item>
      <item row="5" column="4">
       <widget class="QLineEdit" name="lineEditUuid">
+       <property name="toolTip">
+        <string>Unique Identifier in JACK</string>
+       </property>
        <property name="readOnly">
         <bool>true</bool>
        </property>
@@ -182,6 +178,9 @@
      </item>
      <item row="0" column="4">
       <widget class="QLineEdit" name="lineEditClientName">
+       <property name="toolTip">
+        <string/>
+       </property>
        <property name="readOnly">
         <bool>true</bool>
        </property>
@@ -202,9 +201,22 @@
       </widget>
      </item>
      <item row="1" column="4">
-      <widget class="QLabel" name="labelGracefulNameValue">
-       <property name="text">
-        <string>value</string>
+      <widget class="QLineEdit" name="lineEditGracefulName">
+       <property name="toolTip">
+        <string>Name generated from the client name, substituting '_' with spaces, and hidding the prefix if it seems to be a NSM client</string>
+       </property>
+       <property name="readOnly">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="4">
+      <widget class="QLineEdit" name="lineEditPrettyName">
+       <property name="toolTip">
+        <string>Internal pretty name, set when user renames the client with the context menu.</string>
+       </property>
+       <property name="readOnly">
+        <bool>true</bool>
        </property>
       </widget>
      </item>
@@ -258,7 +270,7 @@
       <set>QAbstractItemView::AllEditTriggers</set>
      </property>
      <property name="rowCount">
-      <number>2</number>
+      <number>0</number>
      </property>
      <property name="columnCount">
       <number>2</number>
@@ -269,8 +281,6 @@
      <attribute name="verticalHeaderVisible">
       <bool>false</bool>
      </attribute>
-     <row/>
-     <row/>
      <column>
       <property name="text">
        <string>Property</string>

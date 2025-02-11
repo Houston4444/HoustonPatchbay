@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>420</width>
-    <height>431</height>
+    <height>468</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -149,13 +149,6 @@
        </property>
       </widget>
      </item>
-     <item row="0" column="2">
-      <widget class="QLabel" name="labelGracefulNameValue">
-       <property name="text">
-        <string>value</string>
-       </property>
-      </widget>
-     </item>
      <item row="6" column="0">
       <widget class="QLabel" name="label_4">
        <property name="text">
@@ -219,10 +212,17 @@
        </property>
       </widget>
      </item>
+     <item row="0" column="2">
+      <widget class="QLineEdit" name="lineEditGracefulName">
+       <property name="readOnly">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
      <item row="1" column="2">
-      <widget class="QLabel" name="labelInternalPrettyNameValue">
-       <property name="text">
-        <string>value</string>
+      <widget class="QLineEdit" name="lineEditPrettyName">
+       <property name="readOnly">
+        <bool>true</bool>
        </property>
       </widget>
      </item>
@@ -242,6 +242,23 @@
     </spacer>
    </item>
    <item>
+    <widget class="Line" name="line">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QLabel" name="labelJackMetadatas">
+     <property name="text">
+      <string>JACK metadatas</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignCenter</set>
+     </property>
+    </widget>
+   </item>
+   <item>
     <widget class="QTableWidget" name="tableWidgetMetadatas">
      <property name="sizeAdjustPolicy">
       <enum>QAbstractScrollArea::AdjustToContents</enum>
@@ -253,7 +270,7 @@
       <set>QAbstractItemView::AllEditTriggers</set>
      </property>
      <property name="rowCount">
-      <number>2</number>
+      <number>0</number>
      </property>
      <property name="columnCount">
       <number>2</number>
@@ -264,8 +281,6 @@
      <attribute name="verticalHeaderVisible">
       <bool>false</bool>
      </attribute>
-     <row/>
-     <row/>
      <column>
       <property name="text">
        <string>Property</string>

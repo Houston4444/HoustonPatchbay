@@ -48,9 +48,13 @@ class GroupInfoDialog(QDialog):
         self.ui.lineEditClientName.setText(self.group.name)
         self.ui.lineEditUuid.setText(str(self.group.uuid))
         
-        self.ui.labelInternalPrettyNameValue.setText(
-            self.group.manager.pretty_names.pretty_group(self.group.name))
-        self.ui.labelGracefulNameValue.setText(self.group.graceful_name)
+        self.ui.lineEditPrettyName.setText(self.group.pretty_name)
+        self.ui.lineEditGracefulName.setText(self.group.graceful_name)
+        display_graceful = self.group.graceful_name != self.group.name
+        for widget in (self.ui.labelGracefulName,
+                       self.ui.labelColonGracefulName,
+                       self.ui.lineEditGracefulName):
+            widget.setVisible(display_graceful)
         
         mng = self.group.manager
         
