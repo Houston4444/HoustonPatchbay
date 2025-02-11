@@ -287,7 +287,7 @@ class HiddensIndicator(QToolButton):
                         and PortMode.INPUT in hpm)):
                 if flt:
                     if (flt.lower() in group.name.lower()
-                            or flt.lower() in group.display_name.lower()):
+                            or flt.lower() in group.graceful_name.lower()):
                         yield group
                 else:
                     yield group

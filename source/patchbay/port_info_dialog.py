@@ -81,7 +81,7 @@ class CanvasPortInfoDialog(QDialog):
             self.ui.lineEditUuid.setVisible(False)
             
         self.ui.lineEditFullPortName.setText(port_full_name)
-        self.ui.labelGracefulNameValue.setText(self._port.display_name)
+        self.ui.labelGracefulNameValue.setText(self._port.graceful_name)
         self.ui.labelInternalPrettyNameValue.setText(
             self._port.manager.pretty_names.pretty_port(self._port.full_name))
         self.ui.lineEditUuid.setText(str(self._port.uuid))

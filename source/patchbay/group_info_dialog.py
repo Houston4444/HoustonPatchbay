@@ -50,7 +50,7 @@ class GroupInfoDialog(QDialog):
         
         self.ui.labelInternalPrettyNameValue.setText(
             self.group.manager.pretty_names.pretty_group(self.group.name))
-        self.ui.labelGracefulNameValue.setText(self.group.display_name)
+        self.ui.labelGracefulNameValue.setText(self.group.graceful_name)
         
         mng = self.group.manager
         

@@ -47,7 +47,7 @@ class PrettyNameDialog(QDialog):
             elif element.mdata_pretty_name:
                 suggest = element.mdata_pretty_name
             else:
-                suggest = element.display_name
+                suggest = element.graceful_name
         
         self.ui.labelIntro.setText(label_intro)
         self.ui.labelGroupName.setText(f'<strong>{name}</strong>')

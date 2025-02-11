@@ -1458,7 +1458,7 @@ class PatchbayManager:
 
         for group in self.groups:
             if (text.lower() not in group.name.lower()
-                    and text.lower() not in group.display_name.lower()):
+                    and text.lower() not in group.graceful_name.lower()):
                 opac_grp_ids.add(group.group_id)
         
         patchcanvas.semi_hide_groups(opac_grp_ids)

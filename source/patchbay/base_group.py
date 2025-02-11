@@ -28,7 +28,7 @@ class Group:
         self.manager = manager
         self.group_id = group_id
         self.name = name
-        self.display_name = name
+        self.graceful_name = name
         self.ports = list[Port]()
         self.portgroups = list[Portgroup]()
         self._is_hardware = False
@@ -89,8 +89,8 @@ class Group:
         
         splitted = gpos.is_splitted()
 
-        self.display_name = \
-            self.display_name.replace('.0/', '/').replace('_', ' ')
+        self.graceful_name = \
+            self.graceful_name.replace('.0/', '/').replace('_', ' ')
         
         self.cnv_box_type = box_type
         self.cnv_icon_name = icon_name
@@ -119,7 +119,7 @@ class Group:
                 return pretty
             
         if self.manager.naming & Naming.GRACEFUL:
-            return self.display_name
+            return self.graceful_name
 
         return self.name
 
@@ -168,7 +168,7 @@ class Group:
         if self._is_hardware:
             box_type = BoxType.HARDWARE
             icon_name = ''
-            if self.a2j_group or self.display_name in ("Midi-Bridge", "a2j"):
+            if self.a2j_group or self.graceful_name in ("Midi-Bridge", "a2j"):
                 icon_name = "a2j"
 
         if self.client_icon:
@@ -248,7 +248,7 @@ class Group:
         elif port.type is PortType.MIDI_ALSA:
             port_full_name = ':'.join(port_full_name.split(':')[4:])
 
-        port.display_name = port_full_name.partition(':')[2]
+        port.graceful_name = port_full_name.partition(':')[2]
 
         if not self.ports:
             # we are adding the first port of the group
@@ -606,7 +606,7 @@ class Group:
                 and display_name.startswith(('capture_', 'playback_'))):
             display_name = display_name.partition('_')[2]
 
-        port.display_name = display_name if display_name else s_display_name
+        port.graceful_name = display_name if display_name else s_display_name
 
     def add_portgroup(self, portgroup: Portgroup):
         self.portgroups.append(portgroup)

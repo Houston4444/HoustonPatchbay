@@ -12,7 +12,7 @@ if TYPE_CHECKING:
 
 
 class Port:
-    display_name = ''
+    graceful_name = ''
     group_id = -1
     portgroup_id = 0
     prevent_stereo = False
@@ -97,7 +97,7 @@ class Port:
                 return pretty_name
         
         if self.manager.naming & Naming.GRACEFUL:
-            return self.display_name
+            return self.graceful_name
 
         return self.short_name
 
@@ -147,7 +147,7 @@ class Port:
         return self.full_name
 
     def add_the_last_digit(self):
-        self.display_name += ' ' + self.last_digit_to_add
+        self.graceful_name += ' ' + self.last_digit_to_add
         self.last_digit_to_add = ''
         self.rename_in_canvas()
 
