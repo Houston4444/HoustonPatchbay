@@ -36,7 +36,7 @@ class Group:
         self.a2j_group = False
         self.in_canvas = False
         self.current_position = group_position
-        self.uuid = 0
+        self.uuid = manager.client_uuids.get(name, 0)
 
         self.has_gui = False
         self.gui_visible = False

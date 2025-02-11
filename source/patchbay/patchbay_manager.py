@@ -144,6 +144,10 @@ class PatchbayManager:
         self._next_port_id = 0
         self._next_connection_id = 0
         self._next_portgroup_id = 1
+        
+        self.client_uuids = dict[str, int]()
+        '''Stock JACK client names and their uuid,
+        uuid can be provided before the group creation.'''
 
         self.naming = Naming.from_config_str(settings.value(
             'Canvas/naming', 'ALL', type=str))
@@ -1110,6 +1114,8 @@ class PatchbayManager:
 
     @later_by_batch()
     def set_group_uuid_from_name(self, client_name: str, uuid: int):
+        self.client_uuids[client_name] = uuid
+        
         group = self.get_group_from_name(client_name)
         if group is not None:
             group.uuid = uuid
@@ -1220,10 +1226,19 @@ class PatchbayManager:
         return group.group_id
 
     @later_by_batch(draw_group=True)
-    def rename_port(self, name: str, new_name: str) -> Union[int, None]:
-        port = self.get_port_from_name(name)
+    def rename_port(self, name: str, new_name: str, uuid=0) -> Union[int, None]:
+        if uuid:
+            port = self.get_port_from_uuid(uuid)
+        else:
+            port = self.get_port_from_name(name)
+
         if port is None:
-            _logger.warning(f"rename_port to '{new_name}', no port named '{name}'")
+            if uuid:
+                _logger.info(
+                    f"rename_port to {new_name}, no port with uuid {uuid}")
+            else:
+                _logger.warning(
+                    f"rename_port to '{new_name}', no port named '{name}'")
             return
 
         # change port key in self._ports_by_name dict
