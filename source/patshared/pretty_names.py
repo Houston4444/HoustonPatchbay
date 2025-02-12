@@ -18,6 +18,12 @@ class PrettyNames:
         self.groups = dict[str, _PrettyAndOver]()
         self.ports = dict[str, _PrettyAndOver]()
     
+    def __or__(self, other: 'PrettyNames') -> 'PrettyNames':
+        pretty_names = PrettyNames()
+        pretty_names.groups = self.groups | other.groups
+        pretty_names.ports = self.ports | other.ports
+        return pretty_names
+    
     def eat_json(self, json_dict: dict[str, dict[str, list[str]]]):
         if not isinstance(json_dict, dict):
             return
