@@ -182,19 +182,19 @@ QToolButton::menu-indicator{image: none}</string>
   <customwidget>
    <class>TypeFilterFrame</class>
    <extends>QFrame</extends>
-   <header>..type_filter_frame</header>
+   <header>..widgets/type_filter_frame</header>
    <container>1</container>
   </customwidget>
   <customwidget>
    <class>ViewSelectorWidget</class>
    <extends>QWidget</extends>
-   <header>..view_selector_frame</header>
+   <header>..widgets/view_selector_frame</header>
    <container>1</container>
   </customwidget>
   <customwidget>
    <class>HiddensIndicator</class>
    <extends>QToolButton</extends>
-   <header>..hiddens_indicator</header>
+   <header>..widgets/hiddens_indicator</header>
   </customwidget>
   <customwidget>
    <class>SpacerWidget</class>
