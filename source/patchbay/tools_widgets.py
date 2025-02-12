@@ -9,15 +9,15 @@ if TYPE_CHECKING:
 from qtpy.QtWidgets import (
     QWidget, QMainWindow, QAction, QApplication, QMenu)
 
-from .bar_widget_jack import BarWidgetJack
-from .bar_widget_transport import BarWidgetTransport
-from .bar_widget_canvas import BarWidgetCanvas
+from .widgets.bar_widget_jack import BarWidgetJack
+from .widgets.bar_widget_transport import BarWidgetTransport
+from .widgets.bar_widget_canvas import BarWidgetCanvas
 
 from .bases.elements import ToolDisplayed, TransportPosition
 
 if TYPE_CHECKING:
     from .patchbay_manager import PatchbayManager
-    from .tool_bar import PatchbayToolBar
+    from .widgets.tool_bar import PatchbayToolBar
 
 
 _translate = QApplication.translate

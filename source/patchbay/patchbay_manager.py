@@ -26,7 +26,7 @@ from .patchbay_signals import SignalsObject
 from .tools_widgets import PatchbayToolsWidget
 from .menus.canvas_menu import CanvasMenu
 from .dialogs.options_dialog import CanvasOptionsDialog
-from .filter_frame import FilterFrame
+from .widgets.filter_frame import FilterFrame
 from .bases.elements import (
     JackPortFlag, ToolDisplayed, TransportPosition)
 from .bases.group import Group

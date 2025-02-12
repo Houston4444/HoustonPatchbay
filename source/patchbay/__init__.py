@@ -13,6 +13,6 @@ from .tools_widgets import  PatchbayToolsWidget
 from .dialogs.port_info_dialog import CanvasPortInfoDialog
 from .menus.canvas_menu import CanvasMenu
 from .dialogs.options_dialog import CanvasOptionsDialog
-from .filter_frame import FilterFrame
+from .widgets.filter_frame import FilterFrame
 from .patchcanvas import patchcanvas
 from .patchcanvas.scene_view import PatchGraphicsView

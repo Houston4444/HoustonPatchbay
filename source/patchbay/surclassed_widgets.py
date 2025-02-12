@@ -22,7 +22,7 @@ from .bases.elements import TransportViewMode
 
 if TYPE_CHECKING:
     from .patchbay_manager import PatchbayManager
-    from .view_selector_frame import ViewSelectorWidget
+    from .widgets.view_selector_frame import ViewSelectorWidget
 
 _translate = QApplication.translate
 

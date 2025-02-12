@@ -5,10 +5,10 @@ from qtpy.QtWidgets import QWidget
 from qtpy.QtGui import QPalette, QIcon, QColor, QKeySequence
 from qtpy.QtCore import Slot
 
-from .bases.elements import (
+from ..bases.elements import (
     ToolDisplayed, TransportPosition, TransportViewMode)
 
-from .ui.transport_bar import Ui_Form as TransportUiForm
+from ..ui.transport_bar import Ui_Form as TransportUiForm
 
 if TYPE_CHECKING:
     from patchbay_manager import PatchbayManager

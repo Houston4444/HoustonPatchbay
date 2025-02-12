@@ -4,10 +4,10 @@ from qtpy.QtWidgets import QFrame
 from qtpy.QtGui import QKeyEvent
 from qtpy.QtCore import Qt, QSettings, Slot
 
-from .ui.filter_frame import Ui_Frame
+from ..ui.filter_frame import Ui_Frame
 
 if TYPE_CHECKING:
-    from .patchbay_manager import PatchbayManager
+    from ..patchbay_manager import PatchbayManager
 
 
 class FilterFrame(QFrame):

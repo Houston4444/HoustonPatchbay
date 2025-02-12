@@ -5,9 +5,9 @@ from qtpy.QtWidgets import QFrame, QApplication
 
 
 from patshared import PortTypesViewFlag
-from .cancel_mng import CancelOp, CancellableAction
+from ..cancel_mng import CancelOp, CancellableAction
 
-from .ui.type_filter_frame import Ui_FrameTypesFilter
+from ..ui.type_filter_frame import Ui_FrameTypesFilter
 
 if TYPE_CHECKING:
     from patchbay_manager import PatchbayManager

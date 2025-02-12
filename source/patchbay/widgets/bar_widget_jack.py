@@ -3,9 +3,9 @@ from typing import TYPE_CHECKING
 from qtpy.QtCore import QTimer
 from qtpy.QtWidgets import QWidget
 
-from .bases.elements import ToolDisplayed
+from ..bases.elements import ToolDisplayed
 
-from .ui.jack_bar import Ui_Form as JackUiForm
+from ..ui.jack_bar import Ui_Form as JackUiForm
 
 if TYPE_CHECKING:
     from patchbay_manager import PatchbayManager

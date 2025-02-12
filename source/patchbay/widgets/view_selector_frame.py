@@ -10,10 +10,10 @@ from qtpy.QtGui import (
 from qtpy.QtCore import Slot, Qt, QSize, QPointF, QRect, QRectF, QModelIndex
 
 from patshared import PortTypesViewFlag
-from .patchcanvas import canvas
-from .cancel_mng import CancelOp, CancellableAction
+from ..patchcanvas import canvas
+from ..cancel_mng import CancelOp, CancellableAction
 
-from .ui.view_selector import Ui_Form
+from ..ui.view_selector import Ui_Form
 
 if TYPE_CHECKING:
     from patchbay_manager import PatchbayManager

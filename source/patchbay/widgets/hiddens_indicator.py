@@ -8,13 +8,13 @@ if TYPE_CHECKING:
     from qtpy.QtGui import QAction
 from qtpy.QtWidgets import QToolButton, QMenu, QApplication, QAction
 
-from .cancel_mng import CancelOp, CancellableAction
-from .bases.group import Group
-from .patchcanvas import utils
+from ..cancel_mng import CancelOp, CancellableAction
+from ..bases.group import Group
+from ..patchcanvas import utils
 from patshared import PortMode
 
 if TYPE_CHECKING:
-    from .patchbay_manager import PatchbayManager
+    from ..patchbay_manager import PatchbayManager
 
 
 _translate = QApplication.translate

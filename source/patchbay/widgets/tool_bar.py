@@ -7,7 +7,7 @@ from qtpy.QtWidgets import QToolBar, QLabel
 from qtpy.QtGui import QMouseEvent
 from qtpy.QtCore import Qt, QPoint, Signal, QSize
 
-from .surclassed_widgets import SpacerWidget
+from ..surclassed_widgets import SpacerWidget
 from .hiddens_indicator import HiddensIndicator
 from .bar_widget_canvas import BarWidgetCanvas
 from .bar_widget_jack import BarWidgetJack
