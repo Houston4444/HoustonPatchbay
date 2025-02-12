@@ -4,7 +4,7 @@ from qtpy.QtCore import Slot
 from qtpy.QtGui import QIcon
 from qtpy.QtWidgets import QMenu, QApplication, QInputDialog
 
-from .cancel_mng import CancelOp, CancellableAction
+from ..cancel_mng import CancelOp, CancellableAction
 
 if TYPE_CHECKING:
     from patchbay_manager import PatchbayManager

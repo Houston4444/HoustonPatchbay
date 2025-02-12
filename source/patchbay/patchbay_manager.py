@@ -24,7 +24,7 @@ from .patchcanvas.init_values import (
 from .cancel_mng import CancelMng, CancelOp, CancellableAction
 from .patchbay_signals import SignalsObject
 from .tools_widgets import PatchbayToolsWidget
-from .canvas_menu import CanvasMenu
+from .menus.canvas_menu import CanvasMenu
 from .options_dialog import CanvasOptionsDialog
 from .filter_frame import FilterFrame
 from .bases.elements import (

@@ -4,12 +4,12 @@ from qtpy.QtGui import QIcon
 from qtpy.QtWidgets import QMenu, QApplication
 
 
-from . import patchcanvas
+from .. import patchcanvas
 from patshared import PortMode
-from .cancel_mng import CancelOp, CancellableAction
+from ..cancel_mng import CancelOp, CancellableAction
 
 if TYPE_CHECKING:
-    from .patchbay_manager import PatchbayManager
+    from ..patchbay_manager import PatchbayManager
 
 _translate = QApplication.translate
 

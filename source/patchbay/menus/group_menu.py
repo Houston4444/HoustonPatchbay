@@ -6,14 +6,14 @@ from qtpy.QtGui import QIcon, QPixmap
 
 from patshared import PortMode, BoxLayoutMode
 
-from .cancel_mng import CancelOp, CancellableAction
-from .bases.group import Group
-from .patchcanvas import canvas, CallbackAct, patchcanvas, utils
-from .rename_group_dialog import PrettyNameDialog
-from .group_info_dialog import GroupInfoDialog
+from ..cancel_mng import CancelOp, CancellableAction
+from ..bases.group import Group
+from ..patchcanvas import canvas, CallbackAct, patchcanvas, utils
+from ..rename_group_dialog import PrettyNameDialog
+from ..group_info_dialog import GroupInfoDialog
 
 if TYPE_CHECKING:
-    from .patchbay_manager import PatchbayManager
+    from ..patchbay_manager import PatchbayManager
 
 
 _translate = QApplication.translate

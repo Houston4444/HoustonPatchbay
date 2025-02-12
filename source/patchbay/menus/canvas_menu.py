@@ -5,15 +5,15 @@ from qtpy.QtGui import QIcon, QDesktopServices, QPixmap
 from qtpy.QtWidgets import QMenu, QApplication
 from qtpy.QtCore import QLocale, QUrl, Slot
 
-from . import patchcanvas
-from .patchcanvas import utils
+from .. import patchcanvas
+from ..patchcanvas import utils
 from patshared import PortTypesViewFlag, PortMode
 from .views_menu import ViewsMenu
 from .selected_boxes_menu import SelectedBoxesMenu
-from .cancel_mng import CancelOp, CancellableAction
+from ..cancel_mng import CancelOp, CancellableAction
 
 if TYPE_CHECKING:
-    from .patchbay_manager import PatchbayManager
+    from ..patchbay_manager import PatchbayManager
 
 
 _translate = QApplication.translate
