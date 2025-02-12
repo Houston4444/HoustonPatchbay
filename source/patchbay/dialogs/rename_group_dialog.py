@@ -6,12 +6,12 @@ from qtpy.QtWidgets import QDialog, QDialogButtonBox, QApplication
 
 from patshared.base_enums import PortType
 
-from .patchcanvas.utils import portgroup_name_splitted
-from .bases.group import Group
-from .bases.port import Port
-from .bases.portgroup import Portgroup
+from ..patchcanvas.utils import portgroup_name_splitted
+from ..bases.group import Group
+from ..bases.port import Port
+from ..bases.portgroup import Portgroup
 
-from .ui.rename_group import Ui_RenameGroupDialog
+from ..ui.rename_group import Ui_RenameGroupDialog
 
 
 _translate = QApplication.translate

@@ -25,7 +25,7 @@ from .cancel_mng import CancelMng, CancelOp, CancellableAction
 from .patchbay_signals import SignalsObject
 from .tools_widgets import PatchbayToolsWidget
 from .menus.canvas_menu import CanvasMenu
-from .options_dialog import CanvasOptionsDialog
+from .dialogs.options_dialog import CanvasOptionsDialog
 from .filter_frame import FilterFrame
 from .bases.elements import (
     JackPortFlag, ToolDisplayed, TransportPosition)

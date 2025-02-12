@@ -12,14 +12,14 @@ from qtpy.QtWidgets import (QDialog, QApplication, QInputDialog,
 
 
 from patshared import Naming
-from .patchcanvas import patchcanvas, xdg
-from .patchcanvas.theme_manager import ThemeData
-from .patchcanvas.init_values import GridStyle
-from .tools_widgets import is_dark_theme
-from .ui.canvas_options import Ui_CanvasOptions
+from ..patchcanvas import patchcanvas, xdg
+from ..patchcanvas.theme_manager import ThemeData
+from ..patchcanvas.init_values import GridStyle
+from ..tools_widgets import is_dark_theme
+from ..ui.canvas_options import Ui_CanvasOptions
 
 if TYPE_CHECKING:
-    from .patchbay_manager import PatchbayManager
+    from ..patchbay_manager import PatchbayManager
 
 
 _translate = QApplication.translate

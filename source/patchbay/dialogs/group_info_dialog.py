@@ -4,10 +4,10 @@ from qtpy.QtCore import Qt
 
 from patshared.base_enums import BoxType, PortType
 
-from .bases.group import Group
-from .patchcanvas.icon_widget import get_app_icon
+from ..bases.group import Group
+from ..patchcanvas.icon_widget import get_app_icon
 
-from .ui.canvas_group_info import Ui_CanvasGroupInfo
+from ..ui.canvas_group_info import Ui_CanvasGroupInfo
 
 
 class GroupInfoDialog(QDialog):

@@ -8,7 +8,7 @@ from qtpy.QtGui import (
     QCursor, QFocusEvent, QPaintEvent, QPainter,
     QPen, QBrush)
 
-from ..rename_group_dialog import PrettyNameDialog
+from ..dialogs.rename_group_dialog import PrettyNameDialog
 if TYPE_CHECKING:
     # FIX : QAction not found by pylance
     from qtpy.QtGui import QAction

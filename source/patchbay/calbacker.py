@@ -10,7 +10,7 @@ from patshared import (
     PortgroupMem, BoxPos)
 from .patchcanvas import CallbackAct, PortMode, PortType, BoxLayoutMode
 from .bases.port import Port
-from .port_info_dialog import CanvasPortInfoDialog
+from .dialogs.port_info_dialog import CanvasPortInfoDialog
 from .menus.port_menu import PoMenu, ConnectMenu
 from .menus.group_menu import GroupMenu
 from .cancel_mng import CancellableAction, CancelOp
