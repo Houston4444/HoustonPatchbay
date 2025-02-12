@@ -57,10 +57,16 @@ class PrettyNames:
         return {'groups': gp_dict, 'ports': pt_dict}
     
     def save_group(self, group_name: str, pretty_name: str, over_pretty=''):
-        self.groups[group_name] = _PrettyAndOver(pretty_name, over_pretty)
+        if pretty_name:
+            self.groups[group_name] = _PrettyAndOver(pretty_name, over_pretty)
+        elif group_name in self.groups:
+            self.groups.pop(group_name)
     
     def save_port(self, port_name: str, pretty_name: str, over_pretty=''):
-        self.ports[port_name] = _PrettyAndOver(pretty_name, over_pretty)
+        if pretty_name:
+            self.ports[port_name] = _PrettyAndOver(pretty_name, over_pretty)
+        elif port_name in self.ports:
+            self.ports.pop(port_name)
 
     def pretty_group(self, group_name: str, cur_pretty_name='') -> str:
         '''return the group (client) pretty_name if conditions are full,

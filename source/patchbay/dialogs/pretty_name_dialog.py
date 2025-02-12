@@ -4,8 +4,7 @@ from qtpy.QtCore import Slot
 from qtpy.QtGui import QIcon
 from qtpy.QtWidgets import QDialog, QDialogButtonBox, QApplication
 
-from patshared.base_enums import PortType
-
+from patshared import Naming
 from ..patchcanvas.utils import portgroup_name_splitted
 from ..bases.group import Group
 from ..bases.port import Port
@@ -79,8 +78,10 @@ class PrettyNameDialog(QDialog):
         
         else:
             has_jack_uuid = bool(self.element.uuid)
-            
-        if not has_jack_uuid:
+        
+        if (not has_jack_uuid
+                or (self.element.manager.jack_export_naming
+                    & Naming.INTERNAL_PRETTY)):
             self.ui.checkBoxExportJack.setVisible(False)
         
         self.ui.checkBoxExportJack.setChecked(save_in_jack)

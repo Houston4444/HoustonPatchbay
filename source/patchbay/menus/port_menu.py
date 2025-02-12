@@ -8,7 +8,7 @@ from qtpy.QtGui import (
     QCursor, QFocusEvent, QPaintEvent, QPainter,
     QPen, QBrush)
 
-from ..dialogs.rename_group_dialog import PrettyNameDialog
+from ..dialogs.pretty_name_dialog import PrettyNameDialog
 if TYPE_CHECKING:
     # FIX : QAction not found by pylance
     from qtpy.QtGui import QAction
@@ -73,7 +73,8 @@ class PortCheckBox(QCheckBox):
         QCheckBox.__init__(self, "", parent)
         self.setTristate(True)
         
-        port_height = int(canvas.theme.port_height * options.default_zoom / 100.0) + 2
+        port_height = int(
+            canvas.theme.port_height * options.default_zoom / 100.0 + 2)
         self.setMinimumHeight(port_height)
         self.setMinimumWidth(port_height)
         
@@ -987,11 +988,10 @@ class PoMenu(AbstractConnectionsMenu):
                 self._po.mdata_pretty_name)
             self._po.rename_in_canvas()
             
-            if save_in_jack:
-                canvas.callback(
-                    CallbackAct.PORT_RENAME,
-                    self._po.group_id, self._po.port_id, pretty_name)
-        
+            canvas.callback(
+                CallbackAct.PORT_RENAME, self._po.group_id, self._po.port_id,
+                pretty_name, save_in_jack)
+
         elif isinstance(self._po, Portgroup):
             pg_name, suffixes = portgroup_name_splitted(
                 *[p.cnv_name for p in self._po.ports])
@@ -1010,10 +1010,9 @@ class PoMenu(AbstractConnectionsMenu):
                     port_pretty_name, port.mdata_pretty_name)
                 port.rename_in_canvas()
 
-                if save_in_jack:
-                    canvas.callback(
-                        CallbackAct.PORT_RENAME,
-                        port.group_id, port.port_id, port_pretty_name)
+                canvas.callback(
+                    CallbackAct.PORT_RENAME, port.group_id, port.port_id,
+                    port_pretty_name, save_in_jack)
 
     @Slot()
     def _display_port_infos(self):
