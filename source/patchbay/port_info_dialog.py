@@ -3,8 +3,8 @@ from qtpy.QtWidgets import QApplication, QDialog, QTableWidgetItem
 from qtpy.QtCore import Qt
 
 from patshared import PortType
-from .base_elements import JackPortFlag
-from .base_port import Port
+from .bases.elements import JackPortFlag
+from .bases.port import Port
 from .ui.canvas_port_info import Ui_CanvasPortInfo
 
 _translate = QApplication.translate

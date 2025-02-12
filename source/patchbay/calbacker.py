@@ -9,7 +9,7 @@ from patshared import (
     PortMode, PortType, BoxLayoutMode, GroupPos,
     PortgroupMem, BoxPos)
 from .patchcanvas import CallbackAct, PortMode, PortType, BoxLayoutMode
-from .base_port import Port
+from .bases.port import Port
 from .port_info_dialog import CanvasPortInfoDialog
 from .port_menu import PoMenu, ConnectMenu
 from .group_menu import GroupMenu

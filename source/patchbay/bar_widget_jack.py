@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING
 from qtpy.QtCore import QTimer
 from qtpy.QtWidgets import QWidget
 
-from .base_elements import ToolDisplayed
+from .bases.elements import ToolDisplayed
 
 from .ui.jack_bar import Ui_Form as JackUiForm
 

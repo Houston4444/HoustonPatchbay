@@ -9,7 +9,7 @@ if TYPE_CHECKING:
 from qtpy.QtWidgets import QToolButton, QMenu, QApplication, QAction
 
 from .cancel_mng import CancelOp, CancellableAction
-from .base_group import Group
+from .bases.group import Group
 from .patchcanvas import utils
 from patshared import PortMode
 

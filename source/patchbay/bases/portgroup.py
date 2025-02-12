@@ -1,11 +1,11 @@
 from typing import TYPE_CHECKING
 
 from patshared import PortMode, PortType, PortSubType
-from .base_port import Port
-from .patchcanvas import patchcanvas
+from .port import Port
+from ..patchcanvas import patchcanvas
 
 if TYPE_CHECKING:
-    from .patchbay_manager import PatchbayManager
+    from ..patchbay_manager import PatchbayManager
 
 class Portgroup:
     '''Portgroup is a group of ports, in most cases a stereo pair'''

@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING
 
-from .base_port import Port
+from .bases.port import Port
 from .patchcanvas import canvas
 from .patchcanvas.init_values import CallbackAct
 from patshared import PortMode

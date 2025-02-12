@@ -1,11 +1,11 @@
 from typing import TYPE_CHECKING
 
 from patshared import PortType
-from .patchcanvas import patchcanvas
+from ..patchcanvas import patchcanvas
 
 if TYPE_CHECKING:
-    from .patchbay_manager import PatchbayManager
-    from .base_port import Port
+    from ..patchbay_manager import PatchbayManager
+    from .port import Port
 
 class Connection:
     def __init__(self, manager: 'PatchbayManager', connection_id: int,

@@ -11,15 +11,15 @@ from patshared import (
     PortgroupMem,
     Naming
 )
-from .base_elements import JackPortFlag
-from .base_port import Port
-from .base_portgroup import Portgroup
-from .base_connection import Connection
+from .elements import JackPortFlag
+from .port import Port
+from .portgroup import Portgroup
+from .connection import Connection
 
-from .patchcanvas import patchcanvas
+from ..patchcanvas import patchcanvas
 
 if TYPE_CHECKING:
-    from .patchbay_manager import PatchbayManager
+    from ..patchbay_manager import PatchbayManager
     
 
 class Group:

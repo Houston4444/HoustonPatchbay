@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING
 from qtpy.QtCore import Slot
 from qtpy.QtWidgets import QWidget, QApplication
 
-from .base_elements import ToolDisplayed
+from .bases.elements import ToolDisplayed
 from .ui.canvas_bar import Ui_Form as CanvasUiForm
 
 if TYPE_CHECKING:

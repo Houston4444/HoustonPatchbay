@@ -7,7 +7,7 @@ from qtpy.QtGui import QIcon, QPixmap
 from patshared import PortMode, BoxLayoutMode
 
 from .cancel_mng import CancelOp, CancellableAction
-from .base_group import Group
+from .bases.group import Group
 from .patchcanvas import canvas, CallbackAct, patchcanvas, utils
 from .rename_group_dialog import PrettyNameDialog
 from .group_info_dialog import GroupInfoDialog

@@ -27,12 +27,12 @@ from .tools_widgets import PatchbayToolsWidget
 from .canvas_menu import CanvasMenu
 from .options_dialog import CanvasOptionsDialog
 from .filter_frame import FilterFrame
-from .base_elements import (
+from .bases.elements import (
     JackPortFlag, ToolDisplayed, TransportPosition)
-from .base_group import Group
-from .base_connection import Connection
-from .base_port import Port
-from .base_portgroup import Portgroup
+from .bases.group import Group
+from .bases.connection import Connection
+from .bases.port import Port
+from .bases.portgroup import Portgroup
 from .conns_clipboard import ConnClipboard
 from .calbacker import Callbacker
 

@@ -23,10 +23,10 @@ from .patchcanvas.utils import (
     get_portgroup_name_from_ports_names, get_icon, is_dark_theme, portgroup_name_splitted)
 from patshared import (
     PortType, PortSubType, PortMode)
-from .base_group import Group
-from .base_port import Port
-from .base_portgroup import Portgroup
-from .base_connection import Connection
+from .bases.group import Group
+from .bases.port import Port
+from .bases.portgroup import Portgroup
+from .bases.connection import Connection
 
 if TYPE_CHECKING:
     from patchbay_manager import PatchbayManager

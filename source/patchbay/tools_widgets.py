@@ -13,7 +13,7 @@ from .bar_widget_jack import BarWidgetJack
 from .bar_widget_transport import BarWidgetTransport
 from .bar_widget_canvas import BarWidgetCanvas
 
-from .base_elements import ToolDisplayed, TransportPosition
+from .bases.elements import ToolDisplayed, TransportPosition
 
 if TYPE_CHECKING:
     from .patchbay_manager import PatchbayManager
