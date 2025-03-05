@@ -90,7 +90,7 @@ class PortgroupMem:
                 ] + self.port_names
     
     @staticmethod
-    def from_arg_list(arg_tuple: tuple[Union[str, int], ...]) -> 'PortgroupMem':
+    def from_arg_list(arg_tuple: tuple[str | int, ...]) -> 'PortgroupMem':
         arg_list = list(arg_tuple)
         pg_mem = PortgroupMem()
         
