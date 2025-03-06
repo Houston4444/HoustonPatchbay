@@ -57,7 +57,8 @@ class GroupPos:
     '''Object assigned to a group in a specific view.
     It contains its splited state, box positions,
     wrapped and hidden states.'''
-    
+    ARG_TYPES = 'isiiiiiiiiiiiii'
+
     port_types_view: PortTypesViewFlag = PortTypesViewFlag.NONE
     group_name: str = ""
     flags: GroupPosFlag = GroupPosFlag.NONE
@@ -301,10 +302,6 @@ class GroupPos:
             print('group pos from arg list failed !!!')
 
         return gpos
-    
-    @staticmethod
-    def args_types() -> str:
-        return 'isiiiiiiiiiiiii'
     
     def is_splitted(self) -> bool:
         return bool(self.flags & GroupPosFlag.SPLITTED)
