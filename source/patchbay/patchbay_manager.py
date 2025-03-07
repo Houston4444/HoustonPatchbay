@@ -1506,18 +1506,23 @@ class PatchbayManager:
         group_ids_to_sort = set()
         some_groups_removed = False
         clear_conns = False
-    
+        
         while self.delayed_orders.qsize():
             oq = self.delayed_orders.get()
+            
+            # execute the function, and get concerned group_id
             group_id = oq.func(*oq.args, **oq.kwargs)
+
             if oq.metadata_change and group_id is not None:
                 key = oq.args[2]
-                if key == JackMetadata.PRETTY_NAME:
-                    group_ids_to_update.add(group_id)
-                elif key == JackMetadata.ICON_NAME:
-                    group_ids_to_update.add(group_id)
-                elif key == JackMetadata.ORDER:
-                    group_ids_to_sort.add(group_id)
+                match key: 
+                    case JackMetadata.PRETTY_NAME:
+                        group_ids_to_update.add(group_id)
+                    case JackMetadata.ICON_NAME:
+                        group_ids_to_update.add(group_id)
+                    case JackMetadata.ORDER:
+                        group_ids_to_sort.add(group_id)
+                        group_ids_to_update.add(group_id)
 
             if oq.draw_group:
                 if group_id is not None:
