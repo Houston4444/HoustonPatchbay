@@ -61,6 +61,10 @@ class DelayedOrder:
     
 def later_by_batch(draw_group=False, sort_group=False,
                    clear_conns=False, metadata_change=False):
+    '''This decorator indicates that the decorated method will be executed
+    later by batch in the main thread when `_delayed_orders_timer` will
+    call it.'''
+
     def decorator(func: Callable):
         def wrapper(*args, **kwargs):
             mng: PatchbayManager = args[0]
@@ -84,6 +88,9 @@ def later_by_batch(draw_group=False, sort_group=False,
 
 
 def in_main_thread():
+    '''This decorator indicates that the decorated method will be executed
+    directly if called in the main thread, otherwise as soon as possible
+    in the main thread.'''
     def decorator(func: Callable):
         def wrapper(*args, **kwargs):
             mng: PatchbayManager = args[0]
@@ -104,8 +111,8 @@ class PatchbayManager:
     "when True, items can be added to patchcanvas but they won't be drawn"
     
     very_fast_operation = False
-    '''when True, items are not added/removed from patchcanvas
-    useful to win time at startup or refresh'''
+    '''when True, items are not added/removed from patchcanvas.
+    Useful to win time at startup or refresh'''
 
     groups = list[Group]()
     connections = list[Connection]()
@@ -229,7 +236,8 @@ class PatchbayManager:
     def _scene_scale_changed(self, value: float):
         self.sg.scene_scale_changed.emit(value)
 
-    def _execute_in_main_thread(self, func: Callable, args: tuple, kwargs: dict):
+    def _execute_in_main_thread(
+            self, func: Callable, args: tuple, kwargs: dict):
         func(*args, **kwargs)
 
     # --- widgets related methods --- #
@@ -285,8 +293,8 @@ class PatchbayManager:
         if patchcanvas.canvas is not None:
             patchcanvas.set_loading_items(yesno)
 
-    def _set_very_fast_operation(self, yesno: bool):
-        self.very_fast_operation = yesno
+    # def _set_very_fast_operation(self, yesno: bool):
+    #     self.very_fast_operation = yesno
 
     def _add_group(self, group: Group):
         self.groups.append(group)
@@ -311,7 +319,8 @@ class PatchbayManager:
         self._next_portgroup_id += 1
         return portgroup
 
-    def port_type_shown(self, full_port_type: tuple[PortType, PortSubType]) -> bool:
+    def port_type_shown(
+            self, full_port_type: tuple[PortType, PortSubType]) -> bool:
         port_type, sub_type = full_port_type
 
         if port_type is PortType.MIDI_JACK:
@@ -843,17 +852,17 @@ class PatchbayManager:
         self.save_view_and_port_types_view()
 
     def set_views_changed(self):
-        '''emit the "view_changed" signal. Can be Inherited to do other tasks'''
+        '''emit the `view_changed` signal. Can be Inherited to do other tasks'''
         self.sg.views_changed.emit()
 
     def new_view(self, view_number: Optional[int]=None,
                  exclusive_with: Optional[dict[int, PortMode]]=None):
         '''create a new view and switch directly to this view.
         
-        If 'view_number' is not set, it will choose the first available
+        If `view_number` is not set, it will choose the first available
         number.
         
-        if 'exclusive_with' is set, all non matching boxes will be hidden,
+        if `exclusive_with` is set, all non matching boxes will be hidden,
         and new view will be a white list view.'''
         
         new_num = self.views.add_view(
@@ -1432,16 +1441,16 @@ class PatchbayManager:
             self._tools_widget.refresh_transport(transport_position)
 
     def change_buffersize(self, buffer_size: int):
-        pass
+        ...
 
     def transport_play_pause(self, play: bool):
-        pass
+        ...
 
     def transport_stop(self):
-        pass
+        ...
 
     def transport_relocate(self, frame: int):
-        pass
+        ...
 
     def change_tools_displayed(self, tools_displayed: ToolDisplayed):
         if self._tools_widget is not None:
