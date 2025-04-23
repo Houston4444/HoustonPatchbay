@@ -643,7 +643,6 @@ def move_group_boxes(
                             box, *both_pos,
                             joining=Joining.YES)
                 else:
-
                     box.set_top_left(xy)
                     canvas.scene.add_box_to_animation(box, *xy)
                     canvas.scene.add_box_to_animation_restore(box)

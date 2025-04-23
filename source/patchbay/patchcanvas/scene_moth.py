@@ -617,8 +617,11 @@ class PatchSceneMoth(QGraphicsScene):
 
         moving_box.start_time = time.time() - self._move_timer_start_at
         moving_box.from_pt = moving_box.to_pt
+
+        aft_wrap_rect = box_widget.after_wrap_rect()
+        final_rect = QRectF(0.0, 0.0, aft_wrap_rect.width(), aft_wrap_rect.height())
         moving_box.final_rect = \
-            box_widget.after_wrap_rect().translated(moving_box.to_pt)
+            final_rect.translated(moving_box.to_pt)
 
         if moving_box.hidding_state is BoxHidding.NONE:
             box_widget.animate_restoring(0.0)

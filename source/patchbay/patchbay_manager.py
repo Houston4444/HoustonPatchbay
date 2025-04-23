@@ -710,6 +710,9 @@ class PatchbayManager:
                     change_counter += 1
         
         if change_counter > 30:
+            # Big changes between the current and the next view
+            # Strategy is to remove all from canvas and add all what is needed
+            # without animation.
             for connection in self.connections:
                 connection.in_canvas = False
                         
@@ -726,7 +729,6 @@ class PatchbayManager:
                 group.current_position = self.get_group_position(group.name)
                 if (group.outs_ptv | group.ins_ptv) & self.port_types_view:
                     group.add_to_canvas()
-                    
                     group.add_all_ports_to_canvas()
             
             for connection in self.connections:
