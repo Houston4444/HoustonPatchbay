@@ -348,3 +348,30 @@ class GroupPos:
                 return True
         
         return False
+    
+    def apply_only_diffs(self, orig_gpos: 'Optional[GroupPos]', new_gpos: 'GroupPos'):
+        '''Apply to this config gpos only what is different between
+        session gpos orig_gpos (at load) and new_gpos (now)'''
+        
+        if (orig_gpos is None
+                or new_gpos.is_splitted() is not orig_gpos.is_splitted()):
+            if orig_gpos is not None:
+                self.set_splitted(new_gpos.is_splitted())
+
+            for port_mode in PortMode.in_out_both():
+                self.boxes[port_mode] = new_gpos.boxes[port_mode].copy()
+            return
+        
+        for port_mode in PortMode.in_out_both():
+            box = self.boxes[port_mode]
+            orig_box = orig_gpos.boxes[port_mode]
+            new_box = new_gpos.boxes[port_mode]
+            
+            if new_box.is_hidden() is not orig_box.is_hidden():
+                box.set_hidden(new_box.is_hidden())
+            if new_box.is_wrapped() is not orig_box.is_hidden():
+                box.set_wrapped(new_box.is_wrapped())
+            if new_box.layout_mode is not orig_box.layout_mode:
+                box.layout_mode = new_box.layout_mode
+            if new_box.pos != orig_box.pos:
+                box.pos = new_box.pos

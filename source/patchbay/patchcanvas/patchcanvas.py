@@ -546,7 +546,11 @@ def move_group_boxes(
         redraw=PortMode.NULL, restore=PortMode.NULL):
     '''Highly optimized function used at view change.
     Only things that need to be redrawn are redrawn.
-    Any change in this function can easily create unwanted bugs ;)'''
+    Any change in this function can easily create unwanted bugs ;)
+    
+    restore is required because the previous box_pos can be hidden
+    and this one shown, but without ports
+    (e.g. a pure audio group in midi view)'''
     group = canvas.get_group(group_id)
     if group is None:
         return
@@ -639,7 +643,7 @@ def move_group_boxes(
                             box, *both_pos,
                             joining=Joining.YES)
                 else:
-                    
+
                     box.set_top_left(xy)
                     canvas.scene.add_box_to_animation(box, *xy)
                     canvas.scene.add_box_to_animation_restore(box)
