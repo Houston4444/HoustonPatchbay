@@ -77,7 +77,7 @@ class CanvasOptionsDialog(QDialog):
             self._naming_changed)
         self.ui.checkBoxGracefulNames.stateChanged.connect(
             self._naming_changed)
-        self.ui.checkBoxExportPrettyNames.stateChanged.connect(
+        self.ui.checkBoxExportPrettyNames.clicked.connect(
             self._jack_export_naming_changed)
         
         self.ui.checkBoxShadows.stateChanged.connect(
@@ -167,13 +167,18 @@ class CanvasOptionsDialog(QDialog):
         
         self.mng.change_naming(naming)
 
-    @Slot(int)
-    def _jack_export_naming_changed(self, state: int):
+    @Slot(bool)
+    def _jack_export_naming_changed(self, checked: bool):
         jack_exp_naming = Naming.TRUE_NAME
         if self.ui.checkBoxExportPrettyNames.isChecked():
             jack_exp_naming |= Naming.INTERNAL_PRETTY 
         
         self.mng.change_jack_export_naming(jack_exp_naming)
+
+    def export_pretty_names_changed(self, state: bool):
+        # option has been changed from the daemon itself 
+        # (probably with ray_control)
+        self.ui.checkBoxExportPrettyNames.setChecked(state)
 
     def _change_default_zoom(self, value: int):
         patchcanvas.set_default_zoom(value)
