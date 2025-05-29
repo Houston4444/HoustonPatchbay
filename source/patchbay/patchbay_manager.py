@@ -157,10 +157,9 @@ class PatchbayManager:
         '''Stock JACK client names and their uuid,
         uuid can be provided before the group creation.'''
 
+        self.jack_export_naming = Naming.INTERNAL_PRETTY
         self.naming = Naming.from_config_str(settings.value(
             'Canvas/naming', 'ALL', type=str))
-        self.jack_export_naming = Naming.from_config_str(settings.value(
-            'Canvas/jack_export_naming', 'INTERNAL_PRETTY', type=str))
 
         self.group_a2j_hw: bool = settings.value(
             'Canvas/group_a2j_ports', True, type=bool)
@@ -280,8 +279,6 @@ class PatchbayManager:
             return
 
         self._settings.setValue('Canvas/naming', self.naming.name)
-        self._settings.setValue('Canvas/jack_export_naming',
-                                self.jack_export_naming.name)
         self._settings.setValue('Canvas/group_a2j_ports',
                                 self.group_a2j_hw)
         self._settings.setValue('Canvas/alsa_midi_enabled',
