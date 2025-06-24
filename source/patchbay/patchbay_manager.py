@@ -1137,7 +1137,7 @@ class PatchbayManager:
         
         exst_port = self.get_port_from_name(name)
         if exst_port is not None:
-            _logger.error(
+            _logger.warning(
                 f'add port "{name}", '
                 f'it already exists, remove it first !')
 
