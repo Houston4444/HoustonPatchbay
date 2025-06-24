@@ -576,19 +576,20 @@ class Canvas:
     def get_group(self, group_id: int) -> GroupObject:
         return self._groups_dict.get(group_id)
     
-    def get_port(self, group_id: int, port_id: int) -> PortObject:
+    def get_port(self, group_id: int, port_id: int) -> Optional[PortObject]:
         gp = self._ports_dict.get(group_id)
         if gp is None:
             return None
         return gp.get(port_id)
 
-    def get_portgroup(self, group_id: int, portgrp_id: int) -> PortgrpObject:
+    def get_portgroup(
+            self, group_id: int, portgrp_id: int) -> Optional[PortgrpObject]:
         gp = self._portgrps_dict.get(group_id)
         if gp is None:
             return None
         return gp.get(portgrp_id)
 
-    def get_connection(self, connection_id: int) -> ConnectionObject:
+    def get_connection(self, connection_id: int) -> Optional[ConnectionObject]:
         if connection_id in self._conns_dict.keys():
             return self._conns_dict[connection_id]
 

@@ -309,6 +309,8 @@ class GroupedLinesWidget(QGraphicsPathItem):
             
             port_out = canvas.get_port(self._group_out_id, conn.port_out_id)
             port_in = canvas.get_port(self._group_in_id, conn.port_in_id)
+            if port_out is None or port_in is None:
+                continue
             
             port_out_con_pos = port_out.widget.connect_pos()
             port_in_con_pos = port_in.widget.connect_pos()
