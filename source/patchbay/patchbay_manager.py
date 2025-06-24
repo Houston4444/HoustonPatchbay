@@ -555,7 +555,7 @@ class PatchbayManager:
     def get_group_from_id(self, group_id: int) -> Union[Group, None]:
         return self._groups_by_id.get(group_id)
 
-    def get_port_from_name(self, port_name: str) -> Port:
+    def get_port_from_name(self, port_name: str) -> Optional[Port]:
         return self._ports_by_name.get(port_name)
 
     def get_port_from_uuid(self, uuid:int) -> Port:
@@ -1134,6 +1134,28 @@ class PatchbayManager:
         '''adds port and returns the group_id'''
         
         port_type = PortType(port_type_int)
+        
+        exst_port = self.get_port_from_name(name)
+        if exst_port is not None:
+            _logger.error(
+                f'add port "{name}", '
+                f'it already exists, remove it first !')
+
+            if exst_port.type.is_jack and exst_port.uuid:
+                self.jack_metadatas.remove_uuid(exst_port.uuid)
+
+            group = self.get_group_from_id(exst_port.group_id)
+            if group is not None:
+                # remove portgroup first if port is in a portgroup
+                if exst_port.portgroup_id:
+                    for portgroup in group.portgroups:
+                        if portgroup.portgroup_id == exst_port.portgroup_id:
+                            group.portgroups.remove(portgroup)
+                            portgroup.remove_from_canvas()
+                            break
+
+                exst_port.remove_from_canvas()
+                group.remove_port(exst_port)
 
         port = Port(self, self._next_port_id, name, port_type, flags, uuid)
         self._next_port_id += 1
