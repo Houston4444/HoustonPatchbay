@@ -304,11 +304,6 @@ class PatchbayManager:
             self._groups_by_id.pop(group.group_id)
             self._groups_by_name.pop(group.name)
 
-    def _clear_groups(self):
-        self.groups.clear()
-        self._groups_by_id.clear()
-        self._groups_by_name.clear()
-
     def new_portgroup(self, group_id: int, port_mode: int,
                       ports: tuple[Port]) -> Portgroup:
         portgroup = Portgroup(self, group_id, self._next_portgroup_id,
@@ -666,7 +661,10 @@ class PatchbayManager:
         patchcanvas.clear_all()
         self.connections.clear()
         self.jack_metadatas.clear()
-        self._clear_groups()
+        self.groups.clear()
+        self._groups_by_id.clear()
+        self._groups_by_name.clear()
+        self._ports_by_name.clear()
 
         self._next_group_id = 0
         self._next_port_id = 0
