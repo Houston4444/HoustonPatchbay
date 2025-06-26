@@ -1415,6 +1415,9 @@ class PatchbayManager:
         self.server_is_started = True
         if self._tools_widget is not None:
             self._tools_widget.set_jack_running(True)
+        
+        self.clear_all()
+        # if this function is executed, all graph will appear just after
 
     @in_main_thread()
     def server_stopped(self):
