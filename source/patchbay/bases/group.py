@@ -11,7 +11,7 @@ from patshared import (
     PortgroupMem,
     Naming
 )
-from .elements import JackPortFlag
+from .elements import JackPortFlag, CanvasOptimizeIt
 from .port import Port
 from .portgroup import Portgroup
 from .connection import Connection
@@ -811,195 +811,191 @@ class Group:
                 break
 
     def sort_ports_in_canvas(self):
-        already_optimized = self.manager.optimized_operation
-        self.manager.optimize_operation(True)
-
         conn_list = list[Connection]()
 
-        if not self.manager.very_fast_operation:
-            for conn in self.manager.connections:
+        with CanvasOptimizeIt(self.manager):
+            if not self.manager.very_fast_operation:
+                for conn in self.manager.connections:
+                    for port in self.ports:
+                        if (port in (conn.port_out, conn.port_in)
+                                and conn not in conn_list):
+                            conn_list.append(conn)
+                
+                for connection in conn_list:
+                    connection.remove_from_canvas()
+                
+                for portgroup in self.portgroups:
+                    portgroup.remove_from_canvas()
+
                 for port in self.ports:
-                    if (port in (conn.port_out, conn.port_in)
-                            and conn not in conn_list):
-                        conn_list.append(conn)
+                    port.remove_from_canvas()
             
-            for connection in conn_list:
-                connection.remove_from_canvas()
-            
+            self.ports.sort()
+
+            # search and remove existing portgroups with non consecutive ports
+            portgroups_to_remove = list[Portgroup]()
+
             for portgroup in self.portgroups:
-                portgroup.remove_from_canvas()
+                search_index = 0
+                previous_port = None
+                seems_ok = False
 
-            for port in self.ports:
-                port.remove_from_canvas()
-        
-        self.ports.sort()
+                for port in self.ports:
+                    if not seems_ok and port is portgroup.ports[search_index]:
+                        if (port.mdata_portgroup != portgroup.mdata_portgroup
+                                and not portgroup.above_metadatas):
+                            portgroups_to_remove.append(portgroup)
+                            break
 
-        # search and remove existing portgroups with non consecutive ports
-        portgroups_to_remove = list[Portgroup]()
+                        if (not portgroup.above_metadatas and not search_index
+                                and previous_port is not None
+                                and previous_port.mdata_portgroup
+                                and previous_port.mdata_portgroup == port.mdata_portgroup):
+                            # previous port had the same portgroup metadata
+                            # that this port. we need to remove this portgroup.
+                            portgroups_to_remove.append(portgroup)
+                            break
 
-        for portgroup in self.portgroups:
-            search_index = 0
-            previous_port = None
-            seems_ok = False
+                        search_index += 1
+                        if search_index == len(portgroup.ports):
+                            # all ports of portgroup are consecutive
+                            # but still exists the risk that metadatas says
+                            # that the portgroup has now more ports
+                            seems_ok = True
+                            if (portgroup.above_metadatas
+                                    or not portgroup.mdata_portgroup):
+                                break
 
-            for port in self.ports:
-                if not seems_ok and port is portgroup.ports[search_index]:
-                    if (port.mdata_portgroup != portgroup.mdata_portgroup
-                            and not portgroup.above_metadatas):
+                    elif search_index:
+                        if (seems_ok
+                                and (port.mdata_portgroup != previous_port.mdata_portgroup
+                                    or port.type is not portgroup.type
+                                    or port.mode is not portgroup.port_mode)):
+                            # port after the portgroup has not to make
+                            # the portgroup higher. We keep this portgroup
+                            break
+
+                        # this port breaks portgroup ports consecutivity.
+                        # note that ports have been just sorted by type and mode
+                        # so no risk that this port is falsely breaking portgroup
                         portgroups_to_remove.append(portgroup)
                         break
 
-                    if (not portgroup.above_metadatas and not search_index
-                            and previous_port is not None
-                            and previous_port.mdata_portgroup
-                            and previous_port.mdata_portgroup == port.mdata_portgroup):
-                        # previous port had the same portgroup metadata
-                        # that this port. we need to remove this portgroup.
+                    previous_port = port
+                else:
+                    if not seems_ok:
                         portgroups_to_remove.append(portgroup)
-                        break
 
-                    search_index += 1
-                    if search_index == len(portgroup.ports):
-                        # all ports of portgroup are consecutive
-                        # but still exists the risk that metadatas says
-                        # that the portgroup has now more ports
-                        seems_ok = True
-                        if (portgroup.above_metadatas
-                                or not portgroup.mdata_portgroup):
-                            break
+            for portgroup in portgroups_to_remove:
+                self.remove_portgroup(portgroup)
 
-                elif search_index:
-                    if (seems_ok
-                            and (port.mdata_portgroup != previous_port.mdata_portgroup
-                                 or port.type is not portgroup.type
-                                 or port.mode is not portgroup.port_mode)):
-                        # port after the portgroup has not to make
-                        # the portgroup higher. We keep this portgroup
-                        break
+            # add missing portgroups aboving metadatas from portgroup memory
+            for port_type in self.manager.portgroups_memory.keys():
+                ptype_dict = self.manager.portgroups_memory[port_type]
+                gp_dict = ptype_dict.get(self.name)
+                if gp_dict is None:
+                    continue
 
-                    # this port breaks portgroup ports consecutivity.
-                    # note that ports have been just sorted by type and mode
-                    # so no risk that this port is falsely breaking portgroup
-                    portgroups_to_remove.append(portgroup)
-                    break
+                for port_mode in gp_dict.keys():
+                    pg_mem_list = gp_dict[port_mode]
+                    
+                    for portgroup_mem in pg_mem_list:        
+                        if not portgroup_mem.above_metadatas:
+                            continue
 
-                previous_port = port
-            else:
-                if not seems_ok:
-                    portgroups_to_remove.append(portgroup)
+                        founded_ports = list[Port]()
 
-        for portgroup in portgroups_to_remove:
-            self.remove_portgroup(portgroup)
+                        for port in self.ports:
+                            if (not port.portgroup_id
+                                    and port.type is port_type
+                                    and port.mode is port_mode
+                                    and port.short_name
+                                        == portgroup_mem.port_names[len(founded_ports)]):
+                                founded_ports.append(port)
+                                if len(founded_ports) == len(portgroup_mem.port_names):
+                                    new_portgroup = self.manager.new_portgroup(
+                                        self.group_id, port.mode, founded_ports)
+                                    self.portgroups.append(new_portgroup)
+                                    break
 
-        # add missing portgroups aboving metadatas from portgroup memory
-        for port_type in self.manager.portgroups_memory.keys():
-            ptype_dict = self.manager.portgroups_memory[port_type]
-            gp_dict = ptype_dict.get(self.name)
-            if gp_dict is None:
-                continue
-
-            for port_mode in gp_dict.keys():
-                pg_mem_list = gp_dict[port_mode]
-                
-                for portgroup_mem in pg_mem_list:        
-                    if not portgroup_mem.above_metadatas:
-                        continue
-
-                    founded_ports = list[Port]()
-
-                    for port in self.ports:
-                        if (not port.portgroup_id
-                                and port.type is port_type
-                                and port.mode is port_mode
-                                and port.short_name
-                                    == portgroup_mem.port_names[len(founded_ports)]):
-                            founded_ports.append(port)
-                            if len(founded_ports) == len(portgroup_mem.port_names):
-                                new_portgroup = self.manager.new_portgroup(
-                                    self.group_id, port.mode, founded_ports)
-                                self.portgroups.append(new_portgroup)
+                            elif founded_ports:
                                 break
 
-                        elif founded_ports:
-                            break
+            # detect and add portgroups given from metadatas
+            portgroups_mdata = list[dict]() # list of dicts
 
-        # detect and add portgroups given from metadatas
-        portgroups_mdata = list[dict]() # list of dicts
-
-        for port in self.ports:
-            if port.mdata_portgroup:
-                pg_mdata = None
-                if portgroups_mdata:
-                    pg_mdata = portgroups_mdata[-1]
-
-                if not port.portgroup_id:
-                    if (pg_mdata is not None
-                            and pg_mdata['pg_name'] == port.mdata_portgroup
-                            and pg_mdata['port_type'] == port.type
-                            and pg_mdata['port_mode'] == port.mode):
-                        pg_mdata['ports'].append(port)
-                    else:
-                        portgroups_mdata.append(
-                            {'pg_name': port.mdata_portgroup,
-                             'port_type': port.type,
-                             'port_mode': port.mode,
-                             'ports':[port]})
-        
-        for pg_mdata in portgroups_mdata:
-            if len(pg_mdata['ports']) < 2:
-                continue
-
-            new_portgroup = self.manager.new_portgroup(
-                self.group_id, pg_mdata['port_mode'], pg_mdata['ports'])
-            new_portgroup.mdata_portgroup = pg_mdata['pg_name']
-            self.portgroups.append(new_portgroup)
-        
-        # add missing portgroups from portgroup memory
-        for port_type in self.manager.portgroups_memory.keys():
-            ptype_dict = self.manager.portgroups_memory[port_type]
-            gp_dict = ptype_dict.get(self.name)
-            if gp_dict is None:
-                continue
-
-            for port_mode in gp_dict.keys():
-                pg_mem_list = gp_dict[port_mode]
-                
-                for portgroup_mem in pg_mem_list:        
-                    if portgroup_mem.above_metadatas:
-                        continue
-
-                    founded_ports = list[Port]()
-
-                    for port in self.ports:
-                        if (not port.portgroup_id
-                                and port.type is port_type
-                                and port.mode is port_mode
-                                and port.short_name
-                                    == portgroup_mem.port_names[len(founded_ports)]):
-                            founded_ports.append(port)
-                            if len(founded_ports) == len(portgroup_mem.port_names):
-                                new_portgroup = self.manager.new_portgroup(
-                                    self.group_id, port.mode, founded_ports)
-                                self.portgroups.append(new_portgroup)
-                                break
-
-                        elif founded_ports:
-                            break
-        
-        if not self.manager.very_fast_operation:
-            # ok for re-adding all items to canvas
             for port in self.ports:
-                port.add_to_canvas()
+                if port.mdata_portgroup:
+                    pg_mdata = None
+                    if portgroups_mdata:
+                        pg_mdata = portgroups_mdata[-1]
 
-            for portgroup in self.portgroups:
-                portgroup.add_to_canvas()
+                    if not port.portgroup_id:
+                        if (pg_mdata is not None
+                                and pg_mdata['pg_name'] == port.mdata_portgroup
+                                and pg_mdata['port_type'] == port.type
+                                and pg_mdata['port_mode'] == port.mode):
+                            pg_mdata['ports'].append(port)
+                        else:
+                            portgroups_mdata.append(
+                                {'pg_name': port.mdata_portgroup,
+                                'port_type': port.type,
+                                'port_mode': port.mode,
+                                'ports':[port]})
+            
+            for pg_mdata in portgroups_mdata:
+                if len(pg_mdata['ports']) < 2:
+                    continue
+
+                new_portgroup = self.manager.new_portgroup(
+                    self.group_id, pg_mdata['port_mode'], pg_mdata['ports'])
+                new_portgroup.mdata_portgroup = pg_mdata['pg_name']
+                self.portgroups.append(new_portgroup)
+            
+            # add missing portgroups from portgroup memory
+            for port_type in self.manager.portgroups_memory.keys():
+                ptype_dict = self.manager.portgroups_memory[port_type]
+                gp_dict = ptype_dict.get(self.name)
+                if gp_dict is None:
+                    continue
+
+                for port_mode in gp_dict.keys():
+                    pg_mem_list = gp_dict[port_mode]
+                    
+                    for portgroup_mem in pg_mem_list:        
+                        if portgroup_mem.above_metadatas:
+                            continue
+
+                        founded_ports = list[Port]()
+
+                        for port in self.ports:
+                            if (not port.portgroup_id
+                                    and port.type is port_type
+                                    and port.mode is port_mode
+                                    and port.short_name
+                                        == portgroup_mem.port_names[len(founded_ports)]):
+                                founded_ports.append(port)
+                                if len(founded_ports) == len(portgroup_mem.port_names):
+                                    new_portgroup = self.manager.new_portgroup(
+                                        self.group_id, port.mode, founded_ports)
+                                    self.portgroups.append(new_portgroup)
+                                    break
+
+                            elif founded_ports:
+                                break
+            
+            if not self.manager.very_fast_operation:
+                # ok for re-adding all items to canvas
+                for port in self.ports:
+                    port.add_to_canvas()
+
+                for portgroup in self.portgroups:
+                    portgroup.add_to_canvas()
+            
+                for connection in conn_list:
+                    connection.add_to_canvas()
         
-            for connection in conn_list:
-                connection.add_to_canvas()
-        
-        if not already_optimized:
-            self.manager.optimize_operation(False)
-            self.redraw_in_canvas()
+        self.redraw_in_canvas()
 
     def add_all_ports_to_canvas(self):
         for port in self.ports:

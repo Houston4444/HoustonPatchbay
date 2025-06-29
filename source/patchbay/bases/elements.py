@@ -1,5 +1,9 @@
 from dataclasses import dataclass
 from enum import IntFlag, IntEnum, auto, Flag
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from patchbay_manager import PatchbayManager
 
 
 class JackPortFlag(IntFlag):
@@ -92,7 +96,44 @@ class ToolDisplayed(IntFlag):
                     return_td |= ToolDisplayed[disp_str]
 
         return return_td
-        
 
+
+class CanvasOptimize(IntEnum):
+    NORMAL = 0
+    '''No particular optimization, objects are added to canvas and redrawn
+    directly.'''
+
+    FAST = 1
+    '''Objects are added to canvas, but boxes and connections
+    are not redrawn. Groups need to be redrawn once finished.'''
+
+    VERY_FAST = 2
+    '''Objects are not added to canvas (useful for sort operations)
+    objects need to be added to canvas and redrawn once finished'''
+
+
+class CanvasOptimizeIt:
+    '''Context for 'with' statment. save the data at begin and at end
+    for undo/redo actions'''
+    def __init__(
+            self, mng: 'PatchbayManager', canvas_optimize=CanvasOptimize.FAST):
+        self.mng = mng
+        self._previous_optim = mng.canvas_optimize
+        if canvas_optimize > mng.canvas_optimize:
+            mng.canvas_optimize = canvas_optimize
+            mng.optimize_operation(True)
+            # if patchcanvas.canvas is not None:
+            #     patchcanvas.set_loading_items(True)
+
+    def __enter__(self):
+        ...
+
+    def __exit__(self, *args, **kwargs):
+        self.mng.canvas_optimize = self._previous_optim
+
+        if self.mng.canvas_optimize is CanvasOptimize.NORMAL:
+            self.mng.optimize_operation(False)
+            # if patchcanvas.canvas is not None:
+            #     patchcanvas.set_loading_items(False)
 
 

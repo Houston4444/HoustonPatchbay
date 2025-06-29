@@ -1,4 +1,3 @@
-
 import logging
 from pathlib import Path
 from dataclasses import dataclass
@@ -28,7 +27,8 @@ from .menus.canvas_menu import CanvasMenu
 from .dialogs.options_dialog import CanvasOptionsDialog
 from .widgets.filter_frame import FilterFrame
 from .bases.elements import (
-    JackPortFlag, ToolDisplayed, TransportPosition)
+    JackPortFlag, ToolDisplayed, TransportPosition,
+    CanvasOptimizeIt, CanvasOptimize)
 from .bases.group import Group
 from .bases.connection import Connection
 from .bases.port import Port
@@ -113,6 +113,8 @@ class PatchbayManager:
     very_fast_operation = False
     '''when True, items are not added/removed from patchcanvas.
     Useful to win time at startup or refresh'''
+
+    canvas_optimize = CanvasOptimize.NORMAL
 
     groups = list[Group]()
     connections = list[Connection]()
@@ -342,46 +344,45 @@ class PatchbayManager:
         '''Executed after any patchcanvas animation, it cleans
         in patchcanvas all boxes that should be hidden now.'''
         
-        self.optimize_operation(True)
-        group_ids_redraw = set[int]()
+        with CanvasOptimizeIt(self):
+            group_ids_redraw = set[int]()
 
-        for group in self.groups:
-            if group.current_position.hidden_port_modes() is PortMode.NULL:
-                continue
-            hidden_port_mode = group.current_position.hidden_port_modes()
-            
-            if hidden_port_mode & PortMode.OUTPUT:
-                for conn in self.connections:
-                    if conn.port_out.group_id is group.group_id:
-                        conn.remove_from_canvas()
-            
-            if hidden_port_mode & PortMode.INPUT:
-                for conn in self.connections:
-                    if conn.port_in.group_id is group.group_id:
-                        conn.remove_from_canvas()
-            
-            for portgroup in group.portgroups:
-                if hidden_port_mode & portgroup.port_mode:
-                    portgroup.remove_from_canvas()
-                    
-            for port in group.ports:
-                if hidden_port_mode & port.mode:
-                    port.remove_from_canvas()
-            
-            if group.outs_ptv is PortTypesViewFlag.NONE:
-                hidden_port_mode |= PortMode.OUTPUT
-            if group.ins_ptv is PortTypesViewFlag.NONE:
-                hidden_port_mode |= PortMode.INPUT
+            for group in self.groups:
+                if group.current_position.hidden_port_modes() is PortMode.NULL:
+                    continue
+                hidden_port_mode = group.current_position.hidden_port_modes()
+                
+                if hidden_port_mode & PortMode.OUTPUT:
+                    for conn in self.connections:
+                        if conn.port_out.group_id is group.group_id:
+                            conn.remove_from_canvas()
+                
+                if hidden_port_mode & PortMode.INPUT:
+                    for conn in self.connections:
+                        if conn.port_in.group_id is group.group_id:
+                            conn.remove_from_canvas()
+                
+                for portgroup in group.portgroups:
+                    if hidden_port_mode & portgroup.port_mode:
+                        portgroup.remove_from_canvas()
+                        
+                for port in group.ports:
+                    if hidden_port_mode & port.mode:
+                        port.remove_from_canvas()
+                
+                if group.outs_ptv is PortTypesViewFlag.NONE:
+                    hidden_port_mode |= PortMode.OUTPUT
+                if group.ins_ptv is PortTypesViewFlag.NONE:
+                    hidden_port_mode |= PortMode.INPUT
 
-            if hidden_port_mode is PortMode.BOTH:
-                group.remove_from_canvas()
-            elif group.in_canvas:
-                group_ids_redraw.add(group.group_id)
+                if hidden_port_mode is PortMode.BOTH:
+                    group.remove_from_canvas()
+                elif group.in_canvas:
+                    group_ids_redraw.add(group.group_id)
 
-        for conn in self.connections:
-            conn.add_to_canvas()
+            for conn in self.connections:
+                conn.add_to_canvas()
 
-        self.optimize_operation(False)
         for group_id in group_ids_redraw:
             patchcanvas.redraw_group(group_id, prevent_overlap=False)
 
@@ -398,43 +399,41 @@ class PatchbayManager:
             group.current_position.hidden_port_modes() | port_mode)
         group.save_current_position()
 
-        self.optimize_operation(True)
-        
-        if port_mode & PortMode.OUTPUT:
-            for conn in self.connections:
-                if conn.port_out.group_id == group_id:
-                    conn.remove_from_canvas()
-                    
-            for portgroup in group.portgroups:
-                if portgroup.port_mode is PortMode.OUTPUT:
-                    portgroup.remove_from_canvas()
-                    
-            for port in group.ports:
-                if port.mode is PortMode.OUTPUT:
-                    port.remove_from_canvas()
-                    
-            for conn in self.connections:
-                if conn.port_out.group_id is group_id:
-                    conn.add_to_canvas()
-                    
-        if port_mode & PortMode.INPUT:
-            for conn in self.connections:
-                if conn.port_in.group_id == group_id:
-                    conn.remove_from_canvas()
-                    
-            for portgroup in group.portgroups:
-                if portgroup.port_mode is PortMode.INPUT:
-                    portgroup.remove_from_canvas()
-                    
-            for port in group.ports:
-                if port.mode is PortMode.INPUT:
-                    port.remove_from_canvas()
-                    
-            for conn in self.connections:
-                if conn.port_in.group_id is group_id:
-                    conn.add_to_canvas()
+        with CanvasOptimizeIt(self):
+            if port_mode & PortMode.OUTPUT:
+                for conn in self.connections:
+                    if conn.port_out.group_id == group_id:
+                        conn.remove_from_canvas()
+                        
+                for portgroup in group.portgroups:
+                    if portgroup.port_mode is PortMode.OUTPUT:
+                        portgroup.remove_from_canvas()
+                        
+                for port in group.ports:
+                    if port.mode is PortMode.OUTPUT:
+                        port.remove_from_canvas()
+                        
+                for conn in self.connections:
+                    if conn.port_out.group_id is group_id:
+                        conn.add_to_canvas()
+                        
+            if port_mode & PortMode.INPUT:
+                for conn in self.connections:
+                    if conn.port_in.group_id == group_id:
+                        conn.remove_from_canvas()
+                        
+                for portgroup in group.portgroups:
+                    if portgroup.port_mode is PortMode.INPUT:
+                        portgroup.remove_from_canvas()
+                        
+                for port in group.ports:
+                    if port.mode is PortMode.INPUT:
+                        port.remove_from_canvas()
+                        
+                for conn in self.connections:
+                    if conn.port_in.group_id is group_id:
+                        conn.add_to_canvas()
 
-        self.optimize_operation(False)
         patchcanvas.redraw_group(group_id)
         patchcanvas.canvas.scene.resize_the_scene()
 
@@ -459,15 +458,14 @@ class PatchbayManager:
         gpos.set_hidden_port_mode(PortMode.NULL)
         group.save_current_position()
 
-        self.optimize_operation(True)
-        group.add_to_canvas()
-        group.add_all_ports_to_canvas()
-                
-        for conn in self.connections:
-            if conn.port_out.group is group or conn.port_in.group is group:
-                conn.add_to_canvas()
+        with CanvasOptimizeIt(self):
+            group.add_to_canvas()
+            group.add_all_ports_to_canvas()
+                    
+            for conn in self.connections:
+                if conn.port_out.group is group or conn.port_in.group is group:
+                    conn.add_to_canvas()
 
-        self.optimize_operation(False)
         patchcanvas.move_group_boxes(
             group.group_id, gpos,
             redraw=hidden_port_mode, restore=hidden_port_mode)
@@ -476,31 +474,27 @@ class PatchbayManager:
         self.sg.hidden_boxes_changed.emit()
 
     def restore_all_group_hidden_sides(self):
-        self.optimize_operation(True)
-
         groups_to_restore = set[Group]()
-        for group in self.groups:
-            
-            
-            if group.current_position.hidden_port_modes():
-                group.current_position.set_hidden_port_mode(PortMode.NULL)
-                if not group.current_position.fully_set:
-                    if group._is_hardware:
-                        group.current_position.set_splitted(True)
-                
-                group.add_to_canvas()
-                group.add_all_ports_to_canvas()
-                groups_to_restore.add(group)
 
-        # forget all hidden boxes even if these boxes are not
-        # currently present in the patchbay.
-        for gpos in self.views.iter_group_poses(view_num=self.view_number):            
-            gpos.set_hidden_port_mode(PortMode.NULL)
-        
-        for conn in self.connections:
-            conn.add_to_canvas()
+        with CanvasOptimizeIt(self):
+            for group in self.groups:
+                if group.current_position.hidden_port_modes():
+                    group.current_position.set_hidden_port_mode(PortMode.NULL)
+                    if not group.current_position.fully_set:
+                        if group._is_hardware:
+                            group.current_position.set_splitted(True)
+                    
+                    group.add_to_canvas()
+                    group.add_all_ports_to_canvas()
+                    groups_to_restore.add(group)
+
+            # forget all hidden boxes even if these boxes are not
+            # currently present in the patchbay.
+            for gpos in self.views.iter_group_poses(view_num=self.view_number):            
+                gpos.set_hidden_port_mode(PortMode.NULL)
             
-        self.optimize_operation(False)
+            for conn in self.connections:
+                conn.add_to_canvas()
         
         for group in groups_to_restore:
             patchcanvas.move_group_boxes(
@@ -511,26 +505,25 @@ class PatchbayManager:
         self.sg.hidden_boxes_changed.emit()
 
     def hide_all_groups(self):
-        self.optimize_operation(True)
-        
         groups_to_hide = set[Group]()
-        for group in self.groups:
-            if group.current_position.hidden_port_modes() is not PortMode.BOTH:
-                groups_to_hide.add(group)
-                group.current_position.set_hidden_port_mode(PortMode.BOTH)
         
-        for conn in self.connections:
-            conn.remove_from_canvas()
+        with CanvasOptimizeIt(self):
+            for group in self.groups:
+                if (group.current_position.hidden_port_modes()
+                        is not PortMode.BOTH):
+                    groups_to_hide.add(group)
+                    group.current_position.set_hidden_port_mode(PortMode.BOTH)
             
-        for group in groups_to_hide:
-            for portgroup in group.portgroups:
-                portgroup.remove_from_canvas()
+            for conn in self.connections:
+                conn.remove_from_canvas()
                 
-            for port in group.ports:
-                port.remove_from_canvas()
+            for group in groups_to_hide:
+                for portgroup in group.portgroups:
+                    portgroup.remove_from_canvas()
+                    
+                for port in group.ports:
+                    port.remove_from_canvas()
             
-        self.optimize_operation(False)
-        
         for group in groups_to_hide:
             patchcanvas.move_group_boxes(
                 group.group_id, group.current_position,
@@ -635,26 +628,24 @@ class PatchbayManager:
             group.portgroup_memory_added(portgroup_mem)
 
     def remove_and_add_all(self):
-        self.optimize_operation(True)
+        with CanvasOptimizeIt(self):           
+            for connection in self.connections:
+                connection.remove_from_canvas()
             
-        for connection in self.connections:
-            connection.remove_from_canvas()
-        
-        for group in self.groups:
-            for portgroup in group.portgroups:
-                portgroup.remove_from_canvas()
+            for group in self.groups:
+                for portgroup in group.portgroups:
+                    portgroup.remove_from_canvas()
+                
+                for port in group.ports:
+                    port.remove_from_canvas()
+
+                group.remove_from_canvas()
+                group.add_to_canvas()
+                group.add_all_ports_to_canvas()
             
-            for port in group.ports:
-                port.remove_from_canvas()
+            for connection in self.connections:
+                connection.add_to_canvas()
 
-            group.remove_from_canvas()
-            group.add_to_canvas()
-            group.add_all_ports_to_canvas()
-        
-        for connection in self.connections:
-            connection.add_to_canvas()
-
-        self.optimize_operation(False)
         patchcanvas.redraw_all_groups()
 
     def clear_all(self):
@@ -687,8 +678,6 @@ class PatchbayManager:
             f"Change Port Types View: {ex_ptv.name} -> {port_types_view.name}")
         # Prevent visual update at each canvas item creation
         # because we may create/remove a lot of ports here
-        
-        self.optimize_operation(True)
 
         change_counter = 0
 
@@ -718,18 +707,18 @@ class PatchbayManager:
                 for port in group.ports:
                     port.in_canvas = False
             
-            patchcanvas.clear_all()
+            with CanvasOptimizeIt(self):
+                patchcanvas.clear_all()
+                
+                for group in self.groups:
+                    group.current_position = self.get_group_position(group.name)
+                    if (group.outs_ptv | group.ins_ptv) & self.port_types_view:
+                        group.add_to_canvas()
+                        group.add_all_ports_to_canvas()
+                
+                for connection in self.connections:
+                    connection.add_to_canvas()
             
-            for group in self.groups:
-                group.current_position = self.get_group_position(group.name)
-                if (group.outs_ptv | group.ins_ptv) & self.port_types_view:
-                    group.add_to_canvas()
-                    group.add_all_ports_to_canvas()
-            
-            for connection in self.connections:
-                connection.add_to_canvas()
-            
-            self.optimize_operation(False)
             patchcanvas.redraw_all_groups()
             
             self.sg.port_types_view_changed.emit(self.port_types_view)
@@ -740,101 +729,100 @@ class PatchbayManager:
         rm_all_before = bool(ex_ptv & self.port_types_view
                              is PortTypesViewFlag.NONE)
 
-        if rm_all_before:
-            # there is no common port type between previous and next view,
-            # strategy is to remove fastly all contents from the patchcanvas.            
-            for connection in self.connections:
-                connection.in_canvas = False
-                        
-            for group in self.groups:
-                group.in_canvas = False
-                for portgroup in group.portgroups:
-                    portgroup.in_canvas = False
-                for port in group.ports:
-                    port.in_canvas = False
-                    
-            patchcanvas.clear_all()
-
-        else:
-            for connection in self.connections:
-                connection.remove_from_canvas()
-
-        groups_and_pos = dict[Group, tuple[GroupPos, PortMode, PortMode]]()
-
-        for group in self.groups:
-            new_gpos = self.get_group_position(group.name)
-            in_outs_ptv = group.ins_ptv | group.outs_ptv
-            hidden_modes = group.current_position.hidden_port_modes()
-            new_hidden_modes = new_gpos.hidden_port_modes()
-            redraw_mode = PortMode.NULL
-
-            if (hidden_modes is not new_hidden_modes
-                    or self.port_types_view & in_outs_ptv
-                       is not ex_ptv & in_outs_ptv):
-                # group needs to be redrawn because visible ports
-                # are not the sames.
-
-                if new_hidden_modes is not hidden_modes:
-                    # During the animation, we need to see the ports we hide,
-                    # so the hidden ports in the new view must be shown.
-                    # But, if the ports are hidden in the two views,
-                    # we won't show them.
-                    for port_mode in PortMode.INPUT, PortMode.OUTPUT:
-                        if (not new_hidden_modes & port_mode
-                                and hidden_modes & port_mode):
-                            redraw_mode |= port_mode
-
-                if (self.port_types_view & group.ins_ptv
-                        is not ex_ptv & group.ins_ptv):
-                    redraw_mode |= PortMode.INPUT
-
-                if (self.port_types_view & group.outs_ptv
-                        is not ex_ptv & group.outs_ptv):
-                    redraw_mode |= PortMode.OUTPUT
-
-                if not rm_all_before:
+        with CanvasOptimizeIt(self):
+            if rm_all_before:
+                # there is no common port type between previous and next view,
+                # strategy is to remove fastly all contents from the patchcanvas.            
+                for connection in self.connections:
+                    connection.in_canvas = False
+                            
+                for group in self.groups:
+                    group.in_canvas = False
                     for portgroup in group.portgroups:
-                        if portgroup.port_mode & redraw_mode:
-                            portgroup.remove_from_canvas()
-                    
+                        portgroup.in_canvas = False
                     for port in group.ports:
-                        if port.mode & redraw_mode:
-                            port.remove_from_canvas()
-                
-                if (new_gpos.is_splitted()
-                        is not group.current_position.is_splitted()):
-                    group.add_to_canvas(gpos=new_gpos)
-                else:
-                    group.add_to_canvas()
-
-                # only ports which should be hidden in previous and next
-                # view will be hidden (before to animate).
-                for port in group.ports:
-                    port.add_to_canvas(
-                        ignore_gpos=True,
-                        hidden_sides=hidden_modes & new_hidden_modes)
+                        port.in_canvas = False
                         
-                for portgroup in group.portgroups:
-                    portgroup.add_to_canvas()
-            
-            for port in group.ports:
-                if port.in_canvas:
-                    new_gpos.has_sure_existence = True
-                    break
+                patchcanvas.clear_all()
+
             else:
-                group.remove_from_canvas()
-            
-            restore_mode = PortMode.NULL
-            for pmode in (PortMode.INPUT, PortMode.OUTPUT):
-                if (group.current_position.hidden_port_modes() & pmode
-                        and not new_gpos.hidden_port_modes() & pmode):
-                    restore_mode |= pmode
-            groups_and_pos[group] = (new_gpos, redraw_mode, restore_mode)
+                for connection in self.connections:
+                    connection.remove_from_canvas()
 
-        for conn in self.connections:
-            conn.add_to_canvas()
+            groups_and_pos = dict[Group, tuple[GroupPos, PortMode, PortMode]]()
 
-        self.optimize_operation(False)
+            for group in self.groups:
+                new_gpos = self.get_group_position(group.name)
+                in_outs_ptv = group.ins_ptv | group.outs_ptv
+                hidden_modes = group.current_position.hidden_port_modes()
+                new_hidden_modes = new_gpos.hidden_port_modes()
+                redraw_mode = PortMode.NULL
+
+                if (hidden_modes is not new_hidden_modes
+                        or self.port_types_view & in_outs_ptv
+                        is not ex_ptv & in_outs_ptv):
+                    # group needs to be redrawn because visible ports
+                    # are not the sames.
+
+                    if new_hidden_modes is not hidden_modes:
+                        # During the animation, we need to see the ports we hide,
+                        # so the hidden ports in the new view must be shown.
+                        # But, if the ports are hidden in the two views,
+                        # we won't show them.
+                        for port_mode in PortMode.INPUT, PortMode.OUTPUT:
+                            if (not new_hidden_modes & port_mode
+                                    and hidden_modes & port_mode):
+                                redraw_mode |= port_mode
+
+                    if (self.port_types_view & group.ins_ptv
+                            is not ex_ptv & group.ins_ptv):
+                        redraw_mode |= PortMode.INPUT
+
+                    if (self.port_types_view & group.outs_ptv
+                            is not ex_ptv & group.outs_ptv):
+                        redraw_mode |= PortMode.OUTPUT
+
+                    if not rm_all_before:
+                        for portgroup in group.portgroups:
+                            if portgroup.port_mode & redraw_mode:
+                                portgroup.remove_from_canvas()
+                        
+                        for port in group.ports:
+                            if port.mode & redraw_mode:
+                                port.remove_from_canvas()
+                    
+                    if (new_gpos.is_splitted()
+                            is not group.current_position.is_splitted()):
+                        group.add_to_canvas(gpos=new_gpos)
+                    else:
+                        group.add_to_canvas()
+
+                    # only ports which should be hidden in previous and next
+                    # view will be hidden (before to animate).
+                    for port in group.ports:
+                        port.add_to_canvas(
+                            ignore_gpos=True,
+                            hidden_sides=hidden_modes & new_hidden_modes)
+                            
+                    for portgroup in group.portgroups:
+                        portgroup.add_to_canvas()
+                
+                for port in group.ports:
+                    if port.in_canvas:
+                        new_gpos.has_sure_existence = True
+                        break
+                else:
+                    group.remove_from_canvas()
+                
+                restore_mode = PortMode.NULL
+                for pmode in (PortMode.INPUT, PortMode.OUTPUT):
+                    if (group.current_position.hidden_port_modes() & pmode
+                            and not new_gpos.hidden_port_modes() & pmode):
+                        restore_mode |= pmode
+                groups_and_pos[group] = (new_gpos, redraw_mode, restore_mode)
+
+            for conn in self.connections:
+                conn.add_to_canvas()
 
         if groups_and_pos:
             patchcanvas.canvas.scene.prevent_box_user_move = True
@@ -1040,24 +1028,22 @@ class PatchbayManager:
                 ports_dict[port] = port.cnv_name
         
         self.naming = naming
-        self.optimize_operation(True)
 
-        for group in self.groups:
-            if not group.in_canvas:
-                continue
-            
-            if group.cnv_name != groups_dict[group]:
-                group_ids_to_redraw.add(group.group_id)
-                group.rename_in_canvas()
-
-            for port in group.ports:
-                if not port.in_canvas:
+        with CanvasOptimizeIt(self):
+            for group in self.groups:
+                if not group.in_canvas:
                     continue
-                if port.cnv_name != ports_dict[port]:
+                
+                if group.cnv_name != groups_dict[group]:
                     group_ids_to_redraw.add(group.group_id)
-                    port.rename_in_canvas()
+                    group.rename_in_canvas()
 
-        self.optimize_operation(False)
+                for port in group.ports:
+                    if not port.in_canvas:
+                        continue
+                    if port.cnv_name != ports_dict[port]:
+                        group_ids_to_redraw.add(group.group_id)
+                        port.rename_in_canvas()
         
         for group_id in group_ids_to_redraw:
             patchcanvas.redraw_group(group_id)
@@ -1082,19 +1068,16 @@ class PatchbayManager:
         patchcanvas.clear_all()
         patchcanvas.change_theme(theme_name)
 
-        self.optimize_operation(True)
-
-        for group in self.groups:
-            group.add_to_canvas()
-            for port in group.ports:
-                port.add_to_canvas()
-            for portgroup in group.portgroups:
-                portgroup.add_to_canvas()
-        
-        for connection in self.connections:
-            connection.add_to_canvas()
-
-        self.optimize_operation(False)
+        with CanvasOptimizeIt(self):
+            for group in self.groups:
+                group.add_to_canvas()
+                for port in group.ports:
+                    port.add_to_canvas()
+                for portgroup in group.portgroups:
+                    portgroup.add_to_canvas()
+            
+            for connection in self.connections:
+                connection.add_to_canvas()
 
         patchcanvas.redraw_all_groups()
 
@@ -1532,68 +1515,65 @@ class PatchbayManager:
         when no graph event happens during 50ms.
         It executes in the main thread all methods called since last time,
         then, it updates the canvas with new contents.'''
+        _logger.debug('patchbay delayed order')
 
-        self.optimize_operation(True)
         group_ids_to_update = set()
         group_ids_to_sort = set()
         some_groups_removed = False
         clear_conns = False
-
-        _logger.debug('patchbay delayed order')
         
-        while self.delayed_orders.qsize():
-            oq = self.delayed_orders.get()
+        with CanvasOptimizeIt(self):
+            while self.delayed_orders.qsize():
+                oq = self.delayed_orders.get()
+                
+                _logger.debug(f'  execute {oq.func.__name__}, {oq.args[1:]}')
+                
+                # execute the function, and get concerned group_id
+                group_id = oq.func(*oq.args, **oq.kwargs)
+
+                if oq.metadata_change and group_id is not None:
+                    key = oq.args[2]
+                    match key: 
+                        case JackMetadata.PRETTY_NAME:
+                            group_ids_to_update.add(group_id)
+                        case JackMetadata.ICON_NAME:
+                            group_ids_to_update.add(group_id)
+                        case JackMetadata.ORDER:
+                            group_ids_to_sort.add(group_id)
+                            group_ids_to_update.add(group_id)
+
+                if oq.draw_group:
+                    if group_id is not None:
+                        group_ids_to_update.add(group_id)
+                    else:
+                        some_groups_removed = True
+                if oq.clear_conns:
+                    clear_conns = True
             
-            _logger.debug(f'  execute {oq.func.__name__}, {oq.args[1:]}')
-            
-            # execute the function, and get concerned group_id
-            group_id = oq.func(*oq.args, **oq.kwargs)
+            for group in self.groups:
+                if group.group_id in group_ids_to_sort:
+                    group.sort_ports_in_canvas()
 
-            if oq.metadata_change and group_id is not None:
-                key = oq.args[2]
-                match key: 
-                    case JackMetadata.PRETTY_NAME:
-                        group_ids_to_update.add(group_id)
-                    case JackMetadata.ICON_NAME:
-                        group_ids_to_update.add(group_id)
-                    case JackMetadata.ORDER:
-                        group_ids_to_sort.add(group_id)
-                        group_ids_to_update.add(group_id)
+            if clear_conns:
+                # sometimes connections are still in canvas without ports
+                # probably because the message for their destruction
+                # has not been received.
+                # here we can assume to clear all of them
+                conns_to_clean = list[Connection]()
 
-            if oq.draw_group:
-                if group_id is not None:
-                    group_ids_to_update.add(group_id)
-                else:
-                    some_groups_removed = True
-            if oq.clear_conns:
-                clear_conns = True
-        
-        for group in self.groups:
-            if group.group_id in group_ids_to_sort:
-                group.sort_ports_in_canvas()
-
-        if clear_conns:
-            # sometimes connections are still in canvas without ports
-            # probably because the message for their destruction
-            # has not been received.
-            # here we can assume to clear all of them
-            conns_to_clean = list[Connection]()
-
-            for conn in self.connections:
-                for port in (conn.port_out, conn.port_in):
-                    fport = self.get_port_from_name(port.full_name)
-                    if fport is None:
-                        conn.remove_from_canvas()
-                        conns_to_clean.append(conn)
-                        break
-                    
-                    if not fport.in_canvas:
-                        conn.remove_from_canvas()
-                    
-            for conn in conns_to_clean:
-                self.connections.remove(conn)
-
-        self.optimize_operation(False)
+                for conn in self.connections:
+                    for port in (conn.port_out, conn.port_in):
+                        fport = self.get_port_from_name(port.full_name)
+                        if fport is None:
+                            conn.remove_from_canvas()
+                            conns_to_clean.append(conn)
+                            break
+                        
+                        if not fport.in_canvas:
+                            conn.remove_from_canvas()
+                        
+                for conn in conns_to_clean:
+                    self.connections.remove(conn)
 
         for group in self.groups:
             if group.group_id in group_ids_to_update:
