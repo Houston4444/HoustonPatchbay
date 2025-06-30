@@ -207,13 +207,65 @@ def init(view: PatchGraphicsView, callback: Callable,
     canvas.initiated = True
 
 @patchbay_api
-def set_loading_items(yesno: bool):
+def set_loading_items(yesno: bool, auto_redraw=False, prevent_overlap=True):
     '''while canvas is loading items (groups or ports, connections...)
     items will be added, but not redrawn.
     This is an optimization that prevents a lot of redraws.
     Think to set loading items at False and use redraw_all_groups
     or redraw_group once the long operation is finished'''
     canvas.loading_items = yesno
+    
+    if not yesno and auto_redraw:
+        both_done = set[int]()
+        some_hidden = False
+        boxes = list[BoxWidget]()
+        
+        for group_id in canvas.groups_to_redraw_out:
+            group = canvas.get_group(group_id)
+            if group is None:
+                some_hidden = True
+                continue
+
+            for box in group.widgets:
+                port_mode = box.get_port_mode()
+                if port_mode & PortMode.OUTPUT:
+                    box.update_positions(scene_checks=False)
+                    if box.isVisible():
+                        boxes.append(box)
+                    else:
+                        some_hidden = True
+                    
+                    if port_mode & PortMode.INPUT:
+                        both_done.add(group_id)
+        
+        for group_id in canvas.groups_to_redraw_in:
+            if group_id in both_done:
+                continue
+            
+            group = canvas.get_group(group_id)
+            if group is None:
+                some_hidden = True
+                continue
+
+            for box in group.widgets:
+                port_mode = box.get_port_mode()
+                if port_mode & PortMode.INPUT:
+                    box.update_positions(scene_checks=False)
+                    if box.isVisible():
+                        boxes.append(box)
+                    else:
+                        some_hidden = True
+        
+        if prevent_overlap:
+            for box in boxes:
+                canvas.scene.deplace_boxes_from_repulsers([box])
+        
+        if some_hidden:
+            canvas.scene.resize_the_scene()
+        canvas.scene.update()
+    
+    canvas.groups_to_redraw_out.clear()
+    canvas.groups_to_redraw_in.clear()
 
 @patchbay_api
 def add_group(group_id: int, group_name: str, split: bool,
@@ -221,11 +273,6 @@ def add_group(group_id: int, group_name: str, split: bool,
     if canvas.get_group(group_id) is not None:
         _logger.error(f"{_logging_str} - group already exists.")
         return
-
-    # bx_poses = dict[PortMode, BoxPos]()
-    # for port_mode in PortMode.in_out_both():
-    #     box_pos = box_poses.get(port_mode)
-    #     bx_poses[port_mode] = BoxPos() if box_pos is None else BoxPos(box_pos)
 
     group = GroupObject()
     group.group_id = group_id
@@ -238,7 +285,6 @@ def add_group(group_id: int, group_name: str, split: bool,
     group.plugin_inline = False
     group.handle_client_gui = False
     group.gui_visible = False
-    # group.box_poses = bx_poses
     group.gpos = gpos
     group.widgets = list[BoxWidget]()
 
@@ -259,6 +305,8 @@ def add_group(group_id: int, group_name: str, split: bool,
     canvas.add_group(group)
 
     if canvas.loading_items:
+        canvas.groups_to_redraw_in.add(group_id)
+        canvas.groups_to_redraw_out.add(group_id)
         return
 
     QTimer.singleShot(0, canvas.scene.update)
@@ -278,6 +326,8 @@ def remove_group(group_id: int, save_positions=True):
     canvas.group_plugin_map.pop(group.plugin_id, None)
 
     if canvas.loading_items:
+        canvas.groups_to_redraw_in.add(group_id)
+        canvas.groups_to_redraw_out.add(group_id)
         return
 
     QTimer.singleShot(0, canvas.scene.update)
@@ -297,6 +347,8 @@ def rename_group(group_id: int, new_group_name: str):
             box.update_positions()
 
     if canvas.loading_items:
+        canvas.groups_to_redraw_in.add(group_id)
+        canvas.groups_to_redraw_out.add(group_id)
         return
 
     QTimer.singleShot(0, canvas.scene.update)
@@ -447,7 +499,10 @@ def repulse_from_group(group_id: int, port_mode: PortMode):
             canvas.scene.deplace_boxes_from_repulsers([box])
 
 @patchbay_api
-def redraw_all_groups(force_no_prevent_overlap=False, theme_change=False):    
+def redraw_all_groups(force_no_prevent_overlap=False, theme_change=False):
+    if canvas.loading_items:
+        return
+
     # We are redrawing all groups.
     # For optimization reason we prevent here to resize the scene
     # at each group draw, we'll do it once all is done,
@@ -486,6 +541,9 @@ def redraw_all_groups(force_no_prevent_overlap=False, theme_change=False):
 
 @patchbay_api
 def redraw_group(group_id: int, ensure_visible=False, prevent_overlap=True):
+    if canvas.loading_items:
+        return
+    
     group = canvas.get_group(group_id)
     if group is None:
         _logger.error(f"{_logging_str}, no group to redraw")
@@ -726,6 +784,11 @@ def set_group_icon(group_id: int, box_type: BoxType, icon_name: str):
     for box in group.widgets:
         box.set_icon(box_type, icon_name)
 
+    if canvas.loading_items:
+        canvas.groups_to_redraw_out.add(group_id)
+        canvas.groups_to_redraw_in.add(group_id)
+        return
+
     QTimer.singleShot(0, canvas.scene.update)
 
 @patchbay_api
@@ -781,6 +844,10 @@ def add_port(group_id: int, port_id: int, port_name: str,
     canvas.add_port(port)
 
     if canvas.loading_items:
+        if port_mode is PortMode.INPUT:
+            canvas.groups_to_redraw_in.add(group_id)
+        elif port_mode is PortMode.OUTPUT:
+            canvas.groups_to_redraw_out.add(group_id)
         return
 
     box.update_positions()
@@ -815,6 +882,10 @@ def remove_port(group_id: int, port_id: int):
 
     canvas.qobject.port_removed.emit(group_id, port_id)
     if canvas.loading_items:
+        if port.port_mode is PortMode.OUTPUT:
+            canvas.groups_to_redraw_out.add(group_id)
+        else:
+            canvas.groups_to_redraw_in.add(group_id)
         return
 
     if box is not None:
@@ -834,6 +905,10 @@ def rename_port(group_id: int, port_id: int, new_port_name: str):
         port.widget.set_port_name(new_port_name)
 
     if canvas.loading_items:
+        if port.port_mode is PortMode.OUTPUT:
+            canvas.groups_to_redraw_out.add(group_id)
+        else:
+            canvas.groups_to_redraw_in.add(group_id)
         return
 
     port.widget.parentItem().update_positions()

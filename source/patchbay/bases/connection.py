@@ -50,9 +50,10 @@ class Connection:
             return
 
         if not self.in_canvas:
-            for port in (self.port_out, self.port_in):
-                port.set_hidden_conn_in_canvas(self, False)
             return
+
+        for port in (self.port_out, self.port_in):
+            port.set_hidden_conn_in_canvas(self, False)
 
         patchcanvas.disconnect_ports(self.connection_id)
         self.in_canvas = False

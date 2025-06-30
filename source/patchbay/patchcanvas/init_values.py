@@ -433,6 +433,9 @@ class Canvas:
         self._conns_outin_dict = dict[int, dict[int, dict[int, ConnectionObject]]]()
         self._conns_inout_dict = dict[int, dict[int, dict[int, ConnectionObject]]]()
 
+        self.groups_to_redraw_in = set[int]()
+        self.groups_to_redraw_out = set[int]()
+
         self.clipboard = list[ClipboardElement]()
         self.clipboard_cut = True
         self.group_plugin_map = {}

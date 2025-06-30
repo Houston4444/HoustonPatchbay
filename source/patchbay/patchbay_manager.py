@@ -106,13 +106,6 @@ def in_main_thread():
 class PatchbayManager:
     naming = Naming.ALL
     port_types_view = PortTypesViewFlag.ALL
-    
-    optimized_operation = False
-    "when True, items can be added to patchcanvas but they won't be drawn"
-    
-    very_fast_operation = False
-    '''when True, items are not added/removed from patchcanvas.
-    Useful to win time at startup or refresh'''
 
     canvas_optimize = CanvasOptimize.NORMAL
 
@@ -233,7 +226,13 @@ class PatchbayManager:
         
         # just to have the zoom slider updated with the default zoom
         patchcanvas.canvas.scene.zoom_reset()
-        
+    
+    @property
+    def very_fast_operation(self) -> bool:
+        '''when True, items are not added/removed from patchcanvas.
+        Useful to win time at startup or refresh'''
+        return self.canvas_optimize is CanvasOptimize.VERY_FAST
+    
     def _scene_scale_changed(self, value: float):
         self.sg.scene_scale_changed.emit(value)
 
@@ -287,13 +286,14 @@ class PatchbayManager:
                                 self.alsa_midi_enabled)
         patchcanvas.options.save_to_settings(self._settings)
 
-    def optimize_operation(self, yesno: bool):
-        self.optimized_operation = yesno
+    def optimize_operation(
+            self, yesno: bool, auto_redraw=False, prevent_overlap=True):
         if patchcanvas.canvas is not None:
-            patchcanvas.set_loading_items(yesno)
+            patchcanvas.set_loading_items(
+                yesno,
+                auto_redraw=auto_redraw,
+                prevent_overlap=prevent_overlap)
 
-    # def _set_very_fast_operation(self, yesno: bool):
-    #     self.very_fast_operation = yesno
 
     def _add_group(self, group: Group):
         self.groups.append(group)
@@ -343,13 +343,11 @@ class PatchbayManager:
     def animation_finished(self):
         '''Executed after any patchcanvas animation, it cleans
         in patchcanvas all boxes that should be hidden now.'''
-        
-        with CanvasOptimizeIt(self):
-            group_ids_redraw = set[int]()
-
+        with CanvasOptimizeIt(self, auto_redraw=True, prevent_overlap=False):
             for group in self.groups:
                 if group.current_position.hidden_port_modes() is PortMode.NULL:
                     continue
+
                 hidden_port_mode = group.current_position.hidden_port_modes()
                 
                 if hidden_port_mode & PortMode.OUTPUT:
@@ -377,16 +375,11 @@ class PatchbayManager:
 
                 if hidden_port_mode is PortMode.BOTH:
                     group.remove_from_canvas()
-                elif group.in_canvas:
-                    group_ids_redraw.add(group.group_id)
-
+                    
             for conn in self.connections:
                 conn.add_to_canvas()
 
-        for group_id in group_ids_redraw:
-            patchcanvas.redraw_group(group_id, prevent_overlap=False)
-
-        patchcanvas.canvas.scene.resize_the_scene()
+        # patchcanvas.canvas.scene.resize_the_scene()
         self.sg.hidden_boxes_changed.emit()
         self.sg.animation_finished.emit()
 
@@ -399,7 +392,7 @@ class PatchbayManager:
             group.current_position.hidden_port_modes() | port_mode)
         group.save_current_position()
 
-        with CanvasOptimizeIt(self):
+        with CanvasOptimizeIt(self, auto_redraw=True):
             if port_mode & PortMode.OUTPUT:
                 for conn in self.connections:
                     if conn.port_out.group_id == group_id:
@@ -433,9 +426,6 @@ class PatchbayManager:
                 for conn in self.connections:
                     if conn.port_in.group_id is group_id:
                         conn.add_to_canvas()
-
-        patchcanvas.redraw_group(group_id)
-        patchcanvas.canvas.scene.resize_the_scene()
 
         self.sg.hidden_boxes_changed.emit()
 
@@ -628,7 +618,7 @@ class PatchbayManager:
             group.portgroup_memory_added(portgroup_mem)
 
     def remove_and_add_all(self):
-        with CanvasOptimizeIt(self):           
+        with CanvasOptimizeIt(self, auto_redraw=True):
             for connection in self.connections:
                 connection.remove_from_canvas()
             
@@ -645,8 +635,6 @@ class PatchbayManager:
             
             for connection in self.connections:
                 connection.add_to_canvas()
-
-        patchcanvas.redraw_all_groups()
 
     def clear_all(self):
         patchcanvas.clear_all()
@@ -707,9 +695,9 @@ class PatchbayManager:
                 for port in group.ports:
                     port.in_canvas = False
             
+            patchcanvas.clear_all()
+
             with CanvasOptimizeIt(self):
-                patchcanvas.clear_all()
-                
                 for group in self.groups:
                     group.current_position = self.get_group_position(group.name)
                     if (group.outs_ptv | group.ins_ptv) & self.port_types_view:
@@ -1020,7 +1008,6 @@ class PatchbayManager:
         
         groups_dict = dict[Group, str]()
         ports_dict = dict[Port, str]()
-        group_ids_to_redraw = set[int]()
         
         for group in self.groups:
             groups_dict[group] = group.cnv_name
@@ -1029,24 +1016,19 @@ class PatchbayManager:
         
         self.naming = naming
 
-        with CanvasOptimizeIt(self):
+        with CanvasOptimizeIt(self, auto_redraw=True):
             for group in self.groups:
                 if not group.in_canvas:
                     continue
                 
                 if group.cnv_name != groups_dict[group]:
-                    group_ids_to_redraw.add(group.group_id)
                     group.rename_in_canvas()
 
                 for port in group.ports:
                     if not port.in_canvas:
                         continue
                     if port.cnv_name != ports_dict[port]:
-                        group_ids_to_redraw.add(group.group_id)
                         port.rename_in_canvas()
-        
-        for group_id in group_ids_to_redraw:
-            patchcanvas.redraw_group(group_id)
 
     def change_jack_export_naming(self, naming: Naming):
         self.jack_export_naming = naming
@@ -1122,6 +1104,9 @@ class PatchbayManager:
                 f'add port "{name}", '
                 f'it already exists, remove it first !')
 
+            if name in self._ports_by_name:
+                self._ports_by_name.pop(name)
+
             if exst_port.type.is_jack and exst_port.uuid:
                 self.jack_metadatas.remove_uuid(exst_port.uuid)
 
@@ -1142,7 +1127,6 @@ class PatchbayManager:
         self._next_port_id += 1
         
         full_port_name = name
-        
         group_name, colon, port_name = full_port_name.partition(':')
 
         is_a2j_group = False
@@ -1183,7 +1167,6 @@ class PatchbayManager:
             group = Group(self, self._next_group_id, group_name, gpos)
             
             group.a2j_group = is_a2j_group
-            
             self.set_group_as_nsm_client(group)
 
             self._next_group_id += 1
@@ -1210,6 +1193,9 @@ class PatchbayManager:
         port = self.get_port_from_name(name)
         if port is None:
             return None
+
+        if name in self._ports_by_name:
+            self._ports_by_name.pop(name)
 
         if port.type.is_jack and port.uuid:
             self.jack_metadatas.remove_uuid(port.uuid)
@@ -1517,12 +1503,11 @@ class PatchbayManager:
         then, it updates the canvas with new contents.'''
         _logger.debug('patchbay delayed order')
 
-        group_ids_to_update = set()
         group_ids_to_sort = set()
         some_groups_removed = False
         clear_conns = False
         
-        with CanvasOptimizeIt(self):
+        with CanvasOptimizeIt(self, auto_redraw=True):
             while self.delayed_orders.qsize():
                 oq = self.delayed_orders.get()
                 
@@ -1533,23 +1518,15 @@ class PatchbayManager:
 
                 if oq.metadata_change and group_id is not None:
                     key = oq.args[2]
-                    match key: 
-                        case JackMetadata.PRETTY_NAME:
-                            group_ids_to_update.add(group_id)
-                        case JackMetadata.ICON_NAME:
-                            group_ids_to_update.add(group_id)
-                        case JackMetadata.ORDER:
+                    if key == JackMetadata.ORDER:
                             group_ids_to_sort.add(group_id)
-                            group_ids_to_update.add(group_id)
 
                 if oq.draw_group:
-                    if group_id is not None:
-                        group_ids_to_update.add(group_id)
-                    else:
+                    if group_id is None:
                         some_groups_removed = True
                 if oq.clear_conns:
                     clear_conns = True
-            
+    
             for group in self.groups:
                 if group.group_id in group_ids_to_sort:
                     group.sort_ports_in_canvas()
@@ -1574,10 +1551,6 @@ class PatchbayManager:
                         
                 for conn in conns_to_clean:
                     self.connections.remove(conn)
-
-        for group in self.groups:
-            if group.group_id in group_ids_to_update:
-                group.redraw_in_canvas()
 
         if some_groups_removed:
             patchcanvas.canvas.scene.resize_the_scene()

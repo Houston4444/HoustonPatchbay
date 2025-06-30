@@ -79,6 +79,9 @@ class Group:
         return bool(self.outs_ptv & ptv or self.ins_ptv & ptv)
 
     def add_to_canvas(self, gpos: Optional[GroupPos]=None):
+        if self.manager.very_fast_operation:
+            return
+        
         if self.in_canvas:
             return
 
@@ -143,6 +146,9 @@ class Group:
         return self.manager.pretty_names.pretty_group(self.name)
     
     def remove_from_canvas(self):
+        if self.manager.very_fast_operation:
+            return
+        
         if not self.in_canvas:
             return
 
@@ -289,9 +295,6 @@ class Group:
         if port in self.ports:
             port.remove_from_canvas()
             self.ports.remove(port)
-        
-        if self.manager._ports_by_name.get(port.full_name):
-            self.manager._ports_by_name.pop(port.full_name)
 
     def remove_portgroup(self, portgroup: Portgroup):
         if portgroup in self.portgroups:
@@ -813,7 +816,7 @@ class Group:
     def sort_ports_in_canvas(self):
         conn_list = list[Connection]()
 
-        with CanvasOptimizeIt(self.manager):
+        with CanvasOptimizeIt(self.manager, auto_redraw=True):
             if not self.manager.very_fast_operation:
                 for conn in self.manager.connections:
                     for port in self.ports:
@@ -995,8 +998,6 @@ class Group:
                 for connection in conn_list:
                     connection.add_to_canvas()
         
-        self.redraw_in_canvas()
-
     def add_all_ports_to_canvas(self):
         for port in self.ports:
             port.add_to_canvas()

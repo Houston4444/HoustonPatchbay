@@ -116,14 +116,15 @@ class CanvasOptimizeIt:
     '''Context for 'with' statment. save the data at begin and at end
     for undo/redo actions'''
     def __init__(
-            self, mng: 'PatchbayManager', canvas_optimize=CanvasOptimize.FAST):
+            self, mng: 'PatchbayManager', canvas_optimize=CanvasOptimize.FAST,
+            auto_redraw=False, prevent_overlap=True):
         self.mng = mng
+        self._auto_redraw = auto_redraw
+        self._prevent_overlap = prevent_overlap
         self._previous_optim = mng.canvas_optimize
         if canvas_optimize > mng.canvas_optimize:
             mng.canvas_optimize = canvas_optimize
             mng.optimize_operation(True)
-            # if patchcanvas.canvas is not None:
-            #     patchcanvas.set_loading_items(True)
 
     def __enter__(self):
         ...
@@ -132,8 +133,8 @@ class CanvasOptimizeIt:
         self.mng.canvas_optimize = self._previous_optim
 
         if self.mng.canvas_optimize is CanvasOptimize.NORMAL:
-            self.mng.optimize_operation(False)
-            # if patchcanvas.canvas is not None:
-            #     patchcanvas.set_loading_items(False)
+            self.mng.optimize_operation(
+                False, auto_redraw=self._auto_redraw,
+                prevent_overlap=self._prevent_overlap)
 
 

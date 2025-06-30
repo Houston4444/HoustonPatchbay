@@ -308,8 +308,6 @@ class BoxWidgetMoth(QGraphicsItem):
         else:
             self.top_icon = IconPixmapWidget(box_type, icon_name, self)
 
-        self.update_positions()
-
     def has_top_icon(self) -> bool:
         if self.top_icon is None:
             return False
