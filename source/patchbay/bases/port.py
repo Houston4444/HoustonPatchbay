@@ -188,10 +188,10 @@ class Port:
             for conn in visible_conns:
                 self.set_hidden_conn_in_canvas(conn, False)
                 
-        if self.conns_hidden_in_canvas:
-            patchcanvas.port_has_hidden_connection(
-                self.group_id, self.port_id,
-                bool(self.conns_hidden_in_canvas))
+            if self.conns_hidden_in_canvas:
+                patchcanvas.port_has_hidden_connection(
+                    self.group_id, self.port_id,
+                    bool(self.conns_hidden_in_canvas))
 
     def remove_from_canvas(self):
         if self.manager.very_fast_operation:
@@ -223,17 +223,17 @@ class Port:
         patchcanvas.select_port(self.group_id, self.port_id)
 
     def set_hidden_conn_in_canvas(self, conn: Connection, yesno: bool):
-        has_hidden_conns = bool(self.conns_hidden_in_canvas)
+        had_hidden_conns = bool(self.conns_hidden_in_canvas)
 
         if yesno:
             self.conns_hidden_in_canvas.add(conn)
-        elif conn in self.conns_hidden_in_canvas:
-            self.conns_hidden_in_canvas.remove(conn)
+        else:
+            self.conns_hidden_in_canvas.discard(conn)
         
         if not self.in_canvas:
             return
 
-        if has_hidden_conns == bool(self.conns_hidden_in_canvas):
+        if had_hidden_conns == bool(self.conns_hidden_in_canvas):
             return
 
         patchcanvas.port_has_hidden_connection(

@@ -28,19 +28,16 @@ class Connection:
             return
 
         if not (self.port_out.in_canvas and self.port_in.in_canvas):
-            if not (self.port_out.in_canvas or self.port_in.in_canvas):
-                return
-
             for port in (self.port_out, self.port_in):
                 port.set_hidden_conn_in_canvas(self, True)
             return
-
-        self.in_canvas = True
 
         patchcanvas.connect_ports(
             self.connection_id,
             self.port_out.group_id, self.port_out.port_id,
             self.port_in.group_id, self.port_in.port_id)
+
+        self.in_canvas = True
         
         for port in (self.port_out, self.port_in):
             port.set_hidden_conn_in_canvas(self, False)
@@ -49,11 +46,11 @@ class Connection:
         if self.manager.very_fast_operation:
             return
 
-        if not self.in_canvas:
-            return
-
         for port in (self.port_out, self.port_in):
             port.set_hidden_conn_in_canvas(self, False)
+
+        if not self.in_canvas:
+            return
 
         patchcanvas.disconnect_ports(self.connection_id)
         self.in_canvas = False
