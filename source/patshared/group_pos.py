@@ -369,7 +369,7 @@ class GroupPos:
             
             if new_box.is_hidden() is not orig_box.is_hidden():
                 box.set_hidden(new_box.is_hidden())
-            if new_box.is_wrapped() is not orig_box.is_hidden():
+            if new_box.is_wrapped() is not orig_box.is_wrapped():
                 box.set_wrapped(new_box.is_wrapped())
             if new_box.layout_mode is not orig_box.layout_mode:
                 box.layout_mode = new_box.layout_mode
