@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>331</width>
-    <height>275</height>
+    <width>346</width>
+    <height>305</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -234,12 +234,66 @@ It provides a shorter name than the original.</string>
            <item>
             <widget class="QCheckBox" name="checkBoxExportPrettyNames">
              <property name="text">
-              <string>Export internal pretty names to JACK</string>
+              <string>Auto-export internal pretty names to JACK</string>
              </property>
              <property name="checked">
               <bool>true</bool>
              </property>
             </widget>
+           </item>
+           <item>
+            <layout class="QHBoxLayout" name="horizontalLayout_7">
+             <item>
+              <spacer name="horizontalSpacer_2">
+               <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>40</width>
+                 <height>20</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
+             <item>
+              <layout class="QVBoxLayout" name="verticalLayout_6">
+               <item>
+                <widget class="QPushButton" name="pushButtonExportPrettyJack">
+                 <property name="text">
+                  <string>Export pretty names to JACK</string>
+                 </property>
+                 <property name="icon">
+                  <iconset theme="document-export"/>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QPushButton" name="pushButtonImportPrettyJack">
+                 <property name="text">
+                  <string>Import pretty names from JACK</string>
+                 </property>
+                 <property name="icon">
+                  <iconset theme="document-import"/>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </item>
+             <item>
+              <spacer name="horizontalSpacer_4">
+               <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>40</width>
+                 <height>20</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
+            </layout>
            </item>
            <item>
             <spacer name="verticalSpacer_2">
@@ -262,6 +316,7 @@ It provides a shorter name than the original.</string>
           <zorder>label_4</zorder>
           <zorder>line_2</zorder>
           <zorder>checkBoxExportPrettyNames</zorder>
+          <zorder>horizontalLayoutWidget</zorder>
          </widget>
          <widget class="QWidget" name="Theme">
           <attribute name="title">

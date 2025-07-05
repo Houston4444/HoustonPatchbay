@@ -79,6 +79,10 @@ class CanvasOptionsDialog(QDialog):
             self._naming_changed)
         self.ui.checkBoxExportPrettyNames.clicked.connect(
             self._jack_export_naming_changed)
+        self.ui.pushButtonExportPrettyJack.clicked.connect(
+            self._export_pretty_names_to_jack)
+        self.ui.pushButtonImportPrettyJack.clicked.connect(
+            self._import_pretty_names_from_jack)
         
         self.ui.checkBoxShadows.stateChanged.connect(
             manager.sg.group_shadows_changed)
@@ -174,6 +178,14 @@ class CanvasOptionsDialog(QDialog):
             jack_exp_naming |= Naming.INTERNAL_PRETTY 
         
         self.mng.change_jack_export_naming(jack_exp_naming)
+
+    @Slot()
+    def _export_pretty_names_to_jack(self):
+        self.mng.export_pretty_names_to_jack()
+        
+    @Slot()
+    def _import_pretty_names_from_jack(self):
+        self.mng.import_pretty_names_from_jack()
 
     def export_pretty_names_changed(self, state: bool):
         # option has been changed from the daemon itself 

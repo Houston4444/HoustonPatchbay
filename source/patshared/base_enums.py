@@ -175,3 +175,19 @@ class Naming(Flag):
             except:
                 continue
         return naming
+    
+
+class PrettyDiff(Flag):
+    NO_DIFF = 0x0
+    '''There is no difference between internal pretty names
+    and JACK pretty names'''
+    
+    NON_EXPORTED = 0x1
+    'Some internal pretty names are not exported to JACK'
+    
+    NON_IMPORTED = 0x2
+    'Some JACK pretty names are not present in internal pretty names'
+    
+    NON_BOTH = 0x3
+    '''Some internal pretty names are not exported to JACK,
+    and some JACK pretty names are not present in internal pretty names'''
