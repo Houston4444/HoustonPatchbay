@@ -20,10 +20,17 @@ class JackMetadatas(dict[int, dict[str, str]]):
     
     def add(self, uuid: int, key: str, value: str):
         'add a metadata to the bank, or remove it if value is empty string'
+        if not uuid:
+            self.clear()
+            return
         
         uuid_dict = self.get(uuid)
         if uuid_dict is None:
             uuid_dict = self[uuid] = dict[str, str]()
+        
+        if not key:
+            uuid_dict.clear()
+            return
         
         if value:
             uuid_dict[key] = value
