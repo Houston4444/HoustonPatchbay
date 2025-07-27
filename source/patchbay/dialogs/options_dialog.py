@@ -11,7 +11,7 @@ from qtpy.QtWidgets import (QDialog, QApplication, QInputDialog,
                              QMessageBox, QWidget, QFileDialog, QAction)
 
 
-from patshared import Naming
+from patshared import Naming, PrettyDiff
 from ..patchcanvas import patchcanvas, xdg
 from ..patchcanvas.theme_manager import ThemeData
 from ..patchcanvas.init_values import GridStyle
@@ -191,6 +191,12 @@ class CanvasOptionsDialog(QDialog):
         # option has been changed from the daemon itself 
         # (probably with ray_control)
         self.ui.checkBoxExportPrettyNames.setChecked(state)
+
+    def change_pretty_diff(self, pretty_diff: PrettyDiff):
+        self.ui.pushButtonExportPrettyJack.setEnabled(
+            PrettyDiff.NON_EXPORTED in pretty_diff)
+        self.ui.pushButtonImportPrettyJack.setEnabled(
+            PrettyDiff.NON_IMPORTED in pretty_diff)
 
     def _change_default_zoom(self, value: int):
         patchcanvas.set_default_zoom(value)
