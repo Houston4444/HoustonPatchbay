@@ -198,6 +198,9 @@ class CanvasOptionsDialog(QDialog):
         self.ui.pushButtonImportPrettyJack.setEnabled(
             PrettyDiff.NON_IMPORTED in pretty_diff)
 
+    def set_pretty_names_locked(self, locked: bool):
+        self.ui.checkBoxExportPrettyNames.setEnabled(not locked)
+
     def _change_default_zoom(self, value: int):
         patchcanvas.set_default_zoom(value)
         patchcanvas.zoom_reset()
