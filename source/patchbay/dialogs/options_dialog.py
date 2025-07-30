@@ -199,6 +199,14 @@ class CanvasOptionsDialog(QDialog):
             PrettyDiff.NON_IMPORTED in pretty_diff)
 
     def set_pretty_names_locked(self, locked: bool):
+        if not locked and not self.ui.checkBoxExportPrettyNames.isEnabled():
+            # Quite weird for sure,
+            # when not locked and was locked, it means that another daemon  
+            # has just deactivate "export pretty names",
+            # but this daemon won't activate it automaticaly.
+            # The option is not really deactivated (for config save),
+            # but it is not really activated, and can be activated manually.
+            self.ui.checkBoxExportPrettyNames.setChecked(False)
         self.ui.checkBoxExportPrettyNames.setEnabled(not locked)
 
     def _change_default_zoom(self, value: int):
