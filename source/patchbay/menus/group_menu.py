@@ -296,6 +296,8 @@ class GroupMenu(QMenu):
         
         self._mng.pretty_names.save_group(
             self._group.name, pretty_name, self._group.mdata_pretty_name)
+        self._mng.pretty_diff_checker.client_pretty_name_changed(
+            self._group.name)
         self._group.rename_in_canvas()
         
         canvas.callback(

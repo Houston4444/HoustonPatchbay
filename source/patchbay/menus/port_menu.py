@@ -986,6 +986,9 @@ class PoMenu(AbstractConnectionsMenu):
             self._mng.pretty_names.save_port(
                 self._po.full_name_id_free, pretty_name,
                 self._po.mdata_pretty_name)
+            if self._po.type.is_jack:
+                self._mng.pretty_diff_checker.port_pretty_name_changed(
+                    self._po.full_name)
             self._po.rename_in_canvas()
             
             canvas.callback(
@@ -1008,6 +1011,9 @@ class PoMenu(AbstractConnectionsMenu):
                 self._mng.pretty_names.save_port(
                     port.full_name_id_free,
                     port_pretty_name, port.mdata_pretty_name)
+                if port.type.is_jack:
+                    self._mng.pretty_diff_checker.port_pretty_name_changed(
+                        port.full_name)
                 port.rename_in_canvas()
 
                 canvas.callback(

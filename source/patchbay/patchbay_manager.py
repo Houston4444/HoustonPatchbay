@@ -7,6 +7,7 @@ from queue import Queue
 from qtpy.QtGui import QCursor, QGuiApplication, QKeyEvent
 from qtpy.QtWidgets import QMainWindow, QMessageBox, QWidget
 from qtpy.QtCore import QTimer, QSettings, QThread, Qt
+from patchbay.pretty_diff_checker import PrettyDiffChecker
 
 from patshared import (
     PortType, PortSubType, PortMode, JackMetadata, JackMetadatas,
@@ -155,6 +156,7 @@ class PatchbayManager:
         self.jack_export_naming = Naming.INTERNAL_PRETTY
         self.naming = Naming.from_config_str(settings.value(
             'Canvas/naming', 'ALL', type=str))
+        self.pretty_diff_checker = PrettyDiffChecker(self)
 
         self.group_a2j_hw: bool = settings.value(
             'Canvas/group_a2j_ports', True, type=bool)
@@ -1294,59 +1296,61 @@ class PatchbayManager:
         # first store metadata
         self.jack_metadatas.add(uuid, key, value)
         
-        if key == JackMetadata.ORDER:
-            port = self.get_port_from_uuid(uuid)
-            if port is None:
-                return
+        match key:
+            case JackMetadata.ORDER:
+                port = self.get_port_from_uuid(uuid)
+                if port is None:
+                    return
 
-            try:
-                port_order = int(value)
-            except:
-                _logger.warning(
-                    f"JACK_METADATA_ORDER for UUID {uuid} "
-                    f"value '{value}' is not an int")
-                return
+                try:
+                    port_order = int(value)
+                except:
+                    _logger.warning(
+                        f"JACK_METADATA_ORDER for UUID {uuid} "
+                        f"value '{value}' is not an int")
+                    return
 
-            port.order = port_order
-            return port.group_id
-
-        elif key == JackMetadata.PRETTY_NAME:
-            port = self.get_port_from_uuid(uuid)
-            if port is not None:
-                port.rename_in_canvas()
+                port.order = port_order
                 return port.group_id
 
-            for group in self.groups:
-                if group.uuid == uuid:
-                    group.rename_in_canvas()
-                    return group.group_id
+            case JackMetadata.PRETTY_NAME:
+                self.pretty_diff_checker.uuid_change(uuid)
+                port = self.get_port_from_uuid(uuid)
+                if port is not None:
+                    port.rename_in_canvas()
+                    return port.group_id
 
-        elif key == JackMetadata.PORT_GROUP:
-            port = self.get_port_from_uuid(uuid)
-            if port is None:
-                return
+                for group in self.groups:
+                    if group.uuid == uuid:
+                        group.rename_in_canvas()
+                        return group.group_id
 
-            port.mdata_portgroup = value
-            return port.group_id
+            case JackMetadata.PORT_GROUP:
+                port = self.get_port_from_uuid(uuid)
+                if port is None:
+                    return
 
-        elif key == JackMetadata.ICON_NAME:
-            for group in self.groups:
-                if group.uuid == uuid:
-                    group.set_client_icon(value, from_metadata=True)
-                    return group.group_id
+                port.mdata_portgroup = value
+                return port.group_id
 
-        elif key == JackMetadata.SIGNAL_TYPE:
-            port = self.get_port_from_uuid(uuid)
-            if port is None:
-                return
+            case JackMetadata.ICON_NAME:
+                for group in self.groups:
+                    if group.uuid == uuid:
+                        group.set_client_icon(value, from_metadata=True)
+                        return group.group_id
 
-            if port.type is PortType.AUDIO_JACK:
-                if value == 'CV':
-                    port.subtype = PortSubType.CV
-                elif value == 'AUDIO':
-                    port.subtype = PortSubType.REGULAR
+            case JackMetadata.SIGNAL_TYPE:
+                port = self.get_port_from_uuid(uuid)
+                if port is None:
+                    return
 
-            return port.group_id
+                if port.type is PortType.AUDIO_JACK:
+                    if value == 'CV':
+                        port.subtype = PortSubType.CV
+                    elif value == 'AUDIO':
+                        port.subtype = PortSubType.REGULAR
+
+                return port.group_id
 
     @later_by_batch()
     def add_connection(self, port_out_name: str, port_in_name: str):
