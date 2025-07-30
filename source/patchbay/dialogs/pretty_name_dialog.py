@@ -79,9 +79,14 @@ class PrettyNameDialog(QDialog):
         else:
             has_jack_uuid = bool(self.element.uuid)
         
+        if (has_jack_uuid
+                and (Naming.INTERNAL_PRETTY
+                     in self.element.manager.jack_export_naming)):
+            save_in_jack = True
+        
         if (not has_jack_uuid
-                or (self.element.manager.jack_export_naming
-                    & Naming.INTERNAL_PRETTY)):
+                or (Naming.INTERNAL_PRETTY
+                    in self.element.manager.jack_export_naming)):
             self.ui.checkBoxExportJack.setVisible(False)
         
         self.ui.checkBoxExportJack.setChecked(save_in_jack)
