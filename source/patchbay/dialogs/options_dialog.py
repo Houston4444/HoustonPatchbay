@@ -199,7 +199,7 @@ class CanvasOptionsDialog(QDialog):
             PrettyDiff.NON_IMPORTED in pretty_diff)
 
     def set_pretty_names_locked(self, locked: bool):
-        if not locked and not self.ui.checkBoxExportPrettyNames.isEnabled():
+        if locked:
             # Quite weird for sure,
             # when not locked and was locked, it means that another daemon  
             # has just deactivate "export pretty names",
