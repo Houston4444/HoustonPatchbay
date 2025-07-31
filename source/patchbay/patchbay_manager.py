@@ -115,6 +115,7 @@ class PatchbayManager:
     _groups_by_name = dict[str, Group]()
     _groups_by_id = dict[int, Group]()
     _ports_by_name = dict[str, Port]()
+    _ports_by_uuid = dict[int, Port]()
 
     view_number = 1
     views = ViewsDict()
@@ -538,11 +539,8 @@ class PatchbayManager:
     def get_port_from_name(self, port_name: str) -> Optional[Port]:
         return self._ports_by_name.get(port_name)
 
-    def get_port_from_uuid(self, uuid:int) -> Port:
-        for group in self.groups:
-            for port in group.ports:
-                if port.uuid == uuid:
-                    return port
+    def get_port_from_uuid(self, uuid:int) -> Optional[Port]:
+        return self._ports_by_uuid.get(uuid)
 
     def get_port_from_id(self, group_id: int, port_id: int) -> Port:
         group = self.get_group_from_id(group_id)
@@ -646,6 +644,7 @@ class PatchbayManager:
         self._groups_by_id.clear()
         self._groups_by_name.clear()
         self._ports_by_name.clear()
+        self._ports_by_uuid.clear()
 
         self._next_group_id = 0
         self._next_port_id = 0
@@ -1114,6 +1113,8 @@ class PatchbayManager:
 
             if name in self._ports_by_name:
                 self._ports_by_name.pop(name)
+            if uuid in self._ports_by_uuid:
+                self._ports_by_uuid.pop(uuid)
 
             if exst_port.type.is_jack and exst_port.uuid:
                 self.jack_metadatas.remove_uuid(exst_port.uuid)
@@ -1204,7 +1205,8 @@ class PatchbayManager:
 
         if name in self._ports_by_name:
             self._ports_by_name.pop(name)
-
+        if port.uuid in self._ports_by_uuid:
+            self._ports_by_uuid.pop(port.uuid)
         if port.type.is_jack and port.uuid:
             self.jack_metadatas.remove_uuid(port.uuid)
 

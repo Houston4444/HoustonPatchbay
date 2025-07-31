@@ -135,17 +135,19 @@ class PrettyDiffChecker:
         self.pretty_diff = self.get_glob_diff()
         if self.mng.options_dialog:
             self.mng.options_dialog.change_pretty_diff(self.pretty_diff)
-        self.print_diffs()
 
     def print_diffs(self):
-        print('knilou', self.pretty_diff)
+        out_dict = {'client_diffs': dict[int, PrettyDiff](),
+                    'port_diffs  ': dict[int, PrettyDiff]()}
         for uuid, diff in self.clients_diff.items():
             if diff is not PrettyDiff.NO_DIFF:
-                print('cdiff', uuid, diff)
+                out_dict['client_diffs'][uuid] = diff
         
         for uuid, diff in self.ports_diff.items():
             if diff is not PrettyDiff.NO_DIFF:
-                print('pdiff', uuid, diff)
+                out_dict['port_diffs  '][uuid] = diff
+        
+        return out_dict
 
     def get_glob_diff(self) -> PrettyDiff:
         glob_diff = PrettyDiff.NO_DIFF

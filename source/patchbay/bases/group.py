@@ -290,6 +290,7 @@ class Group:
             self.ins_ptv |= ptv_flag
             
         self.manager._ports_by_name[port.full_name] = port
+        self.manager._ports_by_uuid[port.uuid] = port
 
     def remove_port(self, port: Port):
         if port in self.ports:
