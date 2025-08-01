@@ -160,10 +160,4 @@ class PrettyDiffChecker:
             glob_diff |= pretty_diff
             if glob_diff is PrettyDiff.NON_BOTH:
                 return glob_diff
-        return glob_diff
-
-    def metadatas_cleared(self):
-        if self.pretty_diff in (PrettyDiff.NO_DIFF, PrettyDiff.NON_EXPORTED):
-            return
-
-        self.full_update()    
+        return glob_diff 

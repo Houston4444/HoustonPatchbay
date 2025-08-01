@@ -1298,6 +1298,12 @@ class PatchbayManager:
         # first store metadata
         self.jack_metadatas.add(uuid, key, value)
         
+        if not uuid:
+            # all JACK metadatas removed
+            self.pretty_diff_checker.full_update()
+            self.remove_and_add_all()
+            return
+        
         match key:
             case JackMetadata.ORDER:
                 port = self.get_port_from_uuid(uuid)
@@ -1531,7 +1537,7 @@ class PatchbayManager:
                 if oq.metadata_change and group_id is not None:
                     key = oq.args[2]
                     if key == JackMetadata.ORDER:
-                            group_ids_to_sort.add(group_id)
+                        group_ids_to_sort.add(group_id)
 
                 if oq.draw_group:
                     if group_id is None:
