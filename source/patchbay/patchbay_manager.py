@@ -1305,6 +1305,17 @@ class PatchbayManager:
             return
         
         match key:
+            case '':
+                # all metadatas removed for an item (client or port)
+                port = self.get_port_from_uuid(uuid)
+                if port is not None:
+                    port.rename_in_canvas()
+                    return port.group_id
+                
+                for group in self.groups:
+                    if group.uuid == uuid:
+                        return group.group_id
+            
             case JackMetadata.ORDER:
                 port = self.get_port_from_uuid(uuid)
                 if port is None:
@@ -1536,7 +1547,7 @@ class PatchbayManager:
 
                 if oq.metadata_change and group_id is not None:
                     key = oq.args[2]
-                    if key == JackMetadata.ORDER:
+                    if key in (JackMetadata.ORDER, ''):
                         group_ids_to_sort.add(group_id)
 
                 if oq.draw_group:
