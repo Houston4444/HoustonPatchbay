@@ -233,6 +233,9 @@ It provides a shorter name than the original.</string>
            </item>
            <item>
             <widget class="QCheckBox" name="checkBoxExportPrettyNames">
+             <property name="toolTip">
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Automaticaly export internal pretty names (for groups and ports) to JACK metadatas.&lt;/p&gt;&lt;p&gt;JACK metadatas are available for any program using JACK.&lt;/p&gt;&lt;p&gt;JACK pretty-name metadatas created by this will be removed when the option is unchecked.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             </property>
              <property name="text">
               <string>Auto-export internal pretty names to JACK</string>
              </property>
@@ -260,21 +263,29 @@ It provides a shorter name than the original.</string>
               <layout class="QVBoxLayout" name="verticalLayout_6">
                <item>
                 <widget class="QPushButton" name="pushButtonExportPrettyJack">
+                 <property name="toolTip">
+                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Export all internal pretty names (for groups and ports) to JACK metadatas.&lt;/p&gt;&lt;p&gt;If disabled, there is no pretty name not already exported to JACK metadatas.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                 </property>
                  <property name="text">
                   <string>Export pretty names to JACK</string>
                  </property>
                  <property name="icon">
-                  <iconset theme="document-export"/>
+                  <iconset theme="document-export">
+                   <normaloff>.</normaloff>.</iconset>
                  </property>
                 </widget>
                </item>
                <item>
                 <widget class="QPushButton" name="pushButtonImportPrettyJack">
+                 <property name="toolTip">
+                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Import all pretty-name JACK metadatas to internal pretty name. Useful if you wan't to save in your project pretty-names created from another program.&lt;/p&gt;&lt;p&gt;If disabled, there is no pretty-name JACK metadata to import.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                 </property>
                  <property name="text">
                   <string>Import pretty names from JACK</string>
                  </property>
                  <property name="icon">
-                  <iconset theme="document-import"/>
+                  <iconset theme="document-import">
+                   <normaloff>.</normaloff>.</iconset>
                  </property>
                 </widget>
                </item>
@@ -316,7 +327,6 @@ It provides a shorter name than the original.</string>
           <zorder>label_4</zorder>
           <zorder>line_2</zorder>
           <zorder>checkBoxExportPrettyNames</zorder>
-          <zorder>horizontalLayoutWidget</zorder>
          </widget>
          <widget class="QWidget" name="Theme">
           <attribute name="title">
