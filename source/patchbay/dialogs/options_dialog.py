@@ -120,8 +120,10 @@ class CanvasOptionsDialog(QDialog):
         self.ui.checkBoxGracefulNames.setChecked(
             Naming.GRACEFUL in self.mng.naming)
         
-        self.ui.checkBoxExportPrettyNames.setChecked(
-            Naming.INTERNAL_PRETTY in self.mng.jack_export_naming)
+        b = self.ui.checkBoxExportPrettyNames
+        if b.isEnabled():
+            b.setChecked(
+                Naming.INTERNAL_PRETTY in self.mng.jack_export_naming)
         
         options = patchcanvas.options
         
@@ -187,10 +189,14 @@ class CanvasOptionsDialog(QDialog):
     def _import_pretty_names_from_jack(self):
         self.mng.import_pretty_names_from_jack()
 
-    def export_pretty_names_changed(self, state: bool):
+    def auto_export_pretty_names_changed(self, state: bool):
         # option has been changed from the daemon itself 
         # (probably with ray_control)
-        self.ui.checkBoxExportPrettyNames.setChecked(state)
+        b = self.ui.checkBoxExportPrettyNames
+        if b.isEnabled():
+            b.setChecked(state)
+        else:
+            b.setChecked(False)
 
     def change_pretty_diff(self, pretty_diff: PrettyDiff):
         self.ui.pushButtonExportPrettyJack.setEnabled(
@@ -199,9 +205,10 @@ class CanvasOptionsDialog(QDialog):
             PrettyDiff.NON_IMPORTED in pretty_diff)
 
     def set_pretty_names_locked(self, locked: bool):
+        b = self.ui.checkBoxExportPrettyNames
         if locked:
-            self.ui.checkBoxExportPrettyNames.setChecked(False)
-        self.ui.checkBoxExportPrettyNames.setEnabled(not locked)
+            b.setChecked(False)
+        b.setEnabled(not locked)
 
     def _change_default_zoom(self, value: int):
         patchcanvas.set_default_zoom(value)
