@@ -11,7 +11,7 @@ from patchbay.pretty_diff_checker import PrettyDiffChecker
 
 from patshared import (
     PortType, PortSubType, PortMode, JackMetadata, JackMetadatas,
-    PortTypesViewFlag, GroupPos, Naming,
+    PortTypesViewFlag, GroupPos, Naming, TransportPosition,
     ViewsDict, ViewData, PortgroupsDict, PortgroupMem, PrettyNames)
 
 from .patchcanvas import arranger, patchcanvas
@@ -28,8 +28,7 @@ from .menus.canvas_menu import CanvasMenu
 from .dialogs.options_dialog import CanvasOptionsDialog
 from .widgets.filter_frame import FilterFrame
 from .bases.elements import (
-    JackPortFlag, ToolDisplayed, TransportPosition,
-    CanvasOptimizeIt, CanvasOptimize)
+    JackPortFlag, ToolDisplayed, CanvasOptimizeIt, CanvasOptimize)
 from .bases.group import Group
 from .bases.connection import Connection
 from .bases.port import Port

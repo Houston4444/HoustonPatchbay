@@ -9,11 +9,13 @@ if TYPE_CHECKING:
 from qtpy.QtWidgets import (
     QWidget, QMainWindow, QAction, QApplication, QMenu)
 
+from patshared import TransportPosition
+
 from .widgets.bar_widget_jack import BarWidgetJack
 from .widgets.bar_widget_transport import BarWidgetTransport
 from .widgets.bar_widget_canvas import BarWidgetCanvas
 
-from .bases.elements import ToolDisplayed, TransportPosition
+from .bases.elements import ToolDisplayed
 
 if TYPE_CHECKING:
     from .patchbay_manager import PatchbayManager

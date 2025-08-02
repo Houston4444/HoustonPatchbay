@@ -5,8 +5,9 @@ from qtpy.QtWidgets import QWidget
 from qtpy.QtGui import QPalette, QIcon, QColor, QKeySequence
 from qtpy.QtCore import Slot
 
-from ..bases.elements import (
-    ToolDisplayed, TransportPosition, TransportViewMode)
+from patshared import TransportPosition
+
+from ..bases.elements import ToolDisplayed, TransportViewMode
 
 from ..ui.transport_bar import Ui_Form as TransportUiForm
 

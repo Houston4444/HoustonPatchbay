@@ -16,17 +16,6 @@ class JackPortFlag(IntFlag):
     IS_CONTROL_VOLTAGE = 0x100
 
 
-@dataclass
-class TransportPosition:
-    frame: int
-    rolling: bool
-    valid_bbt: bool
-    bar: int
-    beat: int
-    tick: int
-    beats_per_minutes: float
-
-
 class TransportViewMode(IntEnum):
     HOURS_MINUTES_SECONDS = 0
     BEAT_BAR_TICK = 1
