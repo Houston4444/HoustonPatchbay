@@ -5,4 +5,4 @@ from .portgroups_dict import *
 from .views_dict import *
 from .pretty_names import PrettyNames
 from .jack_metadata import JackMetadata, JackMetadatas
-from .transport import TransportPosition
+from .transport import TransportPosition, TransportWanted
