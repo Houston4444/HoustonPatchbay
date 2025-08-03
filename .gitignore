@@ -23,4 +23,5 @@ source/patchbay/__pycache__/
 source/patchbay/*/__pycache__/
 source/patchbay/*/*/__pycache__/
 source/patshared/__pycache__/
+source/patch_engine/__pycache__/
 resources/resources_rc.py
