@@ -729,6 +729,7 @@ class PatchEngine:
         by this program (in this process or not), pretty names are
         saved somewhere in the /tmp directory.'''
         try:
+            self.pretty_tmp_path.parent.mkdir(parents=True, exist_ok=True)
             with open(self.pretty_tmp_path, 'w') as f:
                 json.dump(self.uuid_pretty_names, f)
         except:
