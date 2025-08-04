@@ -1,6 +1,7 @@
 #!/usr/bin/python3 -u
 
 # standard lib imports
+from enum import Enum
 import signal
 from typing import Optional
 import threading
@@ -35,6 +36,19 @@ PORT_TYPE_AUDIO = 1
 PORT_TYPE_MIDI = 2
 
 METADATA_LOCKER = 'pretty-name-export.locker'
+
+
+class AutoExportPretty(Enum):
+    NO = 0
+    YES = 1
+    ZOMBIE = 2
+
+    @property
+    def active(self) -> bool:
+        return self is self.YES
+
+    def __bool__(self) -> bool:
+        return bool(self.value)
 
 
 def jack_pretty_name(uuid: int) -> str:
@@ -72,7 +86,7 @@ class PatchEngine:
     The existence of another instance is managed by a metadata
     METADATA_LOCKER set on the client'''
 
-    auto_export_pretty_names = True
+    auto_export_pretty_names = AutoExportPretty.YES
     '''True if the patchbay option 'Auto-Export pretty names to JACK'
     is activated (True by default).'''
     
@@ -152,6 +166,11 @@ class PatchEngine:
         Multiple daemons can co-exist,
         But if we want things going right,
         we have to ensure that each daemon runs on a different JACK server'''
+        if self.pretty_names_locked:
+            return
+        if not self.auto_export_pretty_names.active:
+            return
+
         try:
             self.client.set_property(
                 self.client.uuid, METADATA_LOCKER,
@@ -244,13 +263,10 @@ class PatchEngine:
                         if uuid == 0:
                             self.uuid_pretty_names.clear()
                             self._save_uuid_pretty_names()
-                            
-                            if self.auto_export_pretty_names:
-                                self._write_locker_mdata()
+                            self._write_locker_mdata()
 
                         elif uuid == self._client_uuid :
-                            if self.auto_export_pretty_names:
-                                self._write_locker_mdata()
+                            self._write_locker_mdata()
                         
                         else:
                             uuid_dict = self.metadatas.get(uuid)
@@ -264,7 +280,7 @@ class PatchEngine:
 
                     if key == METADATA_LOCKER:
                         if uuid == self._client_uuid:
-                            if not value and self.auto_export_pretty_names:
+                            if not value:
                                 # if the metadata locker has been removed
                                 # from an external client,
                                 # re-set it immediatly.
@@ -277,6 +293,11 @@ class PatchEngine:
                             except:
                                 ...
                             else:
+                                if value and self.auto_export_pretty_names:
+                                    self.auto_export_pretty_names = \
+                                        AutoExportPretty.ZOMBIE
+                                
+                                self.pretty_names_locked = bool(value)
                                 self.peo.send_pretty_names_locked(
                                     bool(value))
 
@@ -305,7 +326,7 @@ class PatchEngine:
         if self.pretty_names_locked:
             return
         
-        if not self.auto_export_pretty_names:
+        if not self.auto_export_pretty_names.active:
             return
         
         has_changes = False
@@ -506,8 +527,7 @@ class PatchEngine:
         if self.jack_running:
             self._set_registrations()
             self._collect_graph()
-            if self.auto_export_pretty_names:
-                self._write_locker_mdata()
+            self._write_locker_mdata()
 
             self.samplerate = self.client.samplerate
             self.buffer_size = self.client.blocksize
@@ -719,7 +739,11 @@ class PatchEngine:
                 
                 if (key == METADATA_LOCKER 
                         and uuid != self._client_uuid and value.isdigit()):
+                    if self.auto_export_pretty_names.active:
+                        self.auto_export_pretty_names = \
+                            AutoExportPretty.ZOMBIE
                     self.pretty_names_locked = True
+                    self.peo.send_pretty_names_locked(True)
 
     def _save_uuid_pretty_names(self):
         '''save the contents of self.uuid_pretty_names in /tmp
@@ -746,7 +770,7 @@ class PatchEngine:
                     f'Failed to set pretty-name "{pretty_name}" for {uuid}')
                 return
             
-            if self.auto_export_pretty_names:
+            if self.auto_export_pretty_names.active:
                 self.uuid_pretty_names[uuid] = pretty_name
             self.uuid_waiting_pretty_names[uuid] = pretty_name
 
@@ -759,7 +783,7 @@ class PatchEngine:
                     f'Failed to remove pretty-name for {uuid}')
                 return
             
-            if self.auto_export_pretty_names:
+            if self.auto_export_pretty_names.active:
                 if uuid in self.uuid_pretty_names:
                     self.uuid_pretty_names.pop(uuid)
             if uuid in self.uuid_waiting_pretty_names:
@@ -785,7 +809,7 @@ class PatchEngine:
             return
 
         self.set_pretty_names_auto_export(
-            self.auto_export_pretty_names, force=True)
+            self.auto_export_pretty_names.active, force=True)
 
     def write_group_pretty_name(self, client_name: str, pretty_name: str):
         if not self.jack_running:
@@ -862,15 +886,19 @@ class PatchEngine:
 
     def set_pretty_names_auto_export(self, active: bool, force=False):
         if self.pretty_names_locked:
-            self.auto_export_pretty_names = active
+            if active:
+                self.auto_export_pretty_names = AutoExportPretty.ZOMBIE
+            else:
+                self.auto_export_pretty_names = AutoExportPretty.NO
             return
 
-        if not force and active is self.auto_export_pretty_names:
+        if (self.auto_export_pretty_names is not AutoExportPretty.ZOMBIE
+                and not force
+                and active is self.auto_export_pretty_names.active):
             return
-
-        self.auto_export_pretty_names = active
         
         if active:
+            self.auto_export_pretty_names = AutoExportPretty.YES
             self._write_locker_mdata()
             
             for client_name, client_uuid in self.client_name_uuids.items():
@@ -887,6 +915,7 @@ class PatchEngine:
                     False, port_name, port.uuid)
 
         else:
+            self.auto_export_pretty_names = AutoExportPretty.NO
             self._remove_locker_mdata()
 
             # clear pretty-name metadata created by this from JACK
@@ -913,7 +942,6 @@ class PatchEngine:
 
             self.uuid_pretty_names.clear()
         
-        self.auto_export_pretty_names = active
         self._save_uuid_pretty_names()
 
     def import_all_pretty_names_from_jack(
@@ -959,7 +987,7 @@ class PatchEngine:
             if JackMetadata.PRETTY_NAME in uuid_dict:
                 self._set_jack_pretty_name(uuid, '')
         
-        if self.auto_export_pretty_names:
+        if self.auto_export_pretty_names.active:
             self.set_pretty_names_auto_export(True, force=True)
 
     def transport_play(self, play: bool):
