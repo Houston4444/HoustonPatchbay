@@ -196,7 +196,7 @@ class PatchEngine:
                             uuid_dict = self.metadatas.pop(uuid)
                             if uuid_dict.get(METADATA_LOCKER) is not None:
                                 self.pretty_names_locked = False
-                                self.peo.send_pretty_names_locked(True)
+                                self.peo.send_pretty_names_locked(False)
 
                 case PatchEvent.PORT_ADDED:
                     port: PortData = event_arg
@@ -720,7 +720,6 @@ class PatchEngine:
                 if (key == METADATA_LOCKER 
                         and uuid != self._client_uuid and value.isdigit()):
                     self.pretty_names_locked = True
-                    self.auto_export_pretty_names = False
 
     def _save_uuid_pretty_names(self):
         '''save the contents of self.uuid_pretty_names in /tmp
@@ -862,10 +861,14 @@ class PatchEngine:
         return True
 
     def set_pretty_names_auto_export(self, active: bool, force=False):
+        if self.pretty_names_locked:
+            self.auto_export_pretty_names = active
+            return
+
         if not force and active is self.auto_export_pretty_names:
             return
 
-        self.auto_export_pretty_names = True
+        self.auto_export_pretty_names = active
         
         if active:
             self._write_locker_mdata()
