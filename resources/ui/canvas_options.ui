@@ -262,7 +262,7 @@ It provides a shorter name than the original.</string>
              <item>
               <layout class="QVBoxLayout" name="verticalLayout_6">
                <item>
-                <widget class="QPushButton" name="pushButtonExportPrettyJack">
+                <widget class="QPushButton" name="pushButtonExportCustomJack">
                  <property name="toolTip">
                   <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Export all custom names (for groups and ports) to JACK pretty-name metadatas.&lt;/p&gt;&lt;p&gt;If disabled, there is no custom name not already exported to JACK pretty-name.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                  </property>

@@ -985,7 +985,7 @@ class PatchEngine:
         
         return clients_dict, ports_dict
 
-    def export_all_pretty_names_to_jack_now(self):
+    def export_all_custom_names_to_jack_now(self):
         for client_name, uuid in self.client_name_uuids.items():
             pretty_name = self.custom_names.custom_group(client_name)
             if pretty_name:

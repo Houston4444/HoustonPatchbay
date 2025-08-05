@@ -79,8 +79,8 @@ class CanvasOptionsDialog(QDialog):
             self._naming_changed)
         self.ui.checkBoxExportCustomNames.clicked.connect(
             self._jack_export_naming_changed)
-        self.ui.pushButtonExportPrettyJack.clicked.connect(
-            self._export_pretty_names_to_jack)
+        self.ui.pushButtonExportCustomJack.clicked.connect(
+            self._export_custom_names_to_jack)
         self.ui.pushButtonImportPrettyJack.clicked.connect(
             self._import_pretty_names_from_jack)
         
@@ -182,8 +182,8 @@ class CanvasOptionsDialog(QDialog):
         self.mng.change_jack_export_naming(jack_exp_naming)
 
     @Slot()
-    def _export_pretty_names_to_jack(self):
-        self.mng.export_pretty_names_to_jack()
+    def _export_custom_names_to_jack(self):
+        self.mng.export_custom_names_to_jack()
         
     @Slot()
     def _import_pretty_names_from_jack(self):
@@ -199,7 +199,7 @@ class CanvasOptionsDialog(QDialog):
             b.setChecked(False)
 
     def change_pretty_diff(self, pretty_diff: PrettyDiff):
-        self.ui.pushButtonExportPrettyJack.setEnabled(
+        self.ui.pushButtonExportCustomJack.setEnabled(
             PrettyDiff.NON_EXPORTED in pretty_diff)
         self.ui.pushButtonImportPrettyJack.setEnabled(
             PrettyDiff.NON_IMPORTED in pretty_diff)

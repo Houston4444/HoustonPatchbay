@@ -1033,7 +1033,7 @@ class PatchbayManager:
     def change_jack_export_naming(self, naming: Naming):
         self.jack_export_naming = naming
 
-    def export_pretty_names_to_jack(self):
+    def export_custom_names_to_jack(self):
         ...
         
     def import_pretty_names_from_jack(self):
