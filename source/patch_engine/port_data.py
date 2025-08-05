@@ -1,14 +1,16 @@
 
 from typing import Optional
 
+from patshared import PortType
+
 
 class PortData:
     name: str
-    type: int
+    type: PortType
     flags: int
     uuid: int
     
-    def __init__(self, name: str, type: int, flags: int, uuid: int):
+    def __init__(self, name: str, type: PortType, flags: int, uuid: int):
         self.name = name
         self.type = type
         self.flags = flags

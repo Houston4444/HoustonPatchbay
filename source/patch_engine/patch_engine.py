@@ -15,7 +15,7 @@ import jack
 
 # imports from HoustonPatchbay
 from patshared import (
-    JackMetadatas, JackMetadata, CustomNames,
+    PortType, JackMetadatas, JackMetadata, CustomNames,
     TransportPosition, TransportWanted)
 
 # local imports
@@ -30,10 +30,6 @@ if ALSA_LIB_OK:
 
 
 _logger = logging.getLogger(__name__)
-
-PORT_TYPE_NULL = 0
-PORT_TYPE_AUDIO = 1
-PORT_TYPE_MIDI = 2
 
 METADATA_LOCKER = 'pretty-name-export.locker'
 
@@ -584,11 +580,12 @@ class PatchEngine:
             
         @self.client.set_port_registration_callback
         def port_registration(port: jack.Port, register: bool):
-            port_type_int = PORT_TYPE_NULL
+            port_type = PortType.NULL
             if port.is_audio:
-                port_type_int = PORT_TYPE_AUDIO
+                port_type = PortType.AUDIO_JACK
             elif port.is_midi:
-                port_type_int = PORT_TYPE_MIDI
+                port_type = PortType.MIDI_JACK
+
             flags = jack._lib.jack_port_flags(port._ptr)
             port_name = port.name
             port_uuid = port.uuid
@@ -599,7 +596,7 @@ class PatchEngine:
             if register:                
                 self.patch_event_queue.add(
                     PatchEvent.PORT_ADDED,
-                    PortData(port_name, port_type_int, flags, port_uuid))
+                    PortData(port_name, port_type, flags, port_uuid))
             else:
                 self.patch_event_queue.add(
                     PatchEvent.PORT_REMOVED, port_name)
@@ -702,11 +699,12 @@ class PatchEngine:
             flags = jack._lib.jack_port_flags(port._ptr)
             port_name = port.name
             port_uuid = port.uuid
-            port_type = PORT_TYPE_NULL
+
+            port_type = PortType.NULL
             if port.is_audio:
-                port_type = PORT_TYPE_AUDIO
+                port_type = PortType.AUDIO_JACK
             elif port.is_midi:
-                port_type = PORT_TYPE_MIDI
+                port_type = PortType.MIDI_JACK
 
             known_uuids.add(port_uuid)
 

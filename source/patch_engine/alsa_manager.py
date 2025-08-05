@@ -24,6 +24,8 @@ from pyalsa.alsaseq import (
     SequencerError
 )
 
+from patshared import PortType
+
 from .port_data import PortData
 
 if TYPE_CHECKING:
@@ -34,7 +36,6 @@ PORT_IS_INPUT = 0x1
 PORT_IS_OUTPUT = 0x2
 PORT_IS_PHYSICAL = 0x4
 
-PORT_TYPE_MIDI_ALSA = 0x04
 
 _PORT_READS = SEQ_PORT_CAP_READ | SEQ_PORT_CAP_SUBS_READ
 _PORT_WRITES = SEQ_PORT_CAP_WRITE | SEQ_PORT_CAP_SUBS_WRITE
@@ -160,14 +161,14 @@ class AlsaManager:
         if port.caps & _PORT_READS == _PORT_READS:
             self.pbe.port_added(
                 port.pb_name('OUT', client),
-                PORT_TYPE_MIDI_ALSA,
+                PortType.MIDI_ALSA,
                 port_flags | PORT_IS_OUTPUT,
                 client.id * 0x10000 + port.id)
 
         if port.caps & _PORT_WRITES == _PORT_WRITES:
             self.pbe.port_added(
                 port.pb_name('IN', client),
-                PORT_TYPE_MIDI_ALSA,
+                PortType.MIDI_ALSA,
                 port_flags | PORT_IS_INPUT,
                 client.id * 0x10000 + port.id)
 
@@ -226,14 +227,14 @@ class AlsaManager:
                 if port.caps & _PORT_READS == _PORT_READS:
                     yield PortData(
                         port.pb_name('OUT', client),
-                        PORT_TYPE_MIDI_ALSA,
+                        PortType.MIDI_ALSA,
                         port_flags | PORT_IS_OUTPUT,
                         client.id * 0x10000 + port.id)
                 
                 if port.caps & _PORT_WRITES == _PORT_WRITES:
                     yield PortData(
                         port.pb_name('IN', client),
-                        PORT_TYPE_MIDI_ALSA,
+                        PortType.MIDI_ALSA,
                         port_flags | PORT_IS_INPUT,
                         client.id * 0x10000 + port.id)
     

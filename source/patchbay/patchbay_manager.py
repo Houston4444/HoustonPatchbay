@@ -1099,11 +1099,9 @@ class PatchbayManager:
             group.uuid = uuid
 
     @later_by_batch(draw_group=True)
-    def add_port(self, name: str, port_type_int: int, flags: int, uuid: int) -> int:
+    def add_port(self, name: str, port_type: PortType,
+                 flags: int, uuid: int) -> int:
         '''adds port and returns the group_id'''
-        
-        port_type = PortType(port_type_int)
-        
         exst_port = self.get_port_from_name(name)
         if exst_port is not None:
             _logger.warning(
