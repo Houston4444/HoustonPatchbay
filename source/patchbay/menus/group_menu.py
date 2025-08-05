@@ -9,7 +9,7 @@ from patshared import PortMode, BoxLayoutMode
 from ..cancel_mng import CancelOp, CancellableAction
 from ..bases.group import Group
 from ..patchcanvas import canvas, CallbackAct, patchcanvas, utils
-from ..dialogs.pretty_name_dialog import PrettyNameDialog
+from ..dialogs.custom_name_dialog import CustomNameDialog
 from ..dialogs.group_info_dialog import GroupInfoDialog
 
 if TYPE_CHECKING:
@@ -287,14 +287,14 @@ class GroupMenu(QMenu):
             
     @Slot()
     def _rename(self):        
-        dialog = PrettyNameDialog(self._group)
+        dialog = CustomNameDialog(self._group)
         if not dialog.exec():
             return
         
         pretty_name = dialog.pretty_name()
         save_in_jack = dialog.save_in_metadata()
         
-        self._mng.pretty_names.save_group(
+        self._mng.custom_names.save_group(
             self._group.name, pretty_name, self._group.mdata_pretty_name)
         self._mng.pretty_diff_checker.client_pretty_name_changed(
             self._group.name)

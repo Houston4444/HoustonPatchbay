@@ -8,7 +8,7 @@ from qtpy.QtGui import (
     QCursor, QFocusEvent, QPaintEvent, QPainter,
     QPen, QBrush)
 
-from ..dialogs.pretty_name_dialog import PrettyNameDialog
+from ..dialogs.custom_name_dialog import CustomNameDialog
 if TYPE_CHECKING:
     # FIX : QAction not found by pylance
     from qtpy.QtGui import QAction
@@ -975,7 +975,7 @@ class PoMenu(AbstractConnectionsMenu):
     
     @Slot()
     def _rename(self):
-        dialog = PrettyNameDialog(self._po)
+        dialog = CustomNameDialog(self._po)
         if not dialog.exec():
             return
         
@@ -983,7 +983,7 @@ class PoMenu(AbstractConnectionsMenu):
         save_in_jack = dialog.save_in_metadata()
         
         if isinstance(self._po, Port):
-            self._mng.pretty_names.save_port(
+            self._mng.custom_names.save_port(
                 self._po.full_name_id_free, pretty_name,
                 self._po.mdata_pretty_name)
             if self._po.type.is_jack:
@@ -1008,7 +1008,7 @@ class PoMenu(AbstractConnectionsMenu):
                     # clear portgroup, send empty metadata value
                     port_pretty_name = ''
 
-                self._mng.pretty_names.save_port(
+                self._mng.custom_names.save_port(
                     port.full_name_id_free,
                     port_pretty_name, port.mdata_pretty_name)
                 if port.type.is_jack:

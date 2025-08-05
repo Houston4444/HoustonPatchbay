@@ -157,14 +157,14 @@ class Naming(Flag):
     '''Shorter than TRUE_NAME, more readable name without underscores
     and with custom arrangements depending on the client name.'''
     
-    INTERNAL_PRETTY = 0x2
-    'The pretty name saved internally when user renames a port or a group'
+    CUSTOM = 0x2
+    'The custom name saved when user renames a port or a group'
     
     METADATA_PRETTY = 0x4
     '''The pretty name contained in JACK metadatas
     (http://jackaudio.org/metadata/pretty-name)'''
     
-    ALL = METADATA_PRETTY|INTERNAL_PRETTY|GRACEFUL
+    ALL = METADATA_PRETTY|CUSTOM|GRACEFUL
 
     @classmethod
     def from_config_str(cls, string: str) -> 'Naming':

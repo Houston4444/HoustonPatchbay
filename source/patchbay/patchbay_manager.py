@@ -12,7 +12,7 @@ from patchbay.pretty_diff_checker import PrettyDiffChecker
 from patshared import (
     PortType, PortSubType, PortMode, JackMetadata, JackMetadatas,
     PortTypesViewFlag, GroupPos, Naming, TransportPosition,
-    ViewsDict, ViewData, PortgroupsDict, PortgroupMem, PrettyNames)
+    ViewsDict, ViewData, PortgroupsDict, PortgroupMem, CustomNames)
 
 from .patchcanvas import arranger, patchcanvas
 from .patchcanvas.utils import get_new_group_positions
@@ -120,7 +120,7 @@ class PatchbayManager:
     views = ViewsDict()
     
     portgroups_memory = PortgroupsDict()
-    pretty_names = PrettyNames()
+    custom_names = CustomNames()
     
     delayed_orders = Queue[DelayedOrder]()
     
@@ -153,7 +153,7 @@ class PatchbayManager:
         '''Stock JACK client names and their uuid,
         uuid can be provided before the group creation.'''
 
-        self.jack_export_naming = Naming.INTERNAL_PRETTY
+        self.jack_export_naming = Naming.CUSTOM
         self.naming = Naming.from_config_str(settings.value(
             'Canvas/naming', 'ALL', type=str))
         self.pretty_diff_checker = PrettyDiffChecker(self)

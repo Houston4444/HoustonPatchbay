@@ -77,7 +77,7 @@ class CanvasOptionsDialog(QDialog):
             self._naming_changed)
         self.ui.checkBoxGracefulNames.stateChanged.connect(
             self._naming_changed)
-        self.ui.checkBoxExportPrettyNames.clicked.connect(
+        self.ui.checkBoxExportCustomNames.clicked.connect(
             self._jack_export_naming_changed)
         self.ui.pushButtonExportPrettyJack.clicked.connect(
             self._export_pretty_names_to_jack)
@@ -116,14 +116,14 @@ class CanvasOptionsDialog(QDialog):
         self.ui.checkBoxJackPrettyNames.setChecked(
             Naming.METADATA_PRETTY in self.mng.naming)
         self.ui.checkBoxInternalPrettyNames.setChecked(
-            Naming.INTERNAL_PRETTY in self.mng.naming)
+            Naming.CUSTOM in self.mng.naming)
         self.ui.checkBoxGracefulNames.setChecked(
             Naming.GRACEFUL in self.mng.naming)
         
-        b = self.ui.checkBoxExportPrettyNames
+        b = self.ui.checkBoxExportCustomNames
         if b.isEnabled():
             b.setChecked(
-                Naming.INTERNAL_PRETTY in self.mng.jack_export_naming)
+                Naming.CUSTOM in self.mng.jack_export_naming)
         
         options = patchcanvas.options
         
@@ -167,7 +167,7 @@ class CanvasOptionsDialog(QDialog):
         if self.ui.checkBoxJackPrettyNames.isChecked():
             naming |= Naming.METADATA_PRETTY
         if self.ui.checkBoxInternalPrettyNames.isChecked():
-            naming |= Naming.INTERNAL_PRETTY
+            naming |= Naming.CUSTOM
         if self.ui.checkBoxGracefulNames.isChecked():
             naming |= Naming.GRACEFUL
         
@@ -176,8 +176,8 @@ class CanvasOptionsDialog(QDialog):
     @Slot(bool)
     def _jack_export_naming_changed(self, checked: bool):
         jack_exp_naming = Naming.TRUE_NAME
-        if self.ui.checkBoxExportPrettyNames.isChecked():
-            jack_exp_naming |= Naming.INTERNAL_PRETTY 
+        if self.ui.checkBoxExportCustomNames.isChecked():
+            jack_exp_naming |= Naming.CUSTOM 
         
         self.mng.change_jack_export_naming(jack_exp_naming)
 
@@ -192,7 +192,7 @@ class CanvasOptionsDialog(QDialog):
     def auto_export_pretty_names_changed(self, state: bool):
         # option has been changed from the daemon itself 
         # (probably with ray_control)
-        b = self.ui.checkBoxExportPrettyNames
+        b = self.ui.checkBoxExportCustomNames
         if b.isEnabled():
             b.setChecked(state)
         else:
@@ -205,7 +205,7 @@ class CanvasOptionsDialog(QDialog):
             PrettyDiff.NON_IMPORTED in pretty_diff)
 
     def set_pretty_names_locked(self, locked: bool):
-        b = self.ui.checkBoxExportPrettyNames
+        b = self.ui.checkBoxExportCustomNames
         if locked:
             b.setChecked(False)
         b.setEnabled(not locked)

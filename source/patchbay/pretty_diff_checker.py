@@ -11,7 +11,7 @@ class PrettyDiffChecker:
     def __init__(self, manager: 'PatchbayManager'):
         self.mng = manager
         self.metadatas = self.mng.jack_metadatas
-        self.pretty_names = self.mng.pretty_names
+        self.pretty_names = self.mng.custom_names
         self.client_name_uuids = self.mng.client_uuids
         
         self.clients_diff = dict[int, PrettyDiff]()
@@ -33,7 +33,7 @@ class PrettyDiffChecker:
                     continue
 
                 self.clients_diff[uuid] = self._get_diff(
-                    self.pretty_names.pretty_group(client_name),
+                    self.pretty_names.custom_group(client_name),
                     self.metadatas.pretty_name(uuid))
                 change_diff_new = self.clients_diff[uuid]
                 break
@@ -44,7 +44,7 @@ class PrettyDiffChecker:
 
             if port is not None:
                 self.ports_diff[uuid] = self._get_diff(
-                    self.pretty_names.pretty_port(port.full_name),
+                    self.pretty_names.custom_port(port.full_name),
                     self.metadatas.pretty_name(uuid))
                 change_diff_new = self.ports_diff[uuid]
         
@@ -57,13 +57,13 @@ class PrettyDiffChecker:
                         continue
                     
                     self.clients_diff[uuid] = self._get_diff(
-                        self.pretty_names.pretty_group(client_name),
+                        self.pretty_names.custom_group(client_name),
                         self.metadatas.pretty_name(uuid))
                     change_diff_new = self.clients_diff[uuid]
                     break
             else:
                 self.ports_diff[uuid] = self._get_diff(
-                    self.pretty_names.pretty_port(port.full_name),
+                    self.pretty_names.custom_port(port.full_name),
                     self.metadatas.pretty_name(uuid))
                 change_diff_new = self.ports_diff[uuid]
         
@@ -120,7 +120,7 @@ class PrettyDiffChecker:
 
         for client_name, client_uuid in self.client_name_uuids.items():
             self.clients_diff[client_uuid] = self._get_diff(
-                self.pretty_names.pretty_group(client_name),
+                self.pretty_names.custom_group(client_name),
                 self.metadatas.pretty_name(client_uuid))
         
         for group in self.mng.groups:
@@ -129,7 +129,7 @@ class PrettyDiffChecker:
                     continue
                 
                 self.ports_diff[port.uuid] = self._get_diff(
-                    self.pretty_names.pretty_port(port.full_name),
+                    self.pretty_names.custom_port(port.full_name),
                     self.metadatas.pretty_name(port.uuid))
         
         self.pretty_diff = self.get_glob_diff()

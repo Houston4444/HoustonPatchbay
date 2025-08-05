@@ -16,7 +16,7 @@ from ..ui.rename_group import Ui_RenameGroupDialog
 _translate = QApplication.translate
 
 
-class PrettyNameDialog(QDialog):
+class CustomNameDialog(QDialog):
     def __init__(self, element: Union[Group, Port, Portgroup]):
         super().__init__(element.manager.main_win)
 
@@ -29,20 +29,20 @@ class PrettyNameDialog(QDialog):
             pg_name, suffixes = portgroup_name_splitted(
                 *[p.cnv_name for p in element.ports])
             label_intro = _translate(
-                'pretty_name', 'Set a pretty name for the portgroup :')
+                'custom_name', 'Set a custom name for the portgroup :')
             name = pg_name + '|'.join(suffixes)
             suggest = pg_name.strip()
         else:
             if isinstance(element, Group):
                 label_intro = _translate(
-                    'pretty_name', 'Set a pretty name for the group :')
+                    'custom_name', 'Set a custom name for the group :')
             else:
                 label_intro = _translate(
-                    'pretty_name', 'Set a pretty name for the port :')
+                    'custom_name', 'Set a custom name for the port :')
             
             name = element.cnv_name
-            if element.pretty_name:
-                suggest = element.pretty_name
+            if element.custom_name:
+                suggest = element.custom_name
             elif element.mdata_pretty_name:
                 suggest = element.mdata_pretty_name
             else:
@@ -80,12 +80,12 @@ class PrettyNameDialog(QDialog):
             has_jack_uuid = bool(self.element.uuid)
         
         if (has_jack_uuid
-                and (Naming.INTERNAL_PRETTY
+                and (Naming.CUSTOM
                      in self.element.manager.jack_export_naming)):
             save_in_jack = True
         
         if (not has_jack_uuid
-                or (Naming.INTERNAL_PRETTY
+                or (Naming.CUSTOM
                     in self.element.manager.jack_export_naming)):
             self.ui.checkBoxExportJack.setVisible(False)
         

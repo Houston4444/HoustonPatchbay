@@ -91,10 +91,10 @@ class Port:
             if mdata_pretty_name:
                 return mdata_pretty_name
         
-        if self.manager.naming & Naming.INTERNAL_PRETTY:
-            pretty_name = self.pretty_name
-            if pretty_name:
-                return pretty_name
+        if self.manager.naming & Naming.CUSTOM:
+            custom_name = self.custom_name
+            if custom_name:
+                return custom_name
         
         if self.manager.naming & Naming.GRACEFUL:
             return self.graceful_name
@@ -122,9 +122,9 @@ class Port:
             self.uuid, JackMetadata.SIGNAL_TYPE)
 
     @property
-    def pretty_name(self) -> str:
-        'The internal pretty-name of this port, if it exists'
-        return self.manager.pretty_names.pretty_port(self.full_name_id_free)
+    def custom_name(self) -> str:
+        'The custom name of this port, if it exists'
+        return self.manager.custom_names.custom_port(self.full_name_id_free)
 
     @property
     def alsa_client_id(self) -> int:

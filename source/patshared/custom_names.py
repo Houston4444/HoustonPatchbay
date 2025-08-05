@@ -3,26 +3,26 @@ from dataclasses import dataclass
 
 
 @dataclass()
-class _PrettyAndOver:
-    pretty: str
-    'the saved pretty-name'
+class _CustomAndOver:
+    custom: str
+    'the saved custom name'
     above_pretty: str
-    '''the pretty-name of the subject when pretty-name was saved.
-    This way, pretty name can be set only when the existing pretty-name
-    is the same than above_pretty.'''
+    '''the JACK pretty-name of the subject when custom name was saved.
+    This way, custom name can be set as JACK pretty name 
+    when the existing JACK pretty-name is the same than above_pretty.'''
 
 
-class PrettyNames:
-    'Container for internal pretty names'
+class CustomNames:
+    'Container for internal custom names'
     def __init__(self):
-        self.groups = dict[str, _PrettyAndOver]()
-        self.ports = dict[str, _PrettyAndOver]()
+        self.groups = dict[str, _CustomAndOver]()
+        self.ports = dict[str, _CustomAndOver]()
     
-    def __or__(self, other: 'PrettyNames') -> 'PrettyNames':
-        pretty_names = PrettyNames()
-        pretty_names.groups = self.groups | other.groups
-        pretty_names.ports = self.ports | other.ports
-        return pretty_names
+    def __or__(self, other: 'CustomNames') -> 'CustomNames':
+        custom_names = CustomNames()
+        custom_names.groups = self.groups | other.groups
+        custom_names.ports = self.ports | other.ports
+        return custom_names
     
     def eat_json(self, json_dict: dict[str, dict[str, list[str]]]):
         if not isinstance(json_dict, dict):
@@ -35,7 +35,7 @@ class PrettyNames:
                         and len(pretty_names) == 2):
                     continue
                 
-                self.groups[group_name] = _PrettyAndOver(*pretty_names)
+                self.groups[group_name] = _CustomAndOver(*pretty_names)
                 
         ports = json_dict.get('ports')
         if ports is not None and isinstance(ports, dict):
@@ -44,66 +44,66 @@ class PrettyNames:
                         and len(pretty_names) == 2):
                     continue
                 
-                self.ports[port_name] = _PrettyAndOver(*pretty_names)
+                self.ports[port_name] = _CustomAndOver(*pretty_names)
     
     def to_json(self) -> dict[str, dict[str, tuple[str, str]]]:
         gp_dict = dict[str, tuple[str, str]]()
         pt_dict = dict[str, tuple[str, str]]()
         for group_name, ptov in self.groups.items():
-            gp_dict[group_name] = (ptov.pretty, ptov.above_pretty)
+            gp_dict[group_name] = (ptov.custom, ptov.above_pretty)
         for port_name, ptov in self.ports.items():
-            pt_dict[port_name] = (ptov.pretty, ptov.above_pretty)
+            pt_dict[port_name] = (ptov.custom, ptov.above_pretty)
         
         return {'groups': gp_dict, 'ports': pt_dict}
     
-    def save_group(self, group_name: str, pretty_name: str, over_pretty=''):
-        if pretty_name:
-            self.groups[group_name] = _PrettyAndOver(pretty_name, over_pretty)
+    def save_group(self, group_name: str, custom_name: str, over_pretty=''):
+        if custom_name:
+            self.groups[group_name] = _CustomAndOver(custom_name, over_pretty)
         elif group_name in self.groups:
             self.groups.pop(group_name)
     
-    def save_port(self, port_name: str, pretty_name: str, over_pretty=''):
-        if pretty_name:
-            self.ports[port_name] = _PrettyAndOver(pretty_name, over_pretty)
+    def save_port(self, port_name: str, custom_name: str, over_pretty=''):
+        if custom_name:
+            self.ports[port_name] = _CustomAndOver(custom_name, over_pretty)
         elif port_name in self.ports:
             self.ports.pop(port_name)
 
-    def pretty_group(self, group_name: str, cur_pretty_name='') -> str:
-        '''return the group (client) pretty_name if conditions are full,
+    def custom_group(self, group_name: str, cur_pretty_name='') -> str:
+        '''return the group (client) custom name if conditions are full,
         otherwire empty string'''
         ptov = self.groups.get(group_name)
         if ptov is None:
             return ''
         
-        if ptov.pretty == cur_pretty_name:
+        if ptov.custom == cur_pretty_name:
             return ''
         
         if not cur_pretty_name:
-            return ptov.pretty
+            return ptov.custom
         
         if ptov.above_pretty != cur_pretty_name:
             return ''
-        return ptov.pretty
+        return ptov.custom
     
-    def pretty_port(self, port_name: str, cur_pretty_name='') -> str:
+    def custom_port(self, port_name: str, cur_pretty_name='') -> str:
         '''return the port pretty_name if conditions are full,
         otherwire empty string'''
         ptov = self.ports.get(port_name)
         if ptov is None:
             return ''
         
-        if ptov.pretty == cur_pretty_name:
+        if ptov.custom == cur_pretty_name:
             return ''
         
         if not cur_pretty_name:
-            return ptov.pretty
+            return ptov.custom
         
         if ptov.above_pretty != cur_pretty_name:
             return ''
-        return ptov.pretty
+        return ptov.custom
         
-    def copy(self) -> 'PrettyNames':
-        ret = PrettyNames()
+    def copy(self) -> 'CustomNames':
+        ret = CustomNames()
         ret.groups = self.groups.copy()
         ret.ports = self.ports.copy()
         return ret

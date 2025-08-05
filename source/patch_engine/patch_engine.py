@@ -15,7 +15,7 @@ import jack
 
 # imports from HoustonPatchbay
 from patshared import (
-    JackMetadatas, JackMetadata, PrettyNames,
+    JackMetadatas, JackMetadata, CustomNames,
     TransportPosition, TransportWanted)
 
 # local imports
@@ -121,8 +121,8 @@ class PatchEngine:
         else:
             self.auto_export_pretty_names = AutoExportPretty.NO
 
-        self.pretty_names = PrettyNames()
-        '''Contains all internal pretty names,
+        self.custom_names = CustomNames()
+        '''Contains all internal custom names,
         including some groups and ports not existing now'''
 
         self.uuid_pretty_names = dict[int, str]()
@@ -836,7 +836,7 @@ class PatchEngine:
             return
 
         mdata_pretty_name = self._jack_pretty_name_if_not_mine(client_uuid)
-        self.pretty_names.save_group(
+        self.custom_names.save_group(
             client_name, pretty_name, mdata_pretty_name)
         
         self._set_jack_pretty_name(client_uuid, pretty_name)
@@ -859,7 +859,7 @@ class PatchEngine:
 
         port_uuid = port.uuid
         mdata_pretty_name = self._jack_pretty_name_if_not_mine(port_uuid)
-        self.pretty_names.save_port(port_name, pretty_name, mdata_pretty_name)
+        self.custom_names.save_port(port_name, pretty_name, mdata_pretty_name)
         self._set_jack_pretty_name(port.uuid, pretty_name)
         self._save_uuid_pretty_names()
 
@@ -875,13 +875,13 @@ class PatchEngine:
 
         mdata_pretty_name = jack_pretty_name(uuid)
         if for_client:
-            ptov = self.pretty_names.groups.get(name)
+            ptov = self.custom_names.groups.get(name)
         else:
-            ptov = self.pretty_names.ports.get(name)
+            ptov = self.custom_names.ports.get(name)
 
         if (ptov is None
-                or not ptov.pretty
-                or ptov.pretty == mdata_pretty_name):
+                or not ptov.custom
+                or ptov.custom == mdata_pretty_name):
             return False
         
         if (mdata_pretty_name and ptov.above_pretty
@@ -892,12 +892,12 @@ class PatchEngine:
                 f"pretty-name not set\n"
                 f"  {item_type}: {name}\n"
                 f"  uuid: {uuid}\n"
-                f"  wanted   : '{ptov.pretty}'\n"
+                f"  wanted   : '{ptov.custom}'\n"
                 f"  above    : '{ptov.above_pretty}'\n"
                 f"  existing : '{mdata_pretty_name}'\n")
             return False
         
-        self._set_jack_pretty_name(uuid, ptov.pretty)
+        self._set_jack_pretty_name(uuid, ptov.custom)
         return True
 
     def set_pretty_names_auto_export(self, active: bool, force=False):
@@ -921,7 +921,7 @@ class PatchEngine:
                 self.set_jack_pretty_name_conditionally(
                     True, client_name, client_uuid)
             
-            for port_name in self.pretty_names.ports:
+            for port_name in self.custom_names.ports:
                 try:
                     port = self.client.get_port_by_name(port_name)
                 except jack.JackError:
@@ -941,7 +941,7 @@ class PatchEngine:
                     continue
 
                 mdata_pretty_name = jack_pretty_name(client_uuid)
-                pretty_name = self.pretty_names.pretty_group(client_name)
+                pretty_name = self.custom_names.custom_group(client_name)
                 if pretty_name == mdata_pretty_name:
                     self._set_jack_pretty_name(client_uuid, '')
                     
@@ -952,7 +952,7 @@ class PatchEngine:
                 
                 port_name = port.name
                 mdata_pretty_name = jack_pretty_name(port_uuid)
-                pretty_name = self.pretty_names.pretty_port(port_name)
+                pretty_name = self.custom_names.custom_port(port_name)
                 if pretty_name == mdata_pretty_name:
                     self._set_jack_pretty_name(port_uuid, '')
 
@@ -970,9 +970,9 @@ class PatchEngine:
             if not jack_pretty:
                 continue
 
-            pretty_name = self.pretty_names.pretty_group(client_name)
+            pretty_name = self.custom_names.custom_group(client_name)
             if pretty_name != jack_pretty:
-                self.pretty_names.save_group(client_name, jack_pretty)
+                self.custom_names.save_group(client_name, jack_pretty)
                 clients_dict[client_name] = jack_pretty
 
         for jport in self.ports:
@@ -980,21 +980,21 @@ class PatchEngine:
             if not jack_pretty:
                 continue
             
-            pretty_name = self.pretty_names.pretty_port(jport.name)
+            pretty_name = self.custom_names.custom_port(jport.name)
             if pretty_name != jack_pretty:
-                self.pretty_names.save_port(jport.name, jack_pretty)
+                self.custom_names.save_port(jport.name, jack_pretty)
                 ports_dict[jport.name] = jack_pretty
         
         return clients_dict, ports_dict
 
     def export_all_pretty_names_to_jack_now(self):
         for client_name, uuid in self.client_name_uuids.items():
-            pretty_name = self.pretty_names.pretty_group(client_name)
+            pretty_name = self.custom_names.custom_group(client_name)
             if pretty_name:
                 self._set_jack_pretty_name(uuid, pretty_name)
         
         for jport in self.ports:
-            pretty_name = self.pretty_names.pretty_port(jport.name)
+            pretty_name = self.custom_names.custom_port(jport.name)
             if pretty_name:
                 self._set_jack_pretty_name(jport.uuid, pretty_name)
 

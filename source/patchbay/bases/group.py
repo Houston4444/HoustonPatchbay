@@ -116,10 +116,10 @@ class Group:
                 if pretty:
                     return pretty
             
-        if self.manager.naming & Naming.INTERNAL_PRETTY:
-            pretty = self.manager.pretty_names.pretty_group(self.name)
-            if pretty:
-                return pretty
+        if self.manager.naming & Naming.CUSTOM:
+            custom = self.manager.custom_names.custom_group(self.name)
+            if custom:
+                return custom
             
         if self.manager.naming & Naming.GRACEFUL:
             return self.graceful_name
@@ -141,9 +141,9 @@ class Group:
         return self.manager.jack_metadatas.icon_name(self.uuid)
     
     @property
-    def pretty_name(self) -> str:
-        'The internal pretty-name, if it exists'
-        return self.manager.pretty_names.pretty_group(self.name)
+    def custom_name(self) -> str:
+        'The custom name, if it exists'
+        return self.manager.custom_names.custom_group(self.name)
     
     def remove_from_canvas(self):
         if self.manager.very_fast_operation:
