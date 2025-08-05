@@ -106,7 +106,7 @@ class PatchEngine:
     def __init__(self, client_name: str, pretty_tmp_path: Path,
                  auto_export_pretty_names: bool):
         self.wanted_client_name = client_name
-        self.pretty_names_ready = False
+        self.custom_names_ready = False
 
         self.last_sent_dsp_load = 0
         self.max_dsp_since_last_sent = 0.00
@@ -816,10 +816,10 @@ class PatchEngine:
         return mdata_pretty_name
 
     def apply_pretty_names_export(self):
-        '''Set all pretty names once all pretty names are received,
+        '''Set all pretty names once all custom names are received,
         or clear them if self.auto_export_pretty_names is False 
         and some pretty names have been written by a previous process.'''
-        self.pretty_names_ready = True
+        self.custom_names_ready = True
 
         if not self.jack_running or self.pretty_names_lockers:
             return
