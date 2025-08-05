@@ -75,16 +75,17 @@ class PatchEngine:
     samplerate = 48000
     buffer_size = 1024
     
-    pretty_names_locked = False
-    '''True when another instance
-    is already running on the same JACK server with 
-    'auto_export_pretty_names' option action.
-    In this case, this instance will NOT auto export pretty-names
-    to JACK metadatas, because it could easily create conflicts
-    with the other instance.
-    
-    The existence of another instance is managed by a metadata
-    METADATA_LOCKER set on the client'''
+    pretty_names_lockers = set[int]()
+    '''
+    Contains uuids of clients containing the METADATA_LOCKER.
+    Normally, the way the program is done, only one client
+    could have this metadata written, but we can't ensure
+    that any other programs write this.
+
+    This locker means that another instance has 'auto export pretty names'
+    activated. In this case, 'auto export pretty names' feature will be
+    deactivate for this instance to avoid conflicts.
+    '''
 
     auto_export_pretty_names = AutoExportPretty.YES
     '''True if the patchbay option 'Auto-Export pretty names to JACK'
@@ -172,7 +173,7 @@ class PatchEngine:
         Multiple daemons can co-exist,
         But if we want things going right,
         we have to ensure that each daemon runs on a different JACK server'''
-        if self.pretty_names_locked:
+        if self.pretty_names_lockers:
             return
         if not self.auto_export_pretty_names.active:
             return
@@ -215,13 +216,18 @@ class PatchEngine:
 
                 case PatchEvent.CLIENT_REMOVED:
                     name: str = event_arg
-                    if name in self.client_name_uuids:
-                        uuid = self.client_name_uuids.pop(event_arg)
-                        if uuid in self.metadatas:
-                            uuid_dict = self.metadatas.pop(uuid)
-                            if uuid_dict.get(METADATA_LOCKER) is not None:
-                                self.pretty_names_locked = False
-                                self.peo.send_pretty_names_locked(False)
+                    if name not in self.client_name_uuids:
+                        continue
+
+                    uuid = self.client_name_uuids.pop(event_arg)
+                    if uuid not in self.metadatas:
+                        continue
+                    
+                    uuid_dict = self.metadatas.pop(uuid)
+                    if uuid_dict.get(METADATA_LOCKER) is not None:
+                        self.pretty_names_lockers.discard(uuid)
+                        self.peo.send_pretty_names_locked(
+                            bool(self.pretty_names_lockers))
 
                 case PatchEvent.PORT_ADDED:
                     port: PortData = event_arg
@@ -278,8 +284,9 @@ class PatchEngine:
                             uuid_dict = self.metadatas.get(uuid)
                             if uuid_dict is not None:
                                 if METADATA_LOCKER in uuid_dict.keys():
-                                    self.pretty_names_locked = False
-                                    self.peo.send_pretty_names_locked(False)
+                                    self.pretty_names_lockers.discard(uuid)
+                                    self.peo.send_pretty_names_locked(
+                                        bool(self.pretty_names_lockers))
                             
                     self.metadatas.add(uuid, key, value)
                     self.peo.metadata_updated(uuid, key, value)
@@ -303,9 +310,12 @@ class PatchEngine:
                                     self.auto_export_pretty_names = \
                                         AutoExportPretty.ZOMBIE
                                 
-                                self.pretty_names_locked = bool(value)
+                                if value:
+                                    self.pretty_names_lockers.add(uuid)
+                                else:
+                                    self.pretty_names_lockers.discard(uuid)
                                 self.peo.send_pretty_names_locked(
-                                    bool(value))
+                                    bool(self.pretty_names_lockers))
 
                 case PatchEvent.SHUTDOWN:
                     self.ports.clear()
@@ -329,7 +339,7 @@ class PatchEngine:
         if not self.jack_running:
             return
         
-        if self.pretty_names_locked:
+        if self.pretty_names_lockers:
             return
         
         if not self.auto_export_pretty_names.active:
@@ -748,7 +758,7 @@ class PatchEngine:
                     if self.auto_export_pretty_names.active:
                         self.auto_export_pretty_names = \
                             AutoExportPretty.ZOMBIE
-                    self.pretty_names_locked = True
+                    self.pretty_names_lockers.add(uuid)
                     self.peo.send_pretty_names_locked(True)
 
     def _save_uuid_pretty_names(self):
@@ -811,7 +821,7 @@ class PatchEngine:
         and some pretty names have been written by a previous process.'''
         self.pretty_names_ready = True
 
-        if not self.jack_running or self.pretty_names_locked:
+        if not self.jack_running or self.pretty_names_lockers:
             return
 
         self.set_pretty_names_auto_export(
@@ -891,7 +901,7 @@ class PatchEngine:
         return True
 
     def set_pretty_names_auto_export(self, active: bool, force=False):
-        if self.pretty_names_locked:
+        if self.pretty_names_lockers:
             if active:
                 self.auto_export_pretty_names = AutoExportPretty.ZOMBIE
             else:
