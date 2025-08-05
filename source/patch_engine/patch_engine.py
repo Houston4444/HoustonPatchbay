@@ -102,7 +102,8 @@ class PatchEngine:
     dsp_wanted = True
     transport_wanted = TransportWanted.FULL
     
-    def __init__(self, client_name: str, pretty_tmp_path: Path):
+    def __init__(self, client_name: str, pretty_tmp_path: Path,
+                 auto_export_pretty_names: bool):
         self.wanted_client_name = client_name
         self.pretty_names_ready = False
 
@@ -113,6 +114,11 @@ class PatchEngine:
 
         self.last_transport_pos = TransportPosition(
             0, False, False, 0, 0, 0, 0.0)
+
+        if auto_export_pretty_names:
+            self.auto_export_pretty_names = AutoExportPretty.YES
+        else:
+            self.auto_export_pretty_names = AutoExportPretty.NO
 
         self.pretty_names = PrettyNames()
         '''Contains all internal pretty names,
