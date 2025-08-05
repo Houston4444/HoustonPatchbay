@@ -867,8 +867,8 @@ class PatchEngine:
             self, for_client: bool, name: str, uuid: int) -> bool:
         '''set jack pretty name if checks are ok.
         checks are :
-        - an internal pretty name exists for this item
-        - this internal pretty name is not the current pretty name
+        - a custom name exists for this item
+        - this custom name is not the current pretty name
         - the current pretty name is empty or known to be overwritable
         
         return False if one of theses checks fails.'''

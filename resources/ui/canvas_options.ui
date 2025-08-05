@@ -197,9 +197,9 @@
             </widget>
            </item>
            <item>
-            <widget class="QCheckBox" name="checkBoxInternalPrettyNames">
+            <widget class="QCheckBox" name="checkBoxCustomNames">
              <property name="toolTip">
-              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Choose internal pretty-name defined by user with the &amp;quot;rename&amp;quot; context entry to name clients and ports.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Choose custom names defined by user with the &amp;quot;rename&amp;quot; context entry to name clients and ports.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
              </property>
              <property name="text">
               <string>Custom names</string>
@@ -323,7 +323,7 @@ It provides a shorter name than the original.</string>
           <zorder>checkBoxGracefulNames</zorder>
           <zorder>checkBoxJackPrettyNames</zorder>
           <zorder>verticalSpacer_2</zorder>
-          <zorder>checkBoxInternalPrettyNames</zorder>
+          <zorder>checkBoxCustomNames</zorder>
           <zorder>label_4</zorder>
           <zorder>line_2</zorder>
           <zorder>checkBoxExportCustomNames</zorder>

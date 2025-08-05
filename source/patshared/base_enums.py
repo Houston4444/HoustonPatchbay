@@ -183,11 +183,11 @@ class PrettyDiff(Flag):
     and JACK pretty names'''
     
     NON_EXPORTED = 0x1
-    'Some internal pretty names are not exported to JACK'
+    'Some custom names are not exported to JACK'
     
     NON_IMPORTED = 0x2
-    'Some JACK pretty names are not present in internal pretty names'
+    'Some JACK pretty names are not present in custom names'
     
     NON_BOTH = 0x3
-    '''Some internal pretty names are not exported to JACK,
-    and some JACK pretty names are not present in internal pretty names'''
+    '''Some custom names are not exported to JACK,
+    and some JACK pretty names are not present in custom names'''

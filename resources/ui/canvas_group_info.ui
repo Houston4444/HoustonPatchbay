@@ -213,7 +213,7 @@
      <item row="2" column="4">
       <widget class="QLineEdit" name="lineEditPrettyName">
        <property name="toolTip">
-        <string>Internal pretty name, set when user renames the client with the context menu.</string>
+        <string>Custom name, set when user renames the client with the context menu.</string>
        </property>
        <property name="readOnly">
         <bool>true</bool>
