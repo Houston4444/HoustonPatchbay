@@ -99,8 +99,9 @@ class PatchEngine:
     dsp_wanted = True
     transport_wanted = TransportWanted.FULL
     
-    def __init__(self, client_name: str, pretty_tmp_path: Path,
-                 auto_export_pretty_names: bool):
+    def __init__(
+            self, client_name: str, pretty_tmp_path: Optional[Path],
+            auto_export_pretty_names=False):
         self.wanted_client_name = client_name
         self.custom_names_ready = False
 
@@ -545,7 +546,8 @@ class PatchEngine:
             self.buffer_size = self.client.blocksize
             self.peo.server_restarted()
         
-        if self.pretty_tmp_path.exists():
+        if (self.pretty_tmp_path is not None
+                and self.pretty_tmp_path.exists()):
             # read the contents of pretty names set by this program
             # in a previous run (with same daemon osc port).
             try:
@@ -765,6 +767,9 @@ class PatchEngine:
         In order to recognize which JACK pretty names have been set
         by this program (in this process or not), pretty names are
         saved somewhere in the /tmp directory.'''
+        if self.pretty_tmp_path is None:
+            return
+        
         try:
             self.pretty_tmp_path.parent.mkdir(parents=True, exist_ok=True)
             with open(self.pretty_tmp_path, 'w') as f:
