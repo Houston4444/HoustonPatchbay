@@ -296,7 +296,6 @@ class PatchbayManager:
                 auto_redraw=auto_redraw,
                 prevent_overlap=prevent_overlap)
 
-
     def _add_group(self, group: Group):
         self.groups.append(group)
         self._groups_by_id[group.group_id] = group
@@ -1582,6 +1581,10 @@ class PatchbayManager:
             patchcanvas.canvas.scene.resize_the_scene()
         
         self.sg.patch_may_have_changed.emit()
+    
+    def apply_delayed_changes_now(self):
+        self._delayed_orders_timer.stop()
+        self._delayed_orders_timeout()
     
     def export_to_patchichi_json(self, path: Path, editor_text='') -> bool:
         return export_to_patchichi_json(self, path, editor_text)

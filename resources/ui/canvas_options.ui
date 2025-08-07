@@ -263,6 +263,9 @@ It provides a shorter name than the original.</string>
               <layout class="QVBoxLayout" name="verticalLayout_6">
                <item>
                 <widget class="QPushButton" name="pushButtonExportCustomJack">
+                 <property name="enabled">
+                  <bool>false</bool>
+                 </property>
                  <property name="toolTip">
                   <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Export all custom names (for groups and ports) to JACK pretty-name metadatas.&lt;/p&gt;&lt;p&gt;If disabled, there is no custom name not already exported to JACK pretty-name.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                  </property>
@@ -277,6 +280,9 @@ It provides a shorter name than the original.</string>
                </item>
                <item>
                 <widget class="QPushButton" name="pushButtonImportPrettyJack">
+                 <property name="enabled">
+                  <bool>false</bool>
+                 </property>
                  <property name="toolTip">
                   <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Import all pretty-name JACK metadatas to custom names. Useful if you wan't to save in your project pretty-names created from another program.&lt;/p&gt;&lt;p&gt;If disabled, there is no pretty-name JACK metadata to import.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                  </property>
