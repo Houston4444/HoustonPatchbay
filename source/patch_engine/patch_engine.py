@@ -100,7 +100,7 @@ class PatchEngine:
     transport_wanted = TransportWanted.FULL
     
     def __init__(
-            self, client_name: str, pretty_tmp_path: Optional[Path],
+            self, client_name: str, pretty_tmp_path: Optional[Path]=None,
             auto_export_pretty_names=False):
         self.wanted_client_name = client_name
         self.custom_names_ready = False
