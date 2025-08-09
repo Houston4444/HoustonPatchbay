@@ -148,7 +148,7 @@ class ViewsDict(dict[int, ViewData]):
         out_list = list[dict[str, Any]]()
         
         for index, view_data in self.items():
-            out_dict = {'index': index}
+            out_dict: dict[str, Any] = {'index': index}
 
             if view_data.name:
                 out_dict['name'] = view_data.name
