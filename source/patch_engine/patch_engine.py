@@ -519,15 +519,16 @@ class PatchEngine:
         else:
             _logger.info('JACK client started successfully')
         
-        try:
-            self._client_name = self.client.name
-        except:
-            _logger.warning('Failed to get client name, very strange.')
-        
-        try:
-            self._client_uuid = int(self.client.uuid)
-        except:
-            _logger.warning('JACK metadatas seems to not work correctly')
+        if self.client is not None:
+            try:
+                self._client_name = self.client.name
+            except:
+                _logger.warning('Failed to get client name, very strange.')
+            
+            try:
+                self._client_uuid = int(self.client.uuid)
+            except:
+                _logger.warning('JACK metadatas seems to not work correctly')
         
         self._waiting_jack_client_open = False
 
@@ -887,9 +888,11 @@ class PatchEngine:
                 or ptov.custom == mdata_pretty_name):
             return False
         
-        if (mdata_pretty_name and ptov.above_pretty
-                and mdata_pretty_name != ptov.above_pretty
-                and mdata_pretty_name != self.uuid_pretty_names.get(uuid)):
+        if (mdata_pretty_name
+                and ptov.above_pretty
+                and mdata_pretty_name not in ptov.above_pretty
+                and mdata_pretty_name 
+                    not in self.uuid_pretty_names.get(uuid)):
             item_type = 'client' if for_client else 'port'
             _logger.warning(
                 f"pretty-name not set\n"
