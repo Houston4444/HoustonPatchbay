@@ -1,10 +1,14 @@
 from enum import Enum, auto
-from typing import TYPE_CHECKING, Callable
+import logging
+from typing import TYPE_CHECKING, Callable, Optional
 
 from patshared import ViewData, ViewsDict, PortTypesViewFlag
 
 if TYPE_CHECKING:
     from patchbay_manager import PatchbayManager    
+
+
+_logger = logging.getLogger(__name__)
 
 
 class CancelOp(Enum):
@@ -31,16 +35,16 @@ class ActionRestorer:
 
         self.view_num_bef = 1
         self.view_num_aft = 1
-        self.view_data_bef: ViewData = None
-        self.view_data_aft: ViewData = None
-        self.views_bef : ViewsDict = None
-        self.views_aft: ViewsDict = None
-        self.ptv_bef: PortTypesViewFlag = None
-        self.ptv_aft: PortTypesViewFlag = None
+        self.view_data_bef: Optional[ViewData] = None
+        self.view_data_aft: Optional[ViewData] = None
+        self.views_bef : Optional[ViewsDict] = None
+        self.views_aft: Optional[ViewsDict] = None
+        self.ptv_bef: Optional[PortTypesViewFlag] = None
+        self.ptv_aft: Optional[PortTypesViewFlag] = None
 
-        self.undo_func: Callable = None
+        self.undo_func: Optional[Callable] = None
         self.undo_args: tuple = ()
-        self.redo_func: Callable = None
+        self.redo_func: Optional[Callable] = None
         self.redo_args: tuple = ()
 
 
@@ -80,17 +84,18 @@ class CancelMng:
         
         action = ActionRestorer(op_type)
         action.view_num_bef = self.mng.view_number
-            
-        if op_type in (CancelOp.VIEW, CancelOp.PTV_CHOICE):
-            action.view_data_bef = self.mng.view().copy()
-            if op_type is CancelOp.PTV_CHOICE:
-                action.ptv_bef = self.mng.port_types_view
-            
-        elif op_type in (CancelOp.VIEW_CHOICE, CancelOp.ALL_VIEWS):
-            action.views_bef = self.mng.views.copy()
-            
-        elif op_type is CancelOp.ALL_VIEWS_NO_POS:
-            action.views_bef = self.mng.views.copy(with_positions=False)
+        
+        match op_type:           
+            case CancelOp.VIEW|CancelOp.PTV_CHOICE:
+                action.view_data_bef = self.mng.view().copy()
+                if op_type is CancelOp.PTV_CHOICE:
+                    action.ptv_bef = self.mng.port_types_view
+                
+            case CancelOp.VIEW_CHOICE|CancelOp.ALL_VIEWS:
+                action.views_bef = self.mng.views.copy()
+                
+            case CancelOp.ALL_VIEWS_NO_POS:
+                action.views_bef = self.mng.views.copy(with_positions=False)
 
         self.actions.append(action)
         self.canceled_acts.clear()
@@ -108,30 +113,32 @@ class CancelMng:
             # should not happen, for the same reason
             return
         
-        if op_type is CancelOp.VIEW_CHOICE:
-            if self.new_pos_created:
-                action.type = CancelOp.ALL_VIEWS
-            else:
-                action.view_data_bef = None
+        match op_type:
+            case CancelOp.VIEW_CHOICE:
+                if self.new_pos_created:
+                    action.type = CancelOp.ALL_VIEWS
+                else:
+                    action.view_data_bef = None
 
-        elif op_type is CancelOp.PTV_CHOICE:
-            if self.new_pos_created:
-                action.type = CancelOp.VIEW
-                action.ptv_bef = None
-            else:
-                action.view_data_bef = None
-                action.ptv_aft = self.mng.port_types_view
+            case CancelOp.PTV_CHOICE:
+                if self.new_pos_created:
+                    action.type = CancelOp.VIEW
+                    action.ptv_bef = None
+                else:
+                    action.view_data_bef = None
+                    action.ptv_aft = self.mng.port_types_view
 
         action.view_num_aft = self.mng.view_number
 
-        if action.type is CancelOp.VIEW:
-            action.view_data_aft = self.mng.view().copy()
+        match action.type:
+            case CancelOp.VIEW:
+                action.view_data_aft = self.mng.view().copy()
+                
+            case CancelOp.ALL_VIEWS:
+                action.views_aft = self.mng.views.copy()
             
-        elif action.type is CancelOp.ALL_VIEWS:
-            action.views_aft = self.mng.views.copy()
-        
-        elif action.type is CancelOp.ALL_VIEWS_NO_POS:
-            action.views_aft = self.mng.views.copy(with_positions=False)
+            case CancelOp.ALL_VIEWS_NO_POS:
+                action.views_aft = self.mng.views.copy(with_positions=False)
 
         self.mng.sg.undo_redo_changed.emit()
 
@@ -145,26 +152,39 @@ class CancelMng:
         if action.undo_func is not None:
             action.undo_func(*action.undo_args)
 
-        if action.type is CancelOp.PTV_CHOICE:
-            self.mng.change_port_types_view(action.ptv_bef)
+        match action.type:
+            case CancelOp.PTV_CHOICE:
+                if action.ptv_bef is None:
+                    _logger.error(f"action {action.name} has no ptv_bef")
+                    return
+                self.mng.change_port_types_view(action.ptv_bef)
 
-        elif action.type is CancelOp.VIEW_CHOICE:
-            self.mng.change_view(action.view_num_bef)
-            
-        elif action.type is CancelOp.VIEW:
-            self.mng.views[action.view_num_bef] = action.view_data_bef.copy()
-            self.mng.set_views_changed()
-            self.mng.change_view(action.view_num_bef)
+            case CancelOp.VIEW_CHOICE:
+                self.mng.change_view(action.view_num_bef)
                 
-        elif action.type is CancelOp.ALL_VIEWS:
-            self.mng.views = action.views_bef.copy()
-            self.mng.set_views_changed()
-            self.mng.change_view(action.view_num_bef)
+            case CancelOp.VIEW:
+                if action.view_data_bef is None:
+                    _logger.error(f"action {action.name} has no view_data_bef")
+                    return
+                self.mng.views[action.view_num_bef] = action.view_data_bef.copy()
+                self.mng.set_views_changed()
+                self.mng.change_view(action.view_num_bef)
 
-        elif action.type is CancelOp.ALL_VIEWS_NO_POS:
-            self.mng.views.eat_views_dict_datas(action.views_bef)
-            self.mng.set_views_changed()
-            self.mng.change_view(action.view_num_bef)
+            case CancelOp.ALL_VIEWS:
+                if action.views_bef is None:
+                    _logger.error(f"action {action.name} has no views_bef")
+                    return
+                self.mng.views = action.views_bef.copy()
+                self.mng.set_views_changed()
+                self.mng.change_view(action.view_num_bef)
+
+            case CancelOp.ALL_VIEWS_NO_POS:
+                if action.views_bef is None:
+                    _logger.error(f"action {action.name} has no views_bef")
+                    return
+                self.mng.views.eat_views_dict_datas(action.views_bef)
+                self.mng.set_views_changed()
+                self.mng.change_view(action.view_num_bef)
             
         self.mng.sg.undo_redo_changed.emit()
         
@@ -182,14 +202,23 @@ class CancelMng:
             self.mng.change_view(action.view_num_aft)
 
         elif action.type is CancelOp.PTV_CHOICE:
+            if action.ptv_aft is None:
+                _logger.error(f"action {action.name} has no ptv_aft")
+                return
             self.mng.change_port_types_view(action.ptv_aft)
 
         elif action.type is CancelOp.VIEW:
+            if action.view_data_aft is None:
+                _logger.error(f"action {action.name} has no ptv_aft")
+                return
             self.mng.views[action.view_num_aft] = action.view_data_aft.copy()
             self.mng.set_views_changed()
             self.mng.change_view(action.view_num_aft)
 
         elif action.type is CancelOp.ALL_VIEWS:
+            if action.views_aft is None:
+                _logger.error(f"action {action.name} has no ptv_aft")
+                return
             self.mng.views = action.views_aft.copy()
             self.mng.set_views_changed()
             self.mng.change_view(action.view_num_aft)

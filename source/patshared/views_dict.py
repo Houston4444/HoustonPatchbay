@@ -207,7 +207,7 @@ class ViewsDict(dict[int, ViewData]):
         return out_dict
     
     def update_from_short_data_states(
-            self, data_states: dict[int, dict[str, Union[str, bool]]]):
+            self, data_states: dict[str, dict[str, Union[str, bool]]]):
         
         if not isinstance(data_states, dict):
             return
