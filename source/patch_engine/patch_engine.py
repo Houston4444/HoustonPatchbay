@@ -20,7 +20,7 @@ from patshared import (
 
 # local imports
 from .jack_bases import (
-    ClientNamesUuids, PatchEventQueue, PatchEvent)
+    ClientNamesUuids, PatchEngineOuterMissing, PatchEventQueue, PatchEvent)
 from .patch_engine_outer import PatchEngineOuter
 from .port_data import PortData, PortDataList
 from .suppress_stdout_stderr import SuppressStdoutStderr
@@ -149,6 +149,9 @@ class PatchEngine:
             
     @property
     def can_leave(self) -> bool:
+        if self.peo is None:
+            raise PatchEngineOuterMissing
+        
         if self.terminate:
             return True
         if self.auto_export_pretty_names:
@@ -170,6 +173,8 @@ class PatchEngine:
         Multiple daemons can co-exist,
         But if we want things going right,
         we have to ensure that each daemon runs on a different JACK server'''
+        if self.client is None:
+            return
         if self.pretty_names_lockers:
             return
         if not self.auto_export_pretty_names.active:
@@ -187,6 +192,9 @@ class PatchEngine:
             self._locker_written = True
     
     def _remove_locker_mdata(self):
+        if self.client is None:
+            return
+        
         if self._locker_written:
             try:
                 self.client.remove_property(
@@ -197,10 +205,15 @@ class PatchEngine:
         self._locker_written = False
         
     def process_patch_events(self):
+        if self.client is None:
+            return
+        if self.peo is None:
+            raise PatchEngineOuterMissing
+        
         for event, event_arg in self.patch_event_queue:
             match event:
                 case PatchEvent.CLIENT_ADDED:
-                    name: str = event_arg
+                    name: str = event_arg #type:ignore
                     try:
                         client_uuid = int(
                             self.client.get_uuid_for_client_name(name))
@@ -212,11 +225,11 @@ class PatchEngine:
                             name, client_uuid)
 
                 case PatchEvent.CLIENT_REMOVED:
-                    name: str = event_arg
+                    name: str = event_arg #type:ignore
                     if name not in self.client_name_uuids:
                         continue
 
-                    uuid = self.client_name_uuids.pop(event_arg)
+                    uuid = self.client_name_uuids.pop(name)
                     if uuid not in self.metadatas:
                         continue
                     
@@ -227,28 +240,29 @@ class PatchEngine:
                             bool(self.pretty_names_lockers))
 
                 case PatchEvent.PORT_ADDED:
-                    port: PortData = event_arg
+                    port: PortData = event_arg #type:ignore
                     self.ports.append(port)
                     self.peo.port_added(
                         port.name, port.type, port.flags, port.uuid)
 
                 case PatchEvent.PORT_REMOVED:
-                    port = self.ports.from_name(event_arg)
+                    port = self.ports.from_name(event_arg) #type:ignore
                     self.ports.remove(port)
                     self.peo.port_removed(port.name)
 
                 case PatchEvent.PORT_RENAMED:
-                    old, new = event_arg
+                    old_new: tuple[str, str, int] = event_arg #type:ignore
+                    old, new, uuid = old_new
                     self.ports.rename(old, new)
-                    self.peo.port_renamed(old, new, port.uuid)
+                    self.peo.port_renamed(old, new, uuid)
                 
                 case PatchEvent.CONNECTION_ADDED:
-                    conn: tuple[str, str] = event_arg
+                    conn: tuple[str, str] = event_arg #type:ignore
                     self.connections.append(conn)
                     self.peo.connection_added(conn)
                 
                 case PatchEvent.CONNECTION_REMOVED:
-                    conn: tuple[str, str] = event_arg
+                    conn: tuple[str, str] = event_arg #type:ignore
                     if conn in self.connections:
                         self.connections.remove(conn)
                     self.peo.connection_removed(conn)
@@ -257,15 +271,17 @@ class PatchEngine:
                     self.peo.send_one_xrun()
                 
                 case PatchEvent.BLOCKSIZE_CHANGED:
-                    self.buffer_size = event_arg
+                    buffer_size: int = event_arg #type:ignore
+                    self.buffer_size = buffer_size
                     self.peo.send_buffersize(self.buffer_size)
                 
                 case PatchEvent.SAMPLERATE_CHANGED:
-                    self.samplerate = event_arg
+                    samplerate: int = event_arg #type:ignore
+                    self.samplerate = samplerate
                     self.peo.send_samplerate(self.samplerate)
                 
                 case PatchEvent.METADATA_CHANGED:
-                    uuid_key_value: tuple[int, str, str] = event_arg
+                    uuid_key_value: tuple[int, str, str] = event_arg #type:ignore
                     uuid, key, value = uuid_key_value
                     
                     if key == '':
@@ -317,12 +333,18 @@ class PatchEngine:
                 case PatchEvent.SHUTDOWN:
                     self.ports.clear()
                     self.connections.clear()
+                    self.metadatas.clear()
+                    self.peo.server_stopped()
+                    self.jack_running = False
 
     def check_pretty_names_export(self):
         client_names = set[str]()
         port_names = set[str]()
         
         for event, event_arg in self.patch_event_queue.oldies():
+            if not isinstance(event_arg, str):
+                continue
+            
             match event:
                 case PatchEvent.CLIENT_ADDED:
                     client_names.add(event_arg)
@@ -334,6 +356,9 @@ class PatchEngine:
                     port_names.discard(event_arg)
         
         if not self.jack_running:
+            return
+        
+        if self.client is None:
             return
         
         if self.pretty_names_lockers:
@@ -369,6 +394,8 @@ class PatchEngine:
     def _check_jack_client_responding(self):
         '''Launched in parrallel thread,
         checks that JACK client creation finish.'''
+        if self.peo is None:
+            raise PatchEngineOuterMissing
 
         for i in range(100): # JACK has 5s to answer
             time.sleep(0.050)
@@ -388,6 +415,9 @@ class PatchEngine:
             self.terminate = True
     
     def refresh(self):
+        if self.peo is None:
+            raise PatchEngineOuterMissing
+        
         _logger.debug(f'refresh jack running {self.jack_running}')
         if self.jack_running:
             self._collect_graph()
@@ -397,11 +427,17 @@ class PatchEngine:
             self.alsa_mng.add_all_ports()
     
     def remember_dsp_load(self):
+        if self.client is None:
+            return
+        
         self.max_dsp_since_last_sent = max(
             self.max_dsp_since_last_sent,
             self.client.cpu_load())
         
     def send_dsp_load(self):
+        if self.peo is None:
+            raise PatchEngineOuterMissing
+        
         current_dsp = int(self.max_dsp_since_last_sent + 0.5)
         if current_dsp != self.last_sent_dsp_load:
             self.peo.send_dsp_load(current_dsp)
@@ -412,7 +448,10 @@ class PatchEngine:
         if self.transport_wanted is TransportWanted.NO:
             return
         
-        if not self.jack_running:
+        if self.peo is None:
+            raise PatchEngineOuterMissing
+        
+        if self.client is None:
             return
         
         state, pos_dict = self.client.transport_query()
@@ -444,6 +483,9 @@ class PatchEngine:
                 port_out_name, port_in_name, disconnect=disconnect)
             return
 
+        if self.client is None:
+            return
+
         if disconnect:
             try:
                 self.client.disconnect(port_out_name, port_in_name)
@@ -466,7 +508,7 @@ class PatchEngine:
                     f"to '{port_in_name}'\n{str(e)}")
     
     def set_buffer_size(self, blocksize: int):
-        if not self.jack_running:
+        if self.client is None:
             return
         
         self.client.blocksize = blocksize
@@ -474,7 +516,7 @@ class PatchEngine:
     def exit(self):
         self._save_uuid_pretty_names()
         
-        if self.jack_running:
+        if self.client is not None:
             _logger.debug('deactivate JACK client')
             self.client.deactivate()
             _logger.debug('close JACK client')
@@ -485,10 +527,14 @@ class PatchEngine:
             self.alsa_mng.stop_events_loop()
             del self.alsa_mng
 
-        self.peo.remove_existence_file()
+        if self.peo is not None:
+            self.peo.remove_existence_file()
         _logger.debug('Exit, bye bye.')
     
     def start_jack_client(self):
+        if self.peo is None:
+            raise PatchEngineOuterMissing
+        
         self._waiting_jack_client_open = True
         
         # Sometimes JACK never registers the client
@@ -538,7 +584,7 @@ class PatchEngine:
 
         self.jack_running = bool(self.client is not None)
 
-        if self.jack_running:
+        if self.client is not None:
             self._set_registrations()
             self._collect_graph()
             self._write_locker_mdata()
@@ -589,7 +635,7 @@ class PatchEngine:
             elif port.is_midi:
                 port_type = PortType.MIDI_JACK
 
-            flags = jack._lib.jack_port_flags(port._ptr)
+            flags = jack._lib.jack_port_flags(port._ptr) #type:ignore
             port_name = port.name
             port_uuid = port.uuid
 
@@ -620,7 +666,7 @@ class PatchEngine:
         def port_rename(port: jack.Port, old: str, new: str):
             _logger.debug(f'port renamed "{old}" to "{new}"')
             self.patch_event_queue.add(
-                PatchEvent.PORT_RENAMED, old, new)
+                PatchEvent.PORT_RENAMED, old, new, port.uuid)
 
         @self.client.set_xrun_callback
         def xrun(delayed_usecs: float):
@@ -675,9 +721,6 @@ class PatchEngine:
         @self.client.set_shutdown_callback
         def on_shutdown(status: jack.Status, reason: str):
             _logger.debug('Jack shutdown')
-            self.jack_running = False
-            self.metadatas.clear()
-            self.peo.server_stopped()
             self.patch_event_queue.add(PatchEvent.SHUTDOWN)
             
         self.client.activate()
@@ -690,6 +733,9 @@ class PatchEngine:
             )
     
     def _collect_graph(self):
+        if self.peo is None:
+            raise PatchEngineOuterMissing
+        
         self.ports.clear()
         self.connections.clear()
         self.metadatas.clear()
@@ -697,12 +743,14 @@ class PatchEngine:
         client_names = set[str]()
         known_uuids = set[int]()
 
+        if self.client is None:
+            return
+
         #get all currents Jack ports and connections
         for port in self.client.get_ports():
-            flags = jack._lib.jack_port_flags(port._ptr)
+            flags = jack._lib.jack_port_flags(port._ptr) #type:ignore
             port_name = port.name
             port_uuid = port.uuid
-
             port_type = PortType.NULL
             if port.is_audio:
                 port_type = PortType.AUDIO_JACK
@@ -780,6 +828,12 @@ class PatchEngine:
 
     def _set_jack_pretty_name(self, uuid: int, pretty_name: str):
         'write pretty-name metadata, or remove it if value is empty'
+        if self.client is None:
+            _logger.warning(
+                'Attempting to set pretty-name metadata while JACK '
+                'is not running or JACK client is not ready.')
+            return
+        
         if pretty_name:
             try:
                 self.client.set_property(
@@ -847,7 +901,7 @@ class PatchEngine:
         self._save_uuid_pretty_names()
 
     def write_port_pretty_name(self, port_name: str, pretty_name: str):        
-        if not self.jack_running:
+        if self.client is None:
             return
 
         try:
@@ -891,8 +945,7 @@ class PatchEngine:
         if (mdata_pretty_name
                 and ptov.above_pretty
                 and mdata_pretty_name not in ptov.above_pretty
-                and mdata_pretty_name 
-                    not in self.uuid_pretty_names.get(uuid)):
+                and mdata_pretty_name != self.uuid_pretty_names.get(uuid)):
             item_type = 'client' if for_client else 'port'
             _logger.warning(
                 f"pretty-name not set\n"
@@ -917,6 +970,9 @@ class PatchEngine:
         if (self.auto_export_pretty_names is not AutoExportPretty.ZOMBIE
                 and not force
                 and active is self.auto_export_pretty_names.active):
+            return
+        
+        if self.client is None:
             return
         
         if active:
@@ -1013,14 +1069,22 @@ class PatchEngine:
             self.set_pretty_names_auto_export(True, force=True)
 
     def transport_play(self, play: bool):
+        if self.client is None:
+            return
+        
         if play:
             self.client.transport_start()
         else:
             self.client.transport_stop()
             
     def transport_stop(self):
+        if self.client is None:
+            return
+        
         self.client.transport_stop()
         self.client.transport_locate(0)
         
     def transport_relocate(self, frame: int):
+        if self.client is None:
+            return
         self.client.transport_locate(frame)

@@ -9,6 +9,11 @@ from .port_data import PortData
 PatchEventArg: TypeAlias = str | PortData | tuple[str, str] | tuple[int, str, str]
 
 
+class PatchEngineOuterMissing(Exception):
+    def __init__(self) -> None:
+        super().__init__(f'No PatchEngineOuter set for this PatchEngine')
+
+
 class PatchEvent(Enum):
     CLIENT_ADDED = auto()
     CLIENT_REMOVED = auto()
@@ -24,7 +29,7 @@ class PatchEvent(Enum):
     SAMPLERATE_CHANGED = auto()
 
 
-class PatchEventQueue(Queue[tuple[PatchEvent, PatchEventArg, float]]):
+class PatchEventQueue(Queue[tuple[PatchEvent, PatchEventArg]]):
     def __init__(self, maxsize: int = 0):
         super().__init__(maxsize)
         self.oldies_queue = Queue()

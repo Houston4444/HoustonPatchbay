@@ -27,6 +27,7 @@ from pyalsa.alsaseq import (
 from patshared import PortType
 
 from .port_data import PortData
+from .jack_bases import PatchEngineOuterMissing
 
 if TYPE_CHECKING:
     from patch_engine import PatchEngine
@@ -154,6 +155,9 @@ class AlsaManager:
                                  conn_client_id, conn_port_id))
 
     def add_port_to_patchbay(self, client: AlsaClient, port: AlsaPort):
+        if self.pbe is None:
+            raise PatchEngineOuterMissing
+        
         port_flags = 0
         if port.physical:
             port_flags = PORT_IS_PHYSICAL
@@ -173,6 +177,9 @@ class AlsaManager:
                 client.id * 0x10000 + port.id)
 
     def remove_port_from_patchbay(self, client: AlsaClient, port: AlsaPort):
+        if self.pbe is None:
+            raise PatchEngineOuterMissing
+        
         if port.caps & _PORT_READS == _PORT_READS:
             self.pbe.port_removed(
                 port.pb_name('OUT', client))
@@ -180,7 +187,10 @@ class AlsaManager:
             self.pbe.port_removed(
                 port.pb_name('IN', client))
 
-    def add_all_ports(self):        
+    def add_all_ports(self):
+        if self.pbe is None:
+            raise PatchEngineOuterMissing
+
         if self._event_thread.is_alive():
             self.stop_events_loop()
 
@@ -280,6 +290,9 @@ class AlsaManager:
             pass
         
     def read_events(self):
+        if self.pbe is None:
+            raise PatchEngineOuterMissing
+        
         while True:
             if self._stopping:
                 break
