@@ -37,7 +37,7 @@ class JackMetadatas(dict[int, dict[str, str]]):
         elif uuid_dict.get(key) is not None:
             uuid_dict.pop(key)
     
-    def str_for_key(self, uuid: int, key: JackMetadata) -> str:
+    def str_for_key(self, uuid: int, key: str) -> str:
         uuid_dict = self.get(uuid)
         if uuid_dict is None:
             return ''

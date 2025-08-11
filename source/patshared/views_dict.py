@@ -159,6 +159,9 @@ class ViewsDict(dict[int, ViewData]):
                 out_dict['is_white_list'] = True
             
             for ptv, ptv_dict in view_data.ptvs.items():
+                if ptv.name is None:
+                    continue
+
                 js_ptv_dict = out_dict[ptv.name] = \
                     dict[str, dict[str, dict]]()
                 for gp_name, gpos in ptv_dict.items():

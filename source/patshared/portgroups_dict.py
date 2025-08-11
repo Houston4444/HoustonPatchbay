@@ -53,8 +53,9 @@ class PortgroupMem:
             'above_metadatas': self.above_metadatas
         }
 
-    def as_new_dict(self) -> dict[str, Any]:
-        new_dict = {'port_names': self.port_names}
+    def as_new_dict(self) -> dict[str, list[str] | bool]:
+        new_dict: dict[str, list[str] | bool] = \
+            {'port_names': self.port_names}
         if self.above_metadatas:
             new_dict['above_metadatas'] = self.above_metadatas
         return new_dict

@@ -51,9 +51,9 @@ class CustomNames:
                 elif isinstance(custom, list):
                     self.ports[port_name] = _CustomAndOver(*custom)
     
-    def to_json(self) -> dict[str, dict[str, tuple[str, str]]]:
-        gp_dict = dict[str, tuple[str, str]]()
-        pt_dict = dict[str, tuple[str, str]]()
+    def to_json(self) -> dict[str, dict[str, str | list[str]]]:
+        gp_dict = dict[str, str | list[str]]()
+        pt_dict = dict[str, str | list[str]]()
         for group_name, ctov in self.groups.items():
             gp_dict[group_name] = ctov.to_json_item()
         for port_name, ctov in self.ports.items():

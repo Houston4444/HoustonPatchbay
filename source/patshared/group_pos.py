@@ -131,21 +131,22 @@ class GroupPos:
         for port_mode in PortMode.in_out_both():
             if port_mode is PortMode.INPUT:
                 if GroupPos.is_point(in_xy):
-                    gpos.boxes[port_mode].pos = in_xy
+                    gpos.boxes[port_mode].pos = tuple(in_xy)
                 wrapped = bool(gpos.flags & GroupPosFlag.WRAPPED_INPUT)
             elif port_mode is PortMode.OUTPUT:
                 if GroupPos.is_point(out_xy):
-                    gpos.boxes[port_mode].pos = out_xy
+                    gpos.boxes[port_mode].pos = tuple(out_xy)
                 wrapped = bool(gpos.flags & GroupPosFlag.WRAPPED_OUTPUT)
             else:
                 if GroupPos.is_point(null_xy):
-                    gpos.boxes[port_mode].pos = null_xy
+                    gpos.boxes[port_mode].pos = tuple(null_xy)
                 wrapped = bool(gpos.flags & (GroupPosFlag.WRAPPED_INPUT
                                              | GroupPosFlag.WRAPPED_OUTPUT)
                                == (GroupPosFlag.WRAPPED_INPUT
                                    | GroupPosFlag.WRAPPED_OUTPUT))
 
             try:
+                assert layout_modes is not None
                 gpos.boxes[port_mode].layout_mode = BoxLayoutMode(
                     layout_modes[str(int(port_mode))])
             except:
@@ -244,20 +245,20 @@ class GroupPos:
 
             box_dict = {'pos': box.pos}
             if box.layout_mode is not BoxLayoutMode.AUTO:
-                box_dict['layout_mode'] = box.layout_mode.name
+                box_dict['layout_mode'] = box.layout_mode.name #type:ignore
             
             box_flag_list = list[str]()
             for box_flag in BoxFlag:
                 if box.flags & box_flag:
-                    box_flag_list.append(box_flag.name)
+                    box_flag_list.append(box_flag.name) #type:ignore
             
             if box_flag_list:
-                box_dict['flags'] = '|'.join(box_flag_list)
+                box_dict['flags'] = '|'.join(box_flag_list) #type:ignore
             
             port_mode_names = list[str]()
             for p_mode in PortMode.INPUT, PortMode.OUTPUT:
                 if port_mode & p_mode:
-                    port_mode_names.append(p_mode.name)
+                    port_mode_names.append(p_mode.name) #type:ignore
             
             if not port_mode_names:
                 # should not happen
@@ -284,23 +285,34 @@ class GroupPos:
         return arg_list
     
     @staticmethod
-    def from_arg_list(arg_tuple: tuple[Union[str, int], ...]) -> 'GroupPos':
-        arg_list = list(arg_tuple)
+    def from_arg_list(arg_tuple: tuple[str | int, ...]) -> 'GroupPos':
         gpos = GroupPos()
-
-        try:
-            gpos.port_types_view = PortTypesViewFlag(arg_list.pop(0))
-            gpos.group_name = arg_list.pop(0)
-            gpos.flags = GroupPosFlag(arg_list.pop(0))
+        
+        if len(arg_tuple) != 15:
+            return gpos
+        
+        ptv_int, gp_name, gp_flags, *box_args = arg_tuple # type:ignore
+        if not isinstance(ptv_int, int):
+            return gpos
+        if not isinstance(gp_name, str):
+            return gpos
+        if not isinstance( gp_flags, int):
+            return gpos
+        
+        for box_arg in box_args:
+            if not isinstance(box_arg, int):
+                return gpos
             
-            for port_mode in PortMode.in_out_both():
-                gpos.boxes[port_mode].pos = (arg_list.pop(0), arg_list.pop(0))
-                gpos.boxes[port_mode].flags = BoxFlag(arg_list.pop(0))
-                gpos.boxes[port_mode].layout_mode = BoxLayoutMode(
-                    arg_list.pop(0))
-        except:
-            print('group pos from arg list failed !!!')
+        box_args: list[int]        
+        gpos.port_types_view = PortTypesViewFlag(ptv_int)
+        gpos.group_name = gp_name
+        gpos.flags = GroupPosFlag(gp_flags)
 
+        for port_mode in PortMode.in_out_both():
+            gpos.boxes[port_mode].pos = (box_args.pop(0), box_args.pop(0))
+            gpos.boxes[port_mode].flags = BoxFlag(box_args.pop(0))
+            gpos.boxes[port_mode].layout_mode = BoxLayoutMode(box_args.pop(0))
+        
         return gpos
     
     def is_splitted(self) -> bool:
