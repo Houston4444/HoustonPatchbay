@@ -30,14 +30,17 @@ from qtpy.QtWidgets import QApplication, QGraphicsItem
 from .connectable_widget import ConnectableWidget
 from patshared import PortMode, PortType, PortSubType
 from .init_values import (
-    CanvasItemType, PortgrpObject, ZvBox, canvas, CallbackAct)
+    CanvasItemType, CanvasSceneMissing, CanvasThemeMissing, PortgrpObject, ZvBox, canvas, CallbackAct)
 
 if TYPE_CHECKING:
-    from .box_widget import BoxWidget
+    from .box_widget_moth import BoxWidgetMoth
 
 
 class PortgroupWidget(ConnectableWidget):
-    def __init__(self, portgrp: PortgrpObject, parent: 'BoxWidget'):
+    def __init__(self, portgrp: PortgrpObject, parent: 'BoxWidgetMoth'):
+        if canvas.theme is None:
+            raise CanvasThemeMissing
+        
         ConnectableWidget.__init__(self, portgrp, parent)
         self._logger = logging.getLogger(__name__)
 
@@ -46,7 +49,7 @@ class PortgroupWidget(ConnectableWidget):
         self._portgrp_id = portgrp.portgrp_id
 
         # Base Variables
-        self._portgrp_width  = 15
+        self._portgrp_width = 15
         self._portgrp_height = canvas.theme.port_height
         
         theme = canvas.theme.portgroup
@@ -94,18 +97,22 @@ class PortgroupWidget(ConnectableWidget):
         self._ports_width = ports_width
 
     def update_theme(self):
+        if canvas.theme is None:
+            raise CanvasThemeMissing
+        
         theme = canvas.theme.portgroup
-        if self._port_type is PortType.AUDIO_JACK:
-            if self._port_subtype is PortSubType.CV:
-                theme = theme.cv
-            else:
-                theme = theme.audio
-        elif self._port_type is PortType.MIDI_JACK:
-            theme = theme.midi
-        elif self._port_type is PortType.MIDI_ALSA:
-            theme = theme.alsa
-        elif self._port_type is PortType.VIDEO:
-            theme = theme.video
+        match self._port_type:
+            case PortType.AUDIO_JACK:
+                if self._port_subtype is PortSubType.CV:
+                    theme = theme.cv
+                else:
+                    theme = theme.audio
+            case PortType.MIDI_JACK:
+                theme = theme.midi
+            case PortType.MIDI_ALSA:
+                theme = theme.alsa
+            case PortType.VIDEO:
+                theme = theme.video
         
         self._theme = theme
         self._portgrp_font = theme.font()
@@ -161,7 +168,8 @@ class PortgroupWidget(ConnectableWidget):
                 return
         self.setSelected(True)
 
-    def itemChange(self, change: int, value: bool):
+    def itemChange(
+            self, change: QGraphicsItem.GraphicsItemChange, value: bool):
         if change == QGraphicsItem.GraphicsItemChange.ItemSelectedHasChanged:
             self.changing_select_state = True
             
@@ -179,7 +187,10 @@ class PortgroupWidget(ConnectableWidget):
 
         return QGraphicsItem.itemChange(self, change, value)
 
-    def contextMenuEvent(self, event):        
+    def contextMenuEvent(self, event):
+        if canvas.scene is None:
+            raise CanvasSceneMissing
+
         if canvas.scene.get_zoom_scale() <= 0.4:
             # prefer move box if zoom is too low
             event.ignore()
@@ -198,14 +209,14 @@ class PortgroupWidget(ConnectableWidget):
         
         self.parentItem().setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsMovable, False)
         start_point = canvas.scene.screen_position(
-            self.scenePos() + QPointF(0.0, self.boundingRect().bottom()))
+            self.scenePos() + QPointF(0.0, self.boundingRect().bottom())) # type:ignore
         bottom_screen = QApplication.primaryScreen().geometry().bottom()
         # bottom_screen = QApplication.desktop().screenGeometry().bottom()
         more = 12 if self._port_mode is PortMode.OUTPUT else 0
 
         if start_point.y() + 250 > bottom_screen:
             start_point = canvas.scene.screen_position(
-                self.scenePos()
+                self.scenePos() # type:ignore
                 + QPointF(self._portgrp_width + more, self._portgrp_height))
         
         canvas.callback(
@@ -213,6 +224,9 @@ class PortgroupWidget(ConnectableWidget):
             is_only_connect, start_point.x(), start_point.y())
 
     def boundingRect(self) -> QRectF:
+        if canvas.theme is None:
+            raise CanvasThemeMissing
+        
         middle_width = canvas.theme.port_height / 2.0
 
         if self._port_mode is PortMode.INPUT:
@@ -233,21 +247,10 @@ class PortgroupWidget(ConnectableWidget):
         painter.save()
         painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
 
-        theme = self._theme
-        # theme = canvas.theme.portgroup
-        
-        # if self._port_type is PortType.AUDIO_JACK:
-        #     if self._port_subtype is PortSubType.CV:
-        #         theme = theme.cv
-        #     else:
-        #         theme = theme.audio
-        # elif self._port_type is PortType.MIDI_JACK:
-        #     theme = theme.midi
-        # elif self._port_type is PortType.MIDI_ALSA:
-        #     theme = theme.alsa
-        # elif self._port_type is PortType.VIDEO:
-        #     theme = theme.video
+        if canvas.theme is None:
+            raise CanvasThemeMissing
 
+        theme = self._theme
         if self.isSelected():
             theme = theme.selected
 

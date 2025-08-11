@@ -11,7 +11,9 @@ class CustomScrollBar(QScrollBar):
 
     def mouseMoveEvent(self, event) -> None:
         super().mouseMoveEvent(event)
-        canvas.qobject.start_aliasing_check(AliasingReason.SCROLL_BAR_MOVE)
+        if canvas.qobject is not None:
+            canvas.qobject.start_aliasing_check(
+                AliasingReason.SCROLL_BAR_MOVE)
         
     def mouseReleaseEvent(self, event) -> None:
         super().mouseReleaseEvent(event)
@@ -44,8 +46,9 @@ class PatchGraphicsView(QGraphicsView):
                          & Qt.KeyboardModifier.ControlModifier)):
             self._panning = True
             self.setDragMode(QGraphicsView.DragMode.ScrollHandDrag)
-            event = QMouseEvent(event.type(), event.pos(), Qt.MouseButton.LeftButton,
-                                Qt.MouseButton.LeftButton, event.modifiers())
+            event = QMouseEvent(
+                event.type(), event.pos(), Qt.MouseButton.LeftButton, # type:ignore
+                Qt.MouseButton.LeftButton, event.modifiers())
 
         QGraphicsView.mousePressEvent(self, event)
 

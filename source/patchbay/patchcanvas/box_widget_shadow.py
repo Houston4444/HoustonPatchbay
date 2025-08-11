@@ -21,11 +21,11 @@ from typing import TYPE_CHECKING
 from qtpy.QtGui import QColor
 from qtpy.QtWidgets import QGraphicsDropShadowEffect, QGraphicsObject
 
-from .init_values import canvas
+from .init_values import CanvasSceneMissing, canvas
 from .theme import StyleAttributer
 
 if TYPE_CHECKING:
-    from .box_widget import BoxWidget
+    from .box_widget_moth import BoxWidgetMoth
 
 
 class BoxWidgetShadow(QGraphicsDropShadowEffect):
@@ -43,14 +43,20 @@ class BoxWidgetShadow(QGraphicsDropShadowEffect):
         self.setColor(theme.background_color())
 
     def set_opacity(self, opacity: float):
+        if self._theme is None:
+            return
+        
         color = QColor(self._theme.background_color())
         color.setAlphaF(opacity)
         self.setColor(color)
 
-    def set_fake_parent(self, parent: 'BoxWidget'):
+    def set_fake_parent(self, parent: 'BoxWidgetMoth'):
         self._fake_parent = parent
 
     def draw(self, painter):
+        if canvas.scene is None:
+            raise CanvasSceneMissing
+        
         if self._fake_parent is not None:
             if ((self._fake_parent.boundingRect().height()
                  * canvas.scene.get_zoom_scale())

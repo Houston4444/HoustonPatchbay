@@ -5,6 +5,7 @@ import logging
 import os
 import shutil
 from pathlib import Path
+from typing import Optional
 
 from qtpy.QtCore import QTimer
 
@@ -36,7 +37,7 @@ class ThemeManager:
         self._theme_file_timer.timeout.connect(self._check_theme_file_modified)
 
     @staticmethod
-    def default_theme_paths(source_theme_dir: Path=None) -> list[Path]:
+    def default_theme_paths(source_theme_dir: Optional[Path]=None) -> list[Path]:
         ''' do not use now ! While HoustonPatchbay is a submodule and not a lib
             sharing the same paths for various programs create package conflicts
             in distributions.'''
@@ -63,6 +64,7 @@ class ThemeManager:
             last_modified = os.path.getmtime(self.current_theme_file)
         except:
             self._theme_file_timer.stop()
+            return
 
         if last_modified == self._last_modified:
             return
@@ -96,7 +98,8 @@ class ThemeManager:
         return True
     
     @staticmethod
-    def _convert_configparser_object_to_dict(conf: dict) -> dict:
+    def _convert_configparser_object_to_dict(
+            conf: configparser.ConfigParser) -> dict:
         def type_convert(value):
             '''return an int, a float, or the unchanged given value'''
             try:

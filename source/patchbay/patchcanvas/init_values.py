@@ -90,6 +90,15 @@ class CallbackAct(IntEnum):
     ANIMATION_FINISHED = auto()
 
 
+class CanvasThemeMissing(Exception):
+    def __init__(self, message='A canvas.theme is needed here'):
+        super().__init__(message)
+
+
+class CanvasSceneMissing(Exception):
+    def __init__(self, message='canvas.scene is needed here'):
+        super().__init__(message)
+
 # inline display is not usable in RaySession or Patchance
 # but this patchcanvas module has been forked from Carla
 # and all about inline_display has been kept (we never know)
@@ -279,9 +288,10 @@ class GroupObject:
     plugin_inline: int # to verify
     handle_client_gui: bool
     gui_visible: bool
-    widgets: list
     if TYPE_CHECKING:
         widgets: list[BoxWidget]
+    else:
+        widgets: list
     
     def current_port_mode(self) -> PortMode:
         port_mode = PortMode.NULL
@@ -298,32 +308,27 @@ class ConnectableObject:
     portgrp_id: int
     
     def get_port_ids(self) -> tuple[int]:
-        return ()
+        return tuple[int]()
 
 
 class PortObject(ConnectableObject):
     port_id: int
     port_name: str
-    widget: object
-    portgrp: object
-    hidden_conn_widget: object
     if TYPE_CHECKING:
         widget: PortWidget
-        portgrp: 'PortgrpObject'
+        portgrp: Optional['PortgrpObject']
         hidden_conn_widget: Optional[HiddenConnWidget]
+    else:
+        widget: object
+        portgrp: object
+        hidden_conn_widget: object
+        
 
     pg_pos = 0 # index in the portgroup (if any)
     pg_len = 1 # length of the portgroup (if any)
 
     def __repr__(self) -> str:
         return f"PortObject({self.port_name} - {self.port_id} - {self.portgrp_id})"
-
-    def copy_no_widget(self) -> 'PortObject':
-        port_copy = PortObject()
-        port_copy.__dict__ = self.__dict__.copy()
-        port_copy.widget = None
-        port_copy.hidden_conn_widget = None
-        return port_copy
 
     def get_port_ids(self) -> tuple[int]:
         return (self.port_id,)
@@ -338,18 +343,13 @@ class PortObject(ConnectableObject):
 
 class PortgrpObject(ConnectableObject):
     port_id_list: list[int]
-    widget: object
     if TYPE_CHECKING:
         widget: Optional[PortgroupWidget]
+    else:
+        widget: object
 
     def __init__(self):
         self.ports = list[PortObject]()
-
-    def copy_no_widget(self) -> 'PortgrpObject':
-        portgrp_copy = PortgrpObject()
-        portgrp_copy.__dict__ = self.__dict__.copy()
-        portgrp_copy.widget = None
-        return portgrp_copy
     
     def get_port_ids(self) -> tuple[int]:
         return tuple(self.port_id_list)
@@ -386,7 +386,7 @@ class ConnectionObject:
         else:
             return False
 
-    def concerns(self, group_id: int, port_ids_list: list[int]) -> bool:
+    def concerns(self, group_id: int, port_ids_list: set[int]) -> bool:
         if (self.group_in_id == group_id
                 and self.port_in_id in port_ids_list):
             return True
@@ -415,18 +415,18 @@ class ClipboardElement:
 # Main Canvas object
 class Canvas:
     def __init__(self):
-        self.qobject = None
-        self.settings = None
-        self.theme = None
+        self.qobject: Optional['CanvasObject'] = None
+        self.settings: Optional[QSettings] = None
+        self.theme: Optional['Theme'] = None
 
         self.initiated = False
         self.theme_paths = ()
-        self.theme_manager = None
+        self.theme_manager: Optional['ThemeManager'] = None
 
         self.group_list = list[GroupObject]()
 
         self._groups_dict = dict[int, GroupObject]()
-        self._all_boxes = []
+        self._all_boxes = list['BoxWidget']()
         self._ports_dict = dict[int, dict[int, PortObject]]()
         self._portgrps_dict = dict[int, dict[int, PortgrpObject]]()
         self._conns_dict = dict[int, ConnectionObject]()
@@ -440,7 +440,7 @@ class Canvas:
         self.clipboard_cut = True
         self.group_plugin_map = {}
 
-        self.scene = None
+        self.scene: Optional['PatchScene'] = None
         self.initial_pos = QPointF(0, 0)
         self.size_rect = QRectF()
         self.antialiasing = True
@@ -450,18 +450,6 @@ class Canvas:
         self.loading_items = False
         self.menu_shown = False
         self.menu_click_pos = QPoint(0, 0)
-        
-        # This is only to get object methods in IDE everywhere.
-        if TYPE_CHECKING:
-            self.qobject = CanvasObject()
-            self.theme = Theme()
-            self.theme_manager = ThemeManager()
-            self.scene = PatchScene()
-            self.settings = QSettings()
-            self.options = CanvasOptionsObject()
-            self.features = CanvasFeaturesObject()
-            
-            self._all_boxes = list[BoxWidget]()
 
     def callback(self, action: CallbackAct, value1: int,
                  value2: int, value_str: str):
@@ -549,8 +537,9 @@ class Canvas:
         for widget in group.widgets:
             if widget in self._all_boxes:
                 self._all_boxes.remove(widget)
-                
-        self.qobject.rm_group_to_join(group.group_id)
+
+        if self.qobject is not None:
+            self.qobject.rm_group_to_join(group.group_id)
     
     def remove_port(self, port: PortObject):
         gp_dict = self._ports_dict.get(port.group_id)
@@ -576,7 +565,7 @@ class Canvas:
         except:
             pass
 
-    def get_group(self, group_id: int) -> GroupObject:
+    def get_group(self, group_id: int) -> Optional[GroupObject]:
         return self._groups_dict.get(group_id)
     
     def get_port(self, group_id: int, port_id: int) -> Optional[PortObject]:

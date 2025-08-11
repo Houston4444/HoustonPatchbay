@@ -309,7 +309,7 @@ def nearest_on_grid_check_others(
      
     return nearest_on_grid(xy)
 
-def previous_left_on_grid(x: int) -> int:
+def previous_left_on_grid(x: int | float) -> int:
     cell_x = options.cell_width
     margin = canvas.theme.box_spacing / 2
     
@@ -319,7 +319,7 @@ def previous_left_on_grid(x: int) -> int:
     
     return ret
 
-def next_left_on_grid(x: int) -> int:
+def next_left_on_grid(x: int | float) -> int:
     cell_x = options.cell_width
     margin = canvas.theme.box_spacing / 2
     
@@ -329,7 +329,7 @@ def next_left_on_grid(x: int) -> int:
     
     return ret
 
-def previous_top_on_grid(y: int) -> int:
+def previous_top_on_grid(y: int | float) -> int:
     cell_y = options.cell_height
     margin = canvas.theme.box_spacing / 2
     
@@ -339,7 +339,7 @@ def previous_top_on_grid(y: int) -> int:
     
     return ret
 
-def next_top_on_grid(y: int) -> int:
+def next_top_on_grid(y: int | float) -> int:
     cell_y = options.cell_height
     margin = canvas.theme.box_spacing / 2
     
@@ -349,7 +349,7 @@ def next_top_on_grid(y: int) -> int:
 
     return ret
 
-def next_bottom_on_grid(y: int) -> int:
+def next_bottom_on_grid(y: int | float) -> int:
     cell_y = options.cell_height
     margin = canvas.theme.box_spacing / 2
 
@@ -359,7 +359,7 @@ def next_bottom_on_grid(y: int) -> int:
 
     return ret
 
-def next_width_on_grid(width: Union[float, int]) -> int:
+def next_width_on_grid(width: int | float) -> int:
     cell_x = options.cell_width
     box_spacing = canvas.theme.box_spacing
     ret = cell_x * (1 + (width // cell_x)) - box_spacing
@@ -368,7 +368,7 @@ def next_width_on_grid(width: Union[float, int]) -> int:
     
     return int(ret)
 
-def next_height_on_grid(height: Union[float, int]) -> int:
+def next_height_on_grid(height: int | float) -> int:
     cell_y = options.cell_height
     box_spacing = canvas.theme.box_spacing
     ret = cell_y * (1 + (height // cell_y)) - box_spacing

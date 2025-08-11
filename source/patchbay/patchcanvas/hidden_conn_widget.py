@@ -5,7 +5,7 @@ from qtpy.QtGui import QPolygonF, QPen, QColor, QBrush, QPainter, QPainterPath
 from qtpy.QtCore import QPointF, Qt
 
 from patshared import PortMode, PortType
-from .init_values import canvas, CanvasItemType, options, Zv
+from .init_values import CanvasSceneMissing, CanvasThemeMissing, canvas, CanvasItemType, options, Zv
 
 if TYPE_CHECKING:
     from .port_widget import PortWidget
@@ -14,7 +14,7 @@ if TYPE_CHECKING:
 class _ThemeAttributes:
     base_pen: QPen
     color_main: QColor
-    color_alter: QColor
+    color_alter: QColor | None
     base_width: float
 
 
@@ -30,7 +30,7 @@ class HiddenConnWidget(QGraphicsPathItem):
         self._theme_attrs = _ThemeAttributes()
         
         self.setBrush(QColor(0, 0, 0, 0))
-        self.setGraphicsEffect(None)
+        self.setGraphicsEffect(None) # type:ignore or #TODO what should be sent ?
         self.update_theme()
         self.update_line_pos()
         self.update_line_gradient()
@@ -41,6 +41,9 @@ class HiddenConnWidget(QGraphicsPathItem):
         self.update_line_gradient()
 
     def update_line_pos(self, fast_move=False):
+        if canvas.theme is None:
+            raise CanvasThemeMissing
+        
         x = self._port_widget.connect_pos().x()
         y = self._port_widget.scenePos().y()
         
@@ -87,6 +90,9 @@ class HiddenConnWidget(QGraphicsPathItem):
         return CanvasItemType.BEZIER_LINE
 
     def update_theme(self):
+        if canvas.theme is None:
+            raise CanvasThemeMissing
+        
         port_type = self._port_widget.get_port_type()
 
         theme = canvas.theme.line
@@ -110,9 +116,15 @@ class HiddenConnWidget(QGraphicsPathItem):
         self._theme_attrs = tha
 
     def update_line_gradient(self):
+        if canvas.scene is None:
+            raise CanvasSceneMissing
+        if canvas.theme is None:
+            raise CanvasThemeMissing
+
         tha = self._theme_attrs
         
         if self._semi_hidden:
+            
             shd = options.semi_hide_opacity
             bgcolor = canvas.theme.scene_background_color
 

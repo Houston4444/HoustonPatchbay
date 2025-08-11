@@ -26,6 +26,8 @@ from qtpy.QtWidgets import QGraphicsPathItem
 
 from patshared import PortType, PortMode
 from .init_values import (
+    CanvasSceneMissing,
+    CanvasThemeMissing,
     ConnectionThemeState,
     BoxHidding,
     canvas,
@@ -77,6 +79,9 @@ class GroupedLinesWidget(QGraphicsPathItem):
                  port_type: PortType,
                  theme_state: ConnectionThemeState):
         ''' Class for connection line widget '''
+        if canvas.scene is None:
+            raise CanvasSceneMissing
+        
         QGraphicsPathItem.__init__(self)
 
         self._group_out_id = group_out_id
@@ -92,7 +97,7 @@ class GroupedLinesWidget(QGraphicsPathItem):
         '''is True when the two connected ports are on semi-hidden boxes.
         The lines opacity becomes lighter.'''
         
-        self._th_attribs: _ThemeAttributes = None
+        self._th_attribs: Optional[_ThemeAttributes] = None
         self._theme_state = theme_state
         self.update_theme()
         
@@ -157,6 +162,9 @@ class GroupedLinesWidget(QGraphicsPathItem):
 
     @staticmethod
     def connections_changed(group_out_id: int, group_in_id: int):
+        if canvas.scene is None:
+            raise CanvasSceneMissing
+        
         gp_dict = _all_lines_widgets.get((group_out_id, group_in_id))
         if gp_dict is None:
             gp_dict = {}
@@ -382,20 +390,25 @@ class GroupedLinesWidget(QGraphicsPathItem):
         return CanvasItemType.BEZIER_LINE
 
     def update_theme(self):
+        if canvas.theme is None:
+            raise CanvasThemeMissing
+        
         theme = canvas.theme.line
         if self._theme_state is ConnectionThemeState.DISCONNECTING:
             theme = theme.disconnecting
-        elif self._port_type is PortType.AUDIO_JACK:
-            theme = theme.audio
-        elif self._port_type is PortType.MIDI_JACK:
-            theme = theme.midi
-        elif self._port_type is PortType.MIDI_ALSA:
-            theme = theme.alsa
-        elif self._port_type is PortType.VIDEO:
-            theme = theme.video
+        else:
+            match self._port_type:
+                case PortType.AUDIO_JACK:
+                    theme = theme.audio
+                case PortType.MIDI_JACK:
+                    theme = theme.midi
+                case PortType.MIDI_ALSA:
+                    theme = theme.alsa
+                case PortType.VIDEO:
+                    theme = theme.video
 
-        if self._theme_state is ConnectionThemeState.SELECTED:
-            theme = theme.selected
+            if self._theme_state is ConnectionThemeState.SELECTED:
+                theme = theme.selected
 
         tha = _ThemeAttributes()
         tha.base_pen = theme.fill_pen()
@@ -407,6 +420,11 @@ class GroupedLinesWidget(QGraphicsPathItem):
         self._th_attribs = tha
 
     def update_line_gradient(self):
+        if canvas.scene is None:
+            raise CanvasSceneMissing
+        if canvas.theme is None:
+            raise CanvasThemeMissing
+        
         if (self._box_hidding_out is not BoxHidding.NONE
                 or self._box_hidding_in is not BoxHidding.NONE):
             return
@@ -415,10 +433,15 @@ class GroupedLinesWidget(QGraphicsPathItem):
         pos_bot = self.boundingRect().bottom()
 
         tha = self._th_attribs
+        if tha is None:
+            return
         
         has_gradient = bool(tha.color_main != tha.color_alter)
         
         if has_gradient:
+            if tha.color_alter is None:
+                return
+
             port_gradient = QLinearGradient(0, pos_top, 0, pos_bot)
 
             if self._semi_hidden:
@@ -484,6 +507,9 @@ class GroupedLinesWidget(QGraphicsPathItem):
             self._box_hidding_in = BoxHidding.NONE
             # the lines have now to be drawn normally
             self.update_line_gradient()
+            return
+
+        if self._th_attribs is None:
             return
 
         epsy = 0.001

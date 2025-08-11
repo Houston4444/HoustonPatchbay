@@ -1,6 +1,6 @@
 
 import time
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 from qtpy.QtCore import Qt, QPointF
 from qtpy.QtGui import QCursor
 from qtpy.QtWidgets import QGraphicsItem
@@ -9,6 +9,7 @@ from patshared import PortMode, PortType, PortSubType
 from .init_values import (
     AliasingReason,
     CallbackAct,
+    CanvasSceneMissing,
     ConnectableObject,
     ConnectionObject,
     canvas,
@@ -17,7 +18,7 @@ from .line_move_widget import LineMoveWidget
 from .grouped_lines_widget import GroupedLinesWidget, GroupOutInsDict
 
 if TYPE_CHECKING:
-    from .box_widget import BoxWidget
+    from .box_widget_moth import BoxWidgetMoth
     
 
 class ConnectableWidget(QGraphicsItem):
@@ -26,9 +27,9 @@ class ConnectableWidget(QGraphicsItem):
         is the same for both. """
     
     if TYPE_CHECKING:
-        _hover_item: 'ConnectableWidget'
+        _hover_item: Optional['ConnectableWidget']
 
-    def __init__(self, connectable: ConnectableObject, parent: 'BoxWidget'):
+    def __init__(self, connectable: ConnectableObject, parent: 'BoxWidgetMoth'):
         QGraphicsItem.__init__(self, parent)
         self.setFlags(QGraphicsItem.GraphicsItemFlag.ItemIsSelectable)
         self.setCacheMode(QGraphicsItem.CacheMode.DeviceCoordinateCache)
@@ -124,7 +125,8 @@ class ConnectableWidget(QGraphicsItem):
                 line_mov.set_destination_portgrp_pos(i, self_ports_len)
             else:
                 item = line_mov
-                canvas.scene.removeItem(item)
+                if canvas.scene is not None:
+                    canvas.scene.removeItem(item)
                 del item
 
         while len(self._line_mov_list) < self_ports_len:
@@ -177,7 +179,7 @@ class ConnectableWidget(QGraphicsItem):
             
             for i in range(len(self._port_ids)):
                 for connection in canvas.list_connections(self._po):
-                    if connection.concerns(self._group_id, [self._port_ids[i]]):
+                    if connection.concerns(self._group_id, set([self._port_ids[i]])):
                         canvas.callback(CallbackAct.PORTS_DISCONNECT,
                                         connection.connection_id)
 
@@ -241,9 +243,9 @@ class ConnectableWidget(QGraphicsItem):
                                     hover_group_id, hover_port_id,
                                     self._group_id, port_id)
 
-    def parentItem(self) -> 'BoxWidget':
+    def parentItem(self) -> 'BoxWidgetMoth':
         # only here to say IDE parent is a CanvasBox
-        return super().parentItem()
+        return super().parentItem() # type:ignore
     
     def hoverEnterEvent(self, event):
         if options.auto_select_items:
@@ -256,6 +258,9 @@ class ConnectableWidget(QGraphicsItem):
         QGraphicsItem.hoverLeaveEvent(self, event)
         
     def mousePressEvent(self, event):
+        if canvas.scene is None:
+            raise CanvasSceneMissing
+        
         if canvas.scene.get_zoom_scale() <= 0.4:
             # prefer move box if zoom is too low
             event.ignore()
@@ -300,6 +305,9 @@ class ConnectableWidget(QGraphicsItem):
         QGraphicsItem.mousePressEvent(self, event)
 
     def mouseMoveEvent(self, event):
+        if canvas.scene is None:
+            raise CanvasSceneMissing
+        
         if (not event.buttons() & Qt.MouseButton.LeftButton 
                 and canvas.scene.flying_connectable is not self):
             QGraphicsItem.mouseMoveEvent(self, event)
@@ -335,8 +343,10 @@ class ConnectableWidget(QGraphicsItem):
 
             if (self._has_connections
                     and len(item.get_port_ids()) == len(self._port_ids)):
-                for connection in canvas.list_connections(group_id=item.get_group_id()):
-                    if connection.concerns(item.get_group_id(), item.get_port_ids()):
+                for connection in canvas.list_connections(
+                        group_id=item.get_group_id()):
+                    if connection.concerns(
+                            item.get_group_id(), set(item.get_port_ids())):
                         break
                 else:
                     item_valid = True
@@ -412,7 +422,8 @@ class ConnectableWidget(QGraphicsItem):
                     
                     for portself_id in self._port_ids:
                         for porthover_id in self._hover_item.get_port_ids():
-                            for connection in canvas.list_connections(group_id=self._group_id):
+                            for connection in canvas.list_connections(
+                                    group_id=self._group_id):
                                 if connection.matches(
                                         self._group_id, [portself_id],
                                         self._hover_item.get_group_id(),
@@ -427,7 +438,8 @@ class ConnectableWidget(QGraphicsItem):
                                         self._dotcon_list.append(connection)
                                         connection.ready_to_disc = True
                                         gp_out_ins.add_group_ids(
-                                            connection.group_out_id, connection.group_in_id)
+                                            connection.group_out_id,
+                                            connection.group_in_id)
 
                     gp_out_ins.send_changes()
 
@@ -458,9 +470,13 @@ class ConnectableWidget(QGraphicsItem):
 
         QGraphicsItem.mouseMoveEvent(self, event)
         
-        canvas.qobject.start_aliasing_check(AliasingReason.USER_MOVE)
+        if canvas.qobject is not None:
+            canvas.qobject.start_aliasing_check(AliasingReason.USER_MOVE)
                 
     def mouseReleaseEvent(self, event):
+        if canvas.scene is None:
+            raise CanvasSceneMissing
+        
         if event.button() == Qt.MouseButton.LeftButton:
             if self._mouse_down or canvas.scene.flying_connectable is self:
                 for line_mov in self._line_mov_list:

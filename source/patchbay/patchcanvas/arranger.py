@@ -5,7 +5,7 @@ from typing import Optional
 from qtpy.QtCore import QRectF
 
 from patshared import BoxLayoutMode, PortMode, BoxType, GroupPos
-from .init_values import GroupObject, canvas, CallbackAct
+from .init_values import GroupObject, CanvasThemeMissing, canvas, CallbackAct
 from .utils import nearest_on_grid, next_left_on_grid, next_top_on_grid
 from .box_widget import BoxWidget
 from .patchcanvas import (
@@ -79,6 +79,9 @@ class BoxArranger:
     
     def set_box(self):
         group = canvas.get_group(self.group_id)
+        if group is None:
+            raise Exception
+        
         for box in group.widgets:
             if box._port_mode is self.port_mode:
                 self.box_rect = box.boundingRect()
@@ -86,7 +89,9 @@ class BoxArranger:
         
         tmp_box = BoxWidget(group, self.port_mode)
         self.box_rect = tmp_box.get_dummy_rect()
-        canvas.scene.remove_box(tmp_box)
+        
+        if canvas.scene is not None:
+            canvas.scene.remove_box(tmp_box)
         del tmp_box
     
     def is_owner(self, group_id: int, port_mode: PortMode):
@@ -240,7 +245,7 @@ class CanvasArranger:
 
         # is set only in case there are looping connections
         # around this box arranger.
-        self.ba_to_split: BoxArranger = None
+        self.ba_to_split: Optional[BoxArranger] = None
 
         to_split_group_ids = set[int]()
 
@@ -282,6 +287,9 @@ class CanvasArranger:
             return False
 
         group = canvas.get_group(self.ba_to_split.group_id)
+        if group is None:
+            return False
+        
         new_ba = BoxArranger(self, group, PortMode.INPUT)
         new_ba.ins_connected_to = self.ba_to_split.ins_connected_to
         
@@ -367,6 +375,9 @@ class CanvasArranger:
         return True
         
     def arrange_boxes(self, hardware_on_sides=True):
+        if canvas.theme is None:
+            raise CanvasThemeMissing
+        
         correct_leveling = False
         while not correct_leveling:
             for box_arranger in self.box_arrangers:
@@ -433,10 +444,10 @@ class CanvasArranger:
                     last_top = last_bottom
 
                 elif (previous_column is not None
-                        and (direction is GoTo.RIGHT
-                             and column > previous_column)
+                        and ((direction is GoTo.RIGHT
+                              and column > previous_column)
                              or (direction is GoTo.LEFT
-                                 and column < previous_column)):
+                                 and column < previous_column))):
                     y_pos = last_top
                 
                 else:
@@ -564,6 +575,9 @@ def arrange_follow_signal():
     arranger.arrange_boxes()
 
 def arrange_face_to_face():
+    if canvas.theme is None:
+        raise CanvasThemeMissing
+    
     # split all groups
     while True:
         for group in canvas.group_list:

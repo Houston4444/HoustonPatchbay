@@ -1,15 +1,13 @@
-import inspect
 import math
-import time
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 from qtpy.QtWidgets import QGraphicsPathItem
 from qtpy.QtGui import QPen, QColor, QBrush, QPainter, QPainterPath
 from qtpy.QtCore import QPointF, Qt, QRectF
 
-from .init_values import canvas, options, GridStyle
+from .init_values import CanvasThemeMissing, canvas, options, GridStyle
 
 if TYPE_CHECKING:
-    from .scene import PatchScene
+    from .scene_moth import PatchSceneMoth
 
 
 def x_multiply(path: QPainterPath, n_times: int, width: int) -> QPainterPath:
@@ -56,14 +54,14 @@ def y_multiply(path: QPainterPath, n_times: int, height: int) -> QPainterPath:
 
 
 class GridWidget(QGraphicsPathItem):
-    def __init__(self, scene: 'PatchScene', style=GridStyle.GRID):
+    def __init__(self, scene: 'PatchSceneMoth', style=GridStyle.GRID):
         QGraphicsPathItem.__init__(self)
         self._scene = scene
         self.style = style
         self._rects = list[QRectF]()
         self.setPath(QPainterPath(QPointF()))
-        self.left_path: QPainterPath = None
-        self.right_path: QPainterPath = None
+        self.left_path: Optional[QPainterPath] = None
+        self.right_path: Optional[QPainterPath] = None
         self.left_path_width = 0.0
         self.right_path_width = 0.0
         
@@ -74,6 +72,9 @@ class GridWidget(QGraphicsPathItem):
         self.update_path()
 
     def grid_path(self):
+        if canvas.theme is None:
+            raise CanvasThemeMissing
+        
         theme = canvas.theme.grid
         
         if self.style is GridStyle.TECHNICAL_GRID:
@@ -130,6 +131,9 @@ class GridWidget(QGraphicsPathItem):
             self.grid_path()
     
     def chess_board(self):
+        if canvas.theme is None:
+            raise CanvasThemeMissing
+        
         theme = canvas.theme.grid.chessboard
         
         cell_x = (options.cell_width

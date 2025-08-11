@@ -30,7 +30,7 @@ except:
     from qtpy.QtSvg import QGraphicsSvgItem
 
 from patshared import BoxType, PortMode
-from .init_values import canvas, CanvasItemType
+from .init_values import CanvasSceneMissing, CanvasThemeMissing, canvas, CanvasItemType
 
 
 _logger = logging.getLogger(__name__)
@@ -71,6 +71,9 @@ def get_app_icon(icon_name: str) -> QIcon:
 
 class IconPixmapWidget(QGraphicsPixmapItem):
     def __init__(self, box_type: BoxType, icon_name: str, parent):
+        if canvas.theme is None:
+            raise CanvasThemeMissing
+        
         QGraphicsPixmapItem.__init__(self, parent)
 
         box_theme = canvas.theme.box
@@ -84,6 +87,9 @@ class IconPixmapWidget(QGraphicsPixmapItem):
         self.set_icon(box_type, icon_name)
 
     def set_icon(self, box_type: BoxType, name: str, port_mode=PortMode.NULL):
+        if canvas.scene is None:
+            raise CanvasSceneMissing
+        
         self.icon = get_app_icon(name)
 
         if not self.icon.isNull():
@@ -134,95 +140,99 @@ class IconPixmapWidget(QGraphicsPixmapItem):
         return CanvasItemType.ICON
 
 
-class IconSvgWidget(QGraphicsSvgItem):
+class IconSvgWidget(QGraphicsSvgItem): # type:ignore
     def __init__(self, box_type: BoxType, name: str, port_mode: PortMode, parent):
-        QGraphicsSvgItem.__init__(self, parent)
+        super().__init__(parent)
         self._renderer = None
         self._size = QRectF(4, 4, 24, 24)
         self._icon_size = 24
         self.set_icon(box_type, name, port_mode)
 
     def set_icon(self, box_type: BoxType, name: str, port_mode: PortMode):
+        if canvas.theme is None:
+            raise CanvasThemeMissing
+        
         name = name.lower()
         icon_path = ""
         theme = canvas.theme.icon
         box_theme = canvas.theme.box
 
-        if box_type is BoxType.APPLICATION:
-            self._size = QRectF(3, 2, 19, 18)
+        match box_type:
+            case BoxType.APPLICATION:
+                self._size = QRectF(3, 2, 19, 18)
 
-            if "audacious" in name:
-                icon_path = ":/scalable/pb_audacious.svg"
-                self._size = QRectF(5, 4, 16, 16)
-            elif "clementine" in name:
-                icon_path = ":/scalable/pb_clementine.svg"
-                self._size = QRectF(5, 4, 16, 16)
-            elif "distrho" in name:
+                if "audacious" in name:
+                    icon_path = ":/scalable/pb_audacious.svg"
+                    self._size = QRectF(5, 4, 16, 16)
+                elif "clementine" in name:
+                    icon_path = ":/scalable/pb_clementine.svg"
+                    self._size = QRectF(5, 4, 16, 16)
+                elif "distrho" in name:
+                    icon_path = ":/scalable/pb_distrho.svg"
+                    self._size = QRectF(5, 4, 16, 16)
+                elif "jamin" in name:
+                    icon_path = ":/scalable/pb_jamin.svg"
+                    self._size = QRectF(5, 3, 16, 16)
+                elif "mplayer" in name:
+                    icon_path = ":/scalable/pb_mplayer.svg"
+                    self._size = QRectF(5, 4, 16, 16)
+                elif "vlc" in name:
+                    icon_path = ":/scalable/pb_vlc.svg"
+                    self._size = QRectF(5, 3, 16, 16)
+                else:
+                    icon_path = ":/scalable/pb_generic.svg"
+                    self._size = QRectF(4, 4, 24, 24)
+
+            case BoxType.HARDWARE:
+                box_theme = box_theme.hardware
+                icon_size = int(box_theme.icon_size())
+                self._size = QRectF(4, 4, icon_size, icon_size)
+                self._icon_size = icon_size
+
+                if name == "a2j":
+                    icon_path = theme.hardware_midi
+                else:
+                    if port_mode is PortMode.INPUT:
+                        icon_path = theme.hardware_playback
+                    elif port_mode is PortMode.OUTPUT:
+                        icon_path = theme.hardware_capture
+                    else:
+                        icon_path = theme.hardware_grouped
+
+            case BoxType.DISTRHO:
                 icon_path = ":/scalable/pb_distrho.svg"
                 self._size = QRectF(5, 4, 16, 16)
-            elif "jamin" in name:
-                icon_path = ":/scalable/pb_jamin.svg"
-                self._size = QRectF(5, 3, 16, 16)
-            elif "mplayer" in name:
-                icon_path = ":/scalable/pb_mplayer.svg"
+
+            case BoxType.FILE:
+                icon_path = ":/scalable/pb_file.svg"
                 self._size = QRectF(5, 4, 16, 16)
-            elif "vlc" in name:
-                icon_path = ":/scalable/pb_vlc.svg"
-                self._size = QRectF(5, 3, 16, 16)
-            else:
-                icon_path = ":/scalable/pb_generic.svg"
-                self._size = QRectF(4, 4, 24, 24)
 
-        elif box_type is BoxType.HARDWARE:
-            box_theme = box_theme.hardware
-            icon_size = int(box_theme.icon_size())
-            self._size = QRectF(4, 4, icon_size, icon_size)
-            self._icon_size = icon_size
+            case BoxType.PLUGIN:
+                icon_path = ":/scalable/pb_plugin.svg"
+                self._size = QRectF(5, 4, 16, 16)
 
-            if name == "a2j":
-                icon_path = theme.hardware_midi
-            else:
-                if port_mode is PortMode.INPUT:
-                    icon_path = theme.hardware_playback
-                elif port_mode is PortMode.OUTPUT:
-                    icon_path = theme.hardware_capture
+            case BoxType.LADISH_ROOM:
+                icon_path = ":/scalable/pb_hardware.svg"
+                self._size = QRectF(5, 2, 16, 16)
+
+            case BoxType.MONITOR:
+                box_theme = box_theme.monitor
+                icon_size = int(box_theme.icon_size())
+                self._size = QRectF(4, 4, icon_size, icon_size)
+                self._icon_size = icon_size
+                
+                if name == 'monitor_capture':
+                    icon_path = theme.monitor_capture
+                elif name == 'monitor_playback':
+                    icon_path = theme.monitor_playback
                 else:
-                    icon_path = theme.hardware_grouped
+                    icon_path = ":/canvas/dark/" + name
 
-        elif box_type is BoxType.DISTRHO:
-            icon_path = ":/scalable/pb_distrho.svg"
-            self._size = QRectF(5, 4, 16, 16)
-
-        elif box_type is BoxType.FILE:
-            icon_path = ":/scalable/pb_file.svg"
-            self._size = QRectF(5, 4, 16, 16)
-
-        elif box_type is BoxType.PLUGIN:
-            icon_path = ":/scalable/pb_plugin.svg"
-            self._size = QRectF(5, 4, 16, 16)
-
-        elif box_type is BoxType.LADISH_ROOM:
-            icon_path = ":/scalable/pb_hardware.svg"
-            self._size = QRectF(5, 2, 16, 16)
-
-        elif box_type is BoxType.MONITOR:
-            box_theme = box_theme.monitor
-            icon_size = int(box_theme.icon_size())
-            self._size = QRectF(4, 4, icon_size, icon_size)
-            self._icon_size = icon_size
-            
-            if name == 'monitor_capture':
-                icon_path = theme.monitor_capture
-            elif name == 'monitor_playback':
-                icon_path = theme.monitor_playback
-            else:
-                icon_path = ":/canvas/dark/" + name
-
-        else:
-            self._size = QRectF(0, 0, 0, 0)
-            _logger.critical(f"set_icon({str(box_type)}, {name})"
-                             " - unsupported icon requested")
-            return
+            case _:
+                self._size = QRectF(0, 0, 0, 0)
+                _logger.warning(f"set_icon({str(box_type)}, {name})"
+                                " - unsupported icon requested")
+                return
 
         self._renderer = QSvgRenderer(icon_path, canvas.scene)
         self._renderer.setAspectRatioMode(Qt.AspectRatioMode.KeepAspectRatio)
@@ -246,12 +256,12 @@ class IconSvgWidget(QGraphicsSvgItem):
 
     def paint(self, painter: QPainter, option, widget):
         if not self._renderer:
-            QGraphicsSvgItem.paint(self, painter, option, widget)
+            QGraphicsSvgItem.paint(self, painter, option, widget) # type:ignore
             return
 
         painter.save()
         painter.setRenderHint(QPainter.RenderHint.Antialiasing, False)
-        painter.setRenderHint(QPainter.TextAntialiasing, False)
+        painter.setRenderHint(QPainter.RenderHint.TextAntialiasing, False)
         self._renderer.render(painter, self._size)
         painter.restore()
 

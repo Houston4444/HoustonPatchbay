@@ -23,7 +23,7 @@ import time
 from typing import Callable
 
 from qtpy.QtCore import (Slot, QObject, QPointF, QRectF,
-                          QSettings, QTimer, Signal)
+                         QSettings, QTimer, Signal)
 
 from patshared import (
     PortMode,
@@ -34,6 +34,8 @@ from patshared import (
     )
 from .init_values import (
     AliasingReason,
+    CanvasSceneMissing,
+    CanvasThemeMissing,
     GridStyle,
     PortSubType,
     PortType,
@@ -61,17 +63,16 @@ from .box_widget import BoxWidget
 from .port_widget import PortWidget
 from .grouped_lines_widget import GroupedLinesWidget
 from .hidden_conn_widget import HiddenConnWidget
-from .theme_manager import ThemeManager
+from .theme_manager import ThemeData, ThemeManager
 from .scene import PatchScene
 from .scene_view import PatchGraphicsView
-from .grid_widget import GridWidget
-from .icon_widget import IconPixmapWidget, IconSvgWidget
-from .scene_moth import RubberbandRect
+
 
 _logger = logging.getLogger(__name__)
 # used by patchbay_api decorator to get function_name
 # and arguments, easily usable by logger
 _logging_str = ''
+
 
 # decorator
 def patchbay_api(func: Callable):
@@ -213,6 +214,9 @@ def set_loading_items(yesno: bool, auto_redraw=False, prevent_overlap=True):
     This is an optimization that prevents a lot of redraws.
     Think to set loading items at False and use redraw_all_groups
     or redraw_group once the long operation is finished'''
+    if canvas.scene is None:
+        raise CanvasSceneMissing
+    
     canvas.loading_items = yesno
     
     if not yesno and auto_redraw:
@@ -309,10 +313,14 @@ def add_group(group_id: int, group_name: str, split: bool,
         canvas.groups_to_redraw_out.add(group_id)
         return
 
-    QTimer.singleShot(0, canvas.scene.update)
+    if canvas.scene is not None:
+        QTimer.singleShot(0, canvas.scene.update)
 
 @patchbay_api
 def remove_group(group_id: int, save_positions=True):
+    if canvas.scene is None:
+        raise CanvasSceneMissing
+    
     group = canvas.get_group(group_id)
     if group is None:
         _logger.error(f"{_logging_str} - unable to find group to remove")
@@ -351,7 +359,8 @@ def rename_group(group_id: int, new_group_name: str):
         canvas.groups_to_redraw_out.add(group_id)
         return
 
-    QTimer.singleShot(0, canvas.scene.update)
+    if canvas.scene is not None:
+        QTimer.singleShot(0, canvas.scene.update)
 
 @patchbay_api
 def split_group(group_id: int, on_place=False, redraw=True):
@@ -405,6 +414,11 @@ def split_group(group_id: int, on_place=False, redraw=True):
     if not redraw:
         return
     
+    if canvas.theme is None:
+        raise CanvasThemeMissing
+    if canvas.scene is None:
+        raise CanvasSceneMissing
+    
     full_width = canvas.theme.box_spacing
     
     for box in group.widgets:
@@ -445,6 +459,9 @@ def join_group(group_id: int):
         _logger.error(f"{_logging_str} - group is not splitted")
         return
 
+    if canvas.scene is None:
+        raise CanvasSceneMissing
+
     wrap = True
     for box in group.widgets:
         wrap = wrap and box.is_wrapped()
@@ -478,6 +495,9 @@ def join_group(group_id: int):
 
 @patchbay_api
 def repulse_all_boxes():
+    if canvas.scene is None:
+        raise CanvasSceneMissing
+    
     if options.prevent_overlap:
         canvas.scene.full_repulse()      
 
@@ -489,6 +509,9 @@ def repulse_from_group(group_id: int, port_mode: PortMode):
     group = canvas.get_group(group_id)
     if group is None:
         return
+    
+    if canvas.scene is None:
+        raise CanvasSceneMissing
     
     for box in group.widgets:
         if (box.get_port_mode() & port_mode
@@ -549,6 +572,9 @@ def redraw_group(group_id: int, ensure_visible=False, prevent_overlap=True):
         _logger.error(f"{_logging_str}, no group to redraw")
         return
 
+    if canvas.scene is None:
+        raise CanvasSceneMissing
+
     for box in group.widgets:
         box.update_positions(scene_checks=prevent_overlap)
 
@@ -595,6 +621,9 @@ def change_grid_height(grid_height: int):
 
 @patchbay_api
 def change_grid_widget_style(style: GridStyle):
+    if canvas.scene is None:
+        raise CanvasSceneMissing
+    
     options.grid_style = style
     canvas.scene.update_grid_style()
 
@@ -612,6 +641,9 @@ def move_group_boxes(
     group = canvas.get_group(group_id)
     if group is None:
         return
+
+    if canvas.scene is None:
+        raise CanvasSceneMissing
 
     group.gpos = gpos
     split = gpos.is_splitted()
@@ -686,7 +718,8 @@ def move_group_boxes(
                     both_pos = nearest_on_grid(gpos.boxes[PortMode.BOTH].pos)
 
                     if port_mode is PortMode.OUTPUT:
-                        canvas.qobject.add_group_to_join(group.group_id)
+                        if canvas.qobject is not None:
+                            canvas.qobject.add_group_to_join(group.group_id)
                         joined_widget = BoxWidget(group, PortMode.BOTH)
                         joined_rect = joined_widget.get_dummy_rect()
                         canvas.scene.remove_box(joined_widget)
@@ -706,7 +739,7 @@ def move_group_boxes(
                     canvas.scene.add_box_to_animation_restore(box)
 
             else:
-                if box.is_hidding_or_restore():
+                if box.hidder_widget is not None:
                     canvas.scene.removeItem(box.hidder_widget)
                     box.hidder_widget = None
 
@@ -714,7 +747,8 @@ def move_group_boxes(
                     both_pos = nearest_on_grid(gpos.boxes[PortMode.BOTH].pos)
 
                     if port_mode is PortMode.OUTPUT:
-                        canvas.qobject.add_group_to_join(group.group_id)
+                        if canvas.qobject is not None:
+                            canvas.qobject.add_group_to_join(group.group_id)
 
                         joined_widget = BoxWidget(group, PortMode.BOTH)
                         joined_rect = joined_widget.get_dummy_rect()
@@ -767,7 +801,8 @@ def set_group_layout_mode(group_id: int, port_mode: PortMode,
 
 @patchbay_api
 def clear_selection():
-    canvas.scene.clear_selection()
+    if canvas.scene is not None:
+        canvas.scene.clear_selection()
 
 # ------------------------------------------------------------------------
 
@@ -789,7 +824,8 @@ def set_group_icon(group_id: int, box_type: BoxType, icon_name: str):
         canvas.groups_to_redraw_in.add(group_id)
         return
 
-    QTimer.singleShot(0, canvas.scene.update)
+    if canvas.scene is not None:
+        QTimer.singleShot(0, canvas.scene.update)
 
 @patchbay_api
 def set_group_as_plugin(group_id: int, plugin_id: int,
@@ -852,7 +888,8 @@ def add_port(group_id: int, port_id: int, port_name: str,
 
     box.update_positions()
 
-    QTimer.singleShot(0, canvas.scene.update)
+    if canvas.scene is not None:
+        QTimer.singleShot(0, canvas.scene.update)
 
 @patchbay_api
 def remove_port(group_id: int, port_id: int):
@@ -865,6 +902,9 @@ def remove_port(group_id: int, port_id: int):
         _logger.critical(f"{_logging_str} - Port is in portgroup " 
                             f"{port.portgrp_id}, remove it before !")
         return
+
+    if canvas.scene is None:
+        raise CanvasSceneMissing
 
     if port.hidden_conn_widget is not None:
         canvas.scene.removeItem(port.hidden_conn_widget)
@@ -880,7 +920,8 @@ def remove_port(group_id: int, port_id: int):
     del item
     canvas.remove_port(port)
 
-    canvas.qobject.port_removed.emit(group_id, port_id)
+    if canvas.qobject is not None:
+        canvas.qobject.port_removed.emit(group_id, port_id)
     if canvas.loading_items:
         if port.port_mode is PortMode.OUTPUT:
             canvas.groups_to_redraw_out.add(group_id)
@@ -913,7 +954,8 @@ def rename_port(group_id: int, port_id: int, new_port_name: str):
 
     port.widget.parentItem().update_positions()
 
-    QTimer.singleShot(0, canvas.scene.update)
+    if canvas.scene is not None:
+        QTimer.singleShot(0, canvas.scene.update)
 
 @patchbay_api
 def port_has_hidden_connection(group_id: int, port_id: int, yesno: bool):
@@ -926,12 +968,16 @@ def port_has_hidden_connection(group_id: int, port_id: int, yesno: bool):
     if bool(port.hidden_conn_widget is None) == bool(not yesno):
         return
 
+    if canvas.scene is None:
+        raise CanvasSceneMissing
+
     if yesno:
         port.hidden_conn_widget = HiddenConnWidget(port.widget)
         canvas.scene.addItem(port.hidden_conn_widget)
 
     else:
-        canvas.scene.removeItem(port.hidden_conn_widget)
+        if port.hidden_conn_widget is not None:
+            canvas.scene.removeItem(port.hidden_conn_widget)
         del port.hidden_conn_widget
         port.hidden_conn_widget = None
 
@@ -954,7 +1000,7 @@ def add_portgroup(group_id: int, portgrp_id: int, port_mode: PortMode,
     portgrp.port_mode = port_mode
     portgrp.port_type = port_type
     portgrp.port_subtype = port_subtype
-    portgrp.port_id_list = tuple(port_id_list)
+    portgrp.port_id_list = list(port_id_list)
     portgrp.widget = None
 
     i = 0
@@ -1005,6 +1051,9 @@ def add_portgroup(group_id: int, portgrp_id: int, port_mode: PortMode,
 
 @patchbay_api
 def remove_portgroup(group_id: int, portgrp_id: int):
+    if canvas.scene is None:
+        raise CanvasSceneMissing
+    
     box_widget = None
 
     for portgrp in canvas.list_portgroups(group_id=group_id):
@@ -1049,8 +1098,6 @@ def connect_ports(connection_id: int, group_out_id: int, port_out_id: int,
     if out_port is None or in_port is None:
         _logger.critical(f"{_logging_str} - unable to find ports to connect")
         return
-    
-    out_port_wg, in_port_wg = out_port.widget, in_port.widget
 
     connection = ConnectionObject()
     connection.connection_id = connection_id
@@ -1065,13 +1112,15 @@ def connect_ports(connection_id: int, group_out_id: int, port_out_id: int,
     canvas.add_connection(connection)
 
     GroupedLinesWidget.prepare_conn_changes(group_out_id, group_in_id)
-    canvas.qobject.connect_update_timer.start()
-    canvas.qobject.connection_added.emit(connection_id)
+    if canvas.qobject is not None:
+        canvas.qobject.connect_update_timer.start()
+        canvas.qobject.connection_added.emit(connection_id)
     
     if canvas.loading_items:
         return
 
-    QTimer.singleShot(0, canvas.scene.update)
+    if canvas.scene is not None:
+        QTimer.singleShot(0, canvas.scene.update)
 
 @patchbay_api
 def disconnect_ports(connection_id: int):
@@ -1086,8 +1135,10 @@ def disconnect_ports(connection_id: int):
     
     GroupedLinesWidget.prepare_conn_changes(
         tmp_conn.group_out_id, tmp_conn.group_in_id)
-    canvas.qobject.connect_update_timer.start()
-    canvas.qobject.connection_removed.emit(connection_id)
+    
+    if canvas.qobject is not None:
+        canvas.qobject.connect_update_timer.start()
+        canvas.qobject.connection_removed.emit(connection_id)
 
     out_port = canvas.get_port(tmp_conn.group_out_id, tmp_conn.port_out_id)
     in_port = canvas.get_port(tmp_conn.group_in_id, tmp_conn.port_in_id)
@@ -1103,7 +1154,8 @@ def disconnect_ports(connection_id: int):
     if canvas.loading_items:
         return
 
-    QTimer.singleShot(0, canvas.scene.update)
+    if canvas.scene is not None:
+        QTimer.singleShot(0, canvas.scene.update)
 
 @patchbay_api
 def animate_before_hide_box(group_id: int, port_mode: PortMode):
@@ -1111,6 +1163,9 @@ def animate_before_hide_box(group_id: int, port_mode: PortMode):
     if group is None:
         _logger.info(f"{_logging_str} - failed to find group")
         return
+
+    if canvas.scene is None:
+        raise CanvasSceneMissing
 
     for box in group.widgets:
         if port_mode & box._port_mode:
@@ -1120,7 +1175,8 @@ def animate_before_hide_box(group_id: int, port_mode: PortMode):
 
 @patchbay_api
 def start_aliasing_check(aliasing_reason: AliasingReason):
-    canvas.qobject.start_aliasing_check(aliasing_reason)
+    if canvas.qobject is not None:
+        canvas.qobject.start_aliasing_check(aliasing_reason)
 
 @patchbay_api
 def set_aliasing_reason(aliasing_reason: AliasingReason, yesno: bool):
@@ -1128,14 +1184,21 @@ def set_aliasing_reason(aliasing_reason: AliasingReason, yesno: bool):
 
 @patchbay_api
 def get_theme() -> str:
+    if canvas.theme_manager is None:
+        raise CanvasThemeMissing
     return canvas.theme_manager.get_theme()
 
 @patchbay_api
-def list_themes() -> list[dict]:
+def list_themes() -> list[ThemeData]:
+    if canvas.theme_manager is None:
+        raise CanvasThemeMissing
     return canvas.theme_manager.list_themes()
 
 @patchbay_api
 def change_theme(theme_name='') -> bool:
+    if canvas.theme_manager is None:
+        raise CanvasThemeMissing
+    
     ret = canvas.theme_manager.set_theme(theme_name)
     if ret:
         options.theme_name = theme_name
@@ -1143,6 +1206,8 @@ def change_theme(theme_name='') -> bool:
 
 @patchbay_api
 def copy_and_load_current_theme(new_theme_name: str) -> int:
+    if canvas.theme_manager is None:
+        raise CanvasThemeMissing
     return canvas.theme_manager.copy_and_load_current_theme(new_theme_name)
 
 # ----------------------------------------------------------------------------
@@ -1218,6 +1283,8 @@ def set_auto_select_items(yesno: bool):
 
 @patchbay_api
 def set_elastic(yesno: bool):
+    if canvas.scene is None:
+        raise CanvasSceneMissing
     canvas.scene.set_elastic(yesno)
 
 @patchbay_api
@@ -1252,6 +1319,8 @@ def semi_hide_groups(group_ids: set[int]):
 
 @patchbay_api
 def invert_boxes_selection():
+    if canvas.scene is None:
+        raise CanvasSceneMissing
     canvas.scene.invert_boxes_selection()
 
 @patchbay_api
@@ -1262,6 +1331,9 @@ def select_port(group_id: int, port_id: int):
     
     if port.widget is None:
         return
+    
+    if canvas.scene is None:
+        raise CanvasSceneMissing
     
     box = port.widget.parentItem()
     canvas.scene.clearSelection()
@@ -1281,6 +1353,9 @@ def select_filtered_group_box(group_id: int, n_select=1):
     
     n_widget = 1
 
+    if canvas.scene is None:
+        raise CanvasSceneMissing
+
     for box in group.widgets:
         if box.isVisible():
             if n_select == n_widget:
@@ -1295,7 +1370,7 @@ def select_filtered_group_box(group_id: int, n_select=1):
 def get_box_true_layout(group_id: int, port_mode: PortMode) -> BoxLayoutMode:
     '''Should never return BoxLayoutMode.AUTO'''
     group = canvas.get_group(group_id)
-    if group_id is None:
+    if group is None:
         return BoxLayoutMode.AUTO
     
     for box in group.widgets:
@@ -1335,7 +1410,8 @@ def set_optional_gui_state(group_id: int, visible: bool):
             widget.set_optional_gui_state(visible)
     
     if not canvas.loading_items:
-        canvas.scene.update()
+        if canvas.scene is not None:
+            canvas.scene.update()
 
 @patchbay_api
 def zoom_reset():
@@ -1353,6 +1429,8 @@ def zoom_fit():
 
 @patchbay_api
 def save_cache():
+    if canvas.theme is None:
+        raise CanvasThemeMissing
     canvas.theme.save_cache()
 
 @patchbay_api

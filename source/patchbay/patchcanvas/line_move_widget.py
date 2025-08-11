@@ -24,7 +24,7 @@ from qtpy.QtGui import QPainter, QPainterPath
 from qtpy.QtWidgets import QGraphicsPathItem
 
 from patshared import PortMode, PortType
-from .init_values import canvas, CanvasItemType, Zv
+from .init_values import CanvasSceneMissing, CanvasThemeMissing, canvas, CanvasItemType, Zv
 
 # only to get parent type in IDE
 if TYPE_CHECKING:
@@ -35,6 +35,9 @@ class LineMoveWidget(QGraphicsPathItem):
     def __init__(self, port_mode: PortMode, port_type: PortType,
                  port_posinportgrp: int, portgrp_lenght: int,
                  parent: 'ConnectableWidget'):
+        if canvas.scene is None:
+            raise CanvasSceneMissing
+        
         QGraphicsPathItem.__init__(self)
         self._parent_is_portgroup = bool(len(parent.get_port_ids()) > 1)
 
@@ -60,16 +63,20 @@ class LineMoveWidget(QGraphicsPathItem):
         self._portgrp_len_to = portgrp_len
 
     def update_line_pos(self, scene_pos: QPointF):
+        if canvas.theme is None:
+            raise CanvasThemeMissing
+        
         theme = canvas.theme.line
         
-        if self._port_type is PortType.AUDIO_JACK:
-            theme = theme.audio
-        elif self._port_type is PortType.MIDI_JACK:
-            theme = theme.midi
-        elif self._port_type is PortType.MIDI_ALSA:
-            theme = theme.alsa
-        elif self._port_type is PortType.VIDEO:
-            theme = theme.video
+        match self._port_type:
+            case PortType.AUDIO_JACK:
+                theme = theme.audio
+            case PortType.MIDI_JACK:
+                theme = theme.midi
+            case PortType.MIDI_ALSA:
+                theme = theme.alsa
+            case PortType.VIDEO:
+                theme = theme.video
             
         theme = theme.selected
         

@@ -25,7 +25,8 @@ from typing import Optional
 
 from qtpy.QtCore import (
     Signal, Slot, Qt, QPoint, QPointF, QRectF, QTimer)
-from qtpy.QtGui import QCursor, QPixmap, QPolygonF, QBrush, QPainter
+from qtpy.QtGui import (
+    QCursor, QPixmap, QPolygonF, QBrush, QPainter, QTransform)
 from qtpy.QtWidgets import (
     QGraphicsRectItem, QGraphicsScene, QApplication,
     QGraphicsItem, QGraphicsView)
@@ -35,6 +36,7 @@ from .init_values import (
     AliasingReason,
     BoxHidding,
     CanvasItemType,
+    CanvasThemeMissing,
     GridStyle,
     Joining,
     Direction,
@@ -222,8 +224,9 @@ class PatchSceneMoth(QGraphicsScene):
     def get_scale_factor(self):
         return self._view.transform().m11()
 
-    def fix_scale_factor(self, transform=None):
-        fix, set_view = False, False
+    def fix_scale_factor(self, transform: Optional[QTransform]=None):
+        fix, set_view, view = False, False, None
+
         if not transform:
             set_view = True
             view = self._view
@@ -240,7 +243,7 @@ class PatchSceneMoth(QGraphicsScene):
             transform.scale(self._scale_min, self._scale_min)
 
         if set_view:
-            if fix:
+            if fix and view is not None:
                 view.setTransform(transform)
             self.scale_changed.emit(transform.m11())
 
@@ -354,7 +357,9 @@ class PatchSceneMoth(QGraphicsScene):
                 apply = True
         
         if apply:
-            canvas.qobject.start_aliasing_check(AliasingReason.NAV_ON_BORDERS)
+            if canvas.qobject is not None:
+                canvas.qobject.start_aliasing_check(
+                    AliasingReason.NAV_ON_BORDERS)
             self._view.ensureVisible(ensure_rect, 0, 0)
 
     def _start_navigation_on_borders(self):
@@ -486,7 +491,8 @@ class PatchSceneMoth(QGraphicsScene):
                 if box.update_positions_pending:
                     box.update_positions()
 
-            canvas.qobject.move_boxes_finished.emit()
+            if canvas.qobject is not None:
+                canvas.qobject.move_boxes_finished.emit()
 
     def add_box_to_animation(
             self, box_widget: BoxWidget, to_x: int, to_y: int,
@@ -507,7 +513,9 @@ class PatchSceneMoth(QGraphicsScene):
             # if needed.
             if moving_box.is_joining and joining is Joining.NO:
                 moving_box.is_joining = False
-                canvas.qobject.rm_group_to_join(box_widget.get_group_id())
+                if canvas.qobject is not None:
+                    canvas.qobject.rm_group_to_join(
+                        box_widget.get_group_id())
 
         moving_box.from_pt = QPointF(*box_widget.top_left())
         moving_box.to_pt = QPointF(to_x, to_y)
@@ -619,7 +627,8 @@ class PatchSceneMoth(QGraphicsScene):
         moving_box.from_pt = moving_box.to_pt
 
         aft_wrap_rect = box_widget.after_wrap_rect()
-        final_rect = QRectF(0.0, 0.0, aft_wrap_rect.width(), aft_wrap_rect.height())
+        final_rect = QRectF(
+            0.0, 0.0, aft_wrap_rect.width(), aft_wrap_rect.height())
         moving_box.final_rect = \
             final_rect.translated(moving_box.to_pt)
 
@@ -647,18 +656,19 @@ class PatchSceneMoth(QGraphicsScene):
         self._view.centerOn(widget)
 
     def get_connectable_item_at(
-            self, pos: QPointF, origin: ConnectableWidget) -> ConnectableWidget:
+            self, pos: QPointF, origin: ConnectableWidget) \
+                -> Optional[ConnectableWidget]:
         for item in self.items(pos, Qt.ItemSelectionMode.ContainsItemShape,
                                Qt.SortOrder.AscendingOrder):
             if isinstance(item, ConnectableWidget) and item is not origin:
                 return item
 
-    def get_box_at(self, pos: QPointF) -> BoxWidget:
+    def get_box_at(self, pos: QPointF) -> Optional[BoxWidget]:
         for item in self.items(pos, Qt.ItemSelectionMode.ContainsItemShape,
                                Qt.SortOrder.AscendingOrder):
             if isinstance(item, BoxWidget):
                 return item
-    
+
     def get_selected_boxes(self) -> list[BoxWidget]:
         return [i for i in self.selectedItems() if isinstance(i, BoxWidget)]
 
@@ -675,6 +685,9 @@ class PatchSceneMoth(QGraphicsScene):
         self._scale_min = w1/w0 if w0/h0 > w1/h1 else h1/h0
 
     def update_theme(self):
+        if canvas.theme is None:
+            raise CanvasThemeMissing
+        
         if canvas.theme.scene_background_image is not None:
             bg_brush = QBrush()
             bg_brush.setTextureImage(canvas.theme.scene_background_image)
@@ -694,10 +707,14 @@ class PatchSceneMoth(QGraphicsScene):
         self.update_grid_style()
 
     def drawBackground(self, painter, rect):
+        if canvas.theme is None:
+            raise CanvasThemeMissing
+        
         painter.save()
         painter.setPen(Qt.PenStyle.NoPen)
         
-        if not canvas.theme.scene_background_image.isNull():
+        if (canvas.theme.scene_background_image is not None
+                and not canvas.theme.scene_background_image.isNull()):
             canvas.theme.scene_background_image.setDevicePixelRatio(3.0)
             bg_brush = QBrush()
             bg_brush.setTextureImage(canvas.theme.scene_background_image)
@@ -1037,7 +1054,7 @@ class PatchSceneMoth(QGraphicsScene):
             if event.button() == Qt.MouseButton.LeftButton:
                 self.flying_connectable.mouseReleaseEvent(event)
                 self.flying_connectable = None
-                self.set_cursor(Qt.CursorShape.ArrowCursor)
+                self.set_cursor(Qt.CursorShape.ArrowCursor) # type:ignore
                 return
 
             if event.button() == Qt.MouseButton.RightButton:
@@ -1097,6 +1114,9 @@ class PatchSceneMoth(QGraphicsScene):
             self.flying_connectable.mouseMoveEvent(event)
             return
         
+        if canvas.theme is None:
+            raise CanvasThemeMissing
+
         if self._mouse_down_init:
             self._mouse_down_init = False
             self._mouse_rubberband = False
@@ -1207,7 +1227,8 @@ class PatchSceneMoth(QGraphicsScene):
             event.ignore()
             return
 
-        canvas.qobject.start_aliasing_check(AliasingReason.VIEW_MOVE)
+        if canvas.qobject is not None:
+            canvas.qobject.start_aliasing_check(AliasingReason.VIEW_MOVE)
 
         if (QApplication.keyboardModifiers()
                 & Qt.KeyboardModifier.ControlModifier):

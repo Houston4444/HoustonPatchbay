@@ -21,12 +21,15 @@ class BoxHidder(QGraphicsItem):
         self.update()
         
     def parentItem(self) -> 'BoxWidget':
-        return super().parentItem()
+        return super().parentItem() # type:ignore
     
     def boundingRect(self) -> QRectF:
         return self.parentItem().boundingRect()
     
     def paint(self, painter: QPainter, option, widget):
+        if canvas.theme is None:
+            return
+        
         painter.save()
         orig_rect = self.parentItem().boundingRect()
 

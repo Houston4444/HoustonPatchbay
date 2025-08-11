@@ -720,7 +720,7 @@ class Theme(StyleAttributer):
             pickle.dump(cls.font_metrics_cache, f)
     
     def read_theme(self, theme_dict: dict[str, dict], theme_file_path: str):
-        ''' theme_file_path is only used here to find external resources ''' 
+        '''theme_file_path is only used here to find external resources''' 
         if not isinstance(theme_dict, dict):
             _logger.error("invalid dict read error")
             return

@@ -31,20 +31,23 @@ from qtpy.QtWidgets import QGraphicsItem, QApplication
 # Imports (Custom)
 from patshared import PortMode, PortType, PortSubType
 from .init_values import (
-    CanvasItemType, PortObject, canvas, CallbackAct, ZvBox)
+    CanvasItemType, CanvasSceneMissing, CanvasThemeMissing, PortObject, canvas, CallbackAct, ZvBox)
 from .utils import canvas_callback
 from .connectable_widget import ConnectableWidget
 from .grouped_lines_widget import GroupedLinesWidget
 
 if TYPE_CHECKING:
-    from .box_widget import BoxWidget
+    from .box_widget_moth import BoxWidgetMoth
     from .portgroup_widget import PortgroupWidget
     
 
 # --------------------
 
 class PortWidget(ConnectableWidget):
-    def __init__(self, port: PortObject, parent: 'BoxWidget'):
+    def __init__(self, port: PortObject, parent: 'BoxWidgetMoth'):
+        if canvas.theme is None:
+            raise CanvasThemeMissing
+        
         ConnectableWidget.__init__(self, port, parent)        
         self._logger = logging.getLogger(__name__)
 
@@ -142,7 +145,7 @@ class PortWidget(ConnectableWidget):
                 self._name_truncked = True
         self._update_connect_pos()
 
-    def get_text_width(self):
+    def get_text_width(self) -> float:
         if self._name_truncked:
             return (self._theme.get_text_width(self._print_name)
                     + self._theme.get_text_width(self._trunck_sep)
@@ -161,6 +164,9 @@ class PortWidget(ConnectableWidget):
         return CanvasItemType.PORT
 
     def _update_connect_pos(self):
+        if canvas.theme is None:
+            raise CanvasThemeMissing
+        
         phi = 0.75 if self._pg_len > 2 else 0.62
         
         height = canvas.theme.port_height
@@ -184,13 +190,14 @@ class PortWidget(ConnectableWidget):
         self._connect_pos = QPointF(x_delta, y_delta)
 
     def connect_pos(self) -> QPointF:
-        return self.scenePos() + self._connect_pos
+        return self.scenePos() + self._connect_pos # type:ignore
 
     def setVisible(self, visible: bool):
         super().setVisible(visible)
         self._update_connect_pos()
 
-    def itemChange(self, change: int, value: bool):
+    def itemChange(
+            self, change: QGraphicsItem.GraphicsItemChange, value: bool):
         if change == QGraphicsItem.GraphicsItemChange.ItemSelectedHasChanged:            
             if self.changing_select_state:
                 self.changing_select_state = False
@@ -236,6 +243,9 @@ class PortWidget(ConnectableWidget):
         return QGraphicsItem.itemChange(self, change, value)
 
     def contextMenuEvent(self, event):
+        if canvas.scene is None:
+            raise CanvasSceneMissing
+        
         if canvas.scene.get_zoom_scale() <= 0.4:
             # prefer move box if zoom is too low
             event.ignore()
@@ -255,26 +265,29 @@ class PortWidget(ConnectableWidget):
         # precise the menu start point to still view the port
         # and be able to read its portgroup name.
         start_point = canvas.scene.screen_position(
-            self.scenePos() + QPointF(0.0, canvas.theme.port_height))
+            self.scenePos() + QPointF(0.0, canvas.theme.port_height)) # type:ignore
         
         if (self._portgrp_id and self._port_mode is PortMode.INPUT
                 and self._pg_pos + 1 <= self._pg_len // 2):
             start_point = canvas.scene.screen_position(
                 self.scenePos() + QPointF(
-                    0.0, canvas.theme.port_height * (0.5 + self._pg_len / 2.0)))
+                    0.0, canvas.theme.port_height * (0.5 + self._pg_len / 2.0))) # type:ignore
             
         bottom_screen = QApplication.primaryScreen().geometry().bottom()
         more = 12 if self._port_mode is PortMode.OUTPUT else 0
 
         if start_point.y() + 250 > bottom_screen:
             start_point = canvas.scene.screen_position(
-                self.scenePos() + QPointF(self._port_width + more, canvas.theme.port_height))
+                self.scenePos()
+                + QPointF(self._port_width + more, canvas.theme.port_height)) # type:ignore
         
         canvas.callback(
             CallbackAct.PORT_MENU_CALL, self._group_id, self._port_id,
             is_only_connect, start_point.x(), start_point.y())
 
-    def boundingRect(self):        
+    def boundingRect(self):
+        if canvas.theme is None:
+            raise CanvasThemeMissing
         return QRectF(0.0, 0.0, self._port_width, canvas.theme.port_height)
 
     def mousePressEvent(self, event):
@@ -286,6 +299,9 @@ class PortWidget(ConnectableWidget):
     def paint(self, painter, option, widget):
         if canvas.loading_items:
             return
+        
+        if canvas.theme is None:
+            raise CanvasThemeMissing
         
         painter.save()
         painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)

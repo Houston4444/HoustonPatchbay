@@ -27,6 +27,7 @@ from qtpy.QtWidgets import QGraphicsPathItem
 
 from patshared import PortType
 from .init_values import (
+    CanvasThemeMissing,
     canvas,
     options,
     CanvasItemType,
@@ -45,7 +46,7 @@ class _ThemeState(Enum):
 class _ThemeAttributes:
     base_pen: QPen
     color_main: QColor
-    color_alter: QColor
+    color_alter: QColor | None
     base_width: float
 
 
@@ -69,7 +70,7 @@ class LineWidget(QGraphicsPathItem):
         self.update_theme()
 
         self.setBrush(QColor(0, 0, 0, 0))
-        self.setGraphicsEffect(None)
+        self.setGraphicsEffect(None) # type:ignore
         self.update_line_pos()
 
     def check_select_state(self):
@@ -100,24 +101,13 @@ class LineWidget(QGraphicsPathItem):
 
         mid_x = min(mid_x, max(200.0, x_diff / 2))
 
-        return
-
-        path = QPainterPath(item1_con_pos)
-        path.cubicTo(item1_x + mid_x, item1_y,
-                     item2_x - mid_x, item2_y,
-                     item2_x, item2_y)
-        self.setPath(path)
-
-        if not fast_move:
-            # line gradient is not updated at mouse move event or when box 
-            # is moved by animation. It makes win few time and so avoid some
-            # graphic jerks.
-            self.update_line_gradient()
-
     def type(self) -> CanvasItemType:
         return CanvasItemType.BEZIER_LINE
 
     def update_theme(self):
+        if canvas.theme is None:
+            raise CanvasThemeMissing
+        
         port_type1 = self._item1.get_port_type()
         
         for theme_state in _ThemeState:
@@ -147,6 +137,9 @@ class LineWidget(QGraphicsPathItem):
             self._th_attribs[theme_state] = tha            
 
     def update_line_gradient(self):
+        if canvas.theme is None:
+            raise CanvasThemeMissing
+        
         pos_top = self.boundingRect().top()
         pos_bot = self.boundingRect().bottom()
 
@@ -166,6 +159,9 @@ class LineWidget(QGraphicsPathItem):
                 port_gradient.setColorAt(0.0, tha.color_main)
                 port_gradient.setColorAt(1.0, tha.color_main)
             else:
+                if tha.color_alter is None:
+                    raise Exception
+                
                 if self._semi_hidden:
                     shd = options.semi_hide_opacity
                     bgcolor = canvas.theme.scene_background_color
@@ -206,25 +202,6 @@ class LineWidget(QGraphicsPathItem):
             pen = QPen(QBrush(color_main), tha.base_width, Qt.PenStyle.SolidLine, Qt.PenCapStyle.FlatCap)
             pen.setCosmetic(True)
             self.setPen(pen)
-        
-    # def paint(self, painter, option, widget):
-    #     if canvas.loading_items:
-    #         return
-    #     # return
-    #     painter.save()
-    #     painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
-
-    #     QGraphicsPathItem.paint(self, painter, option, widget)
-
-    #     cosm_pen = QPen(self.pen())
-    #     cosm_pen.setCosmetic(True)
-    #     cosm_pen.setWidthF(1.00001)
-
-    #     painter.setPen(cosm_pen)
-    #     painter.setBrush(Qt.BrushStyle.NoBrush)
-    #     painter.drawPath(self.path())
-
-    #     painter.restore()
 
     def paint(self, painter, option, widget):
         return

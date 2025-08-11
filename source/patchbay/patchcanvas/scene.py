@@ -24,12 +24,13 @@ from qtpy.QtCore import QRectF, QMarginsF, Qt
 from qtpy.QtWidgets import QGraphicsView
 
 from patshared import PortMode
-from .init_values import canvas, options, Direction
+from .init_values import CanvasThemeMissing, canvas, options, Direction
 from .utils import (previous_left_on_grid, next_left_on_grid,
                     previous_top_on_grid, next_top_on_grid)
 
 from .scene_moth import MovingBox, PatchSceneMoth
 from .box_widget import BoxWidget
+from .scene_view import PatchGraphicsView
 
 
 @dataclass
@@ -71,7 +72,7 @@ class PatchScene(PatchSceneMoth):
     '''This class part of the scene is for repulsive boxes option
        because the algorythm is not simple and takes a lot of lines.
        See scene_moth.py for others scene methods.'''
-    def __init__(self, view: QGraphicsView):
+    def __init__(self, view: PatchGraphicsView):
         PatchSceneMoth.__init__(self, view)
         self._full_repulse_boxes = set[BoxWidget]()
 
@@ -114,7 +115,9 @@ class PatchScene(PatchSceneMoth):
             '''returns a QRectF to be placed at side of fixed_rect
             where fixed_rect is an already determinated futur place
             for a box'''
-                
+            if canvas.theme is None:
+                raise CanvasThemeMissing
+            
             if isinstance(fixed, BoxWidget):
                 fixed_rect = fixed.boundingRect().translated(fixed.pos())
             else:
@@ -200,6 +203,9 @@ class PatchScene(PatchSceneMoth):
         if not options.prevent_overlap:
             return
         
+        if canvas.theme is None:
+            raise CanvasThemeMissing
+        
         box_spacing = canvas.theme.box_spacing
         box_spacing_hor = canvas.theme.box_spacing_horizontal
         magnet = canvas.theme.magnet
@@ -221,7 +227,7 @@ class PatchScene(PatchSceneMoth):
                 # in view change the moving box for this box
                 # is the first of the list (optimisation).
                 # there is only one repulser
-                srect = mov_repulsables[0].final_rect
+                srect = mov_repulsables[0].final_rect # type:ignore wtf
             else:
                 # if box is already moving, consider its end position
                 moving_box = self.move_boxes.get(box)
@@ -360,7 +366,7 @@ class PatchScene(PatchSceneMoth):
             adding_list = list[ToMoveBox]()
 
             if mov_repulsables is not None:
-                for moving_box in mov_repulsables:
+                for moving_box in mov_repulsables: # type:ignore
                     mitem = moving_box.widget
                     
                     if (mitem in [r.item for r in repulsers]
@@ -451,6 +457,9 @@ class PatchScene(PatchSceneMoth):
             self, box_widget: BoxWidget, ex_rect: QRectF):
         if not options.prevent_overlap:
             return
+        
+        if canvas.theme is None:
+            raise CanvasThemeMissing
         
         neighbors = [box_widget]
         limit_top = ex_rect.top()

@@ -1,5 +1,7 @@
 
+import logging
 from typing import Iterator, Optional
+
 from qtpy.QtCore import QRectF
 from qtpy.QtGui import QPainterPath
 from qtpy.QtWidgets import QGraphicsItem
@@ -7,10 +9,13 @@ from qtpy.QtWidgets import QGraphicsItem
 from patshared import (
     BoxLayoutMode, PortMode, PortType, PortSubType, BoxType)
 from .init_values import (
-    canvas, options, InlineDisplay, GroupObject)
+    CanvasSceneMissing, CanvasThemeMissing, canvas, options, InlineDisplay, GroupObject)
 from .utils import get_portgroup_name_from_ports_names
 from .box_widget_moth import BoxWidgetMoth, UnwrapButton, TitleLine, WrappingState
 from .box_layout import PortsMinSizes, TitleOn, BoxLayout
+
+
+_logger = logging.getLogger(__name__)
 
 
 def list_port_types_and_subs() -> Iterator[tuple[PortType, PortSubType]]:
@@ -99,6 +104,9 @@ class BoxWidget(BoxWidgetMoth):
     
     def _get_ports_min_sizes(
             self, align_port_types: bool) -> PortsMinSizes:
+        if canvas.theme is None:
+            raise CanvasThemeMissing
+        
         max_in_width = max_out_width = 0.0
         
         box_theme = self.get_theme()
@@ -134,19 +142,25 @@ class BoxWidget(BoxWidgetMoth):
                     if port.pg_pos == 0:
                         portgrp_name = self._get_portgroup_name(port.portgrp_id)
 
-                        portgrp.widget.set_print_name(
-                            portgrp_name,
-                            max_pwidth - canvas.theme.port_grouped_width - 5)
+                        if portgrp is not None and portgrp.widget is not None:
+                            portgrp.widget.set_print_name(
+                                portgrp_name,
+                                max_pwidth - canvas.theme.port_grouped_width - 5)
                     
                     port.widget.set_print_name(
                         port.port_name.replace(
                             self._get_portgroup_name(port.portgrp_id), '', 1),
                         int(max_pwidth/2))
                     
+                    if portgrp is None or portgrp.widget is None:
+                        _logger.warning('_get_ports_min_sizes, '
+                                        'no portgrp or no portgrp.widget')
+                        continue
+                    
                     if (portgrp.widget.get_text_width() + 5
                             > max_pwidth - port.widget.get_text_width()):
                         portgrp.widget.reduce_print_name(
-                            max_pwidth - port.widget.get_text_width() - 5)
+                            max_pwidth - int(port.widget.get_text_width()) - 5)
                     
                     # the port_grouped_width is also used to define
                     # the portgroup minimum width
@@ -468,6 +482,7 @@ class BoxWidget(BoxWidgetMoth):
             else:
                 header_height = title_height
 
+            i = 0
             for i in range(1, 8):
                 max_title_width = 0
                 max_header_width = 50
@@ -486,11 +501,12 @@ class BoxWidget(BoxWidgetMoth):
                         # text line is at right of the icon
                         header_width += icon_size + 4
 
-                    max_header_width = max(max_header_width, header_width)
+                    max_header_width = max(max_header_width, int(header_width))
                 
-                title_height = (title_line_y_start
-                                + int(font_size * 1.4) * (len(title_lines) - 1)
-                                + font_size / 2)
+                title_height = int(
+                    title_line_y_start
+                    + int(font_size * 1.4) * (len(title_lines) - 1)
+                    + font_size / 2)
                 
                 header_height = max(header_height, title_height)
                 
@@ -563,6 +579,10 @@ class BoxWidget(BoxWidgetMoth):
                     and layout.layout_mode is BoxLayoutMode.LARGE):
                 large_layout = layout
 
+        if high_layout is None or large_layout is None:
+            # can not happen, just for typing
+            raise Exception
+
         high_layout.set_choosed()
         large_layout.set_choosed()
         
@@ -577,7 +597,7 @@ class BoxWidget(BoxWidgetMoth):
         return large_layout, high_layout
 
     def _set_ports_y_positions(
-            self, align_port_types: bool) -> dict[str, list[list[int]]]:
+            self, align_port_types: bool) -> dict[str, list[list[float]]]:
         ''' ports Y positioning, return height segments info
             used if port-in-offset or port-out-offset are not zero in box theme'''
 
@@ -592,6 +612,11 @@ class BoxWidget(BoxWidgetMoth):
                 widget.setY(wrapped_port_pos)
             else:
                 widget.setY(pos)
+        
+        if self._layout is None:
+            raise Exception('._layout is needed')
+        if canvas.theme is None:
+            raise CanvasThemeMissing
         
         box_theme = self.get_theme()
         port_spacing = box_theme.port_spacing()
@@ -691,8 +716,8 @@ class BoxWidget(BoxWidgetMoth):
             else:
                 last_out_pos += exc_out / 2
             
-        input_segments = list[list[int]]()
-        output_segments = list[list[int]]()
+        input_segments = list[list[float]]()
+        output_segments = list[list[float]]()
         in_segment = [last_in_pos, last_in_pos]
         out_segment = [last_out_pos, last_out_pos]
         
@@ -738,12 +763,13 @@ class BoxWidget(BoxWidgetMoth):
                         # input R
                         #     output R
                         portgrp = port.portgrp
-                        if portgrp.widget is not None:
-                            set_widget_pos(portgrp.widget, last_in_pos)
-                        
-                        for gp_port in portgrp.ports:
-                            set_widget_pos(gp_port.widget, last_in_pos)
-                            last_in_pos += canvas.theme.port_height
+                        if portgrp is not None:
+                            if portgrp.widget is not None:
+                                set_widget_pos(portgrp.widget, last_in_pos)
+                            
+                            for gp_port in portgrp.ports:
+                                set_widget_pos(gp_port.widget, last_in_pos)
+                                last_in_pos += canvas.theme.port_height
                     else:
                         set_widget_pos(port.widget, last_in_pos)
                         last_in_pos += canvas.theme.port_height
@@ -763,12 +789,13 @@ class BoxWidget(BoxWidgetMoth):
 
                     if port.portgrp_id:
                         portgrp = port.portgrp
-                        if portgrp.widget is not None:
-                            set_widget_pos(portgrp.widget, last_out_pos)
+                        if portgrp is not None:
+                            if portgrp.widget is not None:
+                                set_widget_pos(portgrp.widget, last_out_pos)
 
-                        for gp_port in portgrp.ports:
-                            set_widget_pos(gp_port.widget, last_out_pos)
-                            last_out_pos += canvas.theme.port_height
+                            for gp_port in portgrp.ports:
+                                set_widget_pos(gp_port.widget, last_out_pos)
+                                last_out_pos += canvas.theme.port_height
                     else:
                         set_widget_pos(port.widget, last_out_pos)
                         last_out_pos += canvas.theme.port_height
@@ -804,29 +831,30 @@ class BoxWidget(BoxWidgetMoth):
         
         wp_ports_bottom = wrapped_port_pos + canvas.theme.port_height
         
-        if self._wrapping_state is WrappingState.WRAPPED:
-            ports_top_in = ports_top_out = wrapped_port_pos
-            ports_bottom_in = ports_bottom_out = wp_ports_bottom
+        match self._wrapping_state:
+            case WrappingState.WRAPPED:
+                ports_top_in = ports_top_out = wrapped_port_pos
+                ports_bottom_in = ports_bottom_out = wp_ports_bottom
 
-        elif self._wrapping_state is WrappingState.WRAPPING:
-            ports_top_in = from_float_to(
-                ports_top_in, wrapped_port_pos, self._wrapping_ratio)
-            ports_top_out = from_float_to(
-                ports_top_out, wrapped_port_pos, self._wrapping_ratio)
-            ports_bottom_in = from_float_to(
-                ports_bottom_in, wp_ports_bottom, self._wrapping_ratio)
-            ports_bottom_out = from_float_to(
-                ports_bottom_out, wp_ports_bottom, self._wrapping_ratio)
-            
-        elif self._wrapping_state is WrappingState.UNWRAPPING:
-            ports_top_in = from_float_to(
-                wrapped_port_pos, ports_top_in, self._wrapping_ratio)
-            ports_top_out = from_float_to(
-                wrapped_port_pos, ports_top_out, self._wrapping_ratio)
-            ports_bottom_in = from_float_to(
-                wp_ports_bottom, ports_bottom_in, self._wrapping_ratio)
-            ports_bottom_out = from_float_to(
-                wp_ports_bottom, ports_bottom_out, self._wrapping_ratio)
+            case WrappingState.WRAPPING:
+                ports_top_in = from_float_to(
+                    ports_top_in, wrapped_port_pos, self._wrapping_ratio)
+                ports_top_out = from_float_to(
+                    ports_top_out, wrapped_port_pos, self._wrapping_ratio)
+                ports_bottom_in = from_float_to(
+                    ports_bottom_in, wp_ports_bottom, self._wrapping_ratio)
+                ports_bottom_out = from_float_to(
+                    ports_bottom_out, wp_ports_bottom, self._wrapping_ratio)
+                
+            case WrappingState.UNWRAPPING:
+                ports_top_in = from_float_to(
+                    wrapped_port_pos, ports_top_in, self._wrapping_ratio)
+                ports_top_out = from_float_to(
+                    wrapped_port_pos, ports_top_out, self._wrapping_ratio)
+                ports_bottom_in = from_float_to(
+                    wp_ports_bottom, ports_bottom_in, self._wrapping_ratio)
+                ports_bottom_out = from_float_to(
+                    wp_ports_bottom, ports_bottom_out, self._wrapping_ratio)
 
         self._layout.set_ports_top_bottom(
             ports_top_in, ports_bottom_in,
@@ -836,6 +864,9 @@ class BoxWidget(BoxWidgetMoth):
                 'output_segments': output_segments}
 
     def _set_ports_x_positions(self, ports_min_sizes: PortsMinSizes):
+        if canvas.theme is None:
+            raise CanvasThemeMissing
+        
         box_theme = self.get_theme()
         port_in_offset = box_theme.port_in_offset()
         port_out_offset = box_theme.port_out_offset()
@@ -873,7 +904,7 @@ class BoxWidget(BoxWidgetMoth):
 
             for port in portgrp.ports:
                 if port.widget is not None:
-                    port_print_width = port.widget.get_text_width()
+                    port_print_width = int(port.widget.get_text_width())
 
                     # change port in portgroup width only if
                     # portgrp will have a name
@@ -942,10 +973,9 @@ class BoxWidget(BoxWidgetMoth):
                     if self._can_handle_gui:
                         title_line.x += 2
                     
-                    if self.has_top_icon():
-                        self.top_icon.set_pos(
-                            self._width - int(icon_size) - 3 - pen_width - gui_margin,
-                            3 + pen_width + gui_margin)
+                    self.set_top_icon_pos(
+                        self._width - int(icon_size) - 3 - pen_width - gui_margin,
+                        int(3 + pen_width + gui_margin))
     
                 elif self._current_port_mode is PortMode.OUTPUT:
                     title_line.x = (pen_width + self._header_width
@@ -954,9 +984,9 @@ class BoxWidget(BoxWidgetMoth):
                     if self._can_handle_gui:
                         title_line.x -= 2
                     
-                    if self.has_top_icon():
-                        self.top_icon.set_pos(3 + pen_width + gui_margin,
-                                              3 + pen_width + gui_margin)
+                    self.set_top_icon_pos(
+                        3 + int(pen_width) + gui_margin,
+                        3 + int(pen_width) + gui_margin)
                 
                 title_line.y += y_correction
             return
@@ -984,9 +1014,9 @@ class BoxWidget(BoxWidgetMoth):
                 title_line.x = int((self._width - title_line.size) / 2)
         
         # set icon position
-        if self.has_top_icon():
-            self.top_icon.set_pos(int((self._width - max_title_icon_size)/2),
-                                  int(3 + pen_width + gui_margin))
+        self.set_top_icon_pos(
+            int((self._width - max_title_icon_size)/2),
+            int(3 + pen_width + gui_margin))
 
         # calculate header lines positions
         side_size = (self._width - max(max_title_icon_size, max_title_size)) * 0.5
@@ -999,7 +1029,7 @@ class BoxWidget(BoxWidgetMoth):
                                        self._width - 5.0, y)
     
     def _build_painter_path(
-            self, pos_dict: dict[str, list[tuple[float, float]]],
+            self, pos_dict: dict[str, list[list[float]]],
             selected=False):
         input_segments = pos_dict['input_segments']
         output_segments = pos_dict['output_segments']
@@ -1150,6 +1180,9 @@ class BoxWidget(BoxWidgetMoth):
                 else:
                     return UnwrapButton.RIGHT
 
+        if self._layout is None:
+            raise Exception('_get_wrap_triangle_pos, _layout is needed')
+
         last_in_pos = self._layout.ports_bottom_in
         last_out_pos = self._layout.ports_bottom_out
 
@@ -1200,6 +1233,9 @@ class BoxWidget(BoxWidgetMoth):
         if canvas.loading_items:
             return
 
+        if canvas.scene is None:
+            raise CanvasSceneMissing
+
         if (not (even_animated or wrap_anim)
                 and self in canvas.scene.move_boxes):
             self.update_positions_pending = True
@@ -1229,7 +1265,8 @@ class BoxWidget(BoxWidgetMoth):
         
         if theme_change:
             for portgrp in self._portgrp_list:
-                portgrp.widget.update_theme()
+                if portgrp.widget is not None:
+                    portgrp.widget.update_theme()
                 
             for port in self._port_list:
                 if port.hidden_conn_widget is not None:
@@ -1343,6 +1380,9 @@ class BoxWidget(BoxWidgetMoth):
     def get_dummy_rect(self) -> QRectF:
         '''Used only for dummy box, to know its size
         before joining or arranging.'''
+        if canvas.theme is None:
+            raise CanvasThemeMissing
+        
         self._current_port_mode = PortMode.NULL
         self._port_list.clear()
         self._portgrp_list.clear()
@@ -1373,6 +1413,9 @@ class BoxWidget(BoxWidgetMoth):
                       box_layout.full_width, box_layout.full_height)
     
     def get_layout(self, layout_mode: Optional[BoxLayoutMode] = None) -> BoxLayout:
+        if self._layout is None:
+            raise Exception('get_layout, .layout is required !')
+        
         if layout_mode is None:
             return self._layout
         

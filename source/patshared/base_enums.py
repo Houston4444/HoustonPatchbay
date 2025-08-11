@@ -123,7 +123,7 @@ class PortTypesViewFlag(IntFlag):
             if ptv in (PortTypesViewFlag.NONE, PortTypesViewFlag.ALL):
                 continue
 
-            if self & ptv:
+            if self & ptv and isinstance(ptv.name, str):
                 str_list.append(ptv.name)
         return '|'.join(str_list)
     
