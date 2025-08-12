@@ -24,7 +24,7 @@ from qtpy.QtGui import QPainter, QPainterPath
 from qtpy.QtWidgets import QGraphicsPathItem
 
 from patshared import PortMode, PortType
-from .init_values import CanvasSceneMissing, canvas, CanvasItemType, Zv
+from .init_values import canvas, CanvasItemType, Zv
 
 # only to get parent type in IDE
 if TYPE_CHECKING:
@@ -35,9 +35,7 @@ class LineMoveWidget(QGraphicsPathItem):
     def __init__(self, port_mode: PortMode, port_type: PortType,
                  port_posinportgrp: int, portgrp_lenght: int,
                  parent: 'ConnectableWidget'):
-        if canvas.scene is None:
-            raise CanvasSceneMissing
-        
+        canvas.ensure_init()
         QGraphicsPathItem.__init__(self)
         self._parent_is_portgroup = bool(len(parent.get_port_ids()) > 1)
 

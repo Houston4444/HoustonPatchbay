@@ -10,8 +10,6 @@ from patshared import PortMode, PortType, PortSubType
 from .init_values import (
     AliasingReason,
     CallbackAct,
-    CanvasSceneMissing,
-    CanvasNeverInit,
     ConnectableObject,
     ConnectionObject,
     canvas,
@@ -467,8 +465,7 @@ class ConnectableWidget(QGraphicsItem):
 
         QGraphicsItem.mouseMoveEvent(self, event)
         
-        if canvas.qobject is not None:
-            canvas.qobject.start_aliasing_check(AliasingReason.USER_MOVE)
+        canvas.qobject.start_aliasing_check(AliasingReason.USER_MOVE)
                 
     def mouseReleaseEvent(self, event):
         if event.button() == Qt.MouseButton.LeftButton:

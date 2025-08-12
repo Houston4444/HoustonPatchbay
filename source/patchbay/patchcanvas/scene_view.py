@@ -11,9 +11,8 @@ class CustomScrollBar(QScrollBar):
 
     def mouseMoveEvent(self, event) -> None:
         super().mouseMoveEvent(event)
-        if canvas.qobject is not None:
-            canvas.qobject.start_aliasing_check(
-                AliasingReason.SCROLL_BAR_MOVE)
+        canvas.qobject.start_aliasing_check(
+            AliasingReason.SCROLL_BAR_MOVE)
         
     def mouseReleaseEvent(self, event) -> None:
         super().mouseReleaseEvent(event)

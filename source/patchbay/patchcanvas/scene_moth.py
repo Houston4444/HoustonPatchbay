@@ -356,9 +356,8 @@ class PatchSceneMoth(QGraphicsScene):
                 apply = True
         
         if apply:
-            if canvas.qobject is not None:
-                canvas.qobject.start_aliasing_check(
-                    AliasingReason.NAV_ON_BORDERS)
+            canvas.qobject.start_aliasing_check(
+                AliasingReason.NAV_ON_BORDERS)
             self._view.ensureVisible(ensure_rect, 0, 0)
 
     def _start_navigation_on_borders(self):
@@ -490,8 +489,7 @@ class PatchSceneMoth(QGraphicsScene):
                 if box.update_positions_pending:
                     box.update_positions()
 
-            if canvas.qobject is not None:
-                canvas.qobject.move_boxes_finished.emit()
+            canvas.qobject.move_boxes_finished.emit()
 
     def add_box_to_animation(
             self, box_widget: BoxWidget, to_x: int, to_y: int,
@@ -512,9 +510,8 @@ class PatchSceneMoth(QGraphicsScene):
             # if needed.
             if moving_box.is_joining and joining is Joining.NO:
                 moving_box.is_joining = False
-                if canvas.qobject is not None:
-                    canvas.qobject.rm_group_to_join(
-                        box_widget.get_group_id())
+                canvas.qobject.rm_group_to_join(
+                    box_widget.get_group_id())
 
         moving_box.from_pt = QPointF(*box_widget.top_left())
         moving_box.to_pt = QPointF(to_x, to_y)
@@ -1217,8 +1214,7 @@ class PatchSceneMoth(QGraphicsScene):
             event.ignore()
             return
 
-        if canvas.qobject is not None:
-            canvas.qobject.start_aliasing_check(AliasingReason.VIEW_MOVE)
+        canvas.qobject.start_aliasing_check(AliasingReason.VIEW_MOVE)
 
         if (QApplication.keyboardModifiers()
                 & Qt.KeyboardModifier.ControlModifier):

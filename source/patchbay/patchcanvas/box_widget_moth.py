@@ -41,11 +41,8 @@ from qtpy.QtWidgets import QGraphicsItem, QApplication
 from patshared import PortMode, BoxLayoutMode, BoxType
 from .init_values import (
     AliasingReason,
-    Canvas,
     CanvasItemType,
-    CanvasSceneMissing,
     GroupObject,
-    CanvasNeverInit,
     PortObject,
     PortgrpObject,
     InlineDisplay,
@@ -742,8 +739,7 @@ class BoxWidgetMoth(QGraphicsItem):
                 item.repaint_lines(fast_move=True)
 
             canvas.scene.resize_the_scene()
-            if canvas.qobject is not None:
-                canvas.qobject.start_aliasing_check(AliasingReason.USER_MOVE)
+            canvas.qobject.start_aliasing_check(AliasingReason.USER_MOVE)
             return
 
         QGraphicsItem.mouseMoveEvent(self, event)

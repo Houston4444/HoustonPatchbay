@@ -21,7 +21,7 @@ from typing import TYPE_CHECKING
 from qtpy.QtGui import QColor
 from qtpy.QtWidgets import QGraphicsDropShadowEffect, QGraphicsObject
 
-from .init_values import CanvasSceneMissing, canvas
+from .init_values import canvas
 from .theme import StyleAttributer
 
 if TYPE_CHECKING:

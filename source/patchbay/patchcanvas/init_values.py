@@ -96,11 +96,6 @@ class CanvasNeverInit(Exception):
         super().__init__(message)   
 
 
-class CanvasThemeMissing(Exception):
-    def __init__(self, message='A canvas.theme is needed here'):
-        super().__init__(message)
-
-
 class CanvasSceneMissing(Exception):
     def __init__(self, message='canvas.scene is needed here'):
         super().__init__(message)
@@ -421,7 +416,7 @@ class ClipboardElement:
 # Main Canvas object
 class Canvas:
     def __init__(self):
-        self.qobject: Optional['CanvasObject'] = None
+        self._qobject: Optional['CanvasObject'] = None
         self.settings: Optional[QSettings] = None
         self._theme: Optional['Theme'] = None
 
@@ -477,10 +472,16 @@ class Canvas:
         It can not be None once patchcanvas is init'''
         return self._theme # type:ignore
 
+    @property
+    def qobject(self) -> 'CanvasObject':
+        '''The CanvasObject (a QObject), used when it can not be None.
+        It can not be None once patchcanvas is init'''
+        return self._qobject # type:ignore
+
     def ensure_init(self):
-        if self._theme is None:
-            raise CanvasNeverInit
-        if self._scene is None:
+        '''Ensure patchcanvas.init() has been called,
+        otherwise raise CanvasNeverInit exception'''
+        if not self.initiated:
             raise CanvasNeverInit
 
     def callback(self, action: CallbackAct, value1: int,
@@ -489,8 +490,8 @@ class Canvas:
         pass
 
     def clear_all(self):
-        if self.qobject is not None:
-            self.qobject.rm_all_groups_to_join()
+        if self._qobject is not None:
+            self._qobject.rm_all_groups_to_join()
         self.group_list.clear()
         self._groups_dict.clear()
         self._all_boxes.clear()
@@ -570,8 +571,8 @@ class Canvas:
             if widget in self._all_boxes:
                 self._all_boxes.remove(widget)
 
-        if self.qobject is not None:
-            self.qobject.rm_group_to_join(group.group_id)
+        if self._qobject is not None:
+            self._qobject.rm_group_to_join(group.group_id)
     
     def remove_port(self, port: PortObject):
         gp_dict = self._ports_dict.get(port.group_id)

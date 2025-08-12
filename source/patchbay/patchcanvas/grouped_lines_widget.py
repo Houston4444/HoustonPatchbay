@@ -26,7 +26,6 @@ from qtpy.QtWidgets import QGraphicsPathItem
 
 from patshared import PortType, PortMode
 from .init_values import (
-    CanvasSceneMissing,
     ConnectionThemeState,
     BoxHidding,
     canvas,
@@ -78,9 +77,7 @@ class GroupedLinesWidget(QGraphicsPathItem):
                  port_type: PortType,
                  theme_state: ConnectionThemeState):
         ''' Class for connection line widget '''
-        if canvas.scene is None:
-            raise CanvasSceneMissing
-        
+        canvas.ensure_init()
         QGraphicsPathItem.__init__(self)
 
         self._group_out_id = group_out_id

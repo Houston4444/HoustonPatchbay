@@ -30,7 +30,7 @@ except:
     from qtpy.QtSvg import QGraphicsSvgItem
 
 from patshared import BoxType, PortMode
-from .init_values import CanvasSceneMissing, CanvasThemeMissing, canvas, CanvasItemType
+from .init_values import canvas, CanvasItemType
 
 
 _logger = logging.getLogger(__name__)
@@ -71,9 +71,7 @@ def get_app_icon(icon_name: str) -> QIcon:
 
 class IconPixmapWidget(QGraphicsPixmapItem):
     def __init__(self, box_type: BoxType, icon_name: str, parent):
-        if canvas.theme is None:
-            raise CanvasThemeMissing
-        
+        canvas.ensure_init()
         QGraphicsPixmapItem.__init__(self, parent)
 
         box_theme = canvas.theme.box
