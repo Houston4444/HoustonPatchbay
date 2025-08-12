@@ -76,7 +76,7 @@ class LineWidget(QGraphicsPathItem):
         self.update_line_gradient()
 
     def trigger_disconnect(self):
-        canvas.callback(CallbackAct.PORTS_DISCONNECT, self._connection_id)
+        canvas.cb.ports_disconnect(self._connection_id)
 
     def semi_hide(self, yesno: bool):
         self._semi_hidden = yesno

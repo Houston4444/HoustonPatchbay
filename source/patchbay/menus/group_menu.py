@@ -108,16 +108,14 @@ class DisconnectMenu(QMenu):
                 if (conn.port_out.group_id is self._group.group_id
                         and conn.port_in.group_id is group.group_id
                         and conn.in_canvas):
-                    canvas.callback(CallbackAct.PORTS_DISCONNECT,
-                                    conn.connection_id)
+                    canvas.cb.ports_disconnect(conn.connection_id)
                     
         elif port_mode is PortMode.OUTPUT:
             for conn in self._mng.connections:
                 if (conn.port_in.group_id is self._group.group_id
                         and conn.port_out.group_id is group.group_id
                         and conn.in_canvas):
-                    canvas.callback(CallbackAct.PORTS_DISCONNECT,
-                                    conn.connection_id)
+                    canvas.cb.ports_disconnect(conn.connection_id)
 
 class GroupMenu(QMenu):
     def __init__(self, mng: 'PatchbayManager',
@@ -217,15 +215,13 @@ class GroupMenu(QMenu):
             for conn in self._mng.connections:
                 if (conn.port_out.group_id is self._group.group_id
                         and conn.in_canvas):
-                    canvas.callback(
-                        CallbackAct.PORTS_DISCONNECT, conn.connection_id)
+                    canvas.cb.ports_disconnect(conn.connection_id)
                     
         if self._port_mode & PortMode.INPUT:
             for conn in self._mng.connections:
                 if (conn.port_in.group_id is self._group.group_id
                         and conn.in_canvas):
-                    canvas.callback(
-                        CallbackAct.PORTS_DISCONNECT, conn.connection_id)
+                    canvas.cb.ports_disconnect(conn.connection_id)
     
     @Slot()
     def _join(self):
@@ -250,9 +246,8 @@ class GroupMenu(QMenu):
 
     @Slot()
     def _wrap(self):
-        canvas.callback(CallbackAct.GROUP_WRAP,
-                        self._group.group_id, self._port_mode,
-                        not self._is_wrapped)
+        canvas.cb.group_wrap(
+            self._group.group_id, self._port_mode, not self._is_wrapped)
         
     @Slot()
     def _auto_layout(self):
@@ -300,7 +295,7 @@ class GroupMenu(QMenu):
             self._group.name)
         self._group.rename_in_canvas()
         
-        canvas.callback(
+        canvas.cb.group_rename(
             CallbackAct.GROUP_RENAME, self._group.group_id,
             pretty_name, save_in_jack)
         

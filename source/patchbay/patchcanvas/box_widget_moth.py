@@ -584,9 +584,8 @@ class BoxWidgetMoth(QGraphicsItem):
                 mode = PortMode.OUTPUT
 
             if wrap:
-                canvas_callback(
-                    CallbackAct.GROUP_WRAP, self._group_id,
-                    self._port_mode, False)
+                canvas.cb.group_wrap(
+                    self._group_id, self._port_mode, False)
                 return True
             
         elif self._wrap_triangle_pos is not UnwrapButton.NONE:
@@ -605,9 +604,8 @@ class BoxWidgetMoth(QGraphicsItem):
                 
             trirect.translate(self.scenePos())
             if trirect.contains(scene_pos):
-                canvas_callback(
-                    CallbackAct.GROUP_WRAP, self._group_id,
-                    self._port_mode, True)
+                canvas.cb.group_wrap(
+                    self._group_id, self._port_mode, True)
                 return True
         
         return False
@@ -631,9 +629,8 @@ class BoxWidgetMoth(QGraphicsItem):
                             self._group_id, self._port_mode):
                         lines.setZValue(Zv.SEL_BOX_LINE.value)
 
-                    canvas_callback(
-                        CallbackAct.GROUP_SELECTED, self._group_id,
-                        self._port_mode)
+                    canvas.cb.group_selected(
+                        self._group_id, self._port_mode)
                 else:
                     for lines in GroupedLinesWidget.widgets_for_box(
                             self._group_id, self._port_mode):
@@ -648,16 +645,14 @@ class BoxWidgetMoth(QGraphicsItem):
         event.accept()
         canvas.menu_shown = True
 
-        canvas.callback(CallbackAct.GROUP_MENU_CALL,
-                        self._group_id,
-                        self._port_mode)
+        canvas.cb.group_menu_call(self._group_id, self._port_mode)
 
         canvas.menu_click_pos = QCursor.pos()
 
     def keyPressEvent(self, event):
         if self._plugin_id >= 0 and event.key() == Qt.Key.Key_Delete:
             event.accept()
-            canvas.callback(CallbackAct.PLUGIN_REMOVE, self._plugin_id)
+            canvas.cb.plugin_remove(self._plugin_id)
             return
         QGraphicsItem.keyPressEvent(self, event)
 
@@ -670,16 +665,15 @@ class BoxWidgetMoth(QGraphicsItem):
 
     def mouseDoubleClickEvent(self, event):
         if self._can_handle_gui:
-            canvas.callback(
-                CallbackAct.CLIENT_SHOW_GUI, self._group_id,
-                not self._gui_visible)
+            canvas.cb.client_show_gui(
+                self._group_id, not self._gui_visible)
 
         if self._plugin_id >= 0:
             event.accept()
-            canvas.callback(
-                CallbackAct.PLUGIN_SHOW_UI
-                if self._plugin_ui else CallbackAct.PLUGIN_EDIT,
-                self._plugin_id)
+            if self._plugin_ui:
+                canvas.cb.plugin_show_ui(self._plugin_id)
+            else:
+                canvas.cb.plugin_edit(self._plugin_id)
             return
 
         QGraphicsItem.mouseDoubleClickEvent(self, event)
@@ -764,8 +758,8 @@ class BoxWidgetMoth(QGraphicsItem):
                 for box in selected_boxes:
                     xy = nearest_on_grid(box.top_left())
                     arg_list.append((box._group_id, box._port_mode, *xy))
-                
-            canvas.callback(CallbackAct.BOXES_MOVED, *arg_list)
+            
+            canvas.cb.boxes_moved(*arg_list)
 
             canvas.set_aliasing_reason(AliasingReason.USER_MOVE, False)
 
@@ -822,9 +816,8 @@ class BoxWidgetMoth(QGraphicsItem):
         box_pos.set_wrapped(self.is_wrapped())
         box_pos.layout_mode = self._layout_mode
 
-        canvas_callback(
-            CallbackAct.GROUP_BOX_POS_CHANGED, self._group_id,
-            self._port_mode, box_pos)
+        canvas.cb.group_box_pos_changed(
+            self._group_id, self._port_mode, box_pos)
         group.gpos.boxes[self._port_mode].pos = self.top_left()
 
     def set_in_cache(self, yesno: bool):
@@ -1351,8 +1344,8 @@ class BoxWidgetMoth(QGraphicsItem):
                 and self._plugin_id <= MAX_PLUGIN_ID_ALLOWED
                 and (self._plugin_inline is InlineDisplay.ENABLED
                      or self._inline_scaling != scaling)):
-            data = canvas.callback(
-                CallbackAct.INLINE_DISPLAY, self._plugin_id,
+            data = canvas.cb.inline_display(
+                self._plugin_id,
                 int(inwidth*scaling), int(inheight*scaling))
 
             if data is None:

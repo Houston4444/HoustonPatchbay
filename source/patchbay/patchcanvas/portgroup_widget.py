@@ -210,8 +210,8 @@ class PortgroupWidget(ConnectableWidget):
                 self.scenePos() # type:ignore
                 + QPointF(self._portgrp_width + more, self._portgrp_height))
         
-        canvas.callback(
-            CallbackAct.PORTGROUP_MENU_CALL, self._group_id, self._portgrp_id,
+        canvas.cb.portgroup_menu_call(
+            self._group_id, self._portgrp_id,
             is_only_connect, start_point.x(), start_point.y())
 
     def boundingRect(self) -> QRectF:

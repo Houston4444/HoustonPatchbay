@@ -249,7 +249,7 @@ def get_icon(icon_type: BoxType, icon_name: str,
 
 @easy_log
 def canvas_callback(action: CallbackAct, *args):
-    canvas.callback(action, *args)
+    canvas.cb(action, *args)
 
 def is_dark_theme(widget: QWidget) -> bool:
     return bool(

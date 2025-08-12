@@ -65,6 +65,7 @@ from .hidden_conn_widget import HiddenConnWidget
 from .theme_manager import ThemeData, ThemeManager
 from .scene import PatchScene
 from .scene_view import PatchGraphicsView
+from .proto_callbacker import ProtoCallbacker
 
 
 _logger = logging.getLogger(__name__)
@@ -150,7 +151,7 @@ class CanvasObject(QObject):
 
         self._gps_to_join.clear()
         
-        canvas.callback(CallbackAct.ANIMATION_FINISHED)
+        canvas.cb.animation_finished()
 
     def add_group_to_join(self, group_id: int):
         self._gps_to_join.add(group_id)
@@ -163,18 +164,18 @@ class CanvasObject(QObject):
 
 
 @patchbay_api
-def init(view: PatchGraphicsView, callback: Callable,
+def init(view: PatchGraphicsView, callbacker: ProtoCallbacker,
           theme_paths: tuple[Path], fallback_theme: str):
     if canvas.initiated:
         _logger.critical("init() - already initiated")
         return
 
-    if not callback:
+    if not callbacker:
         _logger.critical("init() - fatal error: callback not set")
         return
 
     canvas.initiated = True
-    canvas.callback = callback
+    canvas._cb = callbacker
     canvas._scene = PatchScene(view)
     view.setScene(canvas._scene)
     
@@ -405,7 +406,7 @@ def split_group(group_id: int, on_place=False, redraw=True):
     group.splitted = True
 
     group.gpos.set_splitted(True)
-    canvas.callback(CallbackAct.GROUP_SPLITTED, group_id)
+    canvas.cb.group_splitted(group_id)
     
     if not redraw:
         return
@@ -479,7 +480,7 @@ def join_group(group_id: int):
     eater.set_wrapped(wrap, animate=False)
     eater.update_positions(scene_checks=False)
 
-    canvas.callback(CallbackAct.GROUP_JOINED, group_id)
+    canvas.cb.group_joined(group_id)
     QTimer.singleShot(0, canvas.scene.update)
 
 @patchbay_api

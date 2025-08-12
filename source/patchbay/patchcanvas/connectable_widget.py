@@ -89,7 +89,7 @@ class ConnectableWidget(QGraphicsItem):
             conn_ids_to_remove.append(connection.connection_id)
                 
         for conn_id in conn_ids_to_remove:
-            canvas.callback(CallbackAct.PORTS_DISCONNECT, conn_id)
+            canvas.cb.ports_disconnect(conn_id)
 
     def is_connectable_to(self, other: 'ConnectableWidget',
                           accept_same_port_mode=False)->bool:
@@ -181,8 +181,8 @@ class ConnectableWidget(QGraphicsItem):
             for i in range(len(self._port_ids)):
                 for connection in canvas.list_connections(self._po):
                     if connection.concerns(self._group_id, set([self._port_ids[i]])):
-                        canvas.callback(CallbackAct.PORTS_DISCONNECT,
-                                        connection.connection_id)
+                        canvas.cb.ports_disconnect(
+                            connection.connection_id)
 
                         for j in range(len(hover_port_ids)):
                             if len(hover_port_ids) >= len(self._port_ids):
@@ -193,13 +193,11 @@ class ConnectableWidget(QGraphicsItem):
                                     continue
 
                             if self._port_mode is PortMode.OUTPUT:
-                                canvas.callback(
-                                    CallbackAct.PORTS_CONNECT,                                        
+                                canvas.cb.ports_connect(
                                     hover_group_id, hover_port_ids[j],
                                     connection.group_in_id, connection.port_in_id)
                             else:
-                                canvas.callback(
-                                    CallbackAct.PORTS_CONNECT,
+                                canvas.cb.ports_connect(
                                     connection.group_out_id, connection.port_out_id,
                                     hover_group_id, hover_port_ids[j])
             return
@@ -217,13 +215,13 @@ class ConnectableWidget(QGraphicsItem):
                             ports_connected_list.append(
                                 [port_id, hover_port_id])
                         else:
-                            canvas.callback(CallbackAct.PORTS_DISCONNECT,
-                                            connection.connection_id)
+                            canvas.cb.ports_disconnect(
+                                connection.connection_id)
 
         if len(con_list) == maxportgrp:
             for connection in con_list:
-                canvas.callback(CallbackAct.PORTS_DISCONNECT,
-                                connection.connection_id)
+                canvas.cb.ports_disconnect(
+                    connection.connection_id)
         else:
             for i in range(len(self._port_ids)):
                 port_id = self._port_ids[i]
@@ -234,13 +232,11 @@ class ConnectableWidget(QGraphicsItem):
                     if i % len(hover_port_ids) == j % len(self._port_ids):
                         if not [port_id, hover_port_id] in ports_connected_list:
                             if self._port_mode is PortMode.OUTPUT:
-                                canvas.callback(
-                                    CallbackAct.PORTS_CONNECT,
+                                canvas.cb.ports_connect(
                                     self._group_id, port_id,
                                     hover_group_id, hover_port_id)                                    
                             else:
-                                canvas.callback(
-                                    CallbackAct.PORTS_CONNECT,
+                                canvas.cb.ports_connect(
                                     hover_group_id, hover_port_id,
                                     self._group_id, port_id)
 

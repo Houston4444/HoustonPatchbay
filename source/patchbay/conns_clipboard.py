@@ -63,14 +63,12 @@ class ConnClipboard:
                     for conn in self._mng.connections:
                         if (conn.port_out is orig_port
                                 and conn.port_in in conn_ports):
-                            canvas.callback(CallbackAct.PORTS_DISCONNECT,
-                                            conn.connection_id)
+                            canvas.cb.ports_disconnect(conn.connection_id)
                 elif orig_port.mode is PortMode.OUTPUT:
                     for conn in self._mng.connections:
                         if (conn.port_in is orig_port
                                 and conn.port_out in conn_ports):
-                            canvas.callback(CallbackAct.PORTS_DISCONNECT,
-                                            conn.connection_id)
+                            canvas.cb.ports_disconnect(conn.connection_id)
             self.cut = False
         
         for i in range(len(ports)):
@@ -91,8 +89,7 @@ class ConnClipboard:
 
                         if conn_port not in [c.port_in for c in self._mng.connections
                                              if c.port_out is port]:
-                            canvas.callback(
-                                CallbackAct.PORTS_CONNECT,
+                            canvas.cb.ports_connect(
                                 port.group_id, port.port_id,
                                 conn_port.group_id, conn_port.port_id)
 
@@ -103,8 +100,7 @@ class ConnClipboard:
                         
                         if conn_port not in [c.port_out for c in self._mng.connections
                                              if c.port_in is port]:
-                            canvas.callback(
-                                CallbackAct.PORTS_CONNECT,
+                            canvas.cb.ports_connect(
                                 conn_port.group_id, conn_port.port_id,
                                 port.group_id, port.port_id)
                 

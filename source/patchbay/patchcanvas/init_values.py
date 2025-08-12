@@ -23,6 +23,7 @@ import logging
 
 from qtpy.QtCore import QPointF, QRectF, QSettings, QPoint
 from qtpy.QtWidgets import QGraphicsItem
+from patchbay.patchcanvas.proto_callbacker import ProtoCallbacker
 
 from patshared import (
     PortMode, PortType, PortSubType, BoxType, BoxPos, GroupPos)
@@ -419,6 +420,7 @@ class Canvas:
         self._qobject: Optional['CanvasObject'] = None
         self.settings: Optional[QSettings] = None
         self._theme: Optional['Theme'] = None
+        self._cb: Optional[ProtoCallbacker] = None
 
         self.initiated = False
         self.theme_paths = ()
@@ -478,16 +480,17 @@ class Canvas:
         It can not be None once patchcanvas is init'''
         return self._qobject # type:ignore
 
+    @property
+    def cb(self) -> ProtoCallbacker:
+        '''The callbacker, used when it can not be None.
+        It can not be None once patchcanvas is init'''
+        return self._cb # type:ignore
+
     def ensure_init(self):
         '''Ensure patchcanvas.init() has been called,
         otherwise raise CanvasNeverInit exception'''
         if not self.initiated:
             raise CanvasNeverInit
-
-    def callback(self, action: CallbackAct, value1: int,
-                 value2: int, value_str: str):
-        # has to be redefined in patchcanvas.init()
-        pass
 
     def clear_all(self):
         if self._qobject is not None:

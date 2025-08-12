@@ -491,16 +491,14 @@ class AbstractConnectionsMenu(QMenu):
                                 and conn.port_in is port_in):
                             break
                     else:
-                        canvas.callback(
-                            CallbackAct.PORTS_CONNECT,
+                        canvas.cb.ports_connect(
                             port_out.group_id, port_out.port_id,
                             port_in.group_id, port_in.port_id)
                 else:
                     for conn in conns:
                         if (conn.port_out is port_out
                                 and conn.port_in is port_in):
-                            canvas.callback(
-                                CallbackAct.PORTS_DISCONNECT,
+                            canvas.cb.ports_disconnect(
                                 conn.connection_id)
                             break
     
@@ -939,7 +937,7 @@ class PoMenu(AbstractConnectionsMenu):
                             if c.port_in in self._ports()]
 
         for conn_id in conn_ids:
-            canvas.callback(CallbackAct.PORTS_DISCONNECT, conn_id)
+            canvas.cb.ports_disconnect(conn_id)
 
     @Slot()
     def _disconnect_all_visible(self):
@@ -962,16 +960,16 @@ class PoMenu(AbstractConnectionsMenu):
         if not isinstance(self._po, Portgroup):
             return
         
-        canvas.callback(CallbackAct.PORTGROUP_REMOVE,
-                        self._po.group_id, self._po.portgroup_id)
+        canvas.cb.portgroup_remove(
+            self._po.group_id, self._po.portgroup_id)
         
     @Slot()
     def _set_as_stereo_with(self):
         port: Port = self.sender().data()
         
-        canvas.callback(CallbackAct.PORTGROUP_ADD, port.group_id,
-                        port.mode, port.type,
-                        (self._po.port_id, port.port_id))
+        canvas.cb.portgroup_add(
+            port.group_id, port.mode, port.type,
+            (self._po.port_id, port.port_id))
     
     @Slot()
     def _rename(self):
@@ -991,8 +989,8 @@ class PoMenu(AbstractConnectionsMenu):
                     self._po.full_name)
             self._po.rename_in_canvas()
             
-            canvas.callback(
-                CallbackAct.PORT_RENAME, self._po.group_id, self._po.port_id,
+            canvas.cb.port_rename(
+                self._po.group_id, self._po.port_id,
                 pretty_name, save_in_jack)
 
         elif isinstance(self._po, Portgroup):
@@ -1016,8 +1014,8 @@ class PoMenu(AbstractConnectionsMenu):
                         port.full_name)
                 port.rename_in_canvas()
 
-                canvas.callback(
-                    CallbackAct.PORT_RENAME, port.group_id, port.port_id,
+                canvas.cb.port_rename(
+                    port.group_id, port.port_id,
                     port_pretty_name, save_in_jack)
 
     @Slot()
@@ -1025,6 +1023,5 @@ class PoMenu(AbstractConnectionsMenu):
         if not isinstance(self._po, Port):
             return
         
-        canvas.callback(
-            CallbackAct.PORT_INFO, self._po.group_id, self._po.port_id)
+        canvas.cb.port_info(self._po.group_id, self._po.port_id)
         

@@ -208,7 +208,6 @@ class PatchbayManager:
                 raise exception
             
             self.callbacker = callbacker
-            self.sg.callback_sig.connect(self.callbacker.receive)
         
         self._manual_path = manual_path
         
@@ -223,8 +222,8 @@ class PatchbayManager:
         patchcanvas.set_options(options)
         patchcanvas.set_features(features)
         patchcanvas.init(
-            view, self.__canvas_callback__, theme_paths, default_theme_name)
-        patchcanvas.canvas._scene.scale_changed.connect(self._scene_scale_changed)
+            view, callbacker, theme_paths, default_theme_name)
+        patchcanvas.canvas.scene.scale_changed.connect(self._scene_scale_changed)
         
         # just to have the zoom slider updated with the default zoom
         patchcanvas.canvas._scene.zoom_reset()

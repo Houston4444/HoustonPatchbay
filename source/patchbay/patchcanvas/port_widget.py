@@ -31,8 +31,7 @@ from qtpy.QtWidgets import QGraphicsItem, QApplication
 # Imports (Custom)
 from patshared import PortMode, PortType, PortSubType
 from .init_values import (
-    CanvasItemType, PortObject, canvas, CallbackAct, ZvBox)
-from .utils import canvas_callback
+    CanvasItemType, PortObject, canvas, ZvBox)
 from .connectable_widget import ConnectableWidget
 from .grouped_lines_widget import GroupedLinesWidget
 
@@ -151,8 +150,7 @@ class PortWidget(ConnectableWidget):
         return self._theme.get_text_width(self._print_name)
 
     def set_as_stereo(self, port_id: int):
-        canvas_callback(
-            CallbackAct.PORTGROUP_ADD,
+        canvas.cb.portgroup_add(
             self._group_id, self._port_mode, self._port_type,
             tuple([p.port_id for p in canvas.list_ports(group_id=self._group_id)
                    if p.port_id in (self._port_id, port_id)]))
@@ -272,8 +270,8 @@ class PortWidget(ConnectableWidget):
                 self.scenePos()
                 + QPointF(self._port_width + more, canvas.theme.port_height)) # type:ignore
         
-        canvas.callback(
-            CallbackAct.PORT_MENU_CALL, self._group_id, self._port_id,
+        canvas.cb.port_menu_call(
+            self._group_id, self._port_id,
             is_only_connect, start_point.x(), start_point.y())
 
     def boundingRect(self):

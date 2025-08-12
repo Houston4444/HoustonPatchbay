@@ -552,7 +552,7 @@ class PatchSceneMoth(QGraphicsScene):
                     group.gpos.boxes[PortMode.BOTH].pos = (to_x, to_y)
             else:
                 group.gpos.boxes[box_widget._port_mode].pos = (to_x, to_y)
-            canvas.callback(CallbackAct.GROUP_POS_MODIFIED, group.group_id)
+            canvas.cb.group_pos_modified(group.group_id)
 
         moving_box.start_time = time.time() - self._move_timer_start_at
 
@@ -1035,7 +1035,7 @@ class PatchSceneMoth(QGraphicsScene):
                     has_box = isinstance(item, BoxWidget)
             
             if not has_box:
-                canvas.callback(CallbackAct.BG_DOUBLE_CLICK)
+                canvas.cb.bg_double_click()
 
         QGraphicsScene.mouseDoubleClickEvent(self, event)
 
@@ -1247,8 +1247,7 @@ class PatchSceneMoth(QGraphicsScene):
             screen_pos = event.screenPos()
             scene_pos = event.scenePos()
             
-            canvas.callback(
-                CallbackAct.BG_RIGHT_CLICK,
+            canvas.cb.bg_right_click(
                 screen_pos.x(), screen_pos.y(),
                 scene_pos.x(), scene_pos.y(),
                 boxes_in_dict(self._selected_boxes))
