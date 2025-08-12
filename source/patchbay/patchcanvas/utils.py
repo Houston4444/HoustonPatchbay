@@ -122,6 +122,9 @@ def get_new_group_positions() -> dict[PortMode, tuple[int, int]]:
 
         return (int(x), int(y))
 
+    if canvas.scene is None:
+        raise CanvasSceneMissing
+
     rect = canvas.scene.get_new_scene_rect()
     if rect.isNull():
         return {PortMode.BOTH: (200, 0),
@@ -166,7 +169,7 @@ def portgroup_name_splitted(
     the second is another tuple containing a suffix for each port. 
     '''
     if len(port_names) <= 0:
-        return ('', ())
+        return ('', tuple[str]())
     if len(port_names) <= 1:
         return (port_names[0], ('',))
 
@@ -213,33 +216,34 @@ def get_icon(icon_type: BoxType, icon_name: str,
 
     icon = QIcon()
 
-    if icon_type is BoxType.HARDWARE:
-        icon_file = ":/canvas/"
-        icon_file += "dark/" if dark else "light/"
-           
-        if icon_name == "a2j":
-            icon_file += "DIN-5.svg"        
-        else:
-            if port_mode is PortMode.INPUT:
-                icon_file += "audio-headphones.svg"
-            elif port_mode is PortMode.OUTPUT:
-                icon_file += "microphone.svg"
+    match icon_type:
+        case BoxType.HARDWARE:
+            icon_file = ":/canvas/"
+            icon_file += "dark/" if dark else "light/"
+            
+            if icon_name == "a2j":
+                icon_file += "DIN-5.svg"        
             else:
-                icon_file += "pb_hardware.svg"
+                if port_mode is PortMode.INPUT:
+                    icon_file += "audio-headphones.svg"
+                elif port_mode is PortMode.OUTPUT:
+                    icon_file += "microphone.svg"
+                else:
+                    icon_file += "pb_hardware.svg"
 
-        icon.addFile(icon_file)
+            icon.addFile(icon_file)
 
-    elif icon_type is BoxType.MONITOR:
-        prefix = ":/canvas/"
-        prefix += "dark/" if dark else "light/"
-        
-        if port_mode is PortMode.INPUT:
-            icon.addFile(prefix + "monitor_capture.svg")
-        else:
-            icon.addFile(prefix + "monitor_playback.svg")
+        case BoxType.MONITOR:
+            prefix = ":/canvas/"
+            prefix += "dark/" if dark else "light/"
+            
+            if port_mode is PortMode.INPUT:
+                icon.addFile(prefix + "monitor_capture.svg")
+            else:
+                icon.addFile(prefix + "monitor_playback.svg")
 
-    elif icon_type is BoxType.INTERNAL:
-        icon.addFile(":/scalable/%s" % icon_name)
+        case BoxType.INTERNAL:
+            icon.addFile(":/scalable/%s" % icon_name)
 
     return icon
 
@@ -266,6 +270,7 @@ def boxes_in_dict(boxes: 'list[BoxWidget]') -> dict[int, PortMode]:
     return serial_dict
 
 def nearest_on_grid(xy: tuple[int, int]) -> tuple[int, int]:
+    canvas.ensure_init()
     x, y = xy
     cell_x = options.cell_width
     cell_y = options.cell_height
@@ -286,7 +291,7 @@ def nearest_on_grid_check_others(
     '''return the pos for a just moved box,
     may be not exactly the nearest point on grid,
     to prevent unwanted other boxes move.'''
-
+    canvas.ensure_init()
     spacing = canvas.theme.box_spacing
     check_rect = orig_box.boundingRect().translated(QPointF(*xy))    
     search_rect = check_rect.adjusted(- spacing, - spacing, spacing, spacing)
@@ -310,6 +315,7 @@ def nearest_on_grid_check_others(
     return nearest_on_grid(xy)
 
 def previous_left_on_grid(x: int | float) -> int:
+    canvas.ensure_init()
     cell_x = options.cell_width
     margin = canvas.theme.box_spacing / 2
     
@@ -320,6 +326,7 @@ def previous_left_on_grid(x: int | float) -> int:
     return ret
 
 def next_left_on_grid(x: int | float) -> int:
+    canvas.ensure_init()
     cell_x = options.cell_width
     margin = canvas.theme.box_spacing / 2
     
@@ -330,6 +337,7 @@ def next_left_on_grid(x: int | float) -> int:
     return ret
 
 def previous_top_on_grid(y: int | float) -> int:
+    canvas.ensure_init()
     cell_y = options.cell_height
     margin = canvas.theme.box_spacing / 2
     
@@ -340,6 +348,7 @@ def previous_top_on_grid(y: int | float) -> int:
     return ret
 
 def next_top_on_grid(y: int | float) -> int:
+    canvas.ensure_init()
     cell_y = options.cell_height
     margin = canvas.theme.box_spacing / 2
     
@@ -350,6 +359,7 @@ def next_top_on_grid(y: int | float) -> int:
     return ret
 
 def next_bottom_on_grid(y: int | float) -> int:
+    canvas.ensure_init()
     cell_y = options.cell_height
     margin = canvas.theme.box_spacing / 2
 
@@ -360,6 +370,7 @@ def next_bottom_on_grid(y: int | float) -> int:
     return ret
 
 def next_width_on_grid(width: int | float) -> int:
+    canvas.ensure_init()
     cell_x = options.cell_width
     box_spacing = canvas.theme.box_spacing
     ret = cell_x * (1 + (width // cell_x)) - box_spacing
@@ -369,6 +380,7 @@ def next_width_on_grid(width: int | float) -> int:
     return int(ret)
 
 def next_height_on_grid(height: int | float) -> int:
+    canvas.ensure_init()
     cell_y = options.cell_height
     box_spacing = canvas.theme.box_spacing
     ret = cell_y * (1 + (height // cell_y)) - box_spacing

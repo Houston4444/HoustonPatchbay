@@ -31,7 +31,7 @@ from qtpy.QtWidgets import QGraphicsItem, QApplication
 # Imports (Custom)
 from patshared import PortMode, PortType, PortSubType
 from .init_values import (
-    CanvasItemType, CanvasSceneMissing, CanvasThemeMissing, PortObject, canvas, CallbackAct, ZvBox)
+    CanvasItemType, PortObject, canvas, CallbackAct, ZvBox)
 from .utils import canvas_callback
 from .connectable_widget import ConnectableWidget
 from .grouped_lines_widget import GroupedLinesWidget
@@ -45,9 +45,6 @@ if TYPE_CHECKING:
 
 class PortWidget(ConnectableWidget):
     def __init__(self, port: PortObject, parent: 'BoxWidgetMoth'):
-        if canvas.theme is None:
-            raise CanvasThemeMissing
-        
         ConnectableWidget.__init__(self, port, parent)        
         self._logger = logging.getLogger(__name__)
 
@@ -164,9 +161,6 @@ class PortWidget(ConnectableWidget):
         return CanvasItemType.PORT
 
     def _update_connect_pos(self):
-        if canvas.theme is None:
-            raise CanvasThemeMissing
-        
         phi = 0.75 if self._pg_len > 2 else 0.62
         
         height = canvas.theme.port_height
@@ -243,9 +237,6 @@ class PortWidget(ConnectableWidget):
         return QGraphicsItem.itemChange(self, change, value)
 
     def contextMenuEvent(self, event):
-        if canvas.scene is None:
-            raise CanvasSceneMissing
-        
         if canvas.scene.get_zoom_scale() <= 0.4:
             # prefer move box if zoom is too low
             event.ignore()
@@ -286,8 +277,6 @@ class PortWidget(ConnectableWidget):
             is_only_connect, start_point.x(), start_point.y())
 
     def boundingRect(self):
-        if canvas.theme is None:
-            raise CanvasThemeMissing
         return QRectF(0.0, 0.0, self._port_width, canvas.theme.port_height)
 
     def mousePressEvent(self, event):
@@ -299,9 +288,6 @@ class PortWidget(ConnectableWidget):
     def paint(self, painter, option, widget):
         if canvas.loading_items:
             return
-        
-        if canvas.theme is None:
-            raise CanvasThemeMissing
         
         painter.save()
         painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)

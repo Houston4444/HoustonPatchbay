@@ -87,9 +87,6 @@ class IconPixmapWidget(QGraphicsPixmapItem):
         self.set_icon(box_type, icon_name)
 
     def set_icon(self, box_type: BoxType, name: str, port_mode=PortMode.NULL):
-        if canvas.scene is None:
-            raise CanvasSceneMissing
-        
         self.icon = get_app_icon(name)
 
         if not self.icon.isNull():
@@ -149,9 +146,6 @@ class IconSvgWidget(QGraphicsSvgItem): # type:ignore
         self.set_icon(box_type, name, port_mode)
 
     def set_icon(self, box_type: BoxType, name: str, port_mode: PortMode):
-        if canvas.theme is None:
-            raise CanvasThemeMissing
-        
         name = name.lower()
         icon_path = ""
         theme = canvas.theme.icon

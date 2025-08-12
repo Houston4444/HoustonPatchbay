@@ -41,9 +41,6 @@ class HiddenConnWidget(QGraphicsPathItem):
         self.update_line_gradient()
 
     def update_line_pos(self, fast_move=False):
-        if canvas.theme is None:
-            raise CanvasThemeMissing
-        
         x = self._port_widget.connect_pos().x()
         y = self._port_widget.scenePos().y()
         
@@ -90,9 +87,6 @@ class HiddenConnWidget(QGraphicsPathItem):
         return CanvasItemType.BEZIER_LINE
 
     def update_theme(self):
-        if canvas.theme is None:
-            raise CanvasThemeMissing
-        
         port_type = self._port_widget.get_port_type()
 
         theme = canvas.theme.line
@@ -116,11 +110,6 @@ class HiddenConnWidget(QGraphicsPathItem):
         self._theme_attrs = tha
 
     def update_line_gradient(self):
-        if canvas.scene is None:
-            raise CanvasSceneMissing
-        if canvas.theme is None:
-            raise CanvasThemeMissing
-
         tha = self._theme_attrs
         
         if self._semi_hidden:

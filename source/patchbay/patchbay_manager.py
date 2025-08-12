@@ -224,10 +224,10 @@ class PatchbayManager:
         patchcanvas.set_features(features)
         patchcanvas.init(
             view, self.__canvas_callback__, theme_paths, default_theme_name)
-        patchcanvas.canvas.scene.scale_changed.connect(self._scene_scale_changed)
+        patchcanvas.canvas._scene.scale_changed.connect(self._scene_scale_changed)
         
         # just to have the zoom slider updated with the default zoom
-        patchcanvas.canvas.scene.zoom_reset()
+        patchcanvas.canvas._scene.zoom_reset()
     
     @property
     def very_fast_operation(self) -> bool:
@@ -812,7 +812,7 @@ class PatchbayManager:
                 conn.add_to_canvas()
 
         if groups_and_pos:
-            patchcanvas.canvas.scene.prevent_box_user_move = True
+            patchcanvas.canvas._scene.prevent_box_user_move = True
 
             for group, gpos_redraw in groups_and_pos.items():
                 group.set_group_position(*gpos_redraw)
@@ -1078,7 +1078,7 @@ class PatchbayManager:
         patchcanvas.set_prevent_overlap(bool(yesno))
 
     def set_zoom(self, zoom: float):
-        patchcanvas.canvas.scene.zoom_ratio(zoom)
+        patchcanvas.canvas._scene.zoom_ratio(zoom)
 
     def zoom_reset(self):
         patchcanvas.zoom_reset()
@@ -1578,7 +1578,7 @@ class PatchbayManager:
                     self.connections.remove(conn)
 
         if some_groups_removed:
-            patchcanvas.canvas.scene.resize_the_scene()
+            patchcanvas.canvas._scene.resize_the_scene()
         
         self.sg.patch_may_have_changed.emit()
     

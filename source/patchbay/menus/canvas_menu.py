@@ -140,25 +140,25 @@ class CanvasMenu(QMenu):
             _translate('patchbay', 'auto-fit'))
         self.autofit.setIcon(QIcon.fromTheme('zoom-select-fit'))
         self.autofit.setShortcut('Home')
-        self.autofit.triggered.connect(patchcanvas.canvas.scene.zoom_fit)
+        self.autofit.triggered.connect(patchcanvas.canvas._scene.zoom_fit)
 
         self.zoom_in = self.zoom_menu.addAction(
             _translate('patchbay', 'Zoom +'))
         self.zoom_in.setIcon(QIcon.fromTheme('zoom-in'))
         self.zoom_in.setShortcut('Ctrl++')
-        self.zoom_in.triggered.connect(patchcanvas.canvas.scene.zoom_in)
+        self.zoom_in.triggered.connect(patchcanvas.canvas._scene.zoom_in)
 
         self.zoom_out = self.zoom_menu.addAction(
             _translate('patchbay', 'Zoom -'))
         self.zoom_out.setIcon(QIcon.fromTheme('zoom-out'))
         self.zoom_out.setShortcut('Ctrl+-')
-        self.zoom_out.triggered.connect(patchcanvas.canvas.scene.zoom_out)
+        self.zoom_out.triggered.connect(patchcanvas.canvas._scene.zoom_out)
 
         self.zoom_orig = self.zoom_menu.addAction(
             _translate('patchbay', 'Default Zoom'))
         self.zoom_orig.setIcon(QIcon.fromTheme('zoom'))
         self.zoom_orig.setShortcut('Ctrl+1')
-        self.zoom_orig.triggered.connect(patchcanvas.canvas.scene.zoom_reset)
+        self.zoom_orig.triggered.connect(patchcanvas.canvas._scene.zoom_reset)
 
         self.addMenu(self.zoom_menu)
 

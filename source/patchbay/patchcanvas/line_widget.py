@@ -27,7 +27,6 @@ from qtpy.QtWidgets import QGraphicsPathItem
 
 from patshared import PortType
 from .init_values import (
-    CanvasThemeMissing,
     canvas,
     options,
     CanvasItemType,
@@ -105,9 +104,6 @@ class LineWidget(QGraphicsPathItem):
         return CanvasItemType.BEZIER_LINE
 
     def update_theme(self):
-        if canvas.theme is None:
-            raise CanvasThemeMissing
-        
         port_type1 = self._item1.get_port_type()
         
         for theme_state in _ThemeState:
@@ -137,9 +133,6 @@ class LineWidget(QGraphicsPathItem):
             self._th_attribs[theme_state] = tha            
 
     def update_line_gradient(self):
-        if canvas.theme is None:
-            raise CanvasThemeMissing
-        
         pos_top = self.boundingRect().top()
         pos_bot = self.boundingRect().bottom()
 

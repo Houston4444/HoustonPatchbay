@@ -68,9 +68,9 @@ repère 0,0 ne pas afficher
 patchcanvas check:
     Callbacks: quelque chose de plus pythonique
     BoxWidgetMoth: 
-        need a canvas where .theme and .scene are never None 
         check if move_boxes etc... have to receive BoxWidgetMoth (instead of BoxWidget) 
             or if theses funcs need to be executed in BoxWidget
     portgrp.widget vérifier si Optional est nécessaire (un peu chiant)
     porgrp et portobject: instantiation directe
+    patchcanvas check if init has been run
 

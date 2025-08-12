@@ -10,7 +10,7 @@ from typing import Optional
 from qtpy.QtCore import QTimer
 
 from .theme import Theme
-from .init_values import canvas, CallbackAct
+from .init_values import CanvasSceneMissing, canvas, CallbackAct
 from .xdg import xdg_data_dirs, xdg_data_home
 
 _logger = logging.Logger(__name__)
@@ -26,6 +26,9 @@ class ThemeData:
 
 class ThemeManager:
     def __init__(self, theme_paths: tuple[Path]) -> None:
+        if canvas.scene is None:
+            raise CanvasSceneMissing
+        
         self.current_theme = None
         self.current_theme_file = Path()
         self.theme_paths = theme_paths
@@ -88,9 +91,9 @@ class ThemeManager:
         theme_dict = self._convert_configparser_object_to_dict(conf)
         self._last_modified = os.path.getmtime(self.current_theme_file)
         
-        del canvas.theme
-        canvas.theme = Theme()
-        canvas.theme.read_theme(theme_dict, self.current_theme_file)
+        del canvas._theme
+        canvas._theme = Theme()
+        canvas._theme.read_theme(theme_dict, self.current_theme_file)
         canvas.scene.update_theme()
         
         theme_ref = self.current_theme_file.parent.name
@@ -158,8 +161,8 @@ class ThemeManager:
         return True
     
     def set_fallback_theme(self):
-        del canvas.theme
-        canvas.theme = Theme()
+        del canvas._theme
+        canvas._theme = Theme()
         canvas.scene.update_theme()
 
     def list_themes(self) -> list[ThemeData]:

@@ -4,7 +4,7 @@ import logging
 from typing import TYPE_CHECKING
 
 from patshared import PortMode, BoxLayoutMode
-from .init_values import CanvasThemeMissing, canvas, options
+from .init_values import CanvasNeverInit, canvas, options
 from .utils import next_width_on_grid, next_height_on_grid
 
 if TYPE_CHECKING:
@@ -37,8 +37,7 @@ class BoxLayout:
     def init_from_box(
             cls, box: 'BoxWidget',
             ports_min_sizes: PortsMinSizes):
-        if canvas.theme is None:
-            raise CanvasThemeMissing
+        canvas.ensure_init()
 
         # never call for external one of theses attributes !
         # Indeed, for optimization reasons, all BoxLayout instances are modified
@@ -60,8 +59,7 @@ class BoxLayout:
                  layout_mode: BoxLayoutMode,
                  title_on: TitleOn,
                  title_template: dict[str, int]):
-        if canvas.theme is None:
-            raise CanvasThemeMissing
+        canvas.ensure_init()
 
         self.n_lines = n_lines
         self.layout_mode = layout_mode

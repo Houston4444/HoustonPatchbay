@@ -36,7 +36,6 @@ from .init_values import (
     AliasingReason,
     BoxHidding,
     CanvasItemType,
-    CanvasThemeMissing,
     GridStyle,
     Joining,
     Direction,
@@ -685,9 +684,6 @@ class PatchSceneMoth(QGraphicsScene):
         self._scale_min = w1/w0 if w0/h0 > w1/h1 else h1/h0
 
     def update_theme(self):
-        if canvas.theme is None:
-            raise CanvasThemeMissing
-        
         if canvas.theme.scene_background_image is not None:
             bg_brush = QBrush()
             bg_brush.setTextureImage(canvas.theme.scene_background_image)
@@ -707,9 +703,6 @@ class PatchSceneMoth(QGraphicsScene):
         self.update_grid_style()
 
     def drawBackground(self, painter, rect):
-        if canvas.theme is None:
-            raise CanvasThemeMissing
-        
         painter.save()
         painter.setPen(Qt.PenStyle.NoPen)
         
@@ -1114,9 +1107,6 @@ class PatchSceneMoth(QGraphicsScene):
             self.flying_connectable.mouseMoveEvent(event)
             return
         
-        if canvas.theme is None:
-            raise CanvasThemeMissing
-
         if self._mouse_down_init:
             self._mouse_down_init = False
             self._mouse_rubberband = False

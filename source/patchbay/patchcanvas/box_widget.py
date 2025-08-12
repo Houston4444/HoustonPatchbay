@@ -9,7 +9,7 @@ from qtpy.QtWidgets import QGraphicsItem
 from patshared import (
     BoxLayoutMode, PortMode, PortType, PortSubType, BoxType)
 from .init_values import (
-    CanvasSceneMissing, CanvasThemeMissing, canvas, options, InlineDisplay, GroupObject)
+    canvas, options, InlineDisplay, GroupObject)
 from .utils import get_portgroup_name_from_ports_names
 from .box_widget_moth import BoxWidgetMoth, UnwrapButton, TitleLine, WrappingState
 from .box_layout import PortsMinSizes, TitleOn, BoxLayout
@@ -104,9 +104,6 @@ class BoxWidget(BoxWidgetMoth):
     
     def _get_ports_min_sizes(
             self, align_port_types: bool) -> PortsMinSizes:
-        if canvas.theme is None:
-            raise CanvasThemeMissing
-        
         max_in_width = max_out_width = 0.0
         
         box_theme = self.get_theme()
@@ -615,8 +612,6 @@ class BoxWidget(BoxWidgetMoth):
         
         if self._layout is None:
             raise Exception('._layout is needed')
-        if canvas.theme is None:
-            raise CanvasThemeMissing
         
         box_theme = self.get_theme()
         port_spacing = box_theme.port_spacing()
@@ -864,9 +859,6 @@ class BoxWidget(BoxWidgetMoth):
                 'output_segments': output_segments}
 
     def _set_ports_x_positions(self, ports_min_sizes: PortsMinSizes):
-        if canvas.theme is None:
-            raise CanvasThemeMissing
-        
         box_theme = self.get_theme()
         port_in_offset = box_theme.port_in_offset()
         port_out_offset = box_theme.port_out_offset()
@@ -1233,9 +1225,6 @@ class BoxWidget(BoxWidgetMoth):
         if canvas.loading_items:
             return
 
-        if canvas.scene is None:
-            raise CanvasSceneMissing
-
         if (not (even_animated or wrap_anim)
                 and self in canvas.scene.move_boxes):
             self.update_positions_pending = True
@@ -1380,9 +1369,6 @@ class BoxWidget(BoxWidgetMoth):
     def get_dummy_rect(self) -> QRectF:
         '''Used only for dummy box, to know its size
         before joining or arranging.'''
-        if canvas.theme is None:
-            raise CanvasThemeMissing
-        
         self._current_port_mode = PortMode.NULL
         self._port_list.clear()
         self._portgrp_list.clear()

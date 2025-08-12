@@ -27,7 +27,6 @@ from qtpy.QtWidgets import QGraphicsPathItem
 from patshared import PortType, PortMode
 from .init_values import (
     CanvasSceneMissing,
-    CanvasThemeMissing,
     ConnectionThemeState,
     BoxHidding,
     canvas,
@@ -162,9 +161,6 @@ class GroupedLinesWidget(QGraphicsPathItem):
 
     @staticmethod
     def connections_changed(group_out_id: int, group_in_id: int):
-        if canvas.scene is None:
-            raise CanvasSceneMissing
-        
         gp_dict = _all_lines_widgets.get((group_out_id, group_in_id))
         if gp_dict is None:
             gp_dict = {}
@@ -390,9 +386,6 @@ class GroupedLinesWidget(QGraphicsPathItem):
         return CanvasItemType.BEZIER_LINE
 
     def update_theme(self):
-        if canvas.theme is None:
-            raise CanvasThemeMissing
-        
         theme = canvas.theme.line
         if self._theme_state is ConnectionThemeState.DISCONNECTING:
             theme = theme.disconnecting
@@ -420,11 +413,6 @@ class GroupedLinesWidget(QGraphicsPathItem):
         self._th_attribs = tha
 
     def update_line_gradient(self):
-        if canvas.scene is None:
-            raise CanvasSceneMissing
-        if canvas.theme is None:
-            raise CanvasThemeMissing
-        
         if (self._box_hidding_out is not BoxHidding.NONE
                 or self._box_hidding_in is not BoxHidding.NONE):
             return

@@ -74,7 +74,7 @@ class PortCheckBox(QCheckBox):
         self.setTristate(True)
         
         port_height = int(
-            canvas.theme.port_height * options.default_zoom / 100.0 + 2)
+            canvas._theme.port_height * options.default_zoom / 100.0 + 2)
         self.setMinimumHeight(port_height)
         self.setMinimumWidth(port_height)
         
@@ -89,7 +89,7 @@ class PortCheckBox(QCheckBox):
     def set_theme(self):        
         po = self._po
         
-        full_theme = canvas.theme
+        full_theme = canvas._theme
         theme = full_theme.port
         line_theme = full_theme.line
         
@@ -171,7 +171,7 @@ class PortCheckBox(QCheckBox):
         pen = QPen(self._theme.fill_pen())
         pen.setWidth(1)
         painter.setPen(pen)
-        bg = QColor(canvas.theme.scene_background_color)
+        bg = QColor(canvas._theme.scene_background_color)
         bg.setAlphaF(1.0)
         painter.setBrush(QBrush(bg))
         
@@ -198,7 +198,7 @@ class CheckFrame(QFrame):
                  port_name: str, port_name_end: str,
                  parent: 'ConnectMenu', pg_pos=0, pg_len=1):
         QFrame.__init__(self, parent)
-        port_height = int(canvas.theme.port_height * options.default_zoom / 100.0) + 2
+        port_height = int(canvas._theme.port_height * options.default_zoom / 100.0) + 2
         self.setMinimumHeight(port_height)
         self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
         
@@ -228,7 +228,7 @@ class CheckFrame(QFrame):
     def _set_theme(self):
         po = self._p_object
 
-        full_theme = canvas.theme
+        full_theme = canvas._theme
         theme = full_theme.port
 
         if isinstance(po, Portgroup):
@@ -357,7 +357,7 @@ class GroupConnectMenu(QMenu):
         if isinstance(parent, DangerousMenu):
             self._connect_menu = parent.parent()
         
-        theme = canvas.theme.box        
+        theme = canvas._theme.box        
         if group.cnv_box_type is BoxType.CLIENT:
             theme = theme.client
         elif group.cnv_box_type is BoxType.HARDWARE:

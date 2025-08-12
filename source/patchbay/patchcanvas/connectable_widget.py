@@ -1,5 +1,6 @@
 
 import time
+from tkinter import N
 from typing import TYPE_CHECKING, Optional
 from qtpy.QtCore import Qt, QPointF
 from qtpy.QtGui import QCursor
@@ -10,6 +11,7 @@ from .init_values import (
     AliasingReason,
     CallbackAct,
     CanvasSceneMissing,
+    CanvasNeverInit,
     ConnectableObject,
     ConnectionObject,
     canvas,
@@ -19,7 +21,8 @@ from .grouped_lines_widget import GroupedLinesWidget, GroupOutInsDict
 
 if TYPE_CHECKING:
     from .box_widget_moth import BoxWidgetMoth
-    
+    from .theme import Theme
+    from .scene import PatchScene
 
 class ConnectableWidget(QGraphicsItem):
     """ This class is the mother class for port and portgroups
@@ -30,6 +33,7 @@ class ConnectableWidget(QGraphicsItem):
         _hover_item: Optional['ConnectableWidget']
 
     def __init__(self, connectable: ConnectableObject, parent: 'BoxWidgetMoth'):
+        canvas.ensure_init()
         QGraphicsItem.__init__(self, parent)
         self.setFlags(QGraphicsItem.GraphicsItemFlag.ItemIsSelectable)
         self.setCacheMode(QGraphicsItem.CacheMode.DeviceCoordinateCache)
@@ -59,7 +63,7 @@ class ConnectableWidget(QGraphicsItem):
         # needed for selecting portgroup and ports together        
         self.mouse_releasing = False
         self.changing_select_state = False
-        
+    
     def get_group_id(self) -> int:
         return self._group_id
 
@@ -125,8 +129,7 @@ class ConnectableWidget(QGraphicsItem):
                 line_mov.set_destination_portgrp_pos(i, self_ports_len)
             else:
                 item = line_mov
-                if canvas.scene is not None:
-                    canvas.scene.removeItem(item)
+                canvas.scene.removeItem(item)
                 del item
 
         while len(self._line_mov_list) < self_ports_len:
@@ -257,10 +260,7 @@ class ConnectableWidget(QGraphicsItem):
             self.setSelected(False)
         QGraphicsItem.hoverLeaveEvent(self, event)
         
-    def mousePressEvent(self, event):
-        if canvas.scene is None:
-            raise CanvasSceneMissing
-        
+    def mousePressEvent(self, event):        
         if canvas.scene.get_zoom_scale() <= 0.4:
             # prefer move box if zoom is too low
             event.ignore()
@@ -305,9 +305,6 @@ class ConnectableWidget(QGraphicsItem):
         QGraphicsItem.mousePressEvent(self, event)
 
     def mouseMoveEvent(self, event):
-        if canvas.scene is None:
-            raise CanvasSceneMissing
-        
         if (not event.buttons() & Qt.MouseButton.LeftButton 
                 and canvas.scene.flying_connectable is not self):
             QGraphicsItem.mouseMoveEvent(self, event)
@@ -474,9 +471,6 @@ class ConnectableWidget(QGraphicsItem):
             canvas.qobject.start_aliasing_check(AliasingReason.USER_MOVE)
                 
     def mouseReleaseEvent(self, event):
-        if canvas.scene is None:
-            raise CanvasSceneMissing
-        
         if event.button() == Qt.MouseButton.LeftButton:
             if self._mouse_down or canvas.scene.flying_connectable is self:
                 for line_mov in self._line_mov_list:

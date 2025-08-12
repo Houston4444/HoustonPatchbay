@@ -90,6 +90,12 @@ class CallbackAct(IntEnum):
     ANIMATION_FINISHED = auto()
 
 
+class CanvasNeverInit(Exception):
+    def __init__(
+            self, message='patchcanvas.init() was probably never called!'):
+        super().__init__(message)   
+
+
 class CanvasThemeMissing(Exception):
     def __init__(self, message='A canvas.theme is needed here'):
         super().__init__(message)
@@ -417,7 +423,7 @@ class Canvas:
     def __init__(self):
         self.qobject: Optional['CanvasObject'] = None
         self.settings: Optional[QSettings] = None
-        self.theme: Optional['Theme'] = None
+        self._theme: Optional['Theme'] = None
 
         self.initiated = False
         self.theme_paths = ()
@@ -440,7 +446,7 @@ class Canvas:
         self.clipboard_cut = True
         self.group_plugin_map = {}
 
-        self.scene: Optional['PatchScene'] = None
+        self._scene: Optional['PatchScene'] = None
         self.initial_pos = QPointF(0, 0)
         self.size_rect = QRectF()
         self.antialiasing = True
@@ -450,6 +456,32 @@ class Canvas:
         self.loading_items = False
         self.menu_shown = False
         self.menu_click_pos = QPoint(0, 0)
+
+    @property
+    def is_init(self) -> bool:
+        if self._scene is None:
+            return False
+        if self._theme is None:
+            return False
+        return True
+
+    @property
+    def scene(self) -> 'PatchScene':
+        '''The canvas PatchScene, used when it can not be None.
+        It can not be None once patchcanvas is init'''
+        return self._scene # type:ignore
+
+    @property
+    def theme(self) -> 'Theme':
+        '''The canvas Theme, used when it can not be None.
+        It can not be None once patchcanvas is init'''
+        return self._theme # type:ignore
+
+    def ensure_init(self):
+        if self._theme is None:
+            raise CanvasNeverInit
+        if self._scene is None:
+            raise CanvasNeverInit
 
     def callback(self, action: CallbackAct, value1: int,
                  value2: int, value_str: str):
@@ -470,8 +502,8 @@ class Canvas:
         self.clipboard.clear()
         self.group_plugin_map.clear()
         
-        if self.scene is not None:
-            self.scene.clear()
+        if self._scene is not None:
+            self._scene.clear()
 
     def add_group(self, group: GroupObject):
         self.group_list.append(group)
@@ -733,13 +765,12 @@ class Canvas:
         if bool(self.aliasing_reason) is is_aliasing:
             return
         
-        if self.scene is not None:
-            self.scene.set_anti_aliasing(not bool(self.aliasing_reason))
+        if self._scene is not None:
+            self._scene.set_anti_aliasing(not bool(self.aliasing_reason))
 
 # -----------------------------
 
 # Global objects
 canvas = Canvas()
-
 options = CanvasOptionsObject()
 features = CanvasFeaturesObject()

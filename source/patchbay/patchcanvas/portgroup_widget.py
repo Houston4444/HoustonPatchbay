@@ -30,7 +30,7 @@ from qtpy.QtWidgets import QApplication, QGraphicsItem
 from .connectable_widget import ConnectableWidget
 from patshared import PortMode, PortType, PortSubType
 from .init_values import (
-    CanvasItemType, CanvasSceneMissing, CanvasThemeMissing, PortgrpObject, ZvBox, canvas, CallbackAct)
+    CanvasItemType, PortgrpObject, ZvBox, canvas, CallbackAct)
 
 if TYPE_CHECKING:
     from .box_widget_moth import BoxWidgetMoth
@@ -38,9 +38,6 @@ if TYPE_CHECKING:
 
 class PortgroupWidget(ConnectableWidget):
     def __init__(self, portgrp: PortgrpObject, parent: 'BoxWidgetMoth'):
-        if canvas.theme is None:
-            raise CanvasThemeMissing
-        
         ConnectableWidget.__init__(self, portgrp, parent)
         self._logger = logging.getLogger(__name__)
 
@@ -97,9 +94,6 @@ class PortgroupWidget(ConnectableWidget):
         self._ports_width = ports_width
 
     def update_theme(self):
-        if canvas.theme is None:
-            raise CanvasThemeMissing
-        
         theme = canvas.theme.portgroup
         match self._port_type:
             case PortType.AUDIO_JACK:
@@ -188,9 +182,6 @@ class PortgroupWidget(ConnectableWidget):
         return QGraphicsItem.itemChange(self, change, value)
 
     def contextMenuEvent(self, event):
-        if canvas.scene is None:
-            raise CanvasSceneMissing
-
         if canvas.scene.get_zoom_scale() <= 0.4:
             # prefer move box if zoom is too low
             event.ignore()
@@ -224,9 +215,6 @@ class PortgroupWidget(ConnectableWidget):
             is_only_connect, start_point.x(), start_point.y())
 
     def boundingRect(self) -> QRectF:
-        if canvas.theme is None:
-            raise CanvasThemeMissing
-        
         middle_width = canvas.theme.port_height / 2.0
 
         if self._port_mode is PortMode.INPUT:
@@ -246,9 +234,6 @@ class PortgroupWidget(ConnectableWidget):
 
         painter.save()
         painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
-
-        if canvas.theme is None:
-            raise CanvasThemeMissing
 
         theme = self._theme
         if self.isSelected():

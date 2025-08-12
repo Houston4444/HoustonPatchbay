@@ -4,7 +4,7 @@ from qtpy.QtWidgets import QGraphicsPathItem
 from qtpy.QtGui import QPen, QColor, QBrush, QPainter, QPainterPath
 from qtpy.QtCore import QPointF, Qt, QRectF
 
-from .init_values import CanvasThemeMissing, canvas, options, GridStyle
+from .init_values import canvas, options, GridStyle
 
 if TYPE_CHECKING:
     from .scene_moth import PatchSceneMoth
@@ -72,9 +72,6 @@ class GridWidget(QGraphicsPathItem):
         self.update_path()
 
     def grid_path(self):
-        if canvas.theme is None:
-            raise CanvasThemeMissing
-        
         theme = canvas.theme.grid
         
         if self.style is GridStyle.TECHNICAL_GRID:
@@ -131,9 +128,6 @@ class GridWidget(QGraphicsPathItem):
             self.grid_path()
     
     def chess_board(self):
-        if canvas.theme is None:
-            raise CanvasThemeMissing
-        
         theme = canvas.theme.grid.chessboard
         
         cell_x = (options.cell_width

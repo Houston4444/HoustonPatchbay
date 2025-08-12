@@ -20,7 +20,8 @@
 import logging
 from math import ceil
 from struct import pack
-from typing import Optional, Union
+from typing import TYPE_CHECKING, Optional
+
 
 try:
     from sip import voidptr
@@ -44,7 +45,7 @@ from .init_values import (
     CanvasItemType,
     CanvasSceneMissing,
     GroupObject,
-    CanvasThemeMissing,
+    CanvasNeverInit,
     PortObject,
     PortgrpObject,
     InlineDisplay,
@@ -63,9 +64,14 @@ from .icon_widget import IconSvgWidget, IconPixmapWidget
 from .port_widget import PortWidget
 from .portgroup_widget import PortgroupWidget
 from .grouped_lines_widget import GroupedLinesWidget
-from .theme import BoxStyleAttributer, StyleAttributer, UnselectedStyleAttributer
+from .theme import StyleAttributer, UnselectedStyleAttributer
 from .box_layout import BoxLayout
 from .box_hidder import BoxHidder
+
+if TYPE_CHECKING:
+    from .scene import PatchScene
+    from .theme import Theme
+
 
 _logger = logging.getLogger(__name__)
 
@@ -107,13 +113,9 @@ class TitleLine:
 
 class BoxWidgetMoth(QGraphicsItem):
     def __init__(self, group: GroupObject, port_mode: PortMode):
+        canvas.ensure_init()
         QGraphicsItem.__init__(self)
         self.setCacheMode(QGraphicsItem.CacheMode.DeviceCoordinateCache)
-
-        if canvas.theme is None:
-            raise CanvasThemeMissing
-        if canvas.scene is None:
-            raise CanvasSceneMissing
 
         # Save Variables, useful for later
         self._group_id = group.group_id
@@ -377,9 +379,6 @@ class BoxWidgetMoth(QGraphicsItem):
                 self.setPos(pos.x(), canvas.size_rect.height() - self._height)
 
     def remove_icon_from_scene(self):
-        if canvas.scene is None:
-            raise CanvasSceneMissing
-        
         if self.top_icon is None:
             return
 
@@ -410,9 +409,6 @@ class BoxWidgetMoth(QGraphicsItem):
 
     def animate_hidding(self, ratio: float):
         'ratio goes from 0.0 (box shown) to 1.0 (box hidden)'
-        if canvas.scene is None:
-            raise CanvasSceneMissing
-        
         if ratio >= 1.0:
             if self.hidder_widget is not None:
                 canvas.scene.removeItem(self.hidder_widget)
@@ -430,9 +426,6 @@ class BoxWidgetMoth(QGraphicsItem):
         
     def animate_restoring(self, ratio: float):
         'ratio goes from 0.0 (box hidden) to 1.0 (box shown)'
-        if canvas.scene is None:
-            raise CanvasSceneMissing
-        
         if ratio >= 1.0:
             if self.hidder_widget is not None:
                 canvas.scene.removeItem(self.hidder_widget)
@@ -477,11 +470,6 @@ class BoxWidgetMoth(QGraphicsItem):
         if yesno == bool(self._wrapping_state
                          in (WrappingState.WRAPPED, WrappingState.WRAPPING)):
             return
-
-        if canvas.theme is None:
-            raise CanvasThemeMissing
-        if canvas.scene is None:
-            raise CanvasSceneMissing
 
         if yesno:
             self.hide_ports_for_wrap(True)
@@ -640,7 +628,7 @@ class BoxWidgetMoth(QGraphicsItem):
             else:
                 self.setZValue(Zv.BOX.value)
 
-            if canvas.scene is not None and not canvas.scene.selecting_boxes:
+            if not canvas.scene.selecting_boxes:
                 if is_selected:
                     for lines in GroupedLinesWidget.widgets_for_box(
                             self._group_id, self._port_mode):
@@ -677,9 +665,6 @@ class BoxWidgetMoth(QGraphicsItem):
         QGraphicsItem.keyPressEvent(self, event)
 
     def hoverEnterEvent(self, event):
-        if canvas.scene is None:
-            raise CanvasSceneMissing
-
         if options.auto_select_items:
             if len(canvas.scene.selectedItems()) > 0:
                 canvas.scene.clearSelection()
@@ -714,8 +699,7 @@ class BoxWidgetMoth(QGraphicsItem):
         
         elif event.button() == Qt.MouseButton.RightButton:
             event.accept()
-            if canvas.scene is not None:
-                canvas.scene.clearSelection()
+            canvas.scene.clearSelection()
             self.setSelected(True)
             self._mouse_down = False
             return
@@ -734,9 +718,6 @@ class BoxWidgetMoth(QGraphicsItem):
         QGraphicsItem.mousePressEvent(self, event)
 
     def mouseMoveEvent(self, event):
-        if canvas.scene is None:
-            return
-        
         if canvas.scene.resizing_scene:
             # QGraphicsScene.setSceneRect calls this method indirectly
             # and resize_the_scene can be called from this method
@@ -768,9 +749,6 @@ class BoxWidgetMoth(QGraphicsItem):
         QGraphicsItem.mouseMoveEvent(self, event)
 
     def mouseReleaseEvent(self, event):
-        if canvas.scene is None:
-            return
-        
         if self._cursor_moving:
             canvas.scene.unset_cursor()
             self.repaint_lines(forced=True)
@@ -826,9 +804,6 @@ class BoxWidgetMoth(QGraphicsItem):
                 round(self.sceneBoundingRect().top()))
 
     def set_top_left(self, xy: tuple[int, int] | tuple[float, float]):
-        if canvas.theme is None:
-            raise CanvasThemeMissing
-
         if self.is_hardware:
             point = QPointF(*xy)
             point += QPointF(
@@ -881,9 +856,6 @@ class BoxWidgetMoth(QGraphicsItem):
                 portgroup.widget.setCacheMode(cache_mode)
 
     def after_wrap_rect(self) -> QRectF:
-        if canvas.theme is None:
-            raise CanvasThemeMissing
-        
         if self._wrapping_state in (WrappingState.NORMAL,
                                     WrappingState.UNWRAPPING):
             width = self._unwrapped_width
@@ -905,9 +877,6 @@ class BoxWidgetMoth(QGraphicsItem):
         if (self._current_port_mode is PortMode.NULL
                 or not self.isVisible()):
             return QRectF()
-        
-        if canvas.scene is None:
-            raise CanvasSceneMissing
         
         if futur:
             move_box = canvas.scene.move_boxes.get(self)
@@ -939,7 +908,7 @@ class BoxWidgetMoth(QGraphicsItem):
             QMarginsF(50.0, 20.0, 50.0, 20.0))
 
     def boundingRect(self):
-        if canvas.theme is not None and self.is_hardware:
+        if self.is_hardware:
             hws = canvas.theme.hardware_rack_width
             
             return QRectF(- hws, - hws,
@@ -949,9 +918,6 @@ class BoxWidgetMoth(QGraphicsItem):
 
     def paint(self, painter, option, widget):
         if canvas.loading_items:
-            return
-
-        if canvas.theme is None:
             return
 
         painter.save()
@@ -1249,7 +1215,7 @@ class BoxWidgetMoth(QGraphicsItem):
         if not self.is_hardware:
             return
         
-        if canvas.theme is None or self._layout is None:
+        if self._layout is None:
             return
         
         d = float(canvas.theme.hardware_rack_width)
@@ -1373,16 +1339,10 @@ class BoxWidgetMoth(QGraphicsItem):
                 hw_poly_bottom += QPointF(*xy)
             painter.drawPolygon(hw_poly_bottom)
 
-    # def _paint_hidding_polygon(self, painter: QPainter):
-    #     theme = canvas.theme.background_color()
-
     def _paint_inline_display(self, painter: QPainter):
         if self._plugin_inline is InlineDisplay.DISABLED:
             return
         if not options.inline_displays:
-            return
-
-        if canvas.scene is None:
             return
 
         inwidth  = self._width - self._width_in - self._width_out - 16
@@ -1431,9 +1391,6 @@ class BoxWidgetMoth(QGraphicsItem):
             QRectF(srcx, srcy, swidth, sheight), self._inline_image)
     
     def get_theme(self, for_wrapper=False) -> UnselectedStyleAttributer:
-        if canvas.theme is None:
-            raise CanvasThemeMissing
-        
         theme = canvas.theme.box
         if for_wrapper:
             theme = canvas.theme.box_wrapper

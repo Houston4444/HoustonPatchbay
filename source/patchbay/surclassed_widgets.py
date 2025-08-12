@@ -356,9 +356,9 @@ class ViewsComboBox(QComboBox):
         painter.drawPath(path)
         
         # Draw PortTypesView thumbnail
-        thmp = patchcanvas.canvas.theme.port
+        thmp = patchcanvas.canvas._theme.port
 
-        if patchcanvas.canvas.theme.thumbnail_port_colors.lower() == 'text':
+        if patchcanvas.canvas._theme.thumbnail_port_colors.lower() == 'text':
             pcols = [thmp.audio.text_color(),
                      thmp.midi.text_color(),
                      thmp.cv.text_color(), 

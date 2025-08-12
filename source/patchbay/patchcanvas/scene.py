@@ -24,7 +24,7 @@ from qtpy.QtCore import QRectF, QMarginsF, Qt
 from qtpy.QtWidgets import QGraphicsView
 
 from patshared import PortMode
-from .init_values import CanvasThemeMissing, canvas, options, Direction
+from .init_values import canvas, options, Direction
 from .utils import (previous_left_on_grid, next_left_on_grid,
                     previous_top_on_grid, next_top_on_grid)
 
@@ -108,16 +108,13 @@ class PatchScene(PatchSceneMoth):
             return Direction.UP
         
         def repulse(direction: Direction,
-                    fixed: Union[BoxWidget, QRectF],
-                    moving: Union[BoxWidget, QRectF],
+                    fixed: BoxWidget | QRectF,
+                    moving: BoxWidget | QRectF,
                     fixed_port_mode: PortMode,
                     moving_port_mode: PortMode) -> QRectF:
             '''returns a QRectF to be placed at side of fixed_rect
             where fixed_rect is an already determinated futur place
             for a box'''
-            if canvas.theme is None:
-                raise CanvasThemeMissing
-            
             if isinstance(fixed, BoxWidget):
                 fixed_rect = fixed.boundingRect().translated(fixed.pos())
             else:
@@ -202,9 +199,6 @@ class PatchScene(PatchSceneMoth):
         # --- function start ---
         if not options.prevent_overlap:
             return
-        
-        if canvas.theme is None:
-            raise CanvasThemeMissing
         
         box_spacing = canvas.theme.box_spacing
         box_spacing_hor = canvas.theme.box_spacing_horizontal
@@ -457,9 +451,6 @@ class PatchScene(PatchSceneMoth):
             self, box_widget: BoxWidget, ex_rect: QRectF):
         if not options.prevent_overlap:
             return
-        
-        if canvas.theme is None:
-            raise CanvasThemeMissing
         
         neighbors = [box_widget]
         limit_top = ex_rect.top()

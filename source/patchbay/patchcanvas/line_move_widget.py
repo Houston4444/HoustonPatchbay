@@ -24,7 +24,7 @@ from qtpy.QtGui import QPainter, QPainterPath
 from qtpy.QtWidgets import QGraphicsPathItem
 
 from patshared import PortMode, PortType
-from .init_values import CanvasSceneMissing, CanvasThemeMissing, canvas, CanvasItemType, Zv
+from .init_values import CanvasSceneMissing, canvas, CanvasItemType, Zv
 
 # only to get parent type in IDE
 if TYPE_CHECKING:
@@ -63,9 +63,6 @@ class LineMoveWidget(QGraphicsPathItem):
         self._portgrp_len_to = portgrp_len
 
     def update_line_pos(self, scene_pos: QPointF):
-        if canvas.theme is None:
-            raise CanvasThemeMissing
-        
         theme = canvas.theme.line
         
         match self._port_type:

@@ -82,9 +82,9 @@ class ItemmDeleg(QAbstractItemDelegate):
         if self.mng is None:
             return
         
-        thmp = canvas.theme.port
+        thmp = canvas._theme.port
 
-        if canvas.theme.thumbnail_port_colors.lower() == 'text':
+        if canvas._theme.thumbnail_port_colors.lower() == 'text':
             self._port_colors = [
                 thmp.audio.text_color(),
                 thmp.midi.text_color(),

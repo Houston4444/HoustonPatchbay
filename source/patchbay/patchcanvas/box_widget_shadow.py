@@ -54,9 +54,6 @@ class BoxWidgetShadow(QGraphicsDropShadowEffect):
         self._fake_parent = parent
 
     def draw(self, painter):
-        if canvas.scene is None:
-            raise CanvasSceneMissing
-        
         if self._fake_parent is not None:
             if ((self._fake_parent.boundingRect().height()
                  * canvas.scene.get_zoom_scale())
