@@ -18,8 +18,7 @@ from .patchcanvas import arranger, patchcanvas
 from .patchcanvas.utils import get_new_group_positions
 from .patchcanvas.scene_view import PatchGraphicsView
 from .patchcanvas.init_values import (
-    AliasingReason, CallbackAct, CanvasFeaturesObject,
-    CanvasOptionsObject)
+    AliasingReason, CanvasFeaturesObject, CanvasOptionsObject)
 
 from .cancel_mng import CancelMng, CancelOp, CancellableAction
 from .patchbay_signals import SignalsObject
@@ -190,9 +189,6 @@ class PatchbayManager:
         self.sg.default_zoom_changed.connect(patchcanvas.set_default_zoom)
         
         self._tools_displayed = ToolDisplayed.ALL
-
-    def __canvas_callback__(self, action: CallbackAct, *args):
-        self.sg.callback_sig.emit(action, args)
 
     def app_init(self,
                  view: PatchGraphicsView,

@@ -17,7 +17,7 @@ from qtpy.QtWidgets import (
     QSpacerItem, QSizePolicy, QWidgetAction,
     QApplication, QAction)
 
-from ..patchcanvas import canvas, CallbackAct, BoxType, options
+from ..patchcanvas import canvas, BoxType, options
 from ..patchcanvas.theme import StyleAttributer
 from ..patchcanvas.utils import (
     get_portgroup_name_from_ports_names, get_icon, is_dark_theme, portgroup_name_splitted)

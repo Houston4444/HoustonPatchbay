@@ -47,50 +47,6 @@ _logger = logging.getLogger(__name__)
 MAX_PLUGIN_ID_ALLOWED = 0x7FF
 
 
-# Callback Actions
-class CallbackAct(IntEnum):
-    GROUP_INFO = auto()            # group_id: int
-    GROUP_RENAME = auto()          # group_id: int
-    GROUP_SPLITTED = auto()        # group_id: int
-    GROUP_JOINED = auto()          # group_id: int
-    GROUP_BOX_POS_CHANGED = auto() # group_id: int, port_mode: PortMode, box_pos: BoxPos
-    GROUP_WRAP = auto()            # group_id: int, folded: bool
-    GROUP_SELECTED = auto()        # group_id: int, splitted_mode: PortMode
-    '''group_id: int, splitted_mode: PortMode
-    
-    Not emitted in case of area multiple selection (optimization)'''
-    
-    GROUP_POS_MODIFIED = auto()    # group_id
-    BOXES_MOVED = auto()           # *[tuple[int, PortMode, int, int]]
-                                   #    [group_id, port_mode, x, y]
-    GROUP_HIDE_BOX = auto()        # group_id: int, port_mode: PortMode
-    PORTGROUP_ADD = auto()         # group_id: int, port_mode: PortMode,
-                                   #      port_type: PortType, port_ids: tuple[int]
-    PORTGROUP_REMOVE = auto()      # group_id: int, portgrp_id: int
-    PORT_INFO = auto()             # group_id: int, port_id: int
-    PORT_RENAME = auto()           # group_id: int, port_id: int
-    PORTS_CONNECT = auto()         # group_out_id: int, port_out_id: int,
-                                   #      group_in_id: int, port_in_id: int
-    PORTS_DISCONNECT = auto()      # conn_id: int
-    GROUP_MENU_CALL = auto()       # group_id: int, port_mode: PortMode
-    PORT_MENU_CALL = auto()        # group_id: int, port_id: int, connect_only: bool,
-                                   #      x_pos: int, y_pos: int
-    PORTGROUP_MENU_CALL = auto()   # group_id: int, portgrp_id: int, connect_only: bool,
-                                   #      x_pos: int, y_pos: int
-    PLUGIN_CLONE = auto()          # plugin_id: int
-    PLUGIN_EDIT = auto()           # plugin_id: int
-    PLUGIN_RENAME = auto()         # plugin_id: int
-    PLUGIN_REPLACE = auto()        # plugin_id: int
-    PLUGIN_REMOVE = auto()         # plugin_id: int
-    PLUGIN_SHOW_UI = auto()        # plugin_id: int
-    INLINE_DISPLAY = auto()        # plugin_id: int
-    BG_RIGHT_CLICK = auto()        # 
-    BG_DOUBLE_CLICK = auto()       # 
-    CLIENT_SHOW_GUI = auto()       # group_id: int, visible: bool
-    THEME_CHANGED = auto()         # theme_name: str
-    ANIMATION_FINISHED = auto()
-
-
 class CanvasNeverInit(Exception):
     def __init__(
             self, message='patchcanvas.init() was probably never called!'):

@@ -5,7 +5,7 @@ from typing import Optional
 from qtpy.QtCore import QRectF
 
 from patshared import BoxLayoutMode, PortMode, BoxType, GroupPos
-from .init_values import GroupObject, CanvasNeverInit, canvas, CallbackAct
+from .init_values import GroupObject, canvas
 from .utils import nearest_on_grid, next_left_on_grid, next_top_on_grid
 from .box_widget import BoxWidget
 from .patchcanvas import (

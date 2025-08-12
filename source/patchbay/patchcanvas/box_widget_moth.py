@@ -48,13 +48,11 @@ from .init_values import (
     InlineDisplay,
     canvas,
     options,
-    CallbackAct,
     MAX_PLUGIN_ID_ALLOWED,
     Direction,
     Zv)
 
 from .utils import (
-    canvas_callback,
     nearest_on_grid, nearest_on_grid_check_others)
 from .box_widget_shadow import BoxWidgetShadow
 from .icon_widget import IconSvgWidget, IconPixmapWidget

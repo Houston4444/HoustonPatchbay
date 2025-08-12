@@ -26,7 +26,7 @@ from qtpy.QtGui import QIcon, QPalette
 from qtpy.QtWidgets import QWidget
 
 from patshared import PortMode, BoxType
-from .init_values import canvas, options, CallbackAct
+from .init_values import canvas, options
 
 if TYPE_CHECKING:
     from .box_widget import BoxWidget
@@ -246,10 +246,6 @@ def get_icon(icon_type: BoxType, icon_name: str,
             icon.addFile(":/scalable/%s" % icon_name)
 
     return icon
-
-@easy_log
-def canvas_callback(action: CallbackAct, *args):
-    canvas.cb(action, *args)
 
 def is_dark_theme(widget: QWidget) -> bool:
     return bool(

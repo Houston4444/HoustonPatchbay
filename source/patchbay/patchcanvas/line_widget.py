@@ -29,8 +29,7 @@ from patshared import PortType
 from .init_values import (
     canvas,
     options,
-    CanvasItemType,
-    CallbackAct)
+    CanvasItemType)
 
 if TYPE_CHECKING:
     from .port_widget import PortWidget

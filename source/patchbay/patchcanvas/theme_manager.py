@@ -10,7 +10,7 @@ from typing import Optional
 from qtpy.QtCore import QTimer
 
 from .theme import Theme
-from .init_values import canvas, CallbackAct
+from .init_values import canvas
 from .xdg import xdg_data_dirs, xdg_data_home
 
 _logger = logging.Logger(__name__)

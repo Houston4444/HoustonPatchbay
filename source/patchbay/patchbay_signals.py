@@ -6,7 +6,6 @@ from qtpy.QtCore import QObject, Signal
 class SignalsObject(QObject):
     out_thread_order = Signal()
     to_main_thread = Signal(object, tuple, dict)
-    callback_sig = Signal(IntEnum, tuple)
     
     view_changed = Signal(int)
     'emitted when the current view has changed [int]'

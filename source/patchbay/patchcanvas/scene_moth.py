@@ -41,7 +41,6 @@ from .init_values import (
     Direction,
     canvas,
     options,
-    CallbackAct,
     Zv,
     MAX_PLUGIN_ID_ALLOWED)
 from .box_widget import BoxWidget

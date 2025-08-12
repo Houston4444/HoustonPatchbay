@@ -2,7 +2,6 @@ from typing import TYPE_CHECKING
 
 from .bases.port import Port
 from .patchcanvas import canvas
-from .patchcanvas.init_values import CallbackAct
 from patshared import PortMode
 
 if TYPE_CHECKING:

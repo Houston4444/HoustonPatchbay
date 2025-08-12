@@ -44,7 +44,6 @@ from .init_values import (
     features,
     CanvasOptionsObject,
     CanvasFeaturesObject,
-    CallbackAct,
     MAX_PLUGIN_ID_ALLOWED,
     GroupObject,
     PortObject,
