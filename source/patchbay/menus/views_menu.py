@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING
 
-from qtpy.QtCore import Slot
+from qtpy.QtCore import Slot # type:ignore
 from qtpy.QtGui import QIcon
 from qtpy.QtWidgets import QMenu, QApplication, QInputDialog
 
@@ -122,7 +122,7 @@ class ViewsMenu(QMenu):
 
     @Slot()
     def _change_view(self):
-        view_number: int = self.sender().data()
+        view_number: int = self.sender().data() # type:ignore
         with CancellableAction(self.mng, CancelOp.VIEW_CHOICE) as a:
             a.name = _translate('undo', 'Change view %i -> %i') % (
                 self.mng.view_number, view_number)
@@ -150,14 +150,15 @@ class ViewsMenu(QMenu):
 
     @Slot()
     def _clear_absents(self):
+        sender_text: str = self.sender().text() # type:ignore
         with CancellableAction(self.mng, CancelOp.VIEW) as a:
-            a.name = self.sender().text()
+            a.name = sender_text
             self.mng.clear_absents_in_view()
         self._build()
 
     @Slot()
     def _change_view_number(self):
-        new_num: int = self.sender().data()
+        new_num: int = self.sender().data() # type:ignore
         with CancellableAction(self.mng, CancelOp.ALL_VIEWS) as a:
             a.name = _translate('undo', 'Change view number %i to %i') % (
                 self.mng.view_number, new_num)
@@ -165,20 +166,23 @@ class ViewsMenu(QMenu):
 
     @Slot()
     def _remove_all_other_views(self):
+        sender_text: str = self.sender().text() # type:ignore
         with CancellableAction(self.mng, CancelOp.ALL_VIEWS) as a:
-            a.name = self.sender().text()
+            a.name = sender_text
             self.mng.remove_all_other_views()
 
     @Slot()
     def _new_view(self):
+        sender_text: str = self.sender().text() # type:ignore
         with CancellableAction(self.mng, CancelOp.ALL_VIEWS) as a:
-            a.name = self.sender().text()
+            a.name = sender_text
             self.mng.new_view()
 
     @Slot()
     def _remove_view(self):
+        sender_text: str = self.sender().text() # type:ignore
         with CancellableAction(self.mng, CancelOp.ALL_VIEWS) as a:
-            a.name = self.sender().text()
+            a.name = sender_text
             self.mng.remove_view(self.mng.view_number)
     
     def showEvent(self, event) -> None:

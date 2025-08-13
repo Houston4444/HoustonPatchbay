@@ -1,5 +1,4 @@
-from typing import TYPE_CHECKING
-import time
+from typing import TYPE_CHECKING, Optional
 
 from patshared import PortMode, PortType, PortSubType, Naming, JackMetadata
 from ..patchcanvas import patchcanvas
@@ -13,6 +12,7 @@ if TYPE_CHECKING:
 
 class Port:
     graceful_name = ''
+    group: 'Group'
     group_id = -1
     portgroup_id = 0
     prevent_stereo = False
@@ -31,7 +31,6 @@ class Port:
         self.flags = flags
         self.uuid = uuid
         self.subtype = PortSubType.REGULAR
-        self.group: 'Group' = None
 
         if (self.type is PortType.AUDIO_JACK
                 and self.flags & JackPortFlag.IS_CONTROL_VOLTAGE):

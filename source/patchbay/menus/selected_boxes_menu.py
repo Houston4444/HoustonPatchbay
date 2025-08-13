@@ -1,5 +1,5 @@
 from typing import TYPE_CHECKING
-from qtpy.QtCore import Slot
+from qtpy.QtCore import Slot # type:ignore
 from qtpy.QtGui import QIcon
 from qtpy.QtWidgets import QMenu, QApplication
 
@@ -17,7 +17,7 @@ _translate = QApplication.translate
 class SelectedBoxesMenu(QMenu):
     def __init__(self, parent):
         super().__init__(parent)
-        self.mng : 'PatchbayManager' = None
+        self.mng : 'PatchbayManager' = None # type:ignore 
         self._selected_boxes = dict[int, PortMode]()
 
         self.setTitle(_translate('sel_boxes_menu', 'Selected boxes'))
@@ -53,14 +53,16 @@ class SelectedBoxesMenu(QMenu):
     @Slot()    
     def _new_exclusive_view(self):
         with CancellableAction(self.mng, CancelOp.ALL_VIEWS) as a:
-            a.name = self.sender().text()
+            sender_text: str = self.sender().text() # type:ignore
+            a.name = sender_text
             patchcanvas.clear_selection()
             self.mng.new_view(exclusive_with=self._selected_boxes)
         
     @Slot()
     def _hide_selected_boxes(self):
         with CancellableAction(self.mng, CancelOp.VIEW) as a:
-            a.name = self.sender().text()
+            sender_text: str = self.sender().text() # type:ignore
+            a.name = sender_text
 
             for group_id, port_mode in self._selected_boxes.items():
                 group = self.mng.get_group_from_id(group_id)

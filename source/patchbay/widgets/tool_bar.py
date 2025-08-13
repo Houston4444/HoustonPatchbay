@@ -5,7 +5,7 @@ from typing import Optional
 from qtpy import QT5
 from qtpy.QtWidgets import QToolBar, QLabel
 from qtpy.QtGui import QMouseEvent
-from qtpy.QtCore import Qt, QPoint, Signal, QSize
+from qtpy.QtCore import Qt, QPoint, Signal, QSize # type:ignore
 
 from ..surclassed_widgets import SpacerWidget
 from .hiddens_indicator import HiddensIndicator
@@ -39,7 +39,7 @@ class PatchbayToolBar(QToolBar):
         
         # execute the menu, exit if no action
         if QT5:
-            point = event.screenPos().toPoint()
+            point = event.screenPos().toPoint() # type:ignore
         else:
             point = QPoint(int(event.scenePosition().x()), 0)
         point.setY(self.mapToGlobal(QPoint(0, self.height())).y())
@@ -53,5 +53,5 @@ class PatchbayToolBar(QToolBar):
         size.setWidth(self._min_width)
         return size
     
-    def needed_width(self) -> QSize:
+    def needed_width(self) -> int:
         return super().sizeHint().width()

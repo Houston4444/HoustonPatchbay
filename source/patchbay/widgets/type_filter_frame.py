@@ -1,5 +1,5 @@
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 from qtpy.QtWidgets import QFrame, QApplication
 
@@ -31,7 +31,7 @@ class TypeFilterFrame(QFrame):
         self.ui.checkBoxAlsaFilter.really_clicked.connect(
             self._check_box_alsa_right_clicked)
         
-        self._mng = None
+        self._mng : 'Optional[PatchbayManager]' = None
     
     def set_patchbay_manager(self, manager: 'PatchbayManager'):
         self._mng = manager
@@ -135,8 +135,9 @@ class TypeFilterFrame(QFrame):
         self._change_port_types_view()
     
     def _port_types_view_changed(self, port_types_view: int):
-        self.ui.checkBoxAlsaFilter.setVisible(
-            self._mng.alsa_midi_enabled)
+        if self._mng is not None:
+            self.ui.checkBoxAlsaFilter.setVisible(
+                self._mng.alsa_midi_enabled)
 
         self.ui.checkBoxAudioFilter.setChecked(
             bool(port_types_view & PortTypesViewFlag.AUDIO))

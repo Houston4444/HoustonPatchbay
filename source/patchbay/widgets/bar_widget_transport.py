@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING
 
 from qtpy.QtWidgets import QWidget
 from qtpy.QtGui import QPalette, QIcon, QColor, QKeySequence
-from qtpy.QtCore import Slot
+from qtpy.QtCore import Slot # type:ignore
 
 from patshared import TransportPosition
 
@@ -38,11 +38,11 @@ class BarWidgetTransport(QWidget):
         
         self._samplerate = 48000
         
-        self.mng: 'PatchbayManager' = None
+        self.mng: 'PatchbayManager' = None # type:ignore
         self._last_transport_pos = TransportPosition(
             0, False, False, 0, 0, 0, 120.00)
         
-        self.ui.toolButtonPlayPause.setShortcut(QKeySequence(' '))
+        self.ui.toolButtonPlayPause.setShortcut(QKeySequence(' ')) # type:ignore
         
         self._fw_clicked_last_time = 0
         self._fw_click_started_at = 0
@@ -53,7 +53,7 @@ class BarWidgetTransport(QWidget):
         
         # set theme
         app_bg = self.ui.labelTempo.palette().brush(
-            QPalette.ColorGroup.Active, QPalette.ColorRole.Button).color()
+            QPalette.ColorGroup.Active, QPalette.ColorRole.Button).color() # type:ignore
         
         scheme = 'dark' if dark else 'light'
         self._icon_play = QIcon(
@@ -62,12 +62,12 @@ class BarWidgetTransport(QWidget):
             f':/transport/{scheme}/media-playback-pause.svg')
         
         self.ui.toolButtonRewind.setIcon(
-            QIcon(f':/transport/{scheme}/media-seek-backward.svg'))
+            QIcon(f':/transport/{scheme}/media-seek-backward.svg')) # type:ignore
         self.ui.toolButtonForward.setIcon(
-            QIcon(f':/transport/{scheme}/media-seek-forward.svg'))
-        self.ui.toolButtonPlayPause.setIcon(self._icon_play)
+            QIcon(f':/transport/{scheme}/media-seek-forward.svg')) # type:ignore
+        self.ui.toolButtonPlayPause.setIcon(self._icon_play) # type:ignore
         self.ui.toolButtonStop.setIcon(
-            QIcon(f':/transport/{scheme}/media-playback-stop.svg'))
+            QIcon(f':/transport/{scheme}/media-playback-stop.svg')) # type:ignore
 
         bg = QColor(app_bg)
         more_gray = 20 if dark else -30
@@ -145,9 +145,9 @@ class BarWidgetTransport(QWidget):
         self.ui.toolButtonPlayPause.setChecked(transport_pos.rolling)
         
         if transport_pos.rolling:
-            self.ui.toolButtonPlayPause.setIcon(self._icon_pause)
+            self.ui.toolButtonPlayPause.setIcon(self._icon_pause) # type:ignore
         else:
-            self.ui.toolButtonPlayPause.setIcon(self._icon_play)
+            self.ui.toolButtonPlayPause.setIcon(self._icon_play) # type:ignore
             
         if (self.ui.labelTime.transport_view_mode
                 is not TransportViewMode.FRAMES):

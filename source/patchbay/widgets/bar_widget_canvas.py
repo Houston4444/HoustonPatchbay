@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING
 
-from qtpy.QtCore import Slot
+from qtpy.QtCore import Slot # type:ignore
 from qtpy.QtWidgets import QWidget, QApplication
 
 from ..bases.elements import ToolDisplayed
@@ -18,7 +18,7 @@ class BarWidgetCanvas(QWidget):
         super().__init__(parent)
         self.ui = CanvasUiForm()
         self.ui.setupUi(self)
-        self.mng: 'PatchbayManager' = None
+        self.mng: 'PatchbayManager' = None # type:ignore
         
         self.ui.toolButtonUndo.clicked.connect(self.undo)
         self.ui.toolButtonRedo.clicked.connect(self.redo)

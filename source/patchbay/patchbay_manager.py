@@ -302,10 +302,10 @@ class PatchbayManager:
             self._groups_by_id.pop(group.group_id)
             self._groups_by_name.pop(group.name)
 
-    def new_portgroup(self, group_id: int, port_mode: int,
-                      ports: tuple[Port]) -> Portgroup:
+    def new_portgroup(self, group_id: int, port_mode: PortMode,
+                      ports: tuple[Port, ...] | list[Port]) -> Portgroup:
         portgroup = Portgroup(self, group_id, self._next_portgroup_id,
-                              port_mode, ports)
+                              port_mode, tuple(ports))
         self._next_portgroup_id += 1
         return portgroup
 

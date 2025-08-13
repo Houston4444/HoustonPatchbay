@@ -1,12 +1,12 @@
 
 from typing import TYPE_CHECKING, Callable, Iterator, Optional, Union
 
-from qtpy.QtCore import Slot, QTimer
+from qtpy.QtCore import Slot, QTimer # type:ignore
 from qtpy.QtGui import QIcon, QPixmap
 if TYPE_CHECKING:
     # FIX : QAction not found by pylance
     from qtpy.QtGui import QAction
-from qtpy.QtWidgets import QToolButton, QMenu, QApplication, QAction
+from qtpy.QtWidgets import QToolButton, QMenu, QApplication, QAction # type:ignore
 
 from ..cancel_mng import CancelOp, CancellableAction
 from ..bases.group import Group
@@ -35,11 +35,11 @@ class GroupList:
     common: str
     "the common prefix for all groups inside 'list'"
     
-    list: 'list[Union[Group, GroupList]]'
+    list: 'list[Group|GroupList]|list[Group]'
     'contains the list of groups or group lists.'
     
     def __init__(self, common: str,
-                 group_list: 'list[Union[Group, GroupList]]'):
+                 group_list: 'list[Group|GroupList]|list[Group]'):
         self.common = common
         self.list = group_list
     
@@ -55,7 +55,7 @@ class GroupList:
                     yield [group_or_list.common] + common_paths, group
 
 
-def common_prefix(*strings: tuple[str]) -> str:
+def common_prefix(*strings: str) -> str:
     max_size = min([len(s) for s in strings])
     common = ''
     for i in range(max_size):
@@ -68,20 +68,27 @@ def common_prefix(*strings: tuple[str]) -> str:
     return common
 
 def divide_group_list(group_list: GroupList) -> GroupList:
+    '''recursive function. 
+    Divide a group list depending on the number of elements'''
     if len(group_list.list) <= MENU_MAX:
         return group_list
 
     # At this stage group_list.list only contains groups 
-    groups = list[Union[Group, GroupList]]()
+    groups = list[Group | GroupList]()
     common_str = group_list.common
     common_min = len(group_list.common)
     
     for group in group_list.list:
+        if TYPE_CHECKING:
+            assert isinstance(group, Group)
         if len(common_str) == common_min:
             common_str = group.name
             groups.append(GroupList(common_str, [group]))
             continue
         
+        if TYPE_CHECKING:
+            assert isinstance(groups[-1], GroupList)
+
         common_str = common_prefix(common_str, group.name)
         if len(common_str) > common_min:
             # add this group to the last list
@@ -91,18 +98,21 @@ def divide_group_list(group_list: GroupList) -> GroupList:
             if len(groups[-1].list) < MENU_MIN:
                 # the last list is too short
                 # remove this list and add all groups directly
-                last_group_list = groups.pop(-1)
+                last_group_list: GroupList = groups.pop(-1) # type:ignore
                 for gp in last_group_list.list:
                     groups.append(gp)
             
             common_str = group.name
             groups.append(GroupList(common_str, [group]))
 
+    if TYPE_CHECKING:
+        assert isinstance(groups[-1], GroupList)
+
     if len(groups[-1].list) < MENU_MIN:
         # the last list is too short
         # remove this list and add all groups directly
         # (only for last group)
-        last_group_list = groups.pop(-1)
+        last_group_list: GroupList = groups.pop(-1) # type:ignore
         for gp in last_group_list.list:
             groups.append(gp)
 
@@ -140,7 +150,7 @@ class HiddensIndicator(QToolButton):
     def __init__(self, parent):
         super().__init__(parent)
         
-        self.mng: 'PatchbayManager' = None
+        self.mng: 'PatchbayManager' = None # type:ignore
         self._get_filter_text: Optional[Callable[[], str]] = None
         '''If this HiddensIndicator instance is used by filter frame,
         it will only count hidden boxes matching with the filter text.'''
@@ -306,7 +316,7 @@ class HiddensIndicator(QToolButton):
         groups.sort(key=lambda x: x.name)
         group_list = divide_group_list(GroupList('', groups))
         
-        menus_dict = dict[tuple[str], QMenu]()
+        menus_dict = dict[tuple[str, ...], QMenu]()
         menus_dict[()] = menu
         
         for paths, group in group_list.walk():
@@ -325,7 +335,8 @@ class HiddensIndicator(QToolButton):
                     parent.addMenu(mnu)
                     menus_dict[tuple(tmp_paths)] = mnu
                     parent = mnu
-                    
+            
+            assert isinstance(mnu, QMenu)
             group_act = mnu.addAction(group.cnv_name)
             group_act.setIcon(utils.get_icon(
                 group.cnv_box_type, group.cnv_icon_name,
@@ -381,7 +392,7 @@ class HiddensIndicator(QToolButton):
             # reverse actions order for indicator in the filter frame
             acts = list[QAction]()
             for act in menu.actions():
-                act.setParent(None)
+                act.setParent(None) # type:ignore
                 acts.append(act)
             acts.reverse()
             
@@ -392,31 +403,34 @@ class HiddensIndicator(QToolButton):
 
     @Slot()
     def _menu_action_triggered(self):
-        act: QAction = self.sender()
-        act_data: int = act.data()
+        act: QAction = self.sender() # type:ignore
+        act_data: int = act.data() # type:ignore
+        act_text: str = act.text() # type:ignore
         
         if act_data == WHITE_LIST:
             with CancellableAction(self.mng, CancelOp.VIEW) as a:
-                a.name = act.text()
-                if act.isChecked():
+                a.name = act_text
+                if TYPE_CHECKING:
+                    assert isinstance(act, QAction)
+                if act.isChecked(): # type:ignore
                     self.mng.clear_absents_in_view()
-                self.mng.view().is_white_list = act.isChecked()
+                self.mng.view().is_white_list = act.isChecked() # type:ignore
                 self.mng.set_views_changed()
             return
         
         if act_data == SHOW_ALL:
             with CancellableAction(self.mng, CancelOp.VIEW) as a:
-                a.name = act.text()                
+                a.name = act_text               
                 self.mng.restore_all_group_hidden_sides()
             return
         
         if act_data == HIDE_ALL:
             with CancellableAction(self.mng, CancelOp.VIEW) as a:
-                a.name = act.text()
+                a.name = act_text
                 self.mng.hide_all_groups()
             return
 
         # act_data is now a group_id
         with CancellableAction(self.mng, CancelOp.VIEW) as a:
-            a.name = _translate('undo', 'Restore "%s"') % act.text()
+            a.name = _translate('undo', 'Restore "%s"') % act_text
             self.mng.restore_group_hidden_sides(act_data)

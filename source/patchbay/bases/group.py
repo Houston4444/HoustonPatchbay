@@ -872,9 +872,11 @@ class Group:
 
                     elif search_index:
                         if (seems_ok
-                                and (port.mdata_portgroup != previous_port.mdata_portgroup
-                                    or port.type is not portgroup.type
-                                    or port.mode is not portgroup.port_mode)):
+                                and ((previous_port is not None
+                                        and port.mdata_portgroup
+                                            != previous_port.mdata_portgroup)
+                                     or port.type is not portgroup.type
+                                     or port.mode is not portgroup.port_mode)):
                             # port after the portgroup has not to make
                             # the portgroup higher. We keep this portgroup
                             break

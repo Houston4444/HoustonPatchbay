@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING
 
 from qtpy.QtWidgets import QMenu, QApplication
-from qtpy.QtCore import Slot
+from qtpy.QtCore import Slot # type:ignore
 from qtpy.QtGui import QIcon, QPixmap
 
 from patshared import PortMode, BoxLayoutMode
@@ -39,15 +39,13 @@ class DisconnectMenu(QMenu):
             for conn in self._mng.connections:
                 if (conn.port_out.group_id is self._group.group_id
                         and conn.in_canvas):
-                    in_groups.add(
-                        self._mng.get_group_from_id(conn.port_in.group_id))
+                    in_groups.add(conn.port_in.group)
                     
         if self._port_mode & PortMode.INPUT:
             for conn in self._mng.connections:
                 if (conn.port_in.group_id is self._group.group_id
                         and conn.in_canvas):
-                    out_groups.add(
-                        self._mng.get_group_from_id(conn.port_out.group_id))
+                    out_groups.add(conn.port_out.group)
 
         if not out_groups and not in_groups:
             no_conn_act = self.addAction(
@@ -100,7 +98,7 @@ class DisconnectMenu(QMenu):
                 
     @Slot()
     def _apply_disconnections(self):
-        data : tuple[PortMode, Group] = self.sender().data()
+        data : tuple[PortMode, Group] = self.sender().data() # type:ignore
         port_mode, group = data
         
         if port_mode is PortMode.INPUT:

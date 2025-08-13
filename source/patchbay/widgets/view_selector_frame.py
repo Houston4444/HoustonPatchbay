@@ -7,7 +7,7 @@ from qtpy.QtWidgets import (
 from qtpy.QtGui import (
     QIcon, QKeyEvent, QPen, QFont, QFontMetricsF,
     QResizeEvent, QColor, QPixmap)
-from qtpy.QtCore import Slot, Qt, QSize, QPointF, QRect, QRectF, QModelIndex
+from qtpy.QtCore import Slot, Qt, QSize, QPointF, QRect, QRectF, QModelIndex # type:ignore
 
 from patshared import PortTypesViewFlag
 from ..patchcanvas import canvas
@@ -82,9 +82,9 @@ class ItemmDeleg(QAbstractItemDelegate):
         if self.mng is None:
             return
         
-        thmp = canvas._theme.port
+        thmp = canvas.theme.port
 
-        if canvas._theme.thumbnail_port_colors.lower() == 'text':
+        if canvas.theme.thumbnail_port_colors.lower() == 'text':
             self._port_colors = [
                 thmp.audio.text_color,
                 thmp.midi.text_color,
@@ -220,7 +220,7 @@ class ViewSelectorWidget(QWidget):
         self._menu = QMenu()
         self._menu.aboutToShow.connect(self._before_show_menu)
 
-        self.ui.toolButtonRemove.setMenu(self._menu)
+        self.ui.toolButtonRemove.setMenu(self._menu) # type:ignore
         
         self._selected_index = 0
         self._selected_view = 1
@@ -252,6 +252,9 @@ class ViewSelectorWidget(QWidget):
         return False
     
     def _build_menu(self):
+        if self.mng is None:
+            return
+        
         self._menu.clear()
         act_rename = self._menu.addAction(
             QIcon.fromTheme('edit-rename'),
@@ -445,14 +448,15 @@ class ViewSelectorWidget(QWidget):
     
     @Slot()
     def _clear_absents(self):
+        sender_text: str = self.sender().text() # type:ignore
         if self.mng is not None:
             with CancellableAction(self.mng, CancelOp.VIEW) as a:
-                a.name = self.sender().text()
+                a.name = sender_text
                 self.mng.clear_absents_in_view()
 
     @Slot()
     def _change_view_number(self):
-        new_num: int = self.sender().data()
+        new_num: int = self.sender().data() # type:ignore
         if self.mng is not None:
             with CancellableAction(self.mng, CancelOp.ALL_VIEWS) as a:
                 a.name = _translate('undo', 'Change view number %i to %i') % (
@@ -471,16 +475,18 @@ class ViewSelectorWidget(QWidget):
 
     @Slot()
     def _remove_all_other_views(self):
+        sender_text: str = self.sender().text() # type:ignore
         if self.mng is not None:
             with CancellableAction(self.mng, CancelOp.ALL_VIEWS) as a:
-                a.name = self.sender().text()
+                a.name = sender_text
                 self.mng.remove_all_other_views()
 
     @Slot()
     def _new_view(self):
+        sender_text: str = self.sender().text() # type:ignore
         if self.mng is not None:
             with CancellableAction(self.mng, CancelOp.ALL_VIEWS) as a:
-                a.name = self.sender().text()
+                a.name = sender_text
                 self.mng.new_view()
 
     def write_view_name(self, view_number: int, name: str):
@@ -493,8 +499,9 @@ class ViewSelectorWidget(QWidget):
     def keyPressEvent(self, event: QKeyEvent):
         if (self.ui.comboBoxView.isEditable()
                 and event.key() in (Qt.Key.Key_Return, Qt.Key.Key_Enter)):
-            self.mng.write_view_data(
-                self._selected_view, name=self._editing_text)
+            if self.mng is not None:
+                self.mng.write_view_data(
+                    self._selected_view, name=self._editing_text)
             self.ui.comboBoxView.setEditable(False)
             self.ui.comboBoxView.setCurrentIndex(self._selected_index)
             event.ignore()

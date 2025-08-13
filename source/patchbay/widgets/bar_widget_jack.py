@@ -17,7 +17,7 @@ class BarWidgetJack(QWidget):
         self.ui = JackUiForm()
         self.ui.setupUi(self)
         
-        self.mng: 'PatchbayManager' = None
+        self.mng: 'PatchbayManager' = None # type:ignore
         
         self._waiting_buffer_change = False
         self._buffer_change_from_osc = False

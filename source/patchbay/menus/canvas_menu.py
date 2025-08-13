@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING
 
 from qtpy.QtGui import QIcon, QDesktopServices, QPixmap
 from qtpy.QtWidgets import QMenu, QApplication
-from qtpy.QtCore import QLocale, QUrl, Slot
+from qtpy.QtCore import QLocale, QUrl, Slot # type:ignore
 
 from .. import patchcanvas
 from ..patchcanvas import utils
@@ -140,25 +140,25 @@ class CanvasMenu(QMenu):
             _translate('patchbay', 'auto-fit'))
         self.autofit.setIcon(QIcon.fromTheme('zoom-select-fit'))
         self.autofit.setShortcut('Home')
-        self.autofit.triggered.connect(patchcanvas.canvas._scene.zoom_fit)
+        self.autofit.triggered.connect(patchcanvas.canvas.scene.zoom_fit)
 
         self.zoom_in = self.zoom_menu.addAction(
             _translate('patchbay', 'Zoom +'))
         self.zoom_in.setIcon(QIcon.fromTheme('zoom-in'))
         self.zoom_in.setShortcut('Ctrl++')
-        self.zoom_in.triggered.connect(patchcanvas.canvas._scene.zoom_in)
+        self.zoom_in.triggered.connect(patchcanvas.canvas.scene.zoom_in)
 
         self.zoom_out = self.zoom_menu.addAction(
             _translate('patchbay', 'Zoom -'))
         self.zoom_out.setIcon(QIcon.fromTheme('zoom-out'))
         self.zoom_out.setShortcut('Ctrl+-')
-        self.zoom_out.triggered.connect(patchcanvas.canvas._scene.zoom_out)
+        self.zoom_out.triggered.connect(patchcanvas.canvas.scene.zoom_out)
 
         self.zoom_orig = self.zoom_menu.addAction(
             _translate('patchbay', 'Default Zoom'))
         self.zoom_orig.setIcon(QIcon.fromTheme('zoom'))
         self.zoom_orig.setShortcut('Ctrl+1')
-        self.zoom_orig.triggered.connect(patchcanvas.canvas._scene.zoom_reset)
+        self.zoom_orig.triggered.connect(patchcanvas.canvas.scene.zoom_reset)
 
         self.addMenu(self.zoom_menu)
 
@@ -319,21 +319,24 @@ class CanvasMenu(QMenu):
 
     @Slot()
     def _show_hidden_group(self):
-        group_id: int = self.sender().data()
+        group_id: int = self.sender().data() # type:ignore
+        sender_text: str = self.sender().text() # type:ignore
         with CancellableAction(self.mng, CancelOp.VIEW) as a:
-            a.name = _translate('undo', 'Restore "%s"') % self.sender().text()
+            a.name = _translate('undo', 'Restore "%s"') % sender_text
             self.mng.restore_group_hidden_sides(group_id, self._scene_pos)
     
     @Slot()
     def _show_all_hidden_groups(self):
+        sender_text: str = self.sender().text() # type:ignore
         with CancellableAction(self.mng, CancelOp.VIEW) as a:
-            a.name = self.sender().text()
+            a.name = sender_text
             self.mng.restore_all_group_hidden_sides()
     
     @Slot(bool)
     def _set_view_white_list(self, state: bool):
+        sender_text: str = self.sender().text() # type:ignore
         with CancellableAction(self.mng, op_type=CancelOp.VIEW) as a:
-            a.name = self.sender().text()
+            a.name = sender_text
             self.mng.view().is_white_list = state
             self.mng.set_views_changed()
 

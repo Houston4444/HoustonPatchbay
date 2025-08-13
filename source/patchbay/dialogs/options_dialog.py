@@ -1,14 +1,11 @@
 
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
-from qtpy.QtCore import Qt, QProcess, QSettings, Slot
+from qtpy.QtCore import Qt, QProcess, QSettings, Slot # type:ignore
 from qtpy.QtGui import QIcon, QPixmap
-if TYPE_CHECKING:
-    # FIX : QAction not found by pylance
-    from qtpy.QtGui import QAction
 from qtpy.QtWidgets import (QDialog, QApplication, QInputDialog,
-                             QMessageBox, QWidget, QFileDialog, QAction)
+                             QMessageBox, QWidget, QFileDialog)
 
 
 from patshared import Naming, PrettyDiff
@@ -27,7 +24,7 @@ _translate = QApplication.translate
 
 class CanvasOptionsDialog(QDialog):    
     def __init__(self, parent: QWidget, manager: 'PatchbayManager',
-                 settings: QSettings =None):
+                 settings: Optional[QSettings] = None):
         QDialog.__init__(self, parent)
         self.ui = Ui_CanvasOptions()
         self.ui.setupUi(self)
@@ -67,9 +64,9 @@ class CanvasOptionsDialog(QDialog):
         
         # connect checkboxs and spinbox signals to patchbays signals
         self.ui.checkBoxA2J.stateChanged.connect(
-            manager.sg.a2j_grouped_changed)
+            manager.sg.a2j_grouped_changed) # type:ignore
         self.ui.checkBoxAlsa.stateChanged.connect(
-            manager.sg.alsa_midi_enabled_changed)
+            manager.sg.alsa_midi_enabled_changed) # type:ignore
         
         self.ui.checkBoxJackPrettyNames.stateChanged.connect(
             self._naming_changed)
@@ -85,19 +82,19 @@ class CanvasOptionsDialog(QDialog):
             self._import_pretty_names_from_jack)
         
         self.ui.checkBoxShadows.stateChanged.connect(
-            manager.sg.group_shadows_changed)
+            manager.sg.group_shadows_changed) # type:ignore
         self.ui.comboBoxGridStyle.currentIndexChanged.connect(
             self._grid_style_changed)
         self.ui.checkBoxAutoSelectItems.stateChanged.connect(
-            manager.sg.auto_select_items_changed)
+            manager.sg.auto_select_items_changed) # type:ignore
         self.ui.checkBoxElastic.stateChanged.connect(
-            manager.sg.elastic_changed)
+            manager.sg.elastic_changed) # type:ignore
         self.ui.checkBoxBordersNavigation.stateChanged.connect(
-            manager.sg.borders_nav_changed)
+            manager.sg.borders_nav_changed) # type:ignore
         self.ui.checkBoxPreventOverlap.stateChanged.connect(
-            manager.sg.prevent_overlap_changed)
+            manager.sg.prevent_overlap_changed) # type:ignore
         self.ui.spinBoxMaxPortWidth.valueChanged.connect(
-            manager.sg.max_port_width_changed)
+            manager.sg.max_port_width_changed) # type:ignore
         self.ui.spinBoxDefaultZoom.valueChanged.connect(
             self._change_default_zoom)
         self.ui.comboBoxBoxesAutoLayout.currentIndexChanged.connect(
@@ -293,7 +290,7 @@ class CanvasOptionsDialog(QDialog):
         for theme_data in theme_list:
             if theme_data.editable:
                 self.ui.comboBoxTheme.addItem(
-                    user_icon, theme_data.name, theme_data.ref_id)
+                    user_icon, theme_data.name, theme_data.ref_id) # type:ignore
             else:
                 self.ui.comboBoxTheme.addItem(
                     theme_data.name, theme_data.ref_id)

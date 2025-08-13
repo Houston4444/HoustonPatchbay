@@ -2,7 +2,7 @@
 from typing import TYPE_CHECKING
 from qtpy.QtWidgets import QFrame
 from qtpy.QtGui import QKeyEvent
-from qtpy.QtCore import Qt, QSettings, Slot
+from qtpy.QtCore import Qt, QSettings, Slot # type:ignore
 
 from ..ui.filter_frame import Ui_Frame
 

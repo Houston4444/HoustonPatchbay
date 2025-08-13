@@ -1,6 +1,6 @@
 from typing import Union
 
-from qtpy.QtCore import Slot
+from qtpy.QtCore import Slot # type:ignore
 from qtpy.QtGui import QIcon
 from qtpy.QtWidgets import QDialog, QDialogButtonBox, QApplication
 
@@ -52,7 +52,7 @@ class CustomNameDialog(QDialog):
         self.ui.labelGroupName.setText(f'<strong>{name}</strong>')
         
         ok_button = self.ui.buttonBox.button(
-            QDialogButtonBox.StandardButton.Ok)
+            QDialogButtonBox.StandardButton.Ok) # type:ignore
         self._ok_text = ok_button.text()
         self._ok_icon = ok_button.icon()
         
@@ -94,11 +94,11 @@ class CustomNameDialog(QDialog):
     @Slot(str)    
     def _text_edited(self, text: str):
         ok_button = self.ui.buttonBox.button(
-            QDialogButtonBox.StandardButton.Ok)
+            QDialogButtonBox.StandardButton.Ok) # type:ignore
         
         if not text:
             ok_button.setText(_translate('rename', 'Clear'))
-            ok_button.setIcon(QIcon.fromTheme('edit-clear'))
+            ok_button.setIcon(QIcon.fromTheme('edit-clear')) # type:ignore
         else:
             ok_button.setText(self._ok_text)
             ok_button.setIcon(self._ok_icon)

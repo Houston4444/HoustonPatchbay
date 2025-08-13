@@ -1,4 +1,3 @@
-from qtpy.QtGui import QShowEvent, QFontMetrics, QFont
 from qtpy.QtWidgets import QApplication, QDialog, QTableWidgetItem
 from qtpy.QtCore import Qt
 
@@ -99,8 +98,8 @@ class CanvasPortInfoDialog(QDialog):
                     value_item = QTableWidgetItem(value)
                     key_item.setData(Qt.ItemDataRole.UserRole, key)
                     value_item.setData(Qt.ItemDataRole.UserRole, value)
-                    self.ui.tableWidgetMetadatas.setItem(row, 0, key_item)
-                    self.ui.tableWidgetMetadatas.setItem(row, 1, value_item)
+                    self.ui.tableWidgetMetadatas.setItem(row, 0, key_item) # type:ignore
+                    self.ui.tableWidgetMetadatas.setItem(row, 1, value_item) # type:ignore
                     row += 1
                 
             self.ui.tableWidgetMetadatas.resizeColumnToContents(0)
