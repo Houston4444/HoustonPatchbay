@@ -688,7 +688,7 @@ class PatchSceneMoth(QGraphicsScene):
         else:
             self.setBackgroundBrush(canvas.theme.scene_background_color)
         
-        self._rubberband.setPen(canvas.theme.rubberband.fill_pen())
+        self._rubberband.setPen(canvas.theme.rubberband.fill_pen)
         self._rubberband.setBrush(canvas.theme.rubberband.background_color())
 
         cur_color = ("black" if canvas.theme.scene_background_color.blackF() < 0.5
@@ -1128,7 +1128,7 @@ class PatchSceneMoth(QGraphicsScene):
             x = min(pos_x, rubb_orig_point.x())
             y = min(pos_y, rubb_orig_point.y())
 
-            line_hinting = canvas.theme.rubberband.fill_pen().widthF() / 2.0
+            line_hinting = canvas.theme.rubberband.fill_pen.widthF() / 2.0
             self._rubberband.setRect(
                 x + line_hinting, y + line_hinting,
                 abs(pos_x - rubb_orig_point.x()),

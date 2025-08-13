@@ -240,7 +240,7 @@ class PortgroupWidget(ConnectableWidget):
             theme = theme.selected
 
         poly_image = theme.background_image()
-        poly_pen = theme.fill_pen()
+        poly_pen = theme.fill_pen
         color_main = theme.background_color()
         color_alter = theme.background2_color()
         text_pen = QPen(theme.text_color())

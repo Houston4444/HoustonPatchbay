@@ -116,7 +116,7 @@ class GridWidget(QGraphicsPathItem):
                 y_path, 1 + math.floor((rect.bottom() - y) / cell_y), cell_y))
 
         self.setPath(path)
-        self.setPen(theme.fill_pen())
+        self.setPen(theme.fill_pen)
         self.setBrush(QBrush(Qt.BrushStyle.NoBrush))
 
     def update_path(self):
@@ -327,11 +327,11 @@ class GridWidget(QGraphicsPathItem):
         
         self.setPath(x_path)
 
-        pen = QPen(theme.fill_pen())
+        pen = QPen(theme.fill_pen)
         pen.setWidthF(cell_x)
         
         self.setPen(QPen(
-            theme.fill_pen().color(), cell_x,
+            theme.fill_pen.color(), cell_x,
             Qt.PenStyle.SolidLine, Qt.PenCapStyle.FlatCap))
     
     def boundingRect(self) -> QRectF:

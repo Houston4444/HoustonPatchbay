@@ -100,7 +100,7 @@ class HiddenConnWidget(QGraphicsPathItem):
             theme = theme.video
                 
         tha = _ThemeAttributes()
-        tha.base_pen = theme.fill_pen()
+        tha.base_pen = theme.fill_pen
         tha.color_main = theme.background_color()
         tha.color_alter = theme.background2_color()
         if tha.color_alter is None:

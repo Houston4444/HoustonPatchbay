@@ -32,7 +32,7 @@ class BoxHidder(QGraphicsItem):
 
         box_theme = self.parentItem().get_theme()
         
-        pen = box_theme.fill_pen()
+        pen = box_theme.fill_pen
         lh = pen.widthF() / 2.0
         square_side = orig_rect.width() + orig_rect.height()
         right = orig_rect.right() - lh
@@ -80,7 +80,7 @@ class BoxHidder(QGraphicsItem):
             painter.setBrush(bg_brush)
             painter.drawPolygon(polygon)
             
-        painter.setPen(box_theme.fill_pen())
+        painter.setPen(box_theme.fill_pen)
         painter.setBrush(canvas.theme.scene_background_color)
         painter.drawPolygon(polygon)
         

@@ -948,7 +948,7 @@ class BoxWidgetMoth(QGraphicsItem):
             painter.drawPath(self._painter_path)
 
         # draw the main rectangle
-        pen = theme.fill_pen()        
+        pen = theme.fill_pen
         painter.setPen(pen)
         pen_width = pen.widthF()
 
@@ -1007,7 +1007,7 @@ class BoxWidgetMoth(QGraphicsItem):
                 gui_theme = gui_theme.gui_hidden
             
             painter.setBrush(gui_theme.background_color())
-            painter.setPen(gui_theme.fill_pen())
+            painter.setPen(gui_theme.fill_pen)
             
             radius = gui_theme.border_radius()
             if radius == 0.0:
@@ -1042,7 +1042,7 @@ class BoxWidgetMoth(QGraphicsItem):
             else:
                 painter.setBrush(color_main)
 
-            painter.setPen(mon_theme.fill_pen())
+            painter.setPen(mon_theme.fill_pen)
 
             BAND_MON_WIDTH = 9
             TRIANGLE_MON_SIZE_TOP = 7
@@ -1081,7 +1081,7 @@ class BoxWidgetMoth(QGraphicsItem):
         # may draw horizontal lines around title (header lines)
         if (self._header_line_left is not None
                 and self._header_line_right is not None):
-            painter.setPen(hltheme.fill_pen())
+            painter.setPen(hltheme.fill_pen)
             painter.drawLine(QPointF(*self._header_line_left[0:2]),
                              QPointF(*self._header_line_left[2:]))
             painter.drawLine(QPointF(*self._header_line_right[0:2]),
@@ -1126,7 +1126,7 @@ class BoxWidgetMoth(QGraphicsItem):
                                  title_line.text)
 
         # draw (un)wrapper triangles
-        painter.setPen(wtheme.fill_pen())
+        painter.setPen(wtheme.fill_pen)
         painter.setBrush(wtheme.background_color())
         tr_pen_width = pen.widthF()
 
@@ -1233,7 +1233,7 @@ class BoxWidgetMoth(QGraphicsItem):
         else:
             painter.setBrush(background1)
         
-        pen = theme.fill_pen()
+        pen = theme.fill_pen
         painter.setPen(pen)
         lh = pen.widthF() / 2.0
         

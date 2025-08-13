@@ -310,7 +310,7 @@ class PortWidget(ConnectableWidget):
         poly_image = theme.background_image()
         poly_color = theme.background_color()
         poly_color_alter = theme.background2_color()
-        poly_pen = theme.fill_pen()
+        poly_pen = theme.fill_pen
         text_pen = QPen(theme.text_color())
 
         # To prevent quality worsening

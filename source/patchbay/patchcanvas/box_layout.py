@@ -44,7 +44,7 @@ class BoxLayout:
         # when we init one from box.
         cls._pms = ports_min_sizes
         theme = box.get_theme()
-        cls._pen_width = theme.fill_pen().widthF()
+        cls._pen_width = theme.fill_pen.widthF()
         cls._port_spacing = theme.port_spacing()
         cls._hwr = canvas.theme.hardware_rack_width if box.is_hardware else 0
         cls._port_mode = box._current_port_mode

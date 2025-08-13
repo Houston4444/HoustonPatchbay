@@ -621,7 +621,7 @@ class BoxWidget(BoxWidgetMoth):
         box_theme = self.get_theme()
         port_spacing = box_theme.port_spacing()
         port_type_spacing = box_theme.port_type_spacing()
-        pen_width = box_theme.fill_pen().widthF()
+        pen_width = box_theme.fill_pen.widthF()
         last_in_type_and_sub = (PortType.NULL, PortSubType.REGULAR)
         last_out_type_and_sub = (PortType.NULL, PortSubType.REGULAR)
         last_type_and_sub = (PortType.NULL, PortSubType.REGULAR)
@@ -931,7 +931,7 @@ class BoxWidget(BoxWidgetMoth):
         box_theme = self.get_theme()
         font_size = box_theme.font().pixelSize()
         font_spacing = int(font_size * 1.4)
-        pen_width = box_theme.fill_pen().widthF()
+        pen_width = box_theme.fill_pen.widthF()
         icon_size = box_theme.icon_size()
 
         # when client is client capable of gui state
@@ -1041,7 +1041,7 @@ class BoxWidget(BoxWidgetMoth):
         port_out_offset = abs(theme.port_out_offset())
         bore_in = bool(theme.port_in_offset_mode() == 'bore')
         bore_out = bool(theme.port_out_offset_mode() == 'bore')
-        pen = theme.fill_pen()
+        pen = theme.fill_pen
         line_hinting = pen.widthF() / 2.0
         
         # theses values are needed to prevent some incorrect painter_path

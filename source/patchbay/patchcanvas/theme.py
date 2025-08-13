@@ -366,6 +366,7 @@ class StyleAttributer:
 
         return self.__getattribute__(attribute)
     
+    @property
     def fill_pen(self) -> QPen:
         if self._fill_pen is None:
             self._fill_pen = QPen(
