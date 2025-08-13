@@ -369,34 +369,39 @@ class StyleAttributer:
     @property
     def fill_pen(self) -> QPen:
         if self._fill_pen is None:
-            self._fill_pen = QPen(
-                QBrush(self.get_value_of('_border_color')),
-                self.get_value_of('_border_width'),
-                self.get_value_of('_border_style'))
+            if TYPE_CHECKING:
+                self._fill_pen = QPen()
+            else:
+                self._fill_pen = QPen(
+                    QBrush(self.get_value_of('_border_color')),
+                    self.get_value_of('_border_width'),
+                    self.get_value_of('_border_style'))
         
         return self._fill_pen
     
     def border_radius(self) -> float:
-        return self.get_value_of('_border_radius')
+        return self.get_value_of('_border_radius') # type:ignore
     
     def background_color(self) -> QColor:
-        return self.get_value_of('_background_color')
+        return self.get_value_of('_background_color') # type:ignore
     
-    def background2_color(self) -> Union[QColor, None]:
-        return self.get_value_of('_background2_color',
+    def background2_color(self) -> Optional[QColor]:
+        return self.get_value_of('_background2_color', # type:ignore
                                  needed_attribute='_background_color')
     
     def background_image(self) -> QImage:
-        return self.get_value_of('_background_image')
+        return self.get_value_of('_background_image') # type:ignore
 
     def text_color(self) -> QColor:
-        return self.get_value_of('_text_color')
+        return self.get_value_of('_text_color') # type:ignore
     
     def font(self) -> QFont:
         if self._font is None:
             self._font = QFont(self.get_value_of('_font_name'))
-            self._font.setPixelSize(int(self.get_value_of('_font_size')))
-            self._font.setWeight(int(self.get_value_of('_font_width')))
+            self._font.setPixelSize(
+                int(self.get_value_of('_font_size'))) # type:ignore
+            self._font.setWeight(
+                int(self.get_value_of('_font_width'))) # type:ignore
         return self._font
         
     def _get_font_metrics_cache(self) -> dict[str, float]:        
@@ -439,37 +444,37 @@ class StyleAttributer:
         return tot_size
     
     def port_offset(self) -> float:
-        return self.get_value_of('_port_offset')
+        return self.get_value_of('_port_offset') # type:ignore
     
     def port_in_offset(self) -> float:
-        return self.get_value_of('_port_in_offset')
+        return self.get_value_of('_port_in_offset') # type:ignore
     
     def port_out_offset(self) -> float:
-        return self.get_value_of('_port_out_offset')
+        return self.get_value_of('_port_out_offset') # type:ignore
     
     def port_in_offset_mode(self) -> str:
-        return self.get_value_of('_port_in_offset_mode')
+        return self.get_value_of('_port_in_offset_mode') # type:ignore
     
     def port_out_offset_mode(self) -> str:
-        return self.get_value_of('_port_out_offset_mode')
+        return self.get_value_of('_port_out_offset_mode') # type:ignore
     
     def port_spacing(self) -> float:
-        return self.get_value_of('_port_spacing')
+        return self.get_value_of('_port_spacing') # type:ignore
     
     def port_type_spacing(self) -> float:
-        return self.get_value_of('_port_type_spacing')
+        return self.get_value_of('_port_type_spacing') # type:ignore
 
     def box_footer(self) -> float:
-        return self.get_value_of('_box_footer')
+        return self.get_value_of('_box_footer') # type:ignore
     
     def icon_size(self) -> float:
-        return self.get_value_of('_icon_size')
+        return self.get_value_of('_icon_size') # type:ignore
     
     def grid_min_width(self) -> float:
-        return self.get_value_of('_grid_min_width')
+        return self.get_value_of('_grid_min_width') # type:ignore
     
     def grid_min_height(self) -> float:
-        return self.get_value_of('_grid_min_height')
+        return self.get_value_of('_grid_min_height') # type:ignore
     
     def _get_titles_templates_cache(self) -> TitleCache:
         font_name = str(self.get_value_of('_font_name'))
