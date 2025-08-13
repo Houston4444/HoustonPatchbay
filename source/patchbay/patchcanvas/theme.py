@@ -16,7 +16,7 @@ _logger = logging.getLogger(__name__)
 TitleCache: TypeAlias = dict[str, dict[str, dict[int, list[dict[str, int]]]]]
 
 
-def _to_qcolor(color: str) -> QColor:
+def _to_qcolor(color: str) -> Optional[QColor]:
     ''' convert a color given with a string to a QColor.
     returns None if color has a incorrect value.'''
     if not isinstance(color, str):
@@ -823,9 +823,10 @@ class Theme(StyleAttributer):
                         self.box_spacing = 2 * (body_value // 2)
 
                     elif body_key == 'background':
-                        self.scene_background_color = _to_qcolor(body_value)
-                        if self.scene_background_color is None:
-                            self.scene_background_color = QColor('black')
+                        scene_bg_color = _to_qcolor(body_value)
+                        if scene_bg_color is None:
+                            scene_bg_color = QColor('black')
+                        self.scene_background_color = scene_bg_color
 
                     elif body_key == 'background-image':
                         background_path = os.path.join(
@@ -845,9 +846,10 @@ class Theme(StyleAttributer):
                                 f"Unable to find background-image \"{background_path}\"")
 
                     elif body_key == 'monitor-color':
-                        self.monitor_color = _to_qcolor(body_value)
-                        if self.monitor_color is None:
-                            self.monitor_color = QColor(190, 158, 0)
+                        monitor_color = _to_qcolor(body_value)
+                        if monitor_color is None:
+                            monitor_color = QColor(190, 158, 0)
+                        self.monitor_color = monitor_color
                     
                     elif body_key == 'thumbnail_port_colors':
                         self.thumbnail_port_colors = str(body_value)

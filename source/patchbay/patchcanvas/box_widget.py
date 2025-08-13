@@ -524,8 +524,13 @@ class BoxWidget(BoxWidgetMoth):
                 last_lines_count = len(title_lines)
 
             lines_choice_max = i
+            if self.has_top_icon():
+                icon_size = int(box_theme.icon_size())
+            else:
+                icon_size = 0
+
             box_theme.save_title_templates(
-                self._group_name, self._can_handle_gui, self.has_top_icon(),
+                self._group_name, self._can_handle_gui, icon_size,
                 all_title_templates[:lines_choice_max])
 
         # Now compare multiple possible areas for the box,
