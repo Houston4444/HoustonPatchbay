@@ -191,10 +191,10 @@ class StyleAttributer:
                     err = True
 
             case 'background-image':
-                image_path = os.path.join(
-                    os.path.dirname(Theme.theme_file_path), 'images', value)
-                if os.path.isfile(image_path):
-                    self._background_image = QImage(image_path)
+                image_path = (Theme.theme_file_path.parent
+                              / 'images' / str(value))
+                if image_path.is_file():
+                    self._background_image = QImage(str(image_path))
                     self._background_image.setDevicePixelRatio(3.0)
                     if self._background_image.isNull():
                         self._background_image = None
@@ -212,11 +212,11 @@ class StyleAttributer:
 
                     # add the font to database if it is an embedded font
                     for ext in ('ttf', 'otf'):
-                        embedded_str = os.path.join(
-                            os.path.dirname(Theme.theme_file_path),
-                            'fonts', f"{value}.{ext}")
-                        if os.path.isfile(embedded_str):
-                            QFontDatabase.addApplicationFont(embedded_str)
+                        embedded_path = (Theme.theme_file_path.parent
+                                        / 'fonts' / f"{value}.{ext}")
+                        if embedded_path.is_file():
+                            QFontDatabase.addApplicationFont(
+                                str(embedded_path))
                             break
                     
                 else:
@@ -510,7 +510,6 @@ class StyleAttributer:
             self._titles_templates_cache = self._get_titles_templates_cache()
         
         gui_key = 'with_gui' if handle_gui else 'without_gui'
-        # icon_key = 'with_icon' if with_icon else 'without_icon'
     
         if (title in self._titles_templates_cache
                 and gui_key in self._titles_templates_cache[title]
@@ -605,7 +604,7 @@ class FontMetricsCacheType(TypedDict):
 
 
 class Theme(StyleAttributer):
-    theme_file_path = ''
+    theme_file_path = Path()
     
     # if for some reason cache may be incompatible with this version
     # of the patchbay, we need to discard the cache files. 
@@ -808,51 +807,51 @@ class Theme(StyleAttributer):
             
             if key == 'body':
                 for body_key, body_value in value.items():
-                    if body_key in (
-                            'port-height', 'box-spacing-horizontal',
-                            'magnet', 'hardware-rack-width'):
-                        if not isinstance(body_value, int):
-                            continue
-                        body_key: str
-                        self.__setattr__(body_key.replace('-', '_'), body_value)
+                    match body_key:
+                        case 'port-height'|'box-spacing-horizontal' \
+                                |'magnet'|'hardware-rack-width':
+                            if not isinstance(body_value, int):
+                                continue
+                            body_key: str
+                            self.__setattr__(body_key.replace('-', '_'), body_value)
 
-                    elif body_key == 'box-spacing':
-                        # box_spacing must be an even number 
-                        if not isinstance(body_value, int):
-                            continue
-                        self.box_spacing = 2 * (body_value // 2)
+                        case 'box-spacing':
+                            # box_spacing must be an even number 
+                            if not isinstance(body_value, int):
+                                continue
+                            self.box_spacing = 2 * (body_value // 2)
 
-                    elif body_key == 'background':
-                        scene_bg_color = _to_qcolor(body_value)
-                        if scene_bg_color is None:
-                            scene_bg_color = QColor('black')
-                        self.scene_background_color = scene_bg_color
+                        case 'background':
+                            scene_bg_color = _to_qcolor(body_value)
+                            if scene_bg_color is None:
+                                scene_bg_color = QColor('black')
+                            self.scene_background_color = scene_bg_color
 
-                    elif body_key == 'background-image':
-                        background_path = os.path.join(
-                            os.path.dirname(theme_file_path), 'images', body_value)
-                        if os.path.isfile(background_path):
-                            try:
-                                self.scene_background_image = QImage(background_path)
-                                if self.scene_background_image.isNull():
+                        case 'background-image':
+                            background_path = os.path.join(
+                                os.path.dirname(theme_file_path), 'images', body_value)
+                            if os.path.isfile(background_path):
+                                try:
+                                    self.scene_background_image = QImage(background_path)
+                                    if self.scene_background_image.isNull():
+                                        _logger.error(
+                                            f"background {background_path} is not a valid image")
+                                        self.scene_background_image = None
+                                except:
                                     _logger.error(
                                         f"background {background_path} is not a valid image")
-                                    self.scene_background_image = None
-                            except:
+                            else:
                                 _logger.error(
-                                    f"background {background_path} is not a valid image")
-                        else:
-                            _logger.error(
-                                f"Unable to find background-image \"{background_path}\"")
+                                    f"Unable to find background-image \"{background_path}\"")
 
-                    elif body_key == 'monitor-color':
-                        monitor_color = _to_qcolor(body_value)
-                        if monitor_color is None:
-                            monitor_color = QColor(190, 158, 0)
-                        self.monitor_color = monitor_color
-                    
-                    elif body_key == 'thumbnail_port_colors':
-                        self.thumbnail_port_colors = str(body_value)
+                        case 'monitor-color':
+                            monitor_color = _to_qcolor(body_value)
+                            if monitor_color is None:
+                                monitor_color = QColor(190, 158, 0)
+                            self.monitor_color = monitor_color
+                        
+                        case 'thumbnail_port_colors':
+                            self.thumbnail_port_colors = str(body_value)
 
                 continue
 
