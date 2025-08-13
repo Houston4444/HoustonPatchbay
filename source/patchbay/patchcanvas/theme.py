@@ -70,7 +70,7 @@ def _to_qcolor(color: str) -> QColor:
                       color.partition('(')[2].rpartition(')')[0].split(',')]
             assert len(values) == 4
             qcolor = QColor(*[int(v) for v in values[:3]],
-                            int(float(values[3]) * 255))
+                            int(float(values[3]) * 255)) # type:ignore
         except:
             return None
     
@@ -142,172 +142,173 @@ class StyleAttributer:
 
     def set_attribute(self, attribute: str, value):
         err = False
-        
-        if attribute == 'border-color':
-            self._border_color = _to_qcolor(value)
-            if self._border_color is None:
-                err = True
-                
-        elif attribute == 'border-width':
-            if isinstance(value, (int, float)):
-                self._border_width = rail_float(value, 0, 20)
-            else:
-                err = True
-                
-        elif attribute == 'border-style':
-            if isinstance(value, str):
-                value = value.lower()
-                if value in ('solid', 'normal'):
-                    self._border_style = Qt.PenStyle.SolidLine
-                elif value in ('nopen', 'none'):
-                    self._border_style = Qt.PenStyle.NoPen
-                elif value == 'dash':
-                    self._border_style = Qt.PenStyle.DashLine
-                elif value == 'dashdot':
-                    self._border_style = Qt.PenStyle.DashDotLine
-                elif value == 'dashdotdot':
-                    self._border_style = Qt.PenStyle.DashDotDotLine
+        match attribute:
+            case 'border-color':
+                self._border_color = _to_qcolor(value)
+                if self._border_color is None:
+                    err = True
+                    
+            case 'border-width':
+                if isinstance(value, (int, float)):
+                    self._border_width = rail_float(value, 0, 20)
                 else:
                     err = True
-            else:
-                err = True
+                    
+            case 'border-style':
+                if isinstance(value, str):
+                    value = value.lower()
+                    match value:
+                        case 'solid'|'normal':
+                            self._border_style = Qt.PenStyle.SolidLine
+                        case 'nopen'|'none':
+                            self._border_style = Qt.PenStyle.NoPen
+                        case 'dash':
+                            self._border_style = Qt.PenStyle.DashLine
+                        case 'dashdot':
+                            self._border_style = Qt.PenStyle.DashDotLine
+                        case 'dashdotdot':
+                            self._border_style = Qt.PenStyle.DashDotDotLine
+                        case _:
+                            err = True
+                else:
+                    err = True
 
-        elif attribute == 'border-radius':
-            if isinstance(value, (int, float)):
-                self._border_radius = rail_float(value, 0, 50)
-            else:
-                err = True
+            case 'border-radius':
+                if isinstance(value, (int, float)):
+                    self._border_radius = rail_float(value, 0, 50)
+                else:
+                    err = True
 
-        elif attribute == 'background':
-            self._background_color = _to_qcolor(value)
-            if self._background_color is None:
-                err = True
-                
-        elif attribute == 'background2':
-            self._background2_color = _to_qcolor(value)
-            if self._background2_color is None:
-                err = True
+            case 'background':
+                self._background_color = _to_qcolor(value)
+                if self._background_color is None:
+                    err = True
+                    
+            case 'background2':
+                self._background2_color = _to_qcolor(value)
+                if self._background2_color is None:
+                    err = True
 
-        elif attribute == 'background-image':
-            image_path = os.path.join(
-                os.path.dirname(Theme.theme_file_path), 'images', value)
-            if os.path.isfile(image_path):
-                self._background_image = QImage(image_path)
-                self._background_image.setDevicePixelRatio(3.0)
-                if self._background_image.isNull():
+            case 'background-image':
+                image_path = os.path.join(
+                    os.path.dirname(Theme.theme_file_path), 'images', value)
+                if os.path.isfile(image_path):
+                    self._background_image = QImage(image_path)
+                    self._background_image.setDevicePixelRatio(3.0)
+                    if self._background_image.isNull():
+                        self._background_image = None
+                else:
                     self._background_image = None
-            else:
-                self._background_image = None
-        
-        elif attribute == 'text-color':
-            self._text_color = _to_qcolor(value)
-            if self._text_color is None:
-                err = True
-                
-        elif attribute == 'font-name':
-            if isinstance(value, str):
-                self._font_name = value
+            
+            case 'text-color':
+                self._text_color = _to_qcolor(value)
+                if self._text_color is None:
+                    err = True
+                    
+            case 'font-name':
+                if isinstance(value, str):
+                    self._font_name = value
 
-                # add the font to database if it is an embedded font
-                for ext in ('ttf', 'otf'):
-                    embedded_str = os.path.join(
-                        os.path.dirname(Theme.theme_file_path),
-                        'fonts', f"{value}.{ext}")
-                    if os.path.isfile(embedded_str):
-                        QFontDatabase.addApplicationFont(embedded_str)
-                        break
-                
-            else:
-                err = True
-                
-        elif attribute == 'font-size':
-            if isinstance(value, (int, float)):
-                self._font_size = rail_int(value, 1, 200)
-            else:
-                err = True
-                
-        elif attribute == 'font-width':
-            if isinstance(value, (int, float)):
-                self._font_width = rail_int(value, 0, 99)
-            elif isinstance(value, str):
-                value = value.lower()
-                if value == 'normal':
-                    self._font_state = QFont.Weight.Normal
-                elif value == 'bold':
-                    self._font_state = QFont.Bold
+                    # add the font to database if it is an embedded font
+                    for ext in ('ttf', 'otf'):
+                        embedded_str = os.path.join(
+                            os.path.dirname(Theme.theme_file_path),
+                            'fonts', f"{value}.{ext}")
+                        if os.path.isfile(embedded_str):
+                            QFontDatabase.addApplicationFont(embedded_str)
+                            break
+                    
                 else:
                     err = True
-            else:
-                err = True
-        
-        elif attribute == 'port-offset':
-            if isinstance(value, (int, float)):
-                self._port_offset = rail_float(value, -20, 20)
-            else:
-                err = True
-        
-        elif attribute == 'port-in-offset':
-            if isinstance(value, (int, float)):
-                self._port_in_offset = rail_float(value, -20, 20)
-            else:
-                err = True
-                
-        elif attribute == 'port-out-offset':
-            if isinstance(value, (int, float)):
-                self._port_out_offset = rail_float(value, -20, 20)
-            else:
-                err = True
-        
-        elif attribute == 'port-in-offset-mode':
-            if isinstance(value, str):
-                self._port_in_offset_mode = value
-            else:
-                err = True
+                    
+            case 'font-size':
+                if isinstance(value, (int, float)):
+                    self._font_size = rail_int(value, 1, 200)
+                else:
+                    err = True
+                    
+            case 'font-width':
+                if isinstance(value, (int, float)):
+                    self._font_width = rail_int(value, 0, 99)
+                elif isinstance(value, str):
+                    value = value.lower()
+                    if value == 'normal':
+                        self._font_state = QFont.Weight.Normal
+                    elif value == 'bold':
+                        self._font_state = QFont.Weight.Bold
+                    else:
+                        err = True
+                else:
+                    err = True
+            
+            case 'port-offset':
+                if isinstance(value, (int, float)):
+                    self._port_offset = rail_float(value, -20, 20)
+                else:
+                    err = True
+            
+            case 'port-in-offset':
+                if isinstance(value, (int, float)):
+                    self._port_in_offset = rail_float(value, -20, 20)
+                else:
+                    err = True
+                    
+            case 'port-out-offset':
+                if isinstance(value, (int, float)):
+                    self._port_out_offset = rail_float(value, -20, 20)
+                else:
+                    err = True
+            
+            case 'port-in-offset-mode':
+                if isinstance(value, str):
+                    self._port_in_offset_mode = value
+                else:
+                    err = True
 
-        elif attribute == 'port-out-offset-mode':
-            if isinstance(value, str):
-                self._port_out_offset_mode = value
-            else:
-                err = True
-        
-        elif attribute == 'port-spacing':
-            if isinstance(value, (int, float)):
-                self._port_spacing = rail_float(value, 0, 100)
-            else:
-                err = True
-        
-        elif attribute == 'port-type-spacing':
-            if isinstance(value, (int, float)):
-                self._port_type_spacing = rail_float(value, 0, 100)
-            else:
-                err = True
+            case 'port-out-offset-mode':
+                if isinstance(value, str):
+                    self._port_out_offset_mode = value
+                else:
+                    err = True
+            
+            case 'port-spacing':
+                if isinstance(value, (int, float)):
+                    self._port_spacing = rail_float(value, 0, 100)
+                else:
+                    err = True
+            
+            case 'port-type-spacing':
+                if isinstance(value, (int, float)):
+                    self._port_type_spacing = rail_float(value, 0, 100)
+                else:
+                    err = True
 
-        elif attribute == 'box-footer':
-            if isinstance(value, (int, float)):
-                self._box_footer = rail_float(value, 0, 50)
-            else:
-                err = True
+            case 'box-footer':
+                if isinstance(value, (int, float)):
+                    self._box_footer = rail_float(value, 0, 50)
+                else:
+                    err = True
 
-        elif attribute == 'icon-size':
-            if isinstance(value, (int, float)):
-                self._icon_size = rail_float(value, 8, 1024)
-            else:
-                err = True
+            case 'icon-size':
+                if isinstance(value, (int, float)):
+                    self._icon_size = rail_float(value, 8, 1024)
+                else:
+                    err = True
 
-        elif attribute == 'grid-min-width':
-            if isinstance(value, (int, float)):
-                self._grid_min_width = rail_float(value, 1, 100000)
-            else:
-                err = True
-                
-        elif attribute == 'grid-min-height':
-            if isinstance(value, (int, float)):
-                self._grid_min_height = rail_float(value, 1, 100000)
-            else:
-                err = True
+            case 'grid-min-width':
+                if isinstance(value, (int, float)):
+                    self._grid_min_width = rail_float(value, 1, 100000)
+                else:
+                    err = True
+                    
+            case 'grid-min-height':
+                if isinstance(value, (int, float)):
+                    self._grid_min_height = rail_float(value, 1, 100000)
+                else:
+                    err = True
 
-        else:
-            _logger.error(f"{self._path}: unknown key: {attribute}")
+            case _:
+                _logger.error(f"{self._path}: unknown key: {attribute}")
 
         if err:
             _logger.error(
@@ -413,7 +414,7 @@ class StyleAttributer:
         self._font_metrics_cache = \
             Theme.font_metrics_cache[font_name][font_size][font_width]
             
-    def get_text_width(self, string:str) -> float:
+    def get_text_width(self, string: str) -> float:
         if self._font_metrics_cache is None:
             self._set_font_metrics_cache()
         
@@ -587,16 +588,16 @@ class IconTheme:
         self.monitor_capture = src + 'monitor_capture.svg'
         self.monitor_playback = src + 'monitor_playback.svg'
         
-    def read_theme(self, theme_file: str):
-        icons_dir = os.path.join(os.path.dirname(theme_file), 'icons')
-        if not os.path.isdir(icons_dir):
+    def read_theme(self, theme_file: Path):
+        icons_dir = theme_file.parent / 'icons'
+        if not icons_dir.is_dir():
             return
         
         for key in ('hardware_capture', 'hardware_playback', 'hardware_grouped',
                     'hardware_midi', 'monitor_capture', 'monitor_playback'):
-            icon_path = os.path.join(icons_dir, key + '.svg')
-            if os.path.isfile(icon_path):
-                self.__setattr__(key, icon_path)
+            icon_path = icons_dir / f'{key}.svg'
+            if icon_path.is_file():
+                self.__setattr__(key, str(icon_path))
 
 
 class Theme(StyleAttributer):
@@ -670,7 +671,7 @@ class Theme(StyleAttributer):
                       'monitor_decoration', 'gui_button', 'grid']
     
     @classmethod
-    def set_file_path(cls, theme_file_path: str):
+    def set_file_path(cls, theme_file_path: Path):
         cls.theme_file_path = theme_file_path
     
     @classmethod
@@ -719,7 +720,7 @@ class Theme(StyleAttributer):
         with open(cache_dir / 'patchbay_fonts', 'wb') as f:
             pickle.dump(cls.font_metrics_cache, f)
     
-    def read_theme(self, theme_dict: dict[str, dict], theme_file_path: str):
+    def read_theme(self, theme_dict: dict[str, dict], theme_file_path: Path):
         '''theme_file_path is only used here to find external resources''' 
         if not isinstance(theme_dict, dict):
             _logger.error("invalid dict read error")

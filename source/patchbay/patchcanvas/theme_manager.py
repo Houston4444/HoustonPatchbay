@@ -167,7 +167,7 @@ class ThemeManager:
         themes_set = set[str]()
         conf = configparser.ConfigParser()
         theme_classes = list[ThemeData]()
-        lang = os.getenv('LANG')
+        lang = os.getenv('LANG', '')
         lang_short = ''
         if len(lang) >= 2:
             lang_short = lang[:2]

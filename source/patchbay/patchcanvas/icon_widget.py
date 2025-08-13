@@ -213,12 +213,13 @@ class IconSvgWidget(QGraphicsSvgItem): # type:ignore
                 self._size = QRectF(4, 4, icon_size, icon_size)
                 self._icon_size = icon_size
                 
-                if name == 'monitor_capture':
-                    icon_path = theme.monitor_capture
-                elif name == 'monitor_playback':
-                    icon_path = theme.monitor_playback
-                else:
-                    icon_path = ":/canvas/dark/" + name
+                match name:
+                    case 'monitor_capture':
+                        icon_path = theme.monitor_capture
+                    case 'monitor_playback':
+                        icon_path = theme.monitor_playback
+                    case _:
+                        icon_path = ":/canvas/dark/" + name
 
             case _:
                 self._size = QRectF(0, 0, 0, 0)

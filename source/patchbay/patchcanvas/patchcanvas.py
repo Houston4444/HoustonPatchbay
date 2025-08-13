@@ -22,16 +22,17 @@ from pathlib import Path
 import time
 from typing import Callable
 
-from qtpy.QtCore import (Slot, QObject, QPointF, QRectF,
-                         QSettings, QTimer, Signal)
+from qtpy.QtCore import (
+    Slot, Signal, QObject, QPointF, QRectF,#type:ignore
+    QSettings, QTimer)
 
 from patshared import (
     PortMode,
     BoxLayoutMode,
     BoxType,
-    BoxPos,
     GroupPos
     )
+
 from .init_values import (
     AliasingReason,
     CanvasNeverInit,
@@ -68,9 +69,9 @@ from .proto_callbacker import ProtoCallbacker
 
 
 _logger = logging.getLogger(__name__)
-# used by patchbay_api decorator to get function_name
-# and arguments, easily usable by logger
 _logging_str = ''
+'''used by patchbay_api decorator to get function_name
+and arguments, easily usable by logger'''
 
 
 # decorator

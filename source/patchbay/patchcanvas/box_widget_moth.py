@@ -24,7 +24,7 @@ from typing import TYPE_CHECKING, Optional
 
 
 try:
-    from sip import voidptr
+    from sip import voidptr # type:ignore
 except:
     # not really used for now because there is no InlineDisplay
     pass
@@ -233,6 +233,8 @@ class BoxWidgetMoth(QGraphicsItem):
         self._painter_path = QPainterPath()
         self._painter_path_sel = QPainterPath()
         self._layout: Optional[BoxLayout] = None
+
+        self.update_positions_pending = False
 
         canvas.scene.addItem(self)
         self.setZValue(Zv.NEW_BOX.value)
@@ -907,6 +909,9 @@ class BoxWidgetMoth(QGraphicsItem):
         if canvas.loading_items:
             return
 
+        if self._layout is None:
+            return
+
         painter.save()
         painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
 
@@ -1125,76 +1130,78 @@ class BoxWidgetMoth(QGraphicsItem):
         painter.setBrush(wtheme.background_color())
         tr_pen_width = pen.widthF()
 
-        if self._wrapping_state in (WrappingState.WRAPPED,
-                                    WrappingState.UNWRAPPING):
-            for port_mode in PortMode.INPUT, PortMode.OUTPUT:
-                if self._current_port_mode & port_mode:
-                    if self._has_side_title():
-                        side = 9
-                        # offset = 4
-                        # ypos = self._height - offset
-                        ypos = self._height - pen_width - 2.0
+        match self._wrap_triangle_pos:
+            case _ if self._wrapping_state in(
+                    WrappingState.WRAPPED, WrappingState.UNWRAPPING):
+                for port_mode in PortMode.INPUT, PortMode.OUTPUT:
+                    if self._current_port_mode & port_mode:
+                        if self._has_side_title():
+                            side = 9
+                            # offset = 4
+                            # ypos = self._height - offset
+                            ypos = self._height - pen_width - 2.0
 
-                        triangle = QPolygonF()
-                        if port_mode is PortMode.INPUT:
-                            xpos = pen_width + 2.0
-                            triangle += QPointF(xpos, ypos)
-                            triangle += QPointF(xpos, ypos - side)
-                            triangle += QPointF(xpos + side, ypos)
+                            triangle = QPolygonF()
+                            if port_mode is PortMode.INPUT:
+                                xpos = pen_width + 2.0
+                                triangle += QPointF(xpos, ypos)
+                                triangle += QPointF(xpos, ypos - side)
+                                triangle += QPointF(xpos + side, ypos)
+                            else:
+                                xpos = self._width - pen_width - 2.0
+                                triangle += QPointF(xpos, ypos)
+                                triangle += QPointF(xpos, ypos - side)
+                                triangle += QPointF(xpos - side, ypos)
                         else:
-                            xpos = self._width - pen_width - 2.0
+                            side = 6
+                            xpos = pen_width + 2.0
+                            ypos = self._height - pen_width - side - 2.0
+
+                            if port_mode is PortMode.OUTPUT:
+                                xpos = \
+                                    self._width - pen_width - 2.0 - 2 * side
+
+                            triangle = QPolygonF()
                             triangle += QPointF(xpos, ypos)
-                            triangle += QPointF(xpos, ypos - side)
-                            triangle += QPointF(xpos - side, ypos)
-                    else:
-                        side = 6
-                        xpos = pen_width + 2.0
-                        ypos = self._height - pen_width - side - 2.0
+                            triangle += QPointF(xpos + 2 * side, ypos)
+                            triangle += QPointF(xpos + side, ypos + side)
+                        
+                        painter.drawPolygon(triangle)
 
-                        if port_mode is PortMode.OUTPUT:
-                            xpos = self._width - pen_width - 2.0 - 2 * side
+            case UnwrapButton.LEFT:
+                side = 6
+                xpos = 2.0 + pen_width
+                ypos = self._height - pen_width - 2.0
+                triangle = QPolygonF()
+                triangle += QPointF(xpos, ypos)
+                triangle += QPointF(xpos + 2 * side, ypos)
+                triangle += QPointF(xpos + side, ypos -side)
 
-                        triangle = QPolygonF()
-                        triangle += QPointF(xpos, ypos)
-                        triangle += QPointF(xpos + 2 * side, ypos)
-                        triangle += QPointF(xpos + side, ypos + side)
-                    
-                    painter.drawPolygon(triangle)
-
-        elif self._wrap_triangle_pos is UnwrapButton.LEFT:
-            side = 6
-            xpos = 2.0 + pen_width
-            ypos = self._height - pen_width - 2.0
-            triangle = QPolygonF()
-            triangle += QPointF(xpos, ypos)
-            triangle += QPointF(xpos + 2 * side, ypos)
-            triangle += QPointF(xpos + side, ypos -side)
-
-            painter.drawPolygon(triangle)
-        
-        elif self._wrap_triangle_pos is UnwrapButton.RIGHT:
-            side = 6
-            xpos = self._width - pen_width - 2 * side - 2.0
+                painter.drawPolygon(triangle)
             
-            ypos = self._height - pen_width - 2.0
-            triangle = QPolygonF()
-            triangle += QPointF(xpos, ypos)
-            triangle += QPointF(xpos + 2 * side, ypos)
-            triangle += QPointF(xpos + side, ypos - side)
-            painter.drawPolygon(triangle)
-        
-        elif self._wrap_triangle_pos is UnwrapButton.CENTER:
-            side = 7
-            xpos = (self._width 
-                    + self._layout._pms.ins_width
-                    - self._layout._pms.outs_width) / 2 - side
+            case UnwrapButton.RIGHT:
+                side = 6
+                xpos = self._width - pen_width - 2 * side - 2.0
+                
+                ypos = self._height - pen_width - 2.0
+                triangle = QPolygonF()
+                triangle += QPointF(xpos, ypos)
+                triangle += QPointF(xpos + 2 * side, ypos)
+                triangle += QPointF(xpos + side, ypos - side)
+                painter.drawPolygon(triangle)
             
-            ypos = self._height - tr_pen_width / 2.0
-            triangle = QPolygonF()
-            triangle += QPointF(xpos, ypos)
-            triangle += QPointF(xpos + 2 * side, ypos)
-            triangle += QPointF(xpos + side, ypos -side)
-            painter.drawPolygon(triangle)
+            case UnwrapButton.CENTER:
+                side = 7
+                xpos = (self._width 
+                        + self._layout._pms.ins_width
+                        - self._layout._pms.outs_width) / 2 - side
+                
+                ypos = self._height - tr_pen_width / 2.0
+                triangle = QPolygonF()
+                triangle += QPointF(xpos, ypos)
+                triangle += QPointF(xpos + 2 * side, ypos)
+                triangle += QPointF(xpos + side, ypos -side)
+                painter.drawPolygon(triangle)
 
         painter.restore()
 

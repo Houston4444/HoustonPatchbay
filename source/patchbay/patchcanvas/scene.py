@@ -29,20 +29,20 @@ from .utils import (previous_left_on_grid, next_left_on_grid,
                     previous_top_on_grid, next_top_on_grid)
 
 from .scene_moth import MovingBox, PatchSceneMoth
-from .box_widget import BoxWidget
+from .box_widget_moth import BoxWidgetMoth
 from .scene_view import PatchGraphicsView
 
 
 @dataclass
 class BoxAndRect:
     rect: QRectF
-    item: BoxWidget
+    item: BoxWidgetMoth
     
         
 @dataclass
 class ToMoveBox:
     directions: list[Direction]
-    item: BoxWidget
+    item: BoxWidgetMoth
     rect: QRectF
     repulser: BoxAndRect
         
@@ -74,9 +74,9 @@ class PatchScene(PatchSceneMoth):
        See scene_moth.py for others scene methods.'''
     def __init__(self, view: PatchGraphicsView):
         PatchSceneMoth.__init__(self, view)
-        self._full_repulse_boxes = set[BoxWidget]()
+        self._full_repulse_boxes = set[BoxWidgetMoth]()
 
-    def deplace_boxes_from_repulsers(self, repulser_boxes: list[BoxWidget],
+    def deplace_boxes_from_repulsers(self, repulser_boxes: list[BoxWidgetMoth],
                                      wanted_direction=Direction.NONE,
                                      mov_repulsables: Optional[list[MovingBox]]=None):
         '''Change the place of boxes in order to have no box overlapping
@@ -108,19 +108,19 @@ class PatchScene(PatchSceneMoth):
             return Direction.UP
         
         def repulse(direction: Direction,
-                    fixed: BoxWidget | QRectF,
-                    moving: BoxWidget | QRectF,
+                    fixed: BoxWidgetMoth | QRectF,
+                    moving: BoxWidgetMoth | QRectF,
                     fixed_port_mode: PortMode,
                     moving_port_mode: PortMode) -> QRectF:
             '''returns a QRectF to be placed at side of fixed_rect
             where fixed_rect is an already determinated futur place
             for a box'''
-            if isinstance(fixed, BoxWidget):
+            if isinstance(fixed, BoxWidgetMoth):
                 fixed_rect = fixed.boundingRect().translated(fixed.pos())
             else:
                 fixed_rect = fixed
             
-            if isinstance(moving, BoxWidget):
+            if isinstance(moving, BoxWidgetMoth):
                 rect = moving.boundingRect().translated(moving.pos())
             else:
                 rect = moving
@@ -265,7 +265,7 @@ class PatchScene(PatchSceneMoth):
                 for widget in self.items(
                         search_rect, Qt.ItemSelectionMode.IntersectsItemShape,
                         Qt.SortOrder.AscendingOrder):
-                    if not isinstance(widget, BoxWidget):
+                    if not isinstance(widget, BoxWidgetMoth):
                         continue
                     
                     if (widget in repulser_boxes
@@ -382,7 +382,7 @@ class PatchScene(PatchSceneMoth):
                             canvas.theme.box_spacing))
                 
                 for widget in self.items(search_rect):
-                    if not isinstance(widget, BoxWidget):
+                    if not isinstance(widget, BoxWidgetMoth):
                         continue
                     if (widget in [r.item for r in repulsers]
                             or widget in [b.item for b in to_move_boxes]
@@ -448,7 +448,7 @@ class PatchScene(PatchSceneMoth):
         self._full_repulse_boxes.clear()
 
     def bring_neighbors_and_deplace_boxes(
-            self, box_widget: BoxWidget, ex_rect: QRectF):
+            self, box_widget: BoxWidgetMoth, ex_rect: QRectF):
         if not options.prevent_overlap:
             return
         
@@ -472,14 +472,14 @@ class PatchScene(PatchSceneMoth):
             for item in self.items(
                     srect.adjusted(0, 0, 0,
                                    box_spacing + 1)):
-                if item not in neighbors and isinstance(item, BoxWidget):
+                if item not in neighbors and isinstance(item, BoxWidgetMoth):
                     nrect = item.after_wrap_rect().translated(item.pos())                    
                     if nrect.top() >= limit_top:
                         neighbors.append(item)
         
         neighbors.remove(box_widget)
 
-        repulser_boxes = list[BoxWidget]()
+        repulser_boxes = list[BoxWidgetMoth]()
 
         for neighbor in neighbors:
             x, y = neighbor.top_left()           

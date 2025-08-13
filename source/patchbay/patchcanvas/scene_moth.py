@@ -24,7 +24,7 @@ import time
 from typing import Optional
 
 from qtpy.QtCore import (
-    Signal, Slot, Qt, QPoint, QPointF, QRectF, QTimer)
+    Signal, Slot, Qt, QPoint, QPointF, QRectF, QTimer) # type:ignore
 from qtpy.QtGui import (
     QCursor, QPixmap, QPolygonF, QBrush, QPainter, QTransform)
 from qtpy.QtWidgets import (
@@ -44,6 +44,7 @@ from .init_values import (
     Zv,
     MAX_PLUGIN_ID_ALLOWED)
 from .box_widget import BoxWidget
+from .box_widget_moth import BoxWidgetMoth
 from .connectable_widget import ConnectableWidget
 from .line_widget import LineWidget
 from .grouped_lines_widget import GroupedLinesWidget
@@ -70,7 +71,7 @@ class RubberbandRect(QGraphicsRectItem):
 
 
 class MovingBox:
-    widget: BoxWidget
+    widget: BoxWidgetMoth
     from_pt: QPointF
     to_pt: QPointF
     final_rect: QRectF
@@ -80,7 +81,7 @@ class MovingBox:
     hidding_state: BoxHidding
     needs_move: bool
     
-    def __init__(self, widget: BoxWidget):
+    def __init__(self, widget: BoxWidgetMoth):
         self.widget = widget
         self.from_pt = QPointF(*widget.top_left())
         self.to_pt = QPointF(*widget.top_left())
@@ -147,7 +148,7 @@ class PatchSceneMoth(QGraphicsScene):
         '''During view change, this attr must be set to True
         to prevent user to take and move a box.'''
         
-        self.move_boxes = dict[BoxWidget, MovingBox]()
+        self.move_boxes = dict[BoxWidgetMoth, MovingBox]()
         self._MOVE_DURATION = 0.300 # 300ms
         self._MOVE_TIMER_INTERVAL = 20 # 20 ms step animation (50 Hz)
         self._move_timer_start_at = 0.0
@@ -177,7 +178,7 @@ class PatchSceneMoth(QGraphicsScene):
         Should be never directly set,
         use 'with SelectingBoxes(self):' instead.'''
 
-        self._selected_boxes = list[BoxWidget]()
+        self._selected_boxes = list[BoxWidgetMoth]()
         '''Selected boxes saved here between mouse press event
         and context menu callback. By default with Qt, all items are
         unselected at right click elsewhere.'''
@@ -491,7 +492,7 @@ class PatchSceneMoth(QGraphicsScene):
             canvas.qobject.move_boxes_finished.emit()
 
     def add_box_to_animation(
-            self, box_widget: BoxWidget, to_x: int, to_y: int,
+            self, box_widget: BoxWidgetMoth, to_x: int, to_y: int,
             joining=Joining.NO_CHANGE, joined_rect=QRectF()):
         '''add a box to the move animation, to_x and to_y refer
         to the top left of the box at the end of animation.
@@ -565,7 +566,7 @@ class PatchSceneMoth(QGraphicsScene):
             # we need to keep it prevented at animation start
             canvas.set_aliasing_reason(AliasingReason.ANIMATION, True)
 
-    def remove_box_from_animation(self, box_widget: BoxWidget):
+    def remove_box_from_animation(self, box_widget: BoxWidgetMoth):
         if self.prevent_box_user_move:
             # should not happens.
             # For now we can remove a box from animation
@@ -576,7 +577,7 @@ class PatchSceneMoth(QGraphicsScene):
         if box_widget in self.move_boxes:
             self.move_boxes.pop(box_widget)
 
-    def add_box_to_animation_wrapping(self, box_widget: BoxWidget, wrap: bool):  
+    def add_box_to_animation_wrapping(self, box_widget: BoxWidgetMoth, wrap: bool):  
         moving_box = self.move_boxes.get(box_widget)
         if moving_box is None:
             moving_box = MovingBox(box_widget)
@@ -1086,7 +1087,7 @@ class PatchSceneMoth(QGraphicsScene):
 
         self._selected_boxes = [
             b for b in self.selectedItems()
-            if isinstance(b, BoxWidget) and b.isVisible()]
+            if isinstance(b, BoxWidgetMoth) and b.isVisible()]
 
         QGraphicsScene.mousePressEvent(self, event)
         canvas.menu_shown = False
@@ -1245,7 +1246,7 @@ class PatchSceneMoth(QGraphicsScene):
             event.accept()
             screen_pos = event.screenPos()
             scene_pos = event.scenePos()
-            
+
             canvas.cb.bg_right_click(
                 screen_pos.x(), screen_pos.y(),
                 scene_pos.x(), scene_pos.y(),
