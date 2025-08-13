@@ -66,11 +66,9 @@ spacers dans tools widget
 repère 0,0 ne pas afficher
 
 patchcanvas check:
-    Callbacks: quelque chose de plus pythonique
-    BoxWidgetMoth: 
-        check if move_boxes etc... have to receive BoxWidgetMoth (instead of BoxWidget) 
-            or if theses funcs need to be executed in BoxWidget
     portgrp.widget vérifier si Optional est nécessaire (un peu chiant)
     porgrp et portobject: instantiation directe
     patchcanvas check if init has been run
+    save cache with SIGTERM too
+    theme @property instead of methods when possible
 

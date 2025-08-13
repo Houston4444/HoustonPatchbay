@@ -2,9 +2,8 @@
 import logging
 import os
 from pathlib import Path
-import time
 import pickle
-from typing import TYPE_CHECKING, Union
+from typing import TYPE_CHECKING, TypeAlias, TypedDict, Union, Optional
 
 from qtpy.QtCore import Qt
 from qtpy.QtGui import (QColor, QPen, QFont, QBrush, QFontMetricsF,
@@ -13,6 +12,8 @@ from qtpy.QtGui import (QColor, QPen, QFont, QBrush, QFontMetricsF,
 from . import xdg
 
 _logger = logging.getLogger(__name__)
+
+TitleCache: TypeAlias = dict[str, dict[str, dict[int, list[dict[str, int]]]]]
 
 
 def _to_qcolor(color: str) -> QColor:
@@ -134,8 +135,8 @@ class StyleAttributer:
 
         self._fill_pen = None
         self._font = None
-        self._font_metrics_cache = None
-        self._titles_templates_cache = None
+        self._font_metrics_cache: Optional[dict[str, float]] = None
+        self._titles_templates_cache: Optional[TitleCache] = None
         
         if TYPE_CHECKING:
             assert isinstance(self._parent, StyleAttributer)
@@ -397,32 +398,33 @@ class StyleAttributer:
             self._font.setWeight(int(self.get_value_of('_font_width')))
         return self._font
         
-    def _set_font_metrics_cache(self):        
-        font_name = self.get_value_of('_font_name')
+    def _get_font_metrics_cache(self) -> dict[str, float]:        
+        font_name = str(self.get_value_of('_font_name'))
         font_size = str(self.get_value_of('_font_size'))
         font_width = str(self.get_value_of('_font_width'))
         
         if not font_name in Theme.font_metrics_cache.keys():
-            Theme.font_metrics_cache[font_name] = {}
+            Theme.font_metrics_cache[font_name] = \
+                dict[str, dict[str, dict[str, float]]]()
         
         if not font_size in Theme.font_metrics_cache[font_name].keys():
-            Theme.font_metrics_cache[font_name][font_size] = {}
+            Theme.font_metrics_cache[font_name][font_size] = \
+                dict[str, dict[str, float]]()
         
         if not font_width in Theme.font_metrics_cache[font_name][font_size].keys():
-            Theme.font_metrics_cache[font_name][font_size][font_width] = {}
+            Theme.font_metrics_cache[font_name][font_size][font_width] = \
+                dict[str, float]()
         
-        self._font_metrics_cache = \
-            Theme.font_metrics_cache[font_name][font_size][font_width]
+        return Theme.font_metrics_cache[font_name][font_size][font_width]
             
     def get_text_width(self, string: str) -> float:
         if self._font_metrics_cache is None:
-            self._set_font_metrics_cache()
+            self._font_metrics_cache = self._get_font_metrics_cache()
         
         if string in self._font_metrics_cache.keys():
             return self._font_metrics_cache[string]
 
         tot_size = 0.0
-        starti = time.time()
         for s in string:
             if s in self._font_metrics_cache.keys():
                 tot_size += self._font_metrics_cache[s]
@@ -468,46 +470,44 @@ class StyleAttributer:
     def grid_min_height(self) -> float:
         return self.get_value_of('_grid_min_height')
     
-    def _set_titles_templates_cache(self):
-        if self._titles_templates_cache is not None:
-            return
-        
-        font_name = self.get_value_of('_font_name')
+    def _get_titles_templates_cache(self) -> TitleCache:
+        font_name = str(self.get_value_of('_font_name'))
         font_size = str(self.get_value_of('_font_size'))
         font_width = str(self.get_value_of('_font_width'))
         
         if not font_name in Theme.title_templates_cache.keys():
-            Theme.title_templates_cache[font_name] = {}
+            Theme.title_templates_cache[font_name] = \
+                dict[str, dict[str, TitleCache]]()
         
         if not font_size in Theme.title_templates_cache[font_name].keys():
-            Theme.title_templates_cache[font_name][font_size] = {}
+            Theme.title_templates_cache[font_name][font_size] = \
+                dict[str, TitleCache]()
         
         if not font_width in Theme.title_templates_cache[font_name][font_size].keys():
-            Theme.title_templates_cache[font_name][font_size][font_width] = {}
+            Theme.title_templates_cache[font_name][font_size][font_width] = \
+                TitleCache()
         
-        self._titles_templates_cache = \
-            Theme.title_templates_cache[font_name][font_size][font_width]
+        return Theme.title_templates_cache[font_name][font_size][font_width]
             
     def save_title_templates(
-            self, title: str, handle_gui: bool, with_icon: bool, templates: list):
+            self, title: str, handle_gui: bool, icon_size: int, templates: list):
         if self._titles_templates_cache is None:
-            self._set_titles_templates_cache()
+            self._titles_templates_cache = self._get_titles_templates_cache()
 
         if not title in self._titles_templates_cache:
             self._titles_templates_cache[title] = {}
 
         gui_key = 'with_gui' if handle_gui else 'without_gui'
-        icon_key = 'with_icon' if with_icon else 'without_icon'
         
         if not gui_key in self._titles_templates_cache[title]:
             self._titles_templates_cache[title][gui_key] = {}
 
-        self._titles_templates_cache[title][gui_key][icon_key] = templates
+        self._titles_templates_cache[title][gui_key][icon_size] = templates
     
     def get_title_templates(
             self, title: str, handle_gui: bool, icon_size: int) -> list[dict[str, int]]:
         if self._titles_templates_cache is None:
-            self._set_titles_templates_cache()
+            self._titles_templates_cache = self._get_titles_templates_cache()
         
         gui_key = 'with_gui' if handle_gui else 'without_gui'
         # icon_key = 'with_icon' if with_icon else 'without_icon'
@@ -600,15 +600,22 @@ class IconTheme:
                 self.__setattr__(key, str(icon_path))
 
 
+class FontMetricsCacheType(TypedDict):
+    CACHE_VERSION: tuple[int, int]
+
+
 class Theme(StyleAttributer):
     theme_file_path = ''
     
     # if for some reason cache may be incompatible with this version
     # of the patchbay, we need to discard the cache files. 
-    CACHE_VERSION = (1, 2)
+    CACHE_VERSION = (1, 3)
     
-    title_templates_cache = {'CACHE_VERSION': CACHE_VERSION}
-    font_metrics_cache = {'CACHE_VERSION': CACHE_VERSION}
+    title_templates_cache: dict[str, dict[str, dict[str, TitleCache]]] = \
+        {'CACHE_VERSION': CACHE_VERSION} # type:ignore
+    font_metrics_cache: dict[str, dict[str, dict[str, dict[str, float]]]] = \
+        {'CACHE_VERSION': CACHE_VERSION} # type:ignore 
+        # CACHE_VERSION is the only one tuple[int, int]
 
     def __init__(self):
         StyleAttributer.__init__(self, '')
