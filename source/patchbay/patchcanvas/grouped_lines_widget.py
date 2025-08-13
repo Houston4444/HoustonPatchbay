@@ -402,8 +402,8 @@ class GroupedLinesWidget(QGraphicsPathItem):
 
         tha = _ThemeAttributes()
         tha.base_pen = theme.fill_pen
-        tha.color_main = theme.background_color()
-        tha.color_alter = theme.background2_color()
+        tha.color_main = theme.background_color
+        tha.color_alter = theme.background2_color
         if tha.color_alter is None:
             tha.color_alter = tha.color_main
         tha.base_width = tha.base_pen.widthF()

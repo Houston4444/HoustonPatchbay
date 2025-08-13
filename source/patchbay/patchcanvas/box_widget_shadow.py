@@ -40,13 +40,13 @@ class BoxWidgetShadow(QGraphicsDropShadowEffect):
 
     def set_theme(self, theme: StyleAttributer):
         self._theme = theme 
-        self.setColor(theme.background_color())
+        self.setColor(theme.background_color)
 
     def set_opacity(self, opacity: float):
         if self._theme is None:
             return
         
-        color = QColor(self._theme.background_color())
+        color = QColor(self._theme.background_color)
         color.setAlphaF(opacity)
         self.setColor(color)
 

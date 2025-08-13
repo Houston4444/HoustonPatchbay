@@ -86,8 +86,8 @@ class GridWidget(QGraphicsPathItem):
         cell_y = options.cell_height
         
         if self.style is GridStyle.GRID:
-            cell_x = cell_x * math.ceil(theme.grid_min_width() / cell_x)
-            cell_y = cell_y * math.ceil(theme.grid_min_height() / cell_y)
+            cell_x = cell_x * math.ceil(theme.grid_min_width / cell_x)
+            cell_y = cell_y * math.ceil(theme.grid_min_height / cell_y)
         
         rect = self._scene.sceneRect()
 
@@ -131,9 +131,9 @@ class GridWidget(QGraphicsPathItem):
         theme = canvas.theme.grid.chessboard
         
         cell_x = (options.cell_width
-                  * math.ceil(theme.grid_min_width() / options.cell_width))
+                  * math.ceil(theme.grid_min_width / options.cell_width))
         cell_y = (options.cell_height
-                  * math.ceil(theme.grid_min_height() / options.cell_height))
+                  * math.ceil(theme.grid_min_height / options.cell_height))
         
         path = QPainterPath(QPointF(0.0, 0.0))
         rect = self._scene.sceneRect()

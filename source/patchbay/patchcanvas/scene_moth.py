@@ -689,7 +689,7 @@ class PatchSceneMoth(QGraphicsScene):
             self.setBackgroundBrush(canvas.theme.scene_background_color)
         
         self._rubberband.setPen(canvas.theme.rubberband.fill_pen)
-        self._rubberband.setBrush(canvas.theme.rubberband.background_color())
+        self._rubberband.setBrush(canvas.theme.rubberband.background_color)
 
         cur_color = ("black" if canvas.theme.scene_background_color.blackF() < 0.5
                      else "white")

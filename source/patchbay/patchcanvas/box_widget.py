@@ -107,10 +107,10 @@ class BoxWidget(BoxWidgetMoth):
         max_in_width = max_out_width = 0.0
         
         box_theme = self.get_theme()
-        port_spacing = box_theme.port_spacing()
-        port_in_offset = box_theme.port_in_offset()
-        port_out_offset = box_theme.port_out_offset()
-        port_type_spacing = box_theme.port_type_spacing()
+        port_spacing = box_theme.port_spacing
+        port_in_offset = box_theme.port_in_offset
+        port_out_offset = box_theme.port_out_offset
+        port_type_spacing = box_theme.port_type_spacing
         last_in_pos = last_out_pos = 0.0
         final_last_in_pos = final_last_out_pos = last_in_pos
         last_in_type_and_sub = (PortType.NULL, PortSubType.REGULAR)
@@ -444,10 +444,10 @@ class BoxWidget(BoxWidgetMoth):
         Return the 2 best layout choices.'''
 
         box_theme = self.get_theme()
-        font_size = box_theme.font().pixelSize()
+        font_size = box_theme.font.pixelSize()
 
         if self.has_top_icon():
-            icon_size = int(box_theme.icon_size())
+            icon_size = int(box_theme.icon_size)
         else:
             icon_size = 0
         
@@ -525,7 +525,7 @@ class BoxWidget(BoxWidgetMoth):
 
             lines_choice_max = i
             if self.has_top_icon():
-                icon_size = int(box_theme.icon_size())
+                icon_size = int(box_theme.icon_size)
             else:
                 icon_size = 0
 
@@ -619,8 +619,8 @@ class BoxWidget(BoxWidgetMoth):
             raise Exception('._layout is needed')
         
         box_theme = self.get_theme()
-        port_spacing = box_theme.port_spacing()
-        port_type_spacing = box_theme.port_type_spacing()
+        port_spacing = box_theme.port_spacing
+        port_type_spacing = box_theme.port_type_spacing
         pen_width = box_theme.fill_pen.widthF()
         last_in_type_and_sub = (PortType.NULL, PortSubType.REGULAR)
         last_out_type_and_sub = (PortType.NULL, PortSubType.REGULAR)
@@ -865,8 +865,8 @@ class BoxWidget(BoxWidgetMoth):
 
     def _set_ports_x_positions(self, ports_min_sizes: PortsMinSizes):
         box_theme = self.get_theme()
-        port_in_offset = box_theme.port_in_offset()
-        port_out_offset = box_theme.port_out_offset()
+        port_in_offset = box_theme.port_in_offset
+        port_out_offset = box_theme.port_out_offset
         
         max_in_width = ports_min_sizes.ins_width
         max_out_width = ports_min_sizes.outs_width
@@ -929,10 +929,10 @@ class BoxWidget(BoxWidgetMoth):
         self._header_line_right = None
 
         box_theme = self.get_theme()
-        font_size = box_theme.font().pixelSize()
+        font_size = box_theme.font.pixelSize()
         font_spacing = int(font_size * 1.4)
         pen_width = box_theme.fill_pen.widthF()
-        icon_size = box_theme.icon_size()
+        icon_size = box_theme.icon_size
 
         # when client is client capable of gui state
         # header has margins
@@ -1036,11 +1036,11 @@ class BoxWidget(BoxWidgetMoth):
         if selected:
             theme = theme.selected
         
-        border_radius = theme.border_radius()
-        port_in_offset = abs(theme.port_in_offset())
-        port_out_offset = abs(theme.port_out_offset())
-        bore_in = bool(theme.port_in_offset_mode() == 'bore')
-        bore_out = bool(theme.port_out_offset_mode() == 'bore')
+        border_radius = theme.border_radius
+        port_in_offset = abs(theme.port_in_offset)
+        port_out_offset = abs(theme.port_out_offset)
+        bore_in = bool(theme.port_in_offset_mode == 'bore')
+        bore_out = bool(theme.port_out_offset_mode == 'bore')
         pen = theme.fill_pen
         line_hinting = pen.widthF() / 2.0
         

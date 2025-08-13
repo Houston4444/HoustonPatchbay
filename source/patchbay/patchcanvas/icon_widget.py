@@ -78,7 +78,7 @@ class IconPixmapWidget(QGraphicsPixmapItem):
         if box_type is BoxType.CLIENT:
             box_theme = box_theme.client
 
-        self._icon_size = box_theme.icon_size()
+        self._icon_size = box_theme.icon_size
         self.icon = None
         self._pixmaps_cache = dict[int, QPixmap]()
 
@@ -177,7 +177,7 @@ class IconSvgWidget(QGraphicsSvgItem): # type:ignore
 
             case BoxType.HARDWARE:
                 box_theme = box_theme.hardware
-                icon_size = int(box_theme.icon_size())
+                icon_size = int(box_theme.icon_size)
                 self._size = QRectF(4, 4, icon_size, icon_size)
                 self._icon_size = icon_size
 
@@ -209,7 +209,7 @@ class IconSvgWidget(QGraphicsSvgItem): # type:ignore
 
             case BoxType.MONITOR:
                 box_theme = box_theme.monitor
-                icon_size = int(box_theme.icon_size())
+                icon_size = int(box_theme.icon_size)
                 self._size = QRectF(4, 4, icon_size, icon_size)
                 self._icon_size = icon_size
                 

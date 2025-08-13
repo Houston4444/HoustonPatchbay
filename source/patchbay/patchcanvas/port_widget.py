@@ -73,7 +73,7 @@ class PortWidget(ConnectableWidget):
             theme = theme.midi
         
         self._theme = theme
-        self._port_font = theme.font()
+        self._port_font = theme.font
 
         self._portgrp_widget = None
         self._loop_select_done = False
@@ -307,11 +307,11 @@ class PortWidget(ConnectableWidget):
         if self.isSelected():
             theme = theme.selected
         
-        poly_image = theme.background_image()
-        poly_color = theme.background_color()
-        poly_color_alter = theme.background2_color()
+        poly_image = theme.background_image
+        poly_color = theme.background_color
+        poly_color_alter = theme.background2_color
         poly_pen = theme.fill_pen
-        text_pen = QPen(theme.text_color())
+        text_pen = QPen(theme.text_color)
 
         # To prevent quality worsening
         poly_pen = QPen(poly_pen)
@@ -465,7 +465,7 @@ class PortWidget(ConnectableWidget):
                     box_theme = box_theme.selected
 
                 scene_col = canvas.theme.scene_background_color
-                box_bg_col = box_theme.background_color()
+                box_bg_col = box_theme.background_color
                 ra = box_bg_col.alphaF()
                 rb = 1.0 - ra
                 

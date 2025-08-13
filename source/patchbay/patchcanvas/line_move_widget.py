@@ -76,7 +76,7 @@ class LineMoveWidget(QGraphicsPathItem):
         theme = theme.selected
         
         pen = theme.fill_pen
-        pen.setColor(theme.background_color())
+        pen.setColor(theme.background_color)
         pen.setStyle(Qt.PenStyle.DotLine if self.ready_to_disc
                      else Qt.PenStyle.SolidLine)
         pen.setCapStyle(Qt.PenCapStyle.FlatCap)

@@ -36,13 +36,13 @@ _translate = QApplication.translate
 
 
 def theme_css(theme: StyleAttributer) -> str:
-    pen = theme.fill_pen()
+    pen = theme.fill_pen
     
     return (
         "background-color: "
-        f"{theme.background_color().name(QColor.NameFormat.HexArgb)};"
+        f"{theme.background_color.name(QColor.NameFormat.HexArgb)};"
         "color: "
-        f"{theme.text_color().name(QColor.NameFormat.HexArgb)};"
+        f"{theme.text_color.name(QColor.NameFormat.HexArgb)};"
         "border: "
         f"{pen.widthF()}px solid {pen.color().name(QColor.NameFormat.HexArgb)}"
     )
@@ -108,13 +108,13 @@ class PortCheckBox(QCheckBox):
 
         self._theme = theme
         self._line_theme = line_theme
-        text_color = theme.text_color().name(QColor.NameFormat.HexArgb)
-        border_color = theme.fill_pen().color().name(QColor.NameFormat.HexArgb)
-        h_text_color = theme.selected.text_color().name(QColor.NameFormat.HexArgb)
+        text_color = theme.text_color.name(QColor.NameFormat.HexArgb)
+        border_color = theme.fill_pen.color().name(QColor.NameFormat.HexArgb)
+        h_text_color = theme.selected.text_color.name(QColor.NameFormat.HexArgb)
         ind_bg = full_theme.scene_background_color.name(QColor.NameFormat.HexArgb)
-        checked_bg = line_theme.selected.background_color().name(QColor.NameFormat.HexArgb)
+        checked_bg = line_theme.selected.background_color.name(QColor.NameFormat.HexArgb)
         
-        border_width = theme.fill_pen().widthF()
+        border_width = theme.fill_pen.widthF()
         
         TOP, RIGHT, BOTTOM, LEFT = 0, 1, 2, 3
         SIDES = ['top', 'right', 'bottom', 'left']
@@ -168,7 +168,7 @@ class PortCheckBox(QCheckBox):
         painter = QPainter()
         painter.begin(self)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
-        pen = QPen(self._theme.fill_pen())
+        pen = QPen(self._theme.fill_pen)
         pen.setWidth(1)
         painter.setPen(pen)
         bg = QColor(canvas._theme.scene_background_color)
@@ -178,7 +178,7 @@ class PortCheckBox(QCheckBox):
         rect = event.rect().adjusted(2, 2, -2, -2)        
         painter.drawRoundedRect(rect, 2.0, 2.0)
         
-        line_color = self._line_theme.background_color()
+        line_color = self._line_theme.background_color
         painter.setBrush(QBrush(line_color))
         painter.setPen(QPen(Qt.PenStyle.NoPen))
         circle_rect = rect.adjusted(3, 3, -3, -3)
@@ -245,9 +245,9 @@ class CheckFrame(QFrame):
 
         self._theme = theme
 
-        text_color = theme.text_color().name()
-        border_color = theme.fill_pen().color().name()        
-        border_width = theme.fill_pen().widthF()
+        text_color = theme.text_color.name()
+        border_color = theme.fill_pen.color().name()        
+        border_width = theme.fill_pen.widthF()
         
         TOP, RIGHT, BOTTOM, LEFT = 0, 1, 2, 3
         SIDES = ['top', 'right', 'bottom', 'left']
@@ -272,14 +272,14 @@ class CheckFrame(QFrame):
         margins_text = ';'.join(margin_texts)
         borders_text = ';'.join(border_texts)
 
-        self.setFont(theme.font())
+        self.setFont(theme.font)
         self.setStyleSheet(
             f"CheckFrame{{{theme_css(theme)}; spacing: 0px;"
             f"{borders_text}; border-radius: 3px; {radius_text};"
             f"{margins_text}; padding-right: 0px}}"
             f"CheckFrame:focus{{{theme_css(theme.selected)}}};")
         
-        self._label_left.setFont(theme.font())
+        self._label_left.setFont(theme.font)
         self._label_left.setStyleSheet(
             f"QLabel{{color: {text_color}}}")
         
@@ -291,7 +291,7 @@ class CheckFrame(QFrame):
             elif port_type is PortType.MIDI_JACK:
                 port_theme = port_theme.midi
 
-            self._label_right.setFont(port_theme.font())
+            self._label_right.setFont(port_theme.font)
             self._label_right.setStyleSheet(
                 f"QLabel{{margin-left: 3px; margin-right: 0px; padding: 0px; {theme_css(port_theme)}}} "
                 f"QLabel:focus{{{theme_css(port_theme.selected)}}}")
@@ -318,12 +318,12 @@ class CheckFrame(QFrame):
         
     def focusInEvent(self, event: QFocusEvent):
         super().focusInEvent(event)
-        text_color = self._theme.selected.text_color().name()
+        text_color = self._theme.selected.text_color.name()
         self._label_left.setStyleSheet(f"QLabel{{color: {text_color}}}")
         
     def focusOutEvent(self, event: QFocusEvent):
         super().focusOutEvent(event)
-        text_color = self._theme.text_color().name()
+        text_color = self._theme.text_color.name()
         self._label_left.setStyleSheet(f"QLabel{{color: {text_color}}}")
 
 
@@ -363,8 +363,8 @@ class GroupConnectMenu(QMenu):
         elif group.cnv_box_type is BoxType.HARDWARE:
             theme = theme.hardware
 
-        bg_color = theme.background_color().name(QColor.NameFormat.HexArgb)
-        border_color = theme.fill_pen().color().name(QColor.NameFormat.HexArgb)
+        bg_color = theme.background_color.name(QColor.NameFormat.HexArgb)
+        border_color = theme.fill_pen.color().name(QColor.NameFormat.HexArgb)
         
         self.setStyleSheet(
             "QMenu{"

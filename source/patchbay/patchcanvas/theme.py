@@ -329,11 +329,11 @@ class StyleAttributer:
             self.set_attribute(key, value)
     
     def get_value_of(self, attribute: str, orig_path='', needed_attribute=''):
-        # returns the value of given attribute for this theme section
-        # if this value is not present in this theme section,
-        # it will look into parent sections.
-        # Note that for 'selected' section, it will look in 'selected' section
-        # of parent before looking in parent section.
+        '''return the value of given attribute for this theme section.
+        if this value is not present in this theme section,
+        it will look into parent sections.
+        Note that for 'selected' section, it will look in 'selected' section
+        of parent before looking in parent section.'''
         if attribute not in self.__dir__():
             _logger.error(f"get_value_of, invalide attribute: {attribute}")
             return None
@@ -379,22 +379,28 @@ class StyleAttributer:
         
         return self._fill_pen
     
+    @property
     def border_radius(self) -> float:
         return self.get_value_of('_border_radius') # type:ignore
     
+    @property
     def background_color(self) -> QColor:
         return self.get_value_of('_background_color') # type:ignore
     
+    @property
     def background2_color(self) -> Optional[QColor]:
         return self.get_value_of('_background2_color', # type:ignore
                                  needed_attribute='_background_color')
     
-    def background_image(self) -> QImage:
+    @property
+    def background_image(self) -> Optional[QImage]:
         return self.get_value_of('_background_image') # type:ignore
 
+    @property
     def text_color(self) -> QColor:
         return self.get_value_of('_text_color') # type:ignore
     
+    @property
     def font(self) -> QFont:
         if self._font is None:
             self._font = QFont(self.get_value_of('_font_name'))
@@ -435,7 +441,7 @@ class StyleAttributer:
             if s in self._font_metrics_cache.keys():
                 tot_size += self._font_metrics_cache[s]
             else:
-                letter_size = QFontMetricsF(self.font()).horizontalAdvance(s)
+                letter_size = QFontMetricsF(self.font).horizontalAdvance(s)
                 self._font_metrics_cache[s] = letter_size
                 tot_size += letter_size
         
@@ -443,36 +449,39 @@ class StyleAttributer:
         
         return tot_size
     
-    def port_offset(self) -> float:
-        return self.get_value_of('_port_offset') # type:ignore
-    
+    @property
     def port_in_offset(self) -> float:
         return self.get_value_of('_port_in_offset') # type:ignore
     
+    @property
     def port_out_offset(self) -> float:
         return self.get_value_of('_port_out_offset') # type:ignore
     
+    @property
     def port_in_offset_mode(self) -> str:
         return self.get_value_of('_port_in_offset_mode') # type:ignore
     
+    @property
     def port_out_offset_mode(self) -> str:
         return self.get_value_of('_port_out_offset_mode') # type:ignore
     
+    @property
     def port_spacing(self) -> float:
         return self.get_value_of('_port_spacing') # type:ignore
     
+    @property
     def port_type_spacing(self) -> float:
         return self.get_value_of('_port_type_spacing') # type:ignore
 
-    def box_footer(self) -> float:
-        return self.get_value_of('_box_footer') # type:ignore
-    
+    @property    
     def icon_size(self) -> float:
         return self.get_value_of('_icon_size') # type:ignore
     
+    @property
     def grid_min_width(self) -> float:
         return self.get_value_of('_grid_min_width') # type:ignore
     
+    @property
     def grid_min_height(self) -> float:
         return self.get_value_of('_grid_min_height') # type:ignore
     

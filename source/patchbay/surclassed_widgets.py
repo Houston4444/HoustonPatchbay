@@ -359,15 +359,15 @@ class ViewsComboBox(QComboBox):
         thmp = patchcanvas.canvas._theme.port
 
         if patchcanvas.canvas._theme.thumbnail_port_colors.lower() == 'text':
-            pcols = [thmp.audio.text_color(),
-                     thmp.midi.text_color(),
-                     thmp.cv.text_color(), 
-                     thmp.alsa.text_color()]
+            pcols = [thmp.audio.text_color,
+                     thmp.midi.text_color,
+                     thmp.cv.text_color, 
+                     thmp.alsa.text_color]
         else:
-            pcols = [thmp.audio.background_color(),
-                     thmp.midi.background_color(),
-                     thmp.cv.background_color(), 
-                     thmp.alsa.background_color()]
+            pcols = [thmp.audio.background_color,
+                     thmp.midi.background_color,
+                     thmp.cv.background_color, 
+                     thmp.alsa.background_color]
         
         # adapt colors lightness to be clearly visible on this background
         bg_ligthness = bg_col.lightnessF()

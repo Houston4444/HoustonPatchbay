@@ -103,7 +103,7 @@ class TitleLine:
         self.size = theme.get_text_width(text)
 
     def get_font(self) -> QFont:
-        return self.theme.font()
+        return self.theme.font
 
 
 class BoxWidgetMoth(QGraphicsItem):
@@ -939,10 +939,10 @@ class BoxWidgetMoth(QGraphicsItem):
             wtheme = wtheme.selected
             hltheme = hltheme.selected
 
-        bg_image = theme.background_image()
+        bg_image = theme.background_image
 
         # draw the background image if exists
-        if bg_image:
+        if bg_image is not None:
             painter.setBrush(QBrush(bg_image))
             painter.setPen(Qt.PenStyle.NoPen)
             painter.drawPath(self._painter_path)
@@ -952,8 +952,8 @@ class BoxWidgetMoth(QGraphicsItem):
         painter.setPen(pen)
         pen_width = pen.widthF()
 
-        color_main = theme.background_color()
-        color_alter = theme.background2_color()
+        color_main = theme.background_color
+        color_alter = theme.background2_color
 
         if color_alter is not None:
             max_size = max(self._height, self._width)
@@ -1006,10 +1006,10 @@ class BoxWidgetMoth(QGraphicsItem):
             else:
                 gui_theme = gui_theme.gui_hidden
             
-            painter.setBrush(gui_theme.background_color())
+            painter.setBrush(gui_theme.background_color)
             painter.setPen(gui_theme.fill_pen)
             
-            radius = gui_theme.border_radius()
+            radius = gui_theme.border_radius
             if radius == 0.0:
                 painter.drawRect(header_rect)
             else:
@@ -1027,8 +1027,8 @@ class BoxWidgetMoth(QGraphicsItem):
             if self.isSelected():
                 mon_theme = mon_theme.selected
             
-            color_main = mon_theme.background_color()
-            color_alter = mon_theme.background2_color()
+            color_main = mon_theme.background_color
+            color_alter = mon_theme.background2_color
 
             if color_alter is not None:
                 tot = int(self._height / 20)
@@ -1087,7 +1087,7 @@ class BoxWidgetMoth(QGraphicsItem):
             painter.drawLine(QPointF(*self._header_line_right[0:2]),
                              QPointF(*self._header_line_right[2:]))
 
-        normal_color = theme.text_color()
+        normal_color = theme.text_color
         opac_color = QColor(normal_color)
         opac_color.setAlpha(int(normal_color.alpha() / 2))
         
@@ -1127,7 +1127,7 @@ class BoxWidgetMoth(QGraphicsItem):
 
         # draw (un)wrapper triangles
         painter.setPen(wtheme.fill_pen)
-        painter.setBrush(wtheme.background_color())
+        painter.setBrush(wtheme.background_color)
         tr_pen_width = pen.widthF()
 
         match self._wrap_triangle_pos:
@@ -1219,8 +1219,8 @@ class BoxWidgetMoth(QGraphicsItem):
         if self.isSelected():
             theme = theme.selected
         
-        background1 = theme.background_color()
-        background2 = theme.background2_color()
+        background1 = theme.background_color
+        background2 = theme.background2_color
         
         if background2 is not None:
             hw_gradient = QLinearGradient(
@@ -1341,7 +1341,7 @@ class BoxWidgetMoth(QGraphicsItem):
 
         inwidth  = self._width - self._width_in - self._width_out - 16
         inheight = (self._height - self._header_height
-                    - self.get_theme().port_spacing() - 3)
+                    - self.get_theme().port_spacing - 3)
         scaling  = (canvas.scene.get_scale_factor()
                     * canvas.scene.get_device_pixel_ratio_f())
 

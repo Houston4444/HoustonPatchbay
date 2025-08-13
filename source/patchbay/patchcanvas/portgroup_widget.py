@@ -63,7 +63,7 @@ class PortgroupWidget(ConnectableWidget):
             theme = theme.video
         
         self._theme = theme
-        self._portgrp_font = theme.font()
+        self._portgrp_font = theme.font
 
         self._ports_width = canvas.theme.port_grouped_width
         self._print_name = ''
@@ -109,7 +109,7 @@ class PortgroupWidget(ConnectableWidget):
                 theme = theme.video
         
         self._theme = theme
-        self._portgrp_font = theme.font()
+        self._portgrp_font = theme.font
 
     def set_print_name(self, print_name:str, width_limited: int):
         self._print_name = print_name
@@ -239,11 +239,11 @@ class PortgroupWidget(ConnectableWidget):
         if self.isSelected():
             theme = theme.selected
 
-        poly_image = theme.background_image()
+        poly_image = theme.background_image
         poly_pen = theme.fill_pen
-        color_main = theme.background_color()
-        color_alter = theme.background2_color()
-        text_pen = QPen(theme.text_color())
+        color_main = theme.background_color
+        color_alter = theme.background2_color
+        text_pen = QPen(theme.text_color)
 
         line_hinting = poly_pen.widthF() / 2.0
         p_height = canvas.theme.port_height
@@ -367,7 +367,7 @@ class PortgroupWidget(ConnectableWidget):
                 box_theme = box_theme.selected
 
             scene_col = canvas.theme.scene_background_color
-            box_bg_col = box_theme.background_color()
+            box_bg_col = box_theme.background_color
             ra = box_bg_col.alphaF()
             rb = 1.0 - ra
             
