@@ -136,9 +136,10 @@ class Callbacker(ProtoCallbacker):
 
         for port_id in port_ids:
             port = self.mng.get_port_from_id(group_id, port_id)
-            if port.mdata_portgroup:
-                above_metadatas = True
-            port_list.append(port)
+            if port is not None:
+                if port.mdata_portgroup:
+                    above_metadatas = True
+                port_list.append(port)
 
         group = self.mng.get_group_from_id(group_id)
         if group is None:
@@ -200,6 +201,9 @@ class Callbacker(ProtoCallbacker):
     def port_menu_call(self, group_id: int, port_id: int, connect_only: bool,
                         x: int, y: int):
         port = self.mng.get_port_from_id(group_id, port_id)
+        if port is None:
+            return
+
         if connect_only:
             menu = ConnectMenu(self.mng, port)
         else:

@@ -1,7 +1,8 @@
 
 from typing import TYPE_CHECKING
 
-from qtpy.QtCore import Qt, Signal, Slot, QPoint, QSize, QRectF, QPointF
+from qtpy.QtCore import (
+    Qt, Signal, Slot, QPoint, QSize, QRectF, QPointF) # type:ignore
 from qtpy.QtGui import (
     QWheelEvent, QKeyEvent, QMouseEvent, QPaintEvent,
     QPainter, QPen, QPainterPath, QPixmap)
@@ -12,11 +13,11 @@ if TYPE_CHECKING:
 
 from qtpy.QtWidgets import (
     QApplication, QProgressBar, QSlider, QToolTip,
-    QLineEdit, QLabel, QMenu, QAction, QCheckBox,
+    QLineEdit, QLabel, QMenu, QAction, QCheckBox, # type:ignore
     QComboBox, QFrame, QWidget)
 
-
 from patshared import PortTypesViewFlag
+
 from .patchcanvas import patchcanvas, AliasingReason
 from .bases.elements import TransportViewMode
 
@@ -116,8 +117,8 @@ class ZoomSlider(QSlider):
 
     def zoom_percent(self) -> int:
         if self.value() <= 500:
-            return self.map_float_to(self.value(), 0, 500, 20, 100)
-        return self.map_float_to(self.value(), 500, 1000, 100, 300)
+            return int(self.map_float_to(self.value(), 0, 500, 20, 100))
+        return int(self.map_float_to(self.value(), 500, 1000, 100, 300))
 
     def set_percent(self, percent: float):
         if 99.99999 < percent < 100.00001:
@@ -356,9 +357,9 @@ class ViewsComboBox(QComboBox):
         painter.drawPath(path)
         
         # Draw PortTypesView thumbnail
-        thmp = patchcanvas.canvas._theme.port
+        thmp = patchcanvas.canvas.theme.port
 
-        if patchcanvas.canvas._theme.thumbnail_port_colors.lower() == 'text':
+        if patchcanvas.canvas.theme.thumbnail_port_colors.lower() == 'text':
             pcols = [thmp.audio.text_color,
                      thmp.midi.text_color,
                      thmp.cv.text_color, 

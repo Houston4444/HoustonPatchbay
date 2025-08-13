@@ -1,6 +1,6 @@
 
 from enum import IntEnum
-from qtpy.QtCore import QObject, Signal
+from qtpy.QtCore import QObject, Signal # type:ignore
 
 # we need a QObject for Signal
 class SignalsObject(QObject):

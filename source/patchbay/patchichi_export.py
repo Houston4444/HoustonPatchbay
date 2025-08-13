@@ -147,6 +147,9 @@ def export_to_patchichi_json(
     portgroups_dict = dict[str, dict[str, dict[str, dict]]]()
 
     for port_type, ptype_dict in mng.portgroups_memory.items():
+        if port_type.name is None:
+            continue
+
         portgroups_dict[port_type.name] = js_ptype_dict = {}
         for gp_name, group_dict in ptype_dict.items():
             js_ptype_dict[gp_name] = {}

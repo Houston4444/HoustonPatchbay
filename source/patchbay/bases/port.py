@@ -18,7 +18,7 @@ class Port:
     prevent_stereo = False
     last_digit_to_add = ''
     in_canvas = False
-    order = None
+    order: Optional[int] = None
     uuid = 0
     'contains the real JACK uuid'
 

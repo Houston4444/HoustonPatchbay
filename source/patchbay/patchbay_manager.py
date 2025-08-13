@@ -130,12 +130,12 @@ class PatchbayManager:
         self.cancel_mng = CancelMng(self)
         self._settings = settings
 
-        self.main_win: QMainWindow = None
-        self._tools_widget: PatchbayToolsWidget = None
-        self.options_dialog: CanvasOptionsDialog = None
-        self.filter_frame: FilterFrame = None
+        self.main_win: Optional[QMainWindow] = None
+        self._tools_widget: Optional[PatchbayToolsWidget] = None
+        self.options_dialog: Optional[CanvasOptionsDialog] = None
+        self.filter_frame: Optional[FilterFrame] = None
         
-        self._manual_path: Path = None
+        self._manual_path: Optional[Path] = None
 
         self.connections_clipboard = ConnClipboard(self)
 
@@ -192,15 +192,18 @@ class PatchbayManager:
 
     def app_init(self,
                  view: PatchGraphicsView,
-                 theme_paths: list[Path],
-                 manual_path: Path = None,
-                 callbacker: Callbacker = None,
-                 options: CanvasOptionsObject = None,
-                 features: CanvasFeaturesObject = None,
+                 theme_paths: tuple[Path, ...],
+                 manual_path: Optional[Path] = None,
+                 callbacker: Optional[Callbacker] = None,
+                 options: Optional[CanvasOptionsObject] = None,
+                 features: Optional[CanvasFeaturesObject] = None,
                  default_theme_name='Black Gold'):
-        if callbacker is not None:
+        if callbacker is None:
+            self.callbacker = Callbacker(self)
+        else:
             if not isinstance(callbacker, Callbacker):
-                exception = TypeError("callbacker must be a Callbacker instance !")
+                exception = TypeError(
+                    "callbacker must be a Callbacker instance !")
                 raise exception
             
             self.callbacker = callbacker
@@ -218,11 +221,11 @@ class PatchbayManager:
         patchcanvas.set_options(options)
         patchcanvas.set_features(features)
         patchcanvas.init(
-            view, callbacker, theme_paths, default_theme_name)
+            view, self.callbacker, theme_paths, default_theme_name)
         patchcanvas.canvas.scene.scale_changed.connect(self._scene_scale_changed)
         
         # just to have the zoom slider updated with the default zoom
-        patchcanvas.canvas._scene.zoom_reset()
+        patchcanvas.canvas.scene.zoom_reset()
     
     @property
     def very_fast_operation(self) -> bool:
@@ -240,7 +243,7 @@ class PatchbayManager:
     # --- widgets related methods --- #
 
     def set_main_win(self, main_win: QWidget):
-        self.main_win = main_win
+        self.main_win = main_win # type:ignore
 
     def set_tools_widget(self, tools_widget: PatchbayToolsWidget):
         self._tools_widget = tools_widget
@@ -426,7 +429,7 @@ class PatchbayManager:
         self.sg.hidden_boxes_changed.emit()
 
     def restore_group_hidden_sides(
-            self, group_id: int, scene_pos: tuple[int, int]=None):
+            self, group_id: int, scene_pos: Optional[tuple[int, int]]=None):
         group = self.get_group_from_id(group_id)
         if group is None:
             return
@@ -535,7 +538,7 @@ class PatchbayManager:
     def get_port_from_uuid(self, uuid:int) -> Optional[Port]:
         return self._ports_by_uuid.get(uuid)
 
-    def get_port_from_id(self, group_id: int, port_id: int) -> Port:
+    def get_port_from_id(self, group_id: int, port_id: int) -> Optional[Port]:
         group = self.get_group_from_id(group_id)
         if group is not None:
             for port in group.ports:
@@ -544,11 +547,11 @@ class PatchbayManager:
 
     def save_group_position(self, gpos: GroupPos):
         # reimplement this to save a group position elsewhere
-        pass
+        ...
 
     def save_portgroup_memory(self, portgrp_mem: PortgroupMem):
         # reimplement this to save a portgroup memory elsewhere
-        pass
+        ...
 
     def get_corrected_a2j_group_name(self, group_name: str) -> str:
         # a2j replace points with spaces in the group name
@@ -807,7 +810,7 @@ class PatchbayManager:
                 conn.add_to_canvas()
 
         if groups_and_pos:
-            patchcanvas.canvas._scene.prevent_box_user_move = True
+            patchcanvas.canvas.scene.prevent_box_user_move = True
 
             for group, gpos_redraw in groups_and_pos.items():
                 group.set_group_position(*gpos_redraw)
@@ -1073,7 +1076,7 @@ class PatchbayManager:
         patchcanvas.set_prevent_overlap(bool(yesno))
 
     def set_zoom(self, zoom: float):
-        patchcanvas.canvas._scene.zoom_ratio(zoom)
+        patchcanvas.canvas.scene.zoom_ratio(zoom)
 
     def zoom_reset(self):
         patchcanvas.zoom_reset()
@@ -1319,9 +1322,9 @@ class PatchbayManager:
                         f"JACK_METADATA_ORDER for UUID {uuid} "
                         f"value '{value}' is not an int")
                     return
-
-                port.order = port_order
-                return port.group_id
+                else:
+                    port.order = port_order
+                    return port.group_id
 
             case JackMetadata.PRETTY_NAME:
                 self.pretty_diff_checker.uuid_change(uuid)
@@ -1340,7 +1343,6 @@ class PatchbayManager:
                 if port is None:
                     return
 
-                port.mdata_portgroup = value
                 return port.group_id
 
             case JackMetadata.ICON_NAME:
@@ -1573,7 +1575,7 @@ class PatchbayManager:
                     self.connections.remove(conn)
 
         if some_groups_removed:
-            patchcanvas.canvas._scene.resize_the_scene()
+            patchcanvas.canvas.scene.resize_the_scene()
         
         self.sg.patch_may_have_changed.emit()
     

@@ -25,7 +25,7 @@ class ThemeData:
 
 
 class ThemeManager:
-    def __init__(self, theme_paths: tuple[Path]) -> None:
+    def __init__(self, theme_paths: tuple[Path, ...]) -> None:
         canvas.ensure_init()
         self.current_theme = None
         self.current_theme_file = Path()

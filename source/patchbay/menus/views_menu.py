@@ -136,6 +136,9 @@ class ViewsMenu(QMenu):
         else:
             view_name = view_data.name
         
+        if self.mng.main_win is None:
+            return
+        
         new_name, ok = QInputDialog.getText(
             self.mng.main_win,
             _translate('views_menu', 'Rename view'),

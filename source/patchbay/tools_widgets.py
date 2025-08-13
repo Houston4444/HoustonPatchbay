@@ -1,13 +1,13 @@
 from enum import Enum, IntEnum
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
-from qtpy.QtCore import QTimer, Slot, QPoint, QObject, Qt
+from qtpy.QtCore import QTimer, Slot, QPoint, QObject, Qt # type:ignore
 from qtpy.QtGui import QPalette, QIcon
 if TYPE_CHECKING:
     # FIX : QAction not found by pylance
     from qtpy.QtGui import QAction
 from qtpy.QtWidgets import (
-    QWidget, QMainWindow, QAction, QApplication, QMenu)
+    QWidget, QMainWindow, QAction, QApplication, QMenu) # type:ignore
 
 from patshared import TransportPosition
 
@@ -28,7 +28,8 @@ _translate = QApplication.translate
 def is_dark_theme(widget: QWidget) -> bool:
     return bool(
         widget.palette().brush(
-            QPalette.ColorGroup.Active, QPalette.ColorRole.WindowText).color().lightness()
+            QPalette.ColorGroup.Active,
+            QPalette.ColorRole.WindowText).color().lightness()
         > 128)
 
 
@@ -71,20 +72,20 @@ class PatchbayToolsWidget(QObject):
         QObject.__init__(self)
         self._jack_running = True
         
-        self.mng: 'PatchbayManager' = None
+        self.mng: 'Optional[PatchbayManager]' = None
 
         self.no_text_with_icons_act = False
 
         self._jack_agnostic = JackAgnostic.NONE
         
         self._tools_displayed = ToolDisplayed.ALL
-        self.tbars : tuple[PatchbayToolBar, ...]= None
+        self.tbars : Optional[tuple[PatchbayToolBar, ...]] = None
         self._last_layout = ''
         self._text_with_icons = TextWithIcons.AUTO
 
-        self._transport_wg: BarWidgetTransport = None
-        self._jack_wg: BarWidgetJack = None
-        self._canvas_wg: BarWidgetCanvas = None
+        self._transport_wg: Optional[BarWidgetTransport] = None
+        self._jack_wg: Optional[BarWidgetJack] = None
+        self._canvas_wg: Optional[BarWidgetCanvas] = None
         
         self._last_win_width = 0
         self._main_bar_little_width = 0
@@ -274,8 +275,9 @@ class PatchbayToolsWidget(QObject):
         
         if (self._jack_agnostic is not JackAgnostic.FULL
                 and not self._jack_running):
-            self.set_jack_running(
-                False, use_alsa_midi=self.mng.alsa_midi_enabled)
+            if self.mng is not None:
+                self.set_jack_running(
+                    False, use_alsa_midi=self.mng.alsa_midi_enabled)
             return
         
         if self.tbars is None:
@@ -335,9 +337,9 @@ class PatchbayToolsWidget(QObject):
         if self._jack_wg is not None:
             self._jack_wg.set_dsp_load(dsp_load)
 
-    def change_buffersize(self, index: int):
+    def change_buffersize(self, buffersize: int):
         if self._jack_wg is not None:
-            self._jack_wg.change_buffersize()
+            self._jack_wg.change_buffersize(buffersize)
 
     def refresh_transport(self, transport_pos: TransportPosition):
         if self._transport_wg is not None:
@@ -485,6 +487,8 @@ class PatchbayToolsWidget(QObject):
         self._first_resize_done = True
 
     def _arrange_tool_bars(self):
+        if self.tbars is None:
+            return
         tbar_widths = [b.needed_width() for b in self.tbars]
         m, t, j, c = tbar_widths
 

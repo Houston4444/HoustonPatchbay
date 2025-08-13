@@ -28,6 +28,9 @@ class CanvasMenu(QMenu):
         # see https://community.kde.org/Guidelines_and_HOWTOs/Wayland_Porting_Notes
         self.winId()
         main_win = self.mng.main_win
+        if main_win is None:
+            return
+        
         main_win.winId()
         parent_window_handle = main_win.windowHandle()
         if not parent_window_handle:

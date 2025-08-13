@@ -165,7 +165,7 @@ class CanvasObject(QObject):
 
 @patchbay_api
 def init(view: PatchGraphicsView, callbacker: ProtoCallbacker,
-          theme_paths: tuple[Path], fallback_theme: str):
+          theme_paths: tuple[Path, ...], fallback_theme: str):
     if canvas.initiated:
         _logger.critical("init() - already initiated")
         return
