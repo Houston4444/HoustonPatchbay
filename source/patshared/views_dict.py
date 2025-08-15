@@ -363,3 +363,44 @@ class ViewsDict(dict[int, ViewData]):
             self[to_num] = self.pop(from_num)
             
         self._sort_views_by_index()
+
+
+class ViewsDictEnsureOne(ViewsDict):
+    def __init__(self):
+        super().__init__()
+        self._ensure_one_view = True
+        self[1] = ViewData(PortTypesViewFlag.ALL)
+    
+    def _ensure_one(self):
+        if not self.keys():
+            self[1] = ViewData(PortTypesViewFlag.ALL)
+    
+    def copy(self, with_positions=True) -> 'ViewsDictEnsureOne':
+        views_dict = ViewsDictEnsureOne()
+        for index, view_data in self.items():
+            views_dict[index] = view_data.copy(with_positions=with_positions)
+        return views_dict
+    
+    def clear(self):
+        super().clear()
+        self._ensure_one()
+    
+    def eat_json_list(self, json_list: list, clear=False):
+        super().eat_json_list(json_list, clear)
+        self._ensure_one()
+    
+    def update_from_short_data_states(
+            self, data_states: dict[str, dict[str, Union[str, bool]]]):
+        super().update_from_short_data_states(data_states)
+        self._ensure_one()
+            
+    def remove_view(self, index: int):
+        super().remove_view(index)
+        self._ensure_one()
+    
+    def first_view_num(self) -> int:
+        for key in self.keys():
+            return key
+        
+        # should be strictly impossible
+        return -1

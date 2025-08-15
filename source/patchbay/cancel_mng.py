@@ -2,7 +2,7 @@ from enum import Enum, auto
 import logging
 from typing import TYPE_CHECKING, Callable, Optional
 
-from patshared import ViewData, ViewsDict, PortTypesViewFlag
+from patshared import ViewData, ViewsDictEnsureOne, PortTypesViewFlag
 
 if TYPE_CHECKING:
     from patchbay_manager import PatchbayManager    
@@ -37,8 +37,8 @@ class ActionRestorer:
         self.view_num_aft = 1
         self.view_data_bef: Optional[ViewData] = None
         self.view_data_aft: Optional[ViewData] = None
-        self.views_bef : Optional[ViewsDict] = None
-        self.views_aft: Optional[ViewsDict] = None
+        self.views_bef : Optional[ViewsDictEnsureOne] = None
+        self.views_aft: Optional[ViewsDictEnsureOne] = None
         self.ptv_bef: Optional[PortTypesViewFlag] = None
         self.ptv_aft: Optional[PortTypesViewFlag] = None
 

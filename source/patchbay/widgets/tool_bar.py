@@ -22,7 +22,7 @@ class PatchbayToolBar(QToolBar):
         self.setContextMenuPolicy(Qt.ContextMenuPolicy.PreventContextMenu)
         self._min_width: Optional[int] = None
 
-    def set_min_width(self, width: int):
+    def set_min_width(self, width: int | None):
         self._min_width = width
 
     def mousePressEvent(self, event: QMouseEvent) -> None:

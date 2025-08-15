@@ -12,7 +12,7 @@ from patchbay.pretty_diff_checker import PrettyDiffChecker
 from patshared import (
     PortType, PortSubType, PortMode, JackMetadata, JackMetadatas,
     PortTypesViewFlag, GroupPos, Naming, TransportPosition,
-    ViewsDict, ViewData, PortgroupsDict, PortgroupMem, CustomNames)
+    ViewsDictEnsureOne, ViewData, PortgroupsDict, PortgroupMem, CustomNames)
 
 from .patchcanvas import arranger, patchcanvas
 from .patchcanvas.utils import get_new_group_positions
@@ -116,7 +116,7 @@ class PatchbayManager:
     _ports_by_uuid = dict[int, Port]()
 
     view_number = 1
-    views = ViewsDict()
+    views = ViewsDictEnsureOne()
     
     portgroups_memory = PortgroupsDict()
     custom_names = CustomNames()
