@@ -267,6 +267,14 @@ class PatchEngine:
                         self.connections.remove(conn)
                     self.peo.connection_removed(conn)
                 
+                case PatchEvent.CLIENT_ADDED:
+                    client_name: str = event_arg #type:ignore
+                    self.peo.client_added(client_name)
+                
+                case PatchEvent.CLIENT_REMOVED:
+                    client_name: str = event_arg # type:ignore
+                    self.peo.client_removed(client_name)
+                
                 case PatchEvent.XRUN:
                     self.peo.send_one_xrun()
                 
