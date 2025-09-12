@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING, Iterator, Optional
 from threading import Thread
     
 from pyalsa.alsaseq import (
+    AlsaEvent,
     Sequencer,
     SEQ_PORT_CAP_NO_EXPORT,
     SEQ_PORT_CAP_READ,
@@ -48,7 +49,10 @@ class AlsaPort:
     physical: bool
     
     def pb_name(self, mode_str: str, client: 'AlsaClient'):
-        return f":ALSA_{mode_str}:{client.id}:{self.id}:{client.name}:{self.name}"
+        return (
+            f":ALSA_{mode_str}:{client.id}:{self.id}:"
+            f"{client.name}:{self.name}")
+
 
 @dataclass
 class AlsaConn:
@@ -57,7 +61,9 @@ class AlsaConn:
     dest_client_id: int
     dest_port_id: int
     
-    def as_port_names(self, clients: dict[int, 'AlsaClient']) -> Optional[tuple[str, str]]:
+    def as_port_names(
+            self, clients: dict[int, 'AlsaClient']) \
+                -> Optional[tuple[str, str]]:
         src_client = clients.get(self.source_client_id)
         dest_client = clients.get(self.dest_client_id)
         
@@ -99,7 +105,8 @@ class AlsaClient:
             return
 
         physical = not bool(port_info['type'] & SEQ_PORT_TYPE_APPLICATION)
-        self.ports[port_id] = AlsaPort(port_info['name'], port_id, caps, physical)
+        self.ports[port_id] = AlsaPort(
+            port_info['name'], port_id, caps, physical)
 
 
 class AlsaManager:
@@ -277,10 +284,14 @@ class AlsaManager:
     def connect_ports(self, port_out_name: str, port_in_name: str,
                       disconnect=False):
         try:
-            _, alsa_key, src_client_id, src_port_id, *rest = port_out_name.split(':')
-            _, alsa_key, dest_client_id, dest_port_id, *rest = port_in_name.split(':')            
-            src_client_id, src_port_id = int(src_client_id), int(src_port_id)
-            dest_client_id, dest_port_id = int(dest_client_id), int(dest_port_id)
+            _, alsa_key, src_client_id, src_port_id, *rest = \
+                port_out_name.split(':')
+            _, alsa_key, dest_client_id, dest_port_id, *rest = \
+                port_in_name.split(':')            
+            src_client_id, src_port_id \
+                = int(src_client_id), int(src_port_id)
+            dest_client_id, dest_port_id \
+                = int(dest_client_id), int(dest_port_id)
         except:
             # TODO log
             return
@@ -298,7 +309,135 @@ class AlsaManager:
         except Exception as e:
             # TODO log something
             pass
+    
+    def _process_event(self, event: AlsaEvent):
+        if self.pbe is None:
+            raise PatchEngineOuterMissing
         
+        data = event.get_data()
+        if event.type == SEQ_EVENT_CLIENT_START:
+            try:
+                client_id = data['addr.client']
+                client_info = self.seq.get_client_info(client_id)
+            except:
+                return
+
+            n_tries = 0
+            client_outed = False
+
+            # Sometimes client name is not ready
+            while client_info['name'] == f'Client-{client_id}':
+                time.sleep(0.010)
+                try:
+                    client_info = self.seq.get_client_info(client_id)
+                except:
+                    client_outed = True
+                    break
+                
+                n_tries += 1
+                if n_tries >= 5:
+                    break
+            
+            if client_outed:
+                return
+
+            self._clients[client_id] = AlsaClient(
+                self, client_info['name'], client_id)
+            self.add_client_to_patchbay(self._clients[client_id].name)
+
+        elif event.type == SEQ_EVENT_CLIENT_EXIT:
+            client_id = data['addr.client']
+            client = self._clients.get(client_id)
+            if client is not None:
+                for port in client.ports.values():
+                    self.remove_port_from_patchbay(client, port)
+
+                self.remove_client_from_patchbay(client.name)
+                del self._clients[client_id]
+            
+        elif event.type == SEQ_EVENT_PORT_START:
+            client_id, port_id = data['addr.client'], data['addr.port']
+            client = self._clients.get(client_id)
+            if client is None:
+                return
+            
+            client.add_port(port_id)
+            port = client.ports.get(port_id)
+            if port is None:
+                return
+            
+            self.add_port_to_patchbay(client, port)
+            
+        elif event.type == SEQ_EVENT_PORT_EXIT:
+            client_id, port_id = data['addr.client'], data['addr.port']
+            client = self._clients.get(client_id)
+            if client is None:
+                return
+
+            port = client.ports.get(port_id)
+            if port is None:
+                return
+            
+            to_rm_conns = list[AlsaConn]()
+            
+            for conn in self._connections:
+                if (client_id, port_id) in (
+                        (conn.source_client_id, conn.source_port_id),
+                        (conn.dest_client_id, conn.dest_port_id)):
+                    to_rm_conns.append(conn)
+                    
+            for conn in to_rm_conns:
+                port_names = conn.as_port_names(self._clients)
+                if port_names is not None:
+                    self.pbe.connection_removed(port_names)
+            
+            self.remove_port_from_patchbay(client, port)
+            
+        elif event.type == SEQ_EVENT_PORT_SUBSCRIBED:
+            sender_client = self._clients.get(data['connect.sender.client'])
+            dest_client = self._clients.get(data['connect.dest.client'])
+            if sender_client is None or dest_client is None:
+                return
+            
+            sender_port = sender_client.ports.get(data['connect.sender.port'])
+            dest_port = dest_client.ports.get(data['connect.dest.port'])
+            
+            if sender_port is None or dest_port is None:
+                return
+
+            self._connections.append(
+                AlsaConn(sender_client.id, sender_port.id,
+                            dest_client.id, dest_port.id))
+
+            self.pbe.connection_added(
+                (sender_port.pb_name('OUT', sender_client),
+                    dest_port.pb_name('IN', dest_client)))
+
+        elif event.type == SEQ_EVENT_PORT_UNSUBSCRIBED:
+            sender_client = self._clients.get(data['connect.sender.client'])
+            dest_client = self._clients.get(data['connect.dest.client'])
+            if sender_client is None or dest_client is None:
+                return
+
+            sender_port = sender_client.ports.get(data['connect.sender.port'])
+            dest_port = dest_client.ports.get(data['connect.dest.port'])
+
+            if sender_port is None or dest_port is None:
+                return
+
+            for conn in self._connections:
+                if (conn.source_client_id == sender_client.id
+                        and conn.source_port_id == sender_port.id
+                        and conn.dest_client_id == dest_client.id
+                        and conn.dest_port_id == dest_port.id):
+                    self._connections.remove(conn)
+                    break 
+
+            self.pbe.connection_removed(
+                (sender_port.pb_name('OUT', sender_client),
+                    dest_port.pb_name('IN', dest_client))
+            )
+    
     def read_events(self):
         if self.pbe is None:
             raise PatchEngineOuterMissing
@@ -307,133 +446,8 @@ class AlsaManager:
             if self._stopping:
                 break
 
-            event_list = self.seq.receive_events(timeout=128, maxevents=1)
-
-            for event in event_list:
-                data = event.get_data()
-
-                if event.type == SEQ_EVENT_CLIENT_START:
-                    try:
-                        client_id = data['addr.client']
-                        client_info = self.seq.get_client_info(client_id)
-                    except:
-                        continue
-
-                    n_tries = 0
-                    client_outed = False
-
-                    # Sometimes client name is not ready
-                    while client_info['name'] == f'Client-{client_id}':
-                        time.sleep(0.010)
-                        try:
-                            client_info = self.seq.get_client_info(client_id)
-                        except:
-                            client_outed = True
-                            break
-                        
-                        n_tries += 1
-                        if n_tries >= 5:
-                            break
-                    
-                    if client_outed:
-                        continue
-
-                    self._clients[client_id] = AlsaClient(
-                        self, client_info['name'], client_id)
-                    self.add_client_to_patchbay(self._clients[client_id].name)
-
-                elif event.type == SEQ_EVENT_CLIENT_EXIT:
-                    client_id = data['addr.client']
-                    client = self._clients.get(client_id)
-                    if client is not None:
-                        for port in client.ports.values():
-                            self.remove_port_from_patchbay(client, port)
-
-                        self.remove_client_from_patchbay(client.name)
-                        del self._clients[client_id]
-                    
-                elif event.type == SEQ_EVENT_PORT_START:
-                    client_id, port_id = data['addr.client'], data['addr.port']
-                    client = self._clients.get(client_id)
-                    if client is None:
-                        continue
-                    
-                    client.add_port(port_id)
-                    port = client.ports.get(port_id)
-                    if port is None:
-                        continue
-                    
-                    self.add_port_to_patchbay(client, port)
-                    
-                elif event.type == SEQ_EVENT_PORT_EXIT:
-                    client_id, port_id = data['addr.client'], data['addr.port']
-                    client = self._clients.get(client_id)
-                    if client is None:
-                        continue
-
-                    port = client.ports.get(port_id)
-                    if port is None:
-                        continue
-                    
-                    to_rm_conns = list[AlsaConn]()
-                    
-                    for conn in self._connections:
-                        if (client_id, port_id) in (
-                                (conn.source_client_id, conn.source_port_id),
-                                (conn.dest_client_id, conn.dest_port_id)):
-                            to_rm_conns.append(conn)
-                            
-                    for conn in to_rm_conns:
-                        port_names = conn.as_port_names(self._clients)
-                        if port_names is not None:
-                            self.pbe.connection_removed(port_names)
-                    
-                    self.remove_port_from_patchbay(client, port)
-                    
-                elif event.type == SEQ_EVENT_PORT_SUBSCRIBED:
-                    sender_client = self._clients.get(data['connect.sender.client'])
-                    dest_client = self._clients.get(data['connect.dest.client'])
-                    if sender_client is None or dest_client is None:
-                        continue
-                    
-                    sender_port = sender_client.ports.get(data['connect.sender.port'])
-                    dest_port = dest_client.ports.get(data['connect.dest.port'])
-                    
-                    if sender_port is None or dest_port is None:
-                        continue
-
-                    self._connections.append(
-                        AlsaConn(sender_client.id, sender_port.id,
-                                 dest_client.id, dest_port.id))
-
-                    self.pbe.connection_added(
-                        (sender_port.pb_name('OUT', sender_client),
-                         dest_port.pb_name('IN', dest_client)))
-
-                elif event.type == SEQ_EVENT_PORT_UNSUBSCRIBED:
-                    sender_client = self._clients.get(data['connect.sender.client'])
-                    dest_client = self._clients.get(data['connect.dest.client'])
-                    if sender_client is None or dest_client is None:
-                        continue
-
-                    sender_port = sender_client.ports.get(data['connect.sender.port'])
-                    dest_port = dest_client.ports.get(data['connect.dest.port'])
-
-                    if sender_port is None or dest_port is None:
-                        continue
-
-                    for conn in self._connections:
-                        if (conn.source_client_id == sender_client.id
-                                and conn.source_port_id == sender_port.id
-                                and conn.dest_client_id == dest_client.id
-                                and conn.dest_port_id == dest_port.id):
-                            self._connections.remove(conn)
-                            break 
-
-                    self.pbe.connection_removed(
-                        (sender_port.pb_name('OUT', sender_client),
-                         dest_port.pb_name('IN', dest_client))
-                    )
+            for event in self.seq.receive_events(timeout=128, maxevents=1):
+                self._process_event(event)
                 
     def stop_events_loop(self):
         if not self._event_thread.is_alive():
