@@ -164,12 +164,12 @@ class AlsaManager:
     def add_client_to_patchbay(self, client_name: str):
         if self.pbe is None:
             raise PatchEngineOuterMissing
-        self.pbe.client_added(client_name)
+        self.pbe.alsa_client_added(client_name)
     
     def remove_client_from_patchbay(self, client_name: str):
         if self.pbe is None:
             raise PatchEngineOuterMissing
-        self.pbe.client_removed(client_name)
+        self.pbe.alsa_client_removed(client_name)
 
     def add_port_to_patchbay(self, client: AlsaClient, port: AlsaPort):
         if self.pbe is None:
