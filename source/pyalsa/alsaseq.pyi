@@ -26,7 +26,7 @@ SEQ_EVENT_PORT_UNSUBSCRIBED: AlsaConstant = 67
 class SequencerError:...
 
 
-class AlsaEvent:
+class SeqEvent:
     type: AlsaConstant
     
     def get_data(self) -> dict[str, Any]:...
@@ -49,7 +49,7 @@ class Sequencer:
             tuple[str, int, list[tuple[
                 str, int, list[list[tuple[int, int]]]]]]]:
         ...
-    def receive_events(self, timeout=128, maxevents=1) -> list[AlsaEvent]:
+    def receive_events(self, timeout=128, maxevents=1) -> list[SeqEvent]:
         ...
     def get_client_info(self, client_id: int) -> dict[str, str]:
         ...

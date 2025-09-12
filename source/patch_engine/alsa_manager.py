@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Iterator, Optional
 from threading import Thread
     
 from pyalsa.alsaseq import (
-    AlsaEvent,
+    SeqEvent,
     Sequencer,
     SEQ_PORT_CAP_NO_EXPORT,
     SEQ_PORT_CAP_READ,
@@ -22,6 +22,8 @@ from pyalsa.alsaseq import (
     SEQ_EVENT_PORT_SUBSCRIBED,
     SEQ_EVENT_PORT_UNSUBSCRIBED,
 )
+
+
 
 from patshared import PortType
 
@@ -310,7 +312,7 @@ class AlsaManager:
             # TODO log something
             pass
     
-    def _process_event(self, event: AlsaEvent):
+    def _process_event(self, event: SeqEvent):
         if self.pbe is None:
             raise PatchEngineOuterMissing
         
