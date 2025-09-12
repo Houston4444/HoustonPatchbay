@@ -4,9 +4,8 @@ import time
 from typing import TYPE_CHECKING, Iterator, Optional
 from threading import Thread
     
-from pyalsa import alsaseq
 from pyalsa.alsaseq import (
-    SEQ_USER_CLIENT,
+    Sequencer,
     SEQ_PORT_CAP_NO_EXPORT,
     SEQ_PORT_CAP_READ,
     SEQ_PORT_CAP_SUBS_READ,
@@ -21,7 +20,6 @@ from pyalsa.alsaseq import (
     SEQ_EVENT_PORT_EXIT,
     SEQ_EVENT_PORT_SUBSCRIBED,
     SEQ_EVENT_PORT_UNSUBSCRIBED,
-    SequencerError
 )
 
 from patshared import PortType
@@ -107,7 +105,7 @@ class AlsaClient:
 class AlsaManager:
     def __init__(self, jack_mng: 'PatchEngine'):
         self.pbe = jack_mng.peo
-        self.seq = alsaseq.Sequencer(clientname='raysession')
+        self.seq = Sequencer(clientname='raysession')
 
         self._all_alsa_connections = list[AlsaConn]()
         self._connections = list[AlsaConn]()
@@ -154,6 +152,16 @@ class AlsaManager:
                         AlsaConn(client_id, port_id,
                                  conn_client_id, conn_port_id))
 
+    def add_client_to_patchbay(self, client_name: str):
+        if self.pbe is None:
+            raise PatchEngineOuterMissing
+        self.pbe.client_added(client_name)
+    
+    def remove_client_from_patchbay(self, client_name: str):
+        if self.pbe is None:
+            raise PatchEngineOuterMissing
+        self.pbe.client_removed(client_name)
+
     def add_port_to_patchbay(self, client: AlsaClient, port: AlsaPort):
         if self.pbe is None:
             raise PatchEngineOuterMissing
@@ -199,6 +207,8 @@ class AlsaManager:
         for client in self._clients.values():
             if client.name == 'System':
                 continue
+
+            self.add_client_to_patchbay(client.name)
 
             for port in client.ports.values():
                 self.add_port_to_patchbay(client, port)
@@ -330,6 +340,7 @@ class AlsaManager:
 
                     self._clients[client_id] = AlsaClient(
                         self, client_info['name'], client_id)
+                    self.add_client_to_patchbay(self._clients[client_id].name)
 
                 elif event.type == SEQ_EVENT_CLIENT_EXIT:
                     client_id = data['addr.client']
@@ -338,6 +349,7 @@ class AlsaManager:
                         for port in client.ports.values():
                             self.remove_port_from_patchbay(client, port)
 
+                        self.remove_client_from_patchbay(client.name)
                         del self._clients[client_id]
                     
                 elif event.type == SEQ_EVENT_PORT_START:
@@ -366,8 +378,9 @@ class AlsaManager:
                     to_rm_conns = list[AlsaConn]()
                     
                     for conn in self._connections:
-                        if (client_id, port_id) in ((conn.source_client_id, conn.source_port_id),
-                                                    (conn.dest_client_id, conn.dest_port_id)):
+                        if (client_id, port_id) in (
+                                (conn.source_client_id, conn.source_port_id),
+                                (conn.dest_client_id, conn.dest_port_id)):
                             to_rm_conns.append(conn)
                             
                     for conn in to_rm_conns:
