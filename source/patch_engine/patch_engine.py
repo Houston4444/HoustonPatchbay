@@ -214,6 +214,8 @@ class PatchEngine:
             match event:
                 case PatchEvent.CLIENT_ADDED:
                     name: str = event_arg #type:ignore
+                    self.peo.jack_client_added(name)
+
                     try:
                         client_uuid = int(
                             self.client.get_uuid_for_client_name(name))
@@ -223,10 +225,12 @@ class PatchEngine:
                         self.client_name_uuids[name] = client_uuid
                         self.peo.associate_client_name_and_uuid(
                             name, client_uuid)
-                    self.peo.jack_client_added(name)
+                        
 
                 case PatchEvent.CLIENT_REMOVED:
                     name: str = event_arg #type:ignore
+                    self.peo.jack_client_removed(name)
+
                     if name not in self.client_name_uuids:
                         continue
 
@@ -239,7 +243,6 @@ class PatchEngine:
                         self.pretty_names_lockers.discard(uuid)
                         self.peo.send_pretty_names_locked(
                             bool(self.pretty_names_lockers))
-                    self.peo.jack_client_removed(name)
 
                 case PatchEvent.PORT_ADDED:
                     port: PortData = event_arg #type:ignore
