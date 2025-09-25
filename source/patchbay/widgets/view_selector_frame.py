@@ -181,10 +181,10 @@ class ItemmDeleg(QAbstractItemDelegate):
                 if view_num == self.mng.view_number:
                     ptv = self.mng.port_types_view
                 
-                for i in range(len(ptvs)):
+                for i, ptv_ in enumerate(ptvs):
                     pcol = self._port_colors[i]
                     painter.setPen(QPen(pcol, 2.0))
-                    if ptv & ptvs[i]:
+                    if ptv & ptv_:
                         painter.drawLine(
                             xst + SPAC * i, row * self._height + 6,
                             xst + SPAC * i, (row + 1) * self._height - 6)

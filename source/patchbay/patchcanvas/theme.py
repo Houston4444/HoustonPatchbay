@@ -33,18 +33,18 @@ def _to_qcolor(color: str) -> Optional[QColor]:
         words = color.split('*')
         next_for_opac = False
         
-        for i in range(len(words)):
+        for i, word in enumerate(words):
             if i == 0:
-                color = words[i].strip()
+                color = word.strip()
                 continue
             
-            if not words[i]:
+            if not word:
                 next_for_opac = True
                 continue
             
             if next_for_opac:
                 try:
-                    opacity_ratio *= float(words[i].strip())
+                    opacity_ratio *= float(word.strip())
                 except:
                     pass
             
@@ -52,7 +52,7 @@ def _to_qcolor(color: str) -> Optional[QColor]:
                 continue
             
             try:
-                intensity_ratio *= float(words[i].strip())
+                intensity_ratio *= float(word.strip())
             except:
                 pass
     

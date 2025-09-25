@@ -276,8 +276,7 @@ class BoxWidget(BoxWidgetMoth):
         last_was_digit = False
         last_was_upper = False
 
-        for i in range(len(string)):
-            c = string[i]
+        for i, c in enumerate(string):
             if c in (' ', '-', '_', '.'):
                 sep_indexes.append(i)
             else:
@@ -412,8 +411,7 @@ class BoxWidget(BoxWidgetMoth):
                         titles = self.split_in_two('uuuu' + subtitle, subt_len)
                         
                         # supress the uuuu
-                        for i in range(len(titles)):
-                            title = titles[i]
+                        for i, title in enumerate(titles):
                             if i == 0:
                                 title = title[4:]
                                 if not title:
@@ -488,8 +486,7 @@ class BoxWidget(BoxWidgetMoth):
                 
                 title_lines = self._split_title(i)
 
-                for j in range(len(title_lines)):
-                    title_line = title_lines[j]
+                for j, title_line in enumerate(title_lines):
                     title_line.y = title_line_y_start + j * int(font_size * 1.4)
                     max_title_width = int(max(max_title_width, title_line.size))
                     header_width = title_line.size + 10
@@ -944,8 +941,7 @@ class BoxWidget(BoxWidgetMoth):
         if self._title_under_icon:
             title_y_start = 3 + gui_margin + icon_size + font_spacing + pen_width
         
-        for i in range(len(self._title_lines)):
-            title_line = self._title_lines[i]
+        for i, title_line in enumerate(self._title_lines):
             title_line.y = title_y_start + i * font_spacing
         
         if not self._title_under_icon and len(self._title_lines) == 1:

@@ -70,24 +70,24 @@ class ConnClipboard:
                             canvas.cb.ports_disconnect(conn.connection_id)
             self.cut = False
         
-        for i in range(len(ports)):
-            port = ports[i]
+        for i, port in enumerate(ports):
             if not port.in_canvas:
                 continue
-            
-            for j in range(len(self.all_ports)):
+
+            for j, orig_port_conns in enumerate(self.all_ports):
                 if i % len(self.all_ports) != j % len(ports):
                     continue
                 
-                orig_port, conn_ports = self.all_ports[j]
+                orig_port, conn_ports = orig_port_conns
                 
                 if port.mode is PortMode.OUTPUT:
                     for conn_port in conn_ports:
                         if not conn_port.in_canvas:
                             continue
 
-                        if conn_port not in [c.port_in for c in self._mng.connections
-                                             if c.port_out is port]:
+                        if conn_port not in [
+                                c.port_in for c in self._mng.connections
+                                if c.port_out is port]:
                             canvas.cb.ports_connect(
                                 port.group_id, port.port_id,
                                 conn_port.group_id, conn_port.port_id)
@@ -97,8 +97,9 @@ class ConnClipboard:
                         if not conn_port.in_canvas:
                             continue
                         
-                        if conn_port not in [c.port_out for c in self._mng.connections
-                                             if c.port_in is port]:
+                        if conn_port not in [
+                                c.port_out for c in self._mng.connections
+                                if c.port_in is port]:
                             canvas.cb.ports_connect(
                                 conn_port.group_id, conn_port.port_id,
                                 port.group_id, port.port_id)

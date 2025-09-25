@@ -455,10 +455,8 @@ class AbstractConnectionsMenu(QMenu):
         has_irregular = False
         missing_regulars = False
         
-        for i in range(len(out_ports)):
-            port_out = out_ports[i]
-            for j in range(len(in_ports)):
-                port_in = in_ports[j]
+        for i, port_out in enumerate(out_ports):
+            for j, port_in in enumerate(in_ports):
                 regular = (i % len(in_ports) == j
                            or j % len(out_ports) == i)
 
@@ -485,13 +483,10 @@ class AbstractConnectionsMenu(QMenu):
                     if c.port_out in out_ports
                     and c.port_in in in_ports]
 
-        for i in range(len(out_ports)):
-            port_out = out_ports[i]
-            for j in range(len(in_ports)):
-                port_in = in_ports[j]
-
+        for i, port_out in enumerate(out_ports):
+            for j, port_in in enumerate(in_ports):
                 if yesno and (i % len(in_ports) == j
-                                or j % len(out_ports) == i):
+                              or j % len(out_ports) == i):
                     for conn in conns:
                         if (conn.port_out is port_out
                                 and conn.port_in is port_in):
@@ -1002,8 +997,7 @@ class PoMenu(AbstractConnectionsMenu):
             pg_name, suffixes = portgroup_name_splitted(
                 *[p.cnv_name for p in self._po.ports])
             
-            for i in range(len(self._po.ports)):
-                port = self._po.ports[i]
+            for i, port in enumerate(self._po.ports):
                 suffix = suffixes[i]
                 if pretty_name:
                     port_pretty_name = f'{pretty_name} {suffix}'

@@ -120,8 +120,7 @@ class ConnectableWidget(QGraphicsItem):
     def reset_line_mov_positions(self):
         self_ports_len = len(self._port_ids)
         
-        for i in range(len(self._line_mov_list)):
-            line_mov = self._line_mov_list[i]
+        for i, line_mov in enumerate(self._line_mov_list):
             if i < self_ports_len:
                 line_mov.set_destination_portgrp_pos(i, self_ports_len)
             else:
@@ -179,7 +178,8 @@ class ConnectableWidget(QGraphicsItem):
             
             for i in range(len(self._port_ids)):
                 for connection in canvas.list_connections(self._po):
-                    if connection.concerns(self._group_id, set([self._port_ids[i]])):
+                    if connection.concerns(
+                            self._group_id, set([self._port_ids[i]])):
                         canvas.cb.ports_disconnect(
                             connection.connection_id)
 
@@ -201,11 +201,8 @@ class ConnectableWidget(QGraphicsItem):
                                     hover_group_id, hover_port_ids[j])
             return
 
-        for i in range(len(self._port_ids)):
-            port_id = self._port_ids[i]
-            for j in range(len(hover_port_ids)):
-                hover_port_id = hover_port_ids[j]
-
+        for i, port_id in enumerate(self._port_ids):
+            for j, hover_port_id in enumerate(hover_port_ids):
                 for connection in canvas.list_connections(self._po):
                     if connection.matches(self._group_id, [port_id],
                                           hover_group_id, [hover_port_id]):
@@ -222,12 +219,8 @@ class ConnectableWidget(QGraphicsItem):
                 canvas.cb.ports_disconnect(
                     connection.connection_id)
         else:
-            for i in range(len(self._port_ids)):
-                port_id = self._port_ids[i]
-                
-                for j in range(len(hover_port_ids)):
-                    hover_port_id = hover_port_ids[j]
-
+            for i, port_id in enumerate(self._port_ids):
+                for j, hover_port_id in enumerate(hover_port_ids):
                     if i % len(hover_port_ids) == j % len(self._port_ids):
                         if not [port_id, hover_port_id] in ports_connected_list:
                             if self._port_mode is PortMode.OUTPUT:
@@ -381,8 +374,7 @@ class ConnectableWidget(QGraphicsItem):
                         line_mov.ready_to_disc = True
                 else:
                     if hover_len <= len(self._line_mov_list):
-                        for i in range(len(self._line_mov_list)):
-                            line_mov = self._line_mov_list[i]
+                        for i, line_mov in enumerate(self._line_mov_list):
                             line_mov.set_destination_portgrp_pos(
                                 i % hover_len, hover_len)
                     else:
