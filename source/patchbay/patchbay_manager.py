@@ -1236,7 +1236,7 @@ class PatchbayManager:
 
         if port is None:
             if uuid:
-                _logger.info(
+                _logger.warning(
                     f"rename_port to {new_name}, no port with uuid {uuid}")
             else:
                 _logger.warning(
