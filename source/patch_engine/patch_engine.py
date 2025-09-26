@@ -344,6 +344,7 @@ class PatchEngine:
                                     bool(self.pretty_names_lockers))
 
                 case PatchEvent.SHUTDOWN:
+                    _logger.debug('receive PatchEvent.SHUTDOWN')
                     self.ports.clear()
                     self.connections.clear()
                     self.metadatas.clear()
@@ -430,12 +431,12 @@ class PatchEngine:
     def refresh(self):
         if self.peo is None:
             raise PatchEngineOuterMissing
-        
+
         _logger.debug(f'refresh jack running {self.jack_running}')
         if self.jack_running:
             self._collect_graph()
             self.peo.server_restarted()
-            
+
         if self.alsa_mng is not None:
             self.alsa_mng.add_all_ports()
     
