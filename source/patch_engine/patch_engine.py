@@ -252,8 +252,9 @@ class PatchEngine:
 
                 case PatchEvent.PORT_REMOVED:
                     port = self.ports.from_name(event_arg) #type:ignore
-                    self.ports.remove(port)
-                    self.peo.port_removed(port.name)
+                    if port is not None:
+                        self.ports.remove(port)
+                        self.peo.port_removed(port.name)
 
                 case PatchEvent.PORT_RENAMED:
                     old_new: tuple[str, str, int] = event_arg #type:ignore
