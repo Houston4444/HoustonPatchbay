@@ -1,6 +1,5 @@
 
 import time
-from tkinter import N
 from typing import TYPE_CHECKING, Optional
 from qtpy.QtCore import Qt, QPointF
 from qtpy.QtGui import QCursor
