@@ -1,2 +1,4 @@
 
 patchbay_manager.disannounce (RaySession ?)  
+
+Change keyboard shortcuts for arrange (Alt+A won't work if main menu is visible)
