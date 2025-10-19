@@ -75,13 +75,11 @@ endif
 # ------------------------
 # # Translations Files
 
-LOCALE: -locale
-
-locale: locale/patchbay_en.qm  \
+LOCALE: locale/patchbay_en.qm  \
 		locale/patchbay_fr.qm
 
 locale/%.qm: locale/%.ts
-	$(LRELEASE) $< -qm $@
+	-$(LRELEASE) $< -qm $@
 
 # -------------------------
 
