@@ -250,9 +250,10 @@ class PortgroupWidget(ConnectableWidget):
         middle_width = p_height * 0.5
 
         text_main_height = self._portgrp_font.pixelSize() * 0.667
-        text_y_pos = ((p_height * len(self._port_ids)
-                       - text_main_height) / 2
-                      + text_main_height)
+        text_y_pos = (
+            (p_height * len(self._port_ids) - text_main_height) / 2
+            + text_main_height
+        )
 
         if self._port_mode is PortMode.INPUT:
             text_pos = QPointF(self._ports_width + 3, text_y_pos)
@@ -325,7 +326,7 @@ class PortgroupWidget(ConnectableWidget):
         for xy in points:
             polygon += QPointF(*xy)
 
-        if poly_image is not None:
+        if not poly_image.isNull():
             painter.setPen(Qt.PenStyle.NoPen)
             painter.setBrush(QBrush(poly_image))
             painter.drawPolygon(polygon)

@@ -942,7 +942,7 @@ class BoxWidgetMoth(QGraphicsItem):
         bg_image = theme.background_image
 
         # draw the background image if exists
-        if bg_image is not None:
+        if not bg_image.isNull():
             painter.setBrush(QBrush(bg_image))
             painter.setPen(Qt.PenStyle.NoPen)
             painter.drawPath(self._painter_path)

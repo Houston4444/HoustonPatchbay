@@ -393,7 +393,7 @@ class StyleAttributer:
                                  needed_attribute='_background_color')
     
     @property
-    def background_image(self) -> Optional[QImage]:
+    def background_image(self) -> QImage:
         return self.get_value_of('_background_image') # type:ignore
 
     @property
@@ -641,7 +641,7 @@ class Theme(StyleAttributer):
         self._border_radius = 0
         self._background_color = QColor('black')
         self._background2_color = QColor('black')
-        self._background_image = False
+        self._background_image = QImage()
         self._text_color = QColor('white')
         self._font_name = "Deja Vu Sans"
         self._font_size = 11
@@ -843,11 +843,14 @@ class Theme(StyleAttributer):
                             self.scene_background_color = scene_bg_color
 
                         case 'background-image':
-                            background_path = os.path.join(
-                                os.path.dirname(theme_file_path), 'images', body_value)
-                            if os.path.isfile(background_path):
+                            if not isinstance(body_value, str):
+                                continue
+                            
+                            background_path = \
+                                theme_file_path.parent / 'images' / body_value
+                            if background_path.is_file():
                                 try:
-                                    self.scene_background_image = QImage(background_path)
+                                    self.scene_background_image = QImage(str(background_path))
                                     if self.scene_background_image.isNull():
                                         _logger.error(
                                             f"background {background_path} is not a valid image")

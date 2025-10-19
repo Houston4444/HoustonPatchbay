@@ -418,7 +418,7 @@ class PortWidget(ConnectableWidget):
         for xy in points:
             polygon += QPointF(*xy)
 
-        if poly_image is not None:
+        if not poly_image.isNull():
             painter.setPen(Qt.PenStyle.NoPen)
             painter.setBrush(QBrush(poly_image))
             painter.drawPolygon(polygon)
