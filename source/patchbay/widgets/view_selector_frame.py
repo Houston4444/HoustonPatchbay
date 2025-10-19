@@ -301,11 +301,11 @@ class ViewSelectorWidget(QWidget):
         menu_arrange = QMenu(_translate('views_menu', 'Arrange'), self)
         menu_arrange.setIcon(QIcon.fromTheme('code-block'))
         
-        act_arrange_signal = menu_arrange.addAction("%s\tAlt+A" %
+        act_arrange_signal = menu_arrange.addAction("%s\tCtrl+Alt+A" %
             _translate('views_menu', 'Follow the signal chain'))
         act_arrange_signal.triggered.connect(self._arrange_follow_signal)
         
-        act_arrange_facing = menu_arrange.addAction("%s\tAlt+Q" %
+        act_arrange_facing = menu_arrange.addAction("%s\tCtrl+Alt+Q" %
             _translate('views_menu', 'Two columns facing each other'))
         act_arrange_facing.triggered.connect(self._arrange_face_to_face)
 
