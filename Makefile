@@ -5,12 +5,11 @@
 #
 
 LRELEASE ?= lrelease
-QT_VERSION ?= 5
-PYRCC := pyrcc5
+QT_VERSION ?= 6
 
 
-# if you set QT_VERSION environment variable to 6 at the make command
-# it will choose the other commands QT_API, pyuic6, pylupdate6.
+# if you set QT_VERSION environment variable to 5 at the make command
+# it will choose the other commands QT_API, pyuic5, pylupdate5.
 
 ifeq ($(QT_VERSION), 6)
 	QT_API ?= PyQt6
