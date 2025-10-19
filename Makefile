@@ -16,6 +16,7 @@ ifeq ($(QT_VERSION), 6)
 	QT_API ?= PyQt6
 	PYUIC ?= pyuic6
 	PYLUPDATE ?= pylupdate6
+	RCC ?= /usr/lib/qt6/libexec/rcc
 	ifeq (, $(shell which $(LRELEASE)))
 		LRELEASE := lrelease-qt6
 	endif
@@ -23,6 +24,7 @@ else
     QT_API ?= PyQt5
 	PYUIC ?= pyuic5
 	PYLUPDATE ?= pylupdate5
+	RCC ?= rcc
 	ifeq (, $(shell which $(LRELEASE)))
 		LRELEASE := lrelease-qt5
 	endif
@@ -54,7 +56,7 @@ QT_PREPARE:
 RES: source/patchbay/resources_rc.py
 
 source/patchbay/resources_rc.py: resources/resources.qrc
-	rcc -g python $< |sed 's/ PySide. / qtpy /' > $@
+	${RCC} -g python $< |sed 's/ PySide. / qtpy /' > $@
 
 # ---------------------
 # UI code
