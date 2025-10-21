@@ -1,4 +1,4 @@
-from qtpy.QtCore import Qt, QPoint
+from qtpy.QtCore import Qt, QPoint, QPointF
 from qtpy.QtGui import QMouseEvent, QWheelEvent, QPainter
 from qtpy.QtWidgets import QApplication, QGraphicsView, QScrollBar
 
@@ -46,8 +46,9 @@ class PatchGraphicsView(QGraphicsView):
             self._panning = True
             self.setDragMode(QGraphicsView.DragMode.ScrollHandDrag)
             event = QMouseEvent(
-                event.type(), event.pos(), Qt.MouseButton.LeftButton, # type:ignore
-                Qt.MouseButton.LeftButton, event.modifiers())
+                event.type(), QPointF(event.pos()),
+                Qt.MouseButton.LeftButton, Qt.MouseButton.LeftButton,
+                event.modifiers())
 
         QGraphicsView.mousePressEvent(self, event)
 
