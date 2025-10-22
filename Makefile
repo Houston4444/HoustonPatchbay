@@ -5,6 +5,7 @@
 #
 
 LRELEASE ?= lrelease
+RCC ?= rcc
 QT_VERSION ?= 6
 
 
@@ -15,7 +16,11 @@ ifeq ($(QT_VERSION), 6)
 	QT_API ?= PyQt6
 	PYUIC ?= pyuic6
 	PYLUPDATE ?= pylupdate6
-	RCC ?= /usr/lib/qt6/libexec/rcc
+
+	ifeq (, $(which $(RCC)))
+		RCC := /usr/lib/qt6/libexec/rcc
+	endif
+
 	ifeq (, $(shell which $(LRELEASE)))
 		LRELEASE := lrelease-qt6
 	endif
