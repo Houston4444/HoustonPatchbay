@@ -17,10 +17,11 @@
 #
 # For a full copy of the GNU General Public License see the doc/GPL.txt file.
 
+from enum import Enum
 import logging
 from math import ceil
 from struct import pack
-from typing import TYPE_CHECKING, Optional
+from typing import Optional
 
 
 try:
@@ -29,8 +30,6 @@ except:
     # not really used for now because there is no InlineDisplay
     pass
 
-import sys
-from enum import Enum
 
 from qtpy.QtCore import Qt, QPointF, QRectF, QTimer, QMarginsF
 from qtpy.QtGui import (QCursor, QFontMetrics, QImage, QFont,
@@ -62,10 +61,6 @@ from .grouped_lines_widget import GroupedLinesWidget
 from .theme import StyleAttributer, UnselectedStyleAttributer
 from .box_layout import BoxLayout
 from .box_hidder import BoxHidder
-
-if TYPE_CHECKING:
-    from .scene import PatchScene
-    from .theme import Theme
 
 
 _logger = logging.getLogger(__name__)

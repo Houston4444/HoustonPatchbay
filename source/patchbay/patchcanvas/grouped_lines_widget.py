@@ -216,7 +216,8 @@ class GroupedLinesWidget(QGraphicsPathItem):
 
     @staticmethod
     def widgets_for_box(
-            group_id: int, port_mode: PortMode) -> Iterator['GroupedLinesWidget']:
+            group_id: int,
+            port_mode: PortMode) -> Iterator['GroupedLinesWidget']:
         if port_mode is PortMode.OUTPUT:
             gp_keys = [g for g in _all_lines_widgets if g[0] is group_id]
         elif port_mode is PortMode.INPUT:
@@ -434,15 +435,21 @@ class GroupedLinesWidget(QGraphicsPathItem):
                 bgcolor = canvas.theme.scene_background_color
                 
                 color_main = QColor(
-                    int(tha.color_main.red() * shd + bgcolor.red() * (1.0 - shd) + 0.5),
-                    int(tha.color_main.green() * shd + bgcolor.green() * (1.0 - shd)+ 0.5),
-                    int(tha.color_main.blue() * shd + bgcolor.blue() * (1.0 - shd) + 0.5),
+                    int(tha.color_main.red() * shd
+                        + bgcolor.red() * (1.0 - shd) + 0.5),
+                    int(tha.color_main.green() * shd
+                        + bgcolor.green() * (1.0 - shd)+ 0.5),
+                    int(tha.color_main.blue() * shd
+                        + bgcolor.blue() * (1.0 - shd) + 0.5),
                     tha.color_main.alpha())
                 
                 color_alter = QColor(
-                    int(tha.color_alter.red() * shd + bgcolor.red() * (1.0 - shd) + 0.5),
-                    int(tha.color_alter.green() * shd + bgcolor.green() * (1.0 - shd)+ 0.5),
-                    int(tha.color_alter.blue() * shd + bgcolor.blue() * (1.0 - shd) + 0.5),
+                    int(tha.color_alter.red() * shd
+                        + bgcolor.red() * (1.0 - shd) + 0.5),
+                    int(tha.color_alter.green() * shd
+                        + bgcolor.green() * (1.0 - shd)+ 0.5),
+                    int(tha.color_alter.blue() * shd
+                        + bgcolor.blue() * (1.0 - shd) + 0.5),
                     tha.color_alter.alpha())
             
             else:
@@ -452,22 +459,28 @@ class GroupedLinesWidget(QGraphicsPathItem):
             port_gradient.setColorAt(0.5, color_alter)
             port_gradient.setColorAt(1.0, color_main)
             
-            self.setPen(QPen(port_gradient, tha.base_width, Qt.PenStyle.SolidLine, Qt.PenCapStyle.FlatCap))
+            self.setPen(
+                QPen(port_gradient, tha.base_width,
+                     Qt.PenStyle.SolidLine, Qt.PenCapStyle.FlatCap))
         else:
             if self._semi_hidden:
                 shd = options.semi_hide_opacity
                 bgcolor = canvas.theme.scene_background_color
 
                 color_main = QColor(
-                    int(tha.color_main.red() * shd + bgcolor.red() * (1.0 - shd) + 0.5),
-                    int(tha.color_main.green() * shd + bgcolor.green() * (1.0 - shd)+ 0.5),
-                    int(tha.color_main.blue() * shd + bgcolor.blue() * (1.0 - shd) + 0.5),
+                    int(tha.color_main.red() * shd
+                        + bgcolor.red() * (1.0 - shd) + 0.5),
+                    int(tha.color_main.green() * shd
+                        + bgcolor.green() * (1.0 - shd)+ 0.5),
+                    int(tha.color_main.blue() * shd
+                        + bgcolor.blue() * (1.0 - shd) + 0.5),
                     tha.color_main.alpha())
             else:
                 color_main = tha.color_main
         
-            self.setPen(QPen(QBrush(color_main),
-                             tha.base_width, Qt.PenStyle.SolidLine, Qt.PenCapStyle.FlatCap))
+            self.setPen(
+                QPen(QBrush(color_main), tha.base_width,
+                     Qt.PenStyle.SolidLine, Qt.PenCapStyle.FlatCap))
             
     def animate_hidding(self, ratio: float):
         '''animate hidding or restoring of connections.
