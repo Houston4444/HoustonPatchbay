@@ -1357,7 +1357,7 @@ class BoxWidgetMoth(QGraphicsItem):
             self._inline_data = pack(
                 "%iB" % (data['height'] * data['stride']), *data['data'])
             self._inline_image = QImage(
-                voidptr(self._inline_data), data['width'], data['height'],
+                voidptr(self._inline_data), data['width'], data['height'], # type:ignore
                 data['stride'], QImage.Format.Format_ARGB32)
             self._inline_scaling = scaling
             self._plugin_inline = InlineDisplay.CACHED

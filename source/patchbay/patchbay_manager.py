@@ -1587,28 +1587,29 @@ class PatchbayManager:
         return export_to_patchichi_json(self, path, editor_text)
     
     def key_press_event(self, event: QKeyEvent):
-        if event.modifiers() & Qt.KeyboardModifier.AltModifier:
-            if event.text().isdigit():
-                # change view with Alt+Num
-                new_num = int(event.text())
-                if self.views.get(new_num) is None:
-                    cancel_op = CancelOp.ALL_VIEWS
-                else:
-                    cancel_op = CancelOp.VIEW_CHOICE
+        if not event.modifiers() & Qt.KeyboardModifier.ControlModifier:
+            if event.modifiers() & Qt.KeyboardModifier.AltModifier:
+                if Qt.Key.Key_0 <= event.key() <= Qt.Key.Key_9:
+                    new_num = event.key() - Qt.Key.Key_0
+                    if self.views.get(new_num) is None:
+                            cancel_op = CancelOp.ALL_VIEWS
+                    else:
+                        cancel_op = CancelOp.VIEW_CHOICE
 
-                with CancellableAction(self, cancel_op) as a:
-                    a.name = _translate('patchbay', 'Change view %i -> %i') \
-                        % (self.view_number, new_num)
-                    self.change_view(new_num)
-            
-            elif event.text().upper() == 'A':
-                self.arrange_follow_signal()
-            
-            elif event.text().upper() == 'Q':
+                    with CancellableAction(self, cancel_op) as a:
+                        a.name = _translate('patchbay', 'Change view %i -> %i') \
+                            % (self.view_number, new_num)
+                        self.change_view(new_num)
+            return
+
+        if event.modifiers() & Qt.KeyboardModifier.AltModifier:
+            if event.key() == Qt.Key.Key_A:
+                self.arrange_follow_signal()            
+            elif event.key() == Qt.Key.Key_Q:
                 self.arrange_face_to_face()
                 
-        elif event.modifiers() & Qt.KeyboardModifier.ControlModifier:
-            if event.key() == 90: # 90 = Z
+        else:
+            if event.key() == Qt.Key.Key_Z:
                 if event.modifiers() & Qt.KeyboardModifier.ShiftModifier:
                     self.cancel_mng.redo()
                 else:
