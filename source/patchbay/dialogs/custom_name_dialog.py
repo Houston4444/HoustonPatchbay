@@ -56,9 +56,9 @@ class CustomNameDialog(QDialog):
         self._ok_text = ok_button.text()
         self._ok_icon = ok_button.icon()
         
-        self.ui.lineEditPrettyName.setText(suggest)
-        self.ui.lineEditPrettyName.selectAll()
-        self.ui.lineEditPrettyName.textEdited.connect(self._text_edited)
+        self.ui.lineEditCustomName.setText(suggest)
+        self.ui.lineEditCustomName.selectAll()
+        self.ui.lineEditCustomName.textEdited.connect(self._text_edited)
         
         save_in_jack: bool = self.element.manager._settings.value(
             'Canvas/save_pretty_name_in_jack', True, type=bool)
@@ -104,7 +104,7 @@ class CustomNameDialog(QDialog):
             ok_button.setIcon(self._ok_icon)
             
     def pretty_name(self) -> str:
-        return self.ui.lineEditPrettyName.text()
+        return self.ui.lineEditCustomName.text()
     
     def save_in_metadata(self) -> bool:
         return self.ui.checkBoxExportJack.isChecked()

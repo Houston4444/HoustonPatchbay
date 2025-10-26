@@ -42,7 +42,7 @@
     </widget>
    </item>
    <item>
-    <widget class="QLineEdit" name="lineEditPrettyName"/>
+    <widget class="QLineEdit" name="lineEditCustomName"/>
    </item>
    <item>
     <spacer name="verticalSpacer">
