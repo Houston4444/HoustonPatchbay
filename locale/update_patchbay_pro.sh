@@ -16,23 +16,41 @@ for file in *.ui;do
 done
 
 
-cd "$code_root/patchbay"
+cd "$code_root/source/patchbay"
 
-for file in *.py;do
-    if cat "$file"|grep -q _translate;then
-        contents+="SOURCES += ../patchbay/${file}
+for file in *;do
+    if [[ "$file" =~ .py$ ]];then
+        if cat "$file"|grep -q _translate;then
+            contents+="SOURCES += ../source/patchbay/${file}
 "
+        fi
+    elif [ -d "$file" ];then
+        dir="$file"
+        [ "$dir" == ui ] && continue
+        # cd "$dir"
+        for file in $dir/*.py;do
+            if cat "$file"|grep -q _translate;then
+                contents+="SOURCES += ../source/patchbay/${file}
+"
+            fi
+        done
     fi
 done
+# for file in *.py;do
+#     if cat "$file"|grep -q _translate;then
+#         contents+="SOURCES += ../patchbay/${file}
+# "
+#     fi
+# done
 
-cd patchcanvas
+# cd patchcanvas
 
-for file in *.py;do
-    if cat "$file"|grep -q _translate;then
-        contents+="SOURCES += ../patchbay/patchcanvas/${file}
-"
-    fi
-done
+# for file in *.py;do
+#     if cat "$file"|grep -q _translate;then
+#         contents+="SOURCES += ../patchbay/patchcanvas/${file}
+# "
+#     fi
+# done
 
 contents+="
 TRANSLATIONS += patchbay_en.ts
