@@ -300,7 +300,7 @@ Celà fournit un nom plus court que l&apos;original.</translation>
     <message>
         <location filename="../resources/ui/canvas_options.ui" line="237"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Automaticaly export custom names (for groups and ports) to JACK metadatas.&lt;/p&gt;&lt;p&gt;JACK metadatas are available for any program using JACK.&lt;/p&gt;&lt;p&gt;JACK pretty-name metadatas created by this will be removed when the option is unchecked.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Exporter automatiquement les noms personnalisés (pour les groupes et les ports) vers les métadonnées de JACK.&lt;/p&gt;&lt;p&gt;Les métadonnées de JACK sont disponibles pour n&apos;importe n&apos;importe quel programme utilisant JACK.&lt;/p&gt;&lt;p&gt;Les métadonnées de joli nom de JACK créées par ce programme sont supprimées quand cette option est décochée.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Exporter automatiquement les noms personnalisés (pour les groupes et les ports) vers les métadonnées de JACK.&lt;/p&gt;&lt;p&gt;Les métadonnées de JACK sont disponibles pour n&apos;importe quel programme utilisant JACK.&lt;/p&gt;&lt;p&gt;Les métadonnées de joli nom de JACK créées par ce programme sont supprimées quand cette option est décochée.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <location filename="../resources/ui/canvas_options.ui" line="240"/>
