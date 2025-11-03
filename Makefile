@@ -47,8 +47,7 @@ QT_PREPARE:
 	$(info compiling for Qt$(QT_VERSION) using $(QT_API))
 	$(file > $(BUILD_CFG_FILE),QT_API=$(QT_API))
 
-    ifeq ($(QT_API), $(QT_API_INST))
-    else
+    ifneq ($(QT_API), $(QT_API_INST))
 		rm -f *~ source/patchbay/resources_rc.py \
 			 locale/*.qm patchbay/ui/*.py
     endif
