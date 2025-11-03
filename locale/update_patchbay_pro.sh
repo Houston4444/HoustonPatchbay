@@ -36,21 +36,7 @@ for file in *;do
         done
     fi
 done
-# for file in *.py;do
-#     if cat "$file"|grep -q _translate;then
-#         contents+="SOURCES += ../patchbay/${file}
-# "
-#     fi
-# done
 
-# cd patchcanvas
-
-# for file in *.py;do
-#     if cat "$file"|grep -q _translate;then
-#         contents+="SOURCES += ../patchbay/patchcanvas/${file}
-# "
-#     fi
-# done
 
 contents+="
 TRANSLATIONS += patchbay_en.ts

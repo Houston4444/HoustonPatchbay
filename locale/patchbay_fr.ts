@@ -61,12 +61,12 @@
     <message>
         <location filename="../resources/ui/canvas_group_info.ui" line="206"/>
         <source>Name generated from the client name, substituting &apos;_&apos; with spaces, and hidding the prefix if it seems to be a NSM client</source>
-        <translation>Nom généré à partir du nom du client en remplaçant &apos;_&apos; par des espaces et en cachant le préfixe s&apos;il semble s&apos;agir d&apos;un client NSM</translation>
+        <translation>Nom généré à partir du nom du client en remplaçant '_' par des espaces et en cachant le préfixe s'il semble s'agir d'un client NSM</translation>
     </message>
     <message>
         <location filename="../resources/ui/canvas_group_info.ui" line="216"/>
         <source>Custom name, set when user renames the client with the context menu.</source>
-        <translation>Nom personnalisé, défini quand l&apos;utilisateur renomme le client à partir du menu contextuel.</translation>
+        <translation>Nom personnalisé, défini quand l'utilisateur renomme le client à partir du menu contextuel.</translation>
     </message>
     <message>
         <location filename="../resources/ui/canvas_group_info.ui" line="254"/>
@@ -154,7 +154,7 @@
     <message>
         <location filename="../resources/ui/canvas_options.ui" line="89"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Allows navigation on borders.&lt;/p&gt;&lt;p&gt;While connecting, moving or selecting boxes, the view is moved when cursor is near a border.&lt;br/&gt;This way, no need to scroll mouse wheel, press shift button or move scroll bars.&lt;/p&gt;&lt;p&gt;&lt;br/&gt;This has strictly no effect if the entire scene is visible in the view.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Permet la navigation sur les bords.&lt;/p&gt;&lt;p&gt;Lors de la connection, du déplacement ou de la sélection des boîtes, la vue se déplace quand le curseur est prêt du bord.&lt;br/&gt;De cette façon, pas besoin d&apos;utiliser la molette de la souris, d&apos;appuyer sur Maj ou de déplacer les barres de défilement&lt;/p&gt;&lt;p&gt;&lt;br/&gt;Ça n&apos;a strictement aucun effet quand la scène est entièrement visible dans la vue.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Permet la navigation sur les bords.&lt;/p&gt;&lt;p&gt;Lors de la connection, du déplacement ou de la sélection des boîtes, la vue se déplace quand le curseur est prêt du bord.&lt;br/&gt;De cette façon, pas besoin d'utiliser la molette de la souris, d'appuyer sur Maj ou de déplacer les barres de défilement&lt;/p&gt;&lt;p&gt;&lt;br/&gt;Ça n'a strictement aucun effet quand la scène est entièrement visible dans la vue.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <location filename="../resources/ui/canvas_options.ui" line="92"/>
@@ -209,7 +209,7 @@
     <message>
         <location filename="../resources/ui/canvas_options.ui" line="424"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Boxes can have two different layouts.&lt;/p&gt;&lt;p&gt;For boxes with input and output ports, if the layout is large, output ports are layouted at right of input ports, else ports are layouted in a descending order, no matter if they are input or output ports.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Les boîtes peuvent avoir deux dispositions différentes.&lt;/p&gt;&lt;p&gt;Pour les boîtes avec des entrées et des sorties, si la disposition est large, les ports de sortie sont disposés à droite des ports d&apos;entrée, sinon les ports sont disposés de haut en bas, qu&apos;ils soient des ports d&apos;entrée ou des ports de sortie.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Les boîtes peuvent avoir deux dispositions différentes.&lt;/p&gt;&lt;p&gt;Pour les boîtes avec des entrées et des sorties, si la disposition est large, les ports de sortie sont disposés à droite des ports d'entrée, sinon les ports sont disposés de haut en bas, qu'ils soient des ports d'entrée ou des ports de sortie.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <location filename="../resources/ui/canvas_options.ui" line="427"/>
@@ -229,7 +229,7 @@
     <message>
         <location filename="../resources/ui/canvas_options.ui" line="570"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Patchichi is a software allowing to run patchbay scenes abstractly.&lt;/p&gt;&lt;p&gt;It is useful for developers, to can develop or fix bug on the patchbay.&lt;/p&gt;&lt;p&gt;It is also nicer to use Patchichi to edit patchbay themes.&lt;/p&gt;&lt;p&gt;You could also use it to build a patchbay graph, for tutorials or whatever you want.&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Patchichi est un logiciel permettant de lancer des scenes de baie de brassage de manière abstraite.&lt;/p&gt;&lt;p&gt;Il est utile pour les devellopeurs, pour améliorer ou corriger des bugs.&lt;/p&gt;&lt;p&gt;Il est également recommandé pour editer les thèmes de la baie de brassage.&lt;/p&gt;&lt;p&gt;Vous pouvez aussi l&apos;utiliser pour construire une scène de baie de brassage, pour des tutoriels par exemple.&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Patchichi est un logiciel permettant de lancer des scenes de baie de brassage de manière abstraite.&lt;/p&gt;&lt;p&gt;Il est utile pour les devellopeurs, pour améliorer ou corriger des bugs.&lt;/p&gt;&lt;p&gt;Il est également recommandé pour editer les thèmes de la baie de brassage.&lt;/p&gt;&lt;p&gt;Vous pouvez aussi l'utiliser pour construire une scène de baie de brassage, pour des tutoriels par exemple.&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <location filename="../resources/ui/canvas_options.ui" line="573"/>
@@ -276,7 +276,7 @@ Les tailles et les positions de boîtes seront adaptées à la grille.</translat
     <message>
         <location filename="../resources/ui/canvas_options.ui" line="202"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Choose custom names defined by user with the &amp;quot;rename&amp;quot; context entry to name clients and ports.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Utiliser les noms personnalisés définis par l&apos;utilisateur avec l&apos;entrée &amp;quot;renommer&amp;quot; du menu contextuel pour nommer les clients et les ports.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Utiliser les noms personnalisés définis par l'utilisateur avec l'entrée &amp;quot;renommer&amp;quot; du menu contextuel pour nommer les clients et les ports.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <location filename="../resources/ui/canvas_options.ui" line="205"/>
@@ -290,7 +290,7 @@ cut some useless characters depending on the client name.
 It provides a shorter name than the original.</source>
         <translation>Utiliser des noms digestes, en remplaçant les &quot;_&quot; par des espaces,
 en supprimant quelques caractères superflus selon le nom du client.
-Celà fournit un nom plus court que l&apos;original.</translation>
+Celà fournit un nom plus court que l'original.</translation>
     </message>
     <message>
         <location filename="../resources/ui/canvas_options.ui" line="220"/>
@@ -300,7 +300,7 @@ Celà fournit un nom plus court que l&apos;original.</translation>
     <message>
         <location filename="../resources/ui/canvas_options.ui" line="237"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Automaticaly export custom names (for groups and ports) to JACK metadatas.&lt;/p&gt;&lt;p&gt;JACK metadatas are available for any program using JACK.&lt;/p&gt;&lt;p&gt;JACK pretty-name metadatas created by this will be removed when the option is unchecked.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Exporter automatiquement les noms personnalisés (pour les groupes et les ports) vers les métadonnées de JACK.&lt;/p&gt;&lt;p&gt;Les métadonnées de JACK sont disponibles pour n&apos;importe quel programme utilisant JACK.&lt;/p&gt;&lt;p&gt;Les métadonnées de joli nom de JACK créées par ce programme sont supprimées quand cette option est décochée.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Exporter automatiquement les noms personnalisés (pour les groupes et les ports) vers les métadonnées de JACK.&lt;/p&gt;&lt;p&gt;Les métadonnées de JACK sont disponibles pour n'importe quel programme utilisant JACK.&lt;/p&gt;&lt;p&gt;Les métadonnées de joli nom de JACK créées par ce programme sont supprimées quand cette option est décochée.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <location filename="../resources/ui/canvas_options.ui" line="240"/>
@@ -311,7 +311,7 @@ vers les jolis noms JACK</translation>
     <message>
         <location filename="../resources/ui/canvas_options.ui" line="270"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Export all custom names (for groups and ports) to JACK pretty-name metadatas.&lt;/p&gt;&lt;p&gt;If disabled, there is no custom name not already exported to JACK pretty-name.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Exporter tous les noms personnalisés (pour les groupes et les ports) vers les métadonnées de joli nom JACK&lt;/p&gt;&lt;p&gt;Si cette case est grisée, il n&apos;y a pas de nom personnalisé qui ne soit pas déjà exporté vers un joli nom JACK.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Exporter tous les noms personnalisés (pour les groupes et les ports) vers les métadonnées de joli nom JACK&lt;/p&gt;&lt;p&gt;Si cette case est grisée, il n'y a pas de nom personnalisé qui ne soit pas déjà exporté vers un joli nom JACK.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <location filename="../resources/ui/canvas_options.ui" line="273"/>
@@ -321,7 +321,7 @@ vers les jolis noms JACK</translation>
     <message>
         <location filename="../resources/ui/canvas_options.ui" line="287"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Import all pretty-name JACK metadatas to custom names. Useful if you wan&apos;t to save in your project pretty-names created from another program.&lt;/p&gt;&lt;p&gt;If disabled, there is no pretty-name JACK metadata to import.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Importer toutes les métadonnées de jolis noms JACK vers les noms personnalisés. Utile si vous voulez sauvegarder dans votre projet les jolis noms JACK créés par un autre programme.&lt;/p&gt;&lt;p&gt;Si cette option est grisée, il n&apos;y a pas de joli nom JACK à importer.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Importer toutes les métadonnées de jolis noms JACK vers les noms personnalisés. Utile si vous voulez sauvegarder dans votre projet les jolis noms JACK créés par un autre programme.&lt;/p&gt;&lt;p&gt;Si cette option est grisée, il n'y a pas de joli nom JACK à importer.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <location filename="../resources/ui/canvas_options.ui" line="290"/>
@@ -560,7 +560,7 @@ vers les jolis noms JACK</translation>
     <message>
         <location filename="../resources/ui/patchbay_tools.ui" line="364"/>
         <source>JACK Samplerate</source>
-        <translation>Fréquence d&apos;échantillonage de JACK</translation>
+        <translation>Fréquence d'échantillonage de JACK</translation>
     </message>
     <message>
         <location filename="../resources/ui/patchbay/patchbay_tools.ui" line="159"/>
@@ -595,7 +595,7 @@ vers les jolis noms JACK</translation>
     <message>
         <location filename="../resources/ui/patchbay_tools.ui" line="496"/>
         <source>&lt;p style=&quot;color:red&quot;&gt;JACK is not started !&lt;/p&gt;</source>
-        <translation>&lt;p style=&quot;color:red&quot;&gt;JACK n&apos;est pas lancé !&lt;/p&gt;</translation>
+        <translation>&lt;p style=&quot;color:red&quot;&gt;JACK n'est pas lancé !&lt;/p&gt;</translation>
     </message>
     <message>
         <location filename="../resources/ui/patchbay_tools.ui" line="44"/>
@@ -723,7 +723,7 @@ vers les jolis noms JACK</translation>
     <message>
         <location filename="../resources/ui/filter_frame.ui" line="220"/>
         <source>adjust the opacity of boxes not matching with the filter</source>
-        <translation>réglez l&apos;opacité des boîtes ne correspondant pas au filtre</translation>
+        <translation>réglez l'opacité des boîtes ne correspondant pas au filtre</translation>
     </message>
     <message>
         <location filename="../resources/ui/filter_frame.ui" line="213"/>
@@ -803,8 +803,8 @@ vers les jolis noms JACK</translation>
         <location filename="../source/patchbay/dialogs/options_dialog.py" line="327"/>
         <source>ALSA python lib version is not present or too old.
 Ensure to have python3-pyalsa &gt;= 1.2.4</source>
-        <translation>La bibliothèque ALSA python n&apos;est pas présente ou trop ancienne.
-Assurez-vous d&apos;avoir python3-pyalsa &gt;= 1.2.4</translation>
+        <translation>La bibliothèque ALSA python n'est pas présente ou trop ancienne.
+Assurez-vous d'avoir python3-pyalsa &gt;= 1.2.4</translation>
     </message>
 </context>
 <context>
@@ -825,7 +825,7 @@ Assurez-vous d&apos;avoir python3-pyalsa &gt;= 1.2.4</translation>
     <message>
         <location filename="../source/patchbay/dialogs/options_dialog.py" line="34"/>
         <source>Choose the smallest area</source>
-        <translation>Choisir l&apos;aire la plus petite</translation>
+        <translation>Choisir l'aire la plus petite</translation>
     </message>
     <message>
         <location filename="../source/patchbay/dialogs/options_dialog.py" line="35"/>
@@ -1172,7 +1172,7 @@ Assurez-vous d&apos;avoir python3-pyalsa &gt;= 1.2.4</translation>
     </message>
     <message>
         <location filename="../source/patchbay/menus/canvas_menu.py" line="68"/>
-        <source>Find a box...	Ctrl+F</source>
+        <source>Find a box...<byte value="x9"/>Ctrl+F</source>
         <translation>Trouver une boîte...	Ctrl+F</translation>
     </message>
     <message>
@@ -1192,7 +1192,7 @@ Assurez-vous d&apos;avoir python3-pyalsa &gt;= 1.2.4</translation>
     </message>
     <message>
         <location filename="../source/patchbay/menus/canvas_menu.py" line="169"/>
-        <source>Refresh the canvas	Ctrl+R</source>
+        <source>Refresh the canvas<byte value="x9"/>Ctrl+R</source>
         <translation>Rafraichir le canevas	Ctrl+R</translation>
     </message>
     <message>
@@ -1360,7 +1360,7 @@ Assurez-vous d&apos;avoir python3-pyalsa &gt;= 1.2.4</translation>
     <message>
         <location filename="../source/patchbay/tools_widgets.py" line="126"/>
         <source>Sample rate</source>
-        <translation>Fréquence d&apos;échantillonage</translation>
+        <translation>Fréquence d'échantillonage</translation>
     </message>
     <message>
         <location filename="../source/patchbay/tools_widgets.py" line="129"/>
