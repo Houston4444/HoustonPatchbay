@@ -1244,7 +1244,8 @@ class PatchbayManager:
             return
 
         # change port key in self._ports_by_name dict
-        self._ports_by_name.pop(name)
+        if name in self._ports_by_name:
+            self._ports_by_name.pop(name)
         self._ports_by_name[new_name] = port
 
         group_name = name.partition(':')[0]
