@@ -554,7 +554,7 @@ class BoxWidgetMoth(QGraphicsItem):
 
     def wrap_unwrap_at_point(self, scene_pos: QPointF) -> bool:
         '''order a wrap or unwrap on the box if scene_pos is on the
-            triangle wrapper'''
+        triangle wrapper'''
         if self._layout is None:
             _logger.error(f"Can not wrap or unwrap {self} now, "
                           "_layout is not set yet")

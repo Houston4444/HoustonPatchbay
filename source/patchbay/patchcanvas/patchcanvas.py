@@ -219,13 +219,11 @@ def set_loading_items(yesno: bool, auto_redraw=False, prevent_overlap=True):
     
     if not yesno and auto_redraw:
         both_done = set[int]()
-        some_hidden = False
         boxes = list[BoxWidget]()
         
         for group_id in canvas.groups_to_redraw_out:
             group = canvas.get_group(group_id)
             if group is None:
-                some_hidden = True
                 continue
 
             for box in group.widgets:
@@ -234,8 +232,6 @@ def set_loading_items(yesno: bool, auto_redraw=False, prevent_overlap=True):
                     box.update_positions(scene_checks=False)
                     if box.isVisible():
                         boxes.append(box)
-                    else:
-                        some_hidden = True
                     
                     if port_mode & PortMode.INPUT:
                         both_done.add(group_id)
@@ -246,7 +242,6 @@ def set_loading_items(yesno: bool, auto_redraw=False, prevent_overlap=True):
             
             group = canvas.get_group(group_id)
             if group is None:
-                some_hidden = True
                 continue
 
             for box in group.widgets:
@@ -255,14 +250,12 @@ def set_loading_items(yesno: bool, auto_redraw=False, prevent_overlap=True):
                     box.update_positions(scene_checks=False)
                     if box.isVisible():
                         boxes.append(box)
-                    else:
-                        some_hidden = True
         
         if prevent_overlap:
             for box in boxes:
                 canvas.scene.deplace_boxes_from_repulsers([box])
         
-        if some_hidden:
+        if canvas.groups_to_redraw_out or canvas.groups_to_redraw_in:
             canvas.scene.resize_the_scene()
         canvas.scene.update()
     
