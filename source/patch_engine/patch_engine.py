@@ -17,12 +17,12 @@ import jack
 from patshared import (
     PortType, JackMetadatas, JackMetadata, CustomNames,
     TransportPosition, TransportWanted)
+from jack_wa import (
+    list_all_connections, list_ports, set_port_registration_callback)
 
 # local imports
 from .jack_bases import (
     ClientNamesUuids, PatchEngineOuterMissing, PatchEventQueue, PatchEvent)
-from .jack_wa import (
-    list_all_connections, list_ports, set_port_registration_callback)
 from .patch_engine_outer import PatchEngineOuter
 from .port_data import PortData, PortDataList
 from .suppress_stdout_stderr import SuppressStdoutStderr

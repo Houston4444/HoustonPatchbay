@@ -1,5 +1,7 @@
-'''workaround functions for functions of python-JACK-Client that can
-crash (mainly when a port is destroyed during iteration)'''
+'''
+workaround functions for functions of python-JACK-Client that can
+crash (mainly when a port is destroyed during iteration)
+'''
 
 from typing import Iterator
 
