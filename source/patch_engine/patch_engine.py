@@ -21,6 +21,8 @@ from patshared import (
 # local imports
 from .jack_bases import (
     ClientNamesUuids, PatchEngineOuterMissing, PatchEventQueue, PatchEvent)
+from .jack_wa import (
+    list_all_connections, list_ports, set_port_registration_callback)
 from .patch_engine_outer import PatchEngineOuter
 from .port_data import PortData, PortDataList
 from .suppress_stdout_stderr import SuppressStdoutStderr
@@ -642,7 +644,7 @@ class PatchEngine:
                 self.patch_event_queue.add(
                     PatchEvent.CLIENT_REMOVED, name)
             
-        @self.client.set_port_registration_callback
+        @set_port_registration_callback(self.client) # type:ignore
         def port_registration(port: jack.Port, register: bool):
             port_type = PortType.NULL
             if port.is_audio:
@@ -762,7 +764,7 @@ class PatchEngine:
             return
 
         #get all currents Jack ports and connections
-        for port in self.client.get_ports():
+        for port in list_ports(self.client):
             flags = jack._lib.jack_port_flags(port._ptr) #type:ignore
             port_name = port.name
             port_uuid = port.uuid
@@ -783,7 +785,7 @@ class PatchEngine:
                 continue
 
             # this port is output, list its connections
-            for conn_port in self.client.get_all_connections(port):
+            for conn_port in list_all_connections(self.client, port):
                 self.connections.append((port_name, conn_port.name))
         
         for client_name in client_names:
@@ -1018,19 +1020,19 @@ class PatchEngine:
                     continue
 
                 mdata_pretty_name = jack_pretty_name(client_uuid)
-                pretty_name = self.custom_names.custom_group(client_name)
-                if pretty_name == mdata_pretty_name:
+                custom_name = self.custom_names.custom_group(client_name)
+                if custom_name == mdata_pretty_name:
                     self._set_jack_pretty_name(client_uuid, '')
-                    
-            for port in self.client.get_ports():
+            
+            for port in list_ports(self.client):
                 port_uuid = port.uuid
                 if port_uuid not in self.uuid_pretty_names:
                     continue
                 
                 port_name = port.name
                 mdata_pretty_name = jack_pretty_name(port_uuid)
-                pretty_name = self.custom_names.custom_port(port_name)
-                if pretty_name == mdata_pretty_name:
+                custom_name = self.custom_names.custom_port(port_name)
+                if custom_name == mdata_pretty_name:
                     self._set_jack_pretty_name(port_uuid, '')
 
             self.uuid_pretty_names.clear()
