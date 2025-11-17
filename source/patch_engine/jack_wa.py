@@ -4,7 +4,6 @@ crash (mainly when a port is destroyed during iteration)'''
 from typing import Iterator
 
 import jack
-from _jack import ffi as _ffi
 
 def _list_ports(client: jack.Client, names) -> Iterator[jack.Port]:
     if not names:
@@ -33,7 +32,7 @@ def list_ports(client: jack.Client) -> Iterator[jack.Port]:
     The original method in jack library crashes if a port is
     destroyed during listing, this one not.
     '''
-    names = _ffi.gc(jack._lib.jack_get_ports(
+    names = jack._ffi.gc(jack._lib.jack_get_ports(
         client._ptr, b'', b'', 0x00),
         jack._lib.jack_free)
     
@@ -44,7 +43,7 @@ def list_all_connections(
     '''workaround for `jack.Client.get_all_connections(port)`.
     The original method in jack library crashes if a port is
     destroyed during listing, this one not.'''
-    names = _ffi.gc(
+    names = jack._ffi.gc(
         jack._lib.jack_port_get_all_connections(client._ptr, port._ptr),
         jack._lib.jack_free)
     
@@ -123,5 +122,5 @@ def set_port_registration_callback(
         callback(port, bool(register))
 
     jack._check(jack._lib.jack_set_port_registration_callback(
-        client._ptr, callback_wrapper, _ffi.NULL),
+        client._ptr, callback_wrapper, jack._ffi.NULL),
         'Error setting port registration callback')
