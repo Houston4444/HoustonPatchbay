@@ -22,6 +22,7 @@ class PatchEvent(Enum):
     PORT_RENAMED = auto()
     CONNECTION_ADDED = auto()
     CONNECTION_REMOVED = auto()
+    CONNECTION_FAILED = auto()
     METADATA_CHANGED = auto()
     SHUTDOWN = auto()
     XRUN = auto()

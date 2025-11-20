@@ -1,5 +1,6 @@
 
 from dataclasses import dataclass
+import logging
 import time
 from typing import TYPE_CHECKING, Iterator, Optional
 from threading import Thread
@@ -24,7 +25,6 @@ from pyalsa.alsaseq import (
 )
 
 
-
 from patshared import PortType
 
 from .port_data import PortData
@@ -33,6 +33,8 @@ from .jack_bases import PatchEngineOuterMissing
 if TYPE_CHECKING:
     from patch_engine import PatchEngine
 
+
+_logger = logging.getLogger(__name__)
 
 PORT_IS_INPUT = 0x1
 PORT_IS_OUTPUT = 0x2
@@ -284,7 +286,7 @@ class AlsaManager:
                    dest_port.pb_name('IN', dest_client))
     
     def connect_ports(self, port_out_name: str, port_in_name: str,
-                      disconnect=False):
+                      disconnect=False) -> bool:
         try:
             _, alsa_key, src_client_id, src_port_id, *rest = \
                 port_out_name.split(':')
@@ -294,9 +296,17 @@ class AlsaManager:
                 = int(src_client_id), int(src_port_id)
             dest_client_id, dest_port_id \
                 = int(dest_client_id), int(dest_port_id)
-        except:
-            # TODO log
-            return
+
+        except BaseException as e:
+            if disconnect:
+                _logger.warning(
+                    f'Failed to find ALSA ports to disconnect: '
+                    f'{port_out_name} -> {port_in_name}\n{str(e)}')
+            else:
+                _logger.warning(
+                    f'Failed to find ALSA ports to connect: '
+                    f'{port_out_name} -> {port_in_name}\n{str(e)}')
+            return False
         
         try:
             if disconnect:
@@ -308,9 +318,19 @@ class AlsaManager:
                     (src_client_id, src_port_id),
                     (dest_client_id, dest_port_id),
                     0, 0, 0, 0)
-        except Exception as e:
-            # TODO log something
-            pass
+
+        except BaseException as e:
+            if disconnect:
+                _logger.warning(
+                    f'Failed to disconnect ALSA ports: '
+                    f'{port_out_name} -> {port_in_name}\n{str(e)}')
+            else:
+                _logger.warning(
+                    f'Failed to connect ALSA ports: '
+                    f'{port_out_name} -> {port_in_name}\n{str(e)}')
+            return False
+
+        return True
     
     def _process_event(self, event: SeqEvent):
         if self.pbe is None:

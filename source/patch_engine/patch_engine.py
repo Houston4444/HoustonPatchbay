@@ -2,6 +2,7 @@
 
 # standard lib imports
 from enum import Enum
+import errno
 import signal
 from typing import Optional
 import threading
@@ -493,36 +494,39 @@ class PatchEngine:
         self.peo.send_transport_position(transport_position)
     
     def connect_ports(self, port_out_name: str, port_in_name: str,
-                      disconnect=False):
+                      disconnect=False) -> bool:
         if (self.alsa_mng is not None
                 and port_out_name.startswith(':ALSA_OUT:')):
-            self.alsa_mng.connect_ports(
+            return self.alsa_mng.connect_ports(
                 port_out_name, port_in_name, disconnect=disconnect)
-            return
 
         if self.client is None:
-            return
+            return False
 
         if disconnect:
             try:
                 self.client.disconnect(port_out_name, port_in_name)
             except jack.JackErrorCode:
                 # ports already disconnected
-                ...
+                return False
             except BaseException as e:
                 _logger.warning(
                     f"Failed to disconnect '{port_out_name}' "
                     f"from '{port_in_name}'\n{str(e)}")
-        else:
-            try:
-                self.client.connect(port_out_name, port_in_name)
-            except jack.JackErrorCode:
-                # ports already connected
-                ...
-            except BaseException as e:
-                _logger.warning(
-                    f"Failed to connect '{port_out_name}' "
-                    f"to '{port_in_name}'\n{str(e)}")
+            return True
+
+        try:
+            self.client.connect(port_out_name, port_in_name)
+        except jack.JackErrorCode as e:
+            # ports already connected
+            if e.code is not errno.EEXIST:
+                return False
+        except BaseException as e:
+            _logger.warning(
+                f"Failed to connect '{port_out_name}' "
+                f"to '{port_in_name}'\n{str(e)}")
+            return False
+        return True
     
     def set_buffer_size(self, blocksize: int):
         if self.client is None:
