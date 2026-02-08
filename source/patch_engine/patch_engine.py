@@ -20,6 +20,7 @@ from patshared import (
     TransportPosition, TransportWanted)
 from jack_wa import (
     list_all_connections, list_ports, set_port_registration_callback)
+from patshared.base_enums import PortMode
 
 # local imports
 from .jack_bases import (
@@ -703,6 +704,13 @@ class PatchEngine:
             else:
                 self.patch_event_queue.add(
                     PatchEvent.PORT_REMOVED, port_name)
+            try:
+                if port.is_output and self.client is not None:
+                    for cport in self.client.get_all_connections(port):
+                        print(f'fu {port} connected to {cport.name}')
+            except:
+                print('hop failed to check conns')
+                pass
 
         @self.client.set_port_connect_callback
         def port_connect(port_a: jack.Port, port_b: jack.Port, connect: bool):
