@@ -228,13 +228,9 @@ class PatchEngine:
         if self.peo is None:
             raise PatchEngineOuterMissing
         
-        if not self.patch_event_queue.empty():
-            print('PatchEvnetQueueue start')
-        
         block_size_changed = False
         
         for event, event_arg in self.patch_event_queue:
-            print('ninie', event.name)
             match event:
                 case PatchEvent.CLIENT_ADDED:
                     name: str = event_arg #type:ignore
