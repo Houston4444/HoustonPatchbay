@@ -213,7 +213,12 @@ class PatchEngine:
         if self.peo is None:
             raise PatchEngineOuterMissing
         
+        if not self.patch_event_queue.empty():
+            print('PatchEvnetQueueue start')
+        
+        
         for event, event_arg in self.patch_event_queue:
+            print('ninie', event.name)
             match event:
                 case PatchEvent.CLIENT_ADDED:
                     name: str = event_arg #type:ignore
@@ -354,6 +359,8 @@ class PatchEngine:
                     self.metadatas.clear()
                     self.peo.server_stopped()
                     self.jack_running = False
+
+        # print('PatchEventQQueueu done')
 
     def check_pretty_names_export(self):
         client_names = set[str]()
