@@ -102,6 +102,9 @@ class GroupedLinesWidget(QGraphicsPathItem):
         else:
             self.setZValue(Zv.LINE.value)
 
+        self._box_hidding_out = BoxHidding.NONE
+        self._box_hidding_in = BoxHidding.NONE
+
         # get box_out and box_in
         group_out = canvas.get_group(group_out_id)
         group_in = canvas.get_group(group_in_id)
@@ -119,9 +122,6 @@ class GroupedLinesWidget(QGraphicsPathItem):
                 break
         else:
             return
-
-        self._box_hidding_out = BoxHidding.NONE
-        self._box_hidding_in = BoxHidding.NONE
         
         move_box_out = canvas.scene.move_boxes.get(box_out)
         if move_box_out is not None:
