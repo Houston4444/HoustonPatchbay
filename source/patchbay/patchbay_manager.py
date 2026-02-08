@@ -36,7 +36,7 @@ from .conns_clipboard import ConnClipboard
 from .calbacker import Callbacker
 from .patchichi_export import export_to_patchichi_json
 
-
+print('faloudo', __name__)
 _translate = QGuiApplication.translate
 _logger = logging.getLogger(__name__)
 
