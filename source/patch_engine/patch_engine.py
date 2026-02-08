@@ -228,7 +228,7 @@ class PatchEngine:
         if self.peo is None:
             raise PatchEngineOuterMissing
         
-        block_size_changed = False
+        # block_size_changed = False
         
         for event, event_arg in self.patch_event_queue:
             match event:
@@ -308,7 +308,7 @@ class PatchEngine:
                     buffer_size: int = event_arg #type:ignore
                     self.buffer_size = buffer_size
                     self.peo.send_buffersize(self.buffer_size)
-                    block_size_changed = True
+                    # block_size_changed = True
                 
                 case PatchEvent.SAMPLERATE_CHANGED:
                     samplerate: int = event_arg #type:ignore
@@ -373,13 +373,13 @@ class PatchEngine:
                     self.peo.server_stopped()
                     self.jack_running = False
 
-        if self._buffer_size_previously_changed and not block_size_changed:
-            self._collect_graph()
-            self.peo.server_restarted()
-            self._buffer_size_previously_changed = False
+        # if self._buffer_size_previously_changed and not block_size_changed:
+        #     self._collect_graph()
+        #     self.peo.server_restarted()
+        #     self._buffer_size_previously_changed = False
 
-        if block_size_changed:
-            self._buffer_size_previously_changed = True
+        # if block_size_changed:
+        #     self._buffer_size_previously_changed = True
 
     def check_pretty_names_export(self):
         client_names = set[str]()
@@ -700,13 +700,37 @@ class PatchEngine:
             else:
                 self.patch_event_queue.add(
                     PatchEvent.PORT_REMOVED, port_name)
+            
+            if not register:
+                return
+            
+            if self.client is None:
+                return
+            
+            # With PipeWire, some ports can be added (re-added in reality)
+            # with already existing connections, in the case of
+            # buffersize (quantum) change.
+            # So we check here existing connections of the port
             try:
-                if port.is_output and self.client is not None:
-                    for cport in self.client.get_all_connections(port):
-                        print(f'fu {port} connected to {cport.name}')
-            except:
-                print('hop failed to check conns')
-                pass
+                for cport in self.client.get_all_connections(port):
+                    cport_name = cport.name
+                    exst_port = self.ports.from_name(cport_name)
+                    if exst_port is None:
+                        continue
+                    
+                    if port.is_output:
+                        self.patch_event_queue.add(
+                            PatchEvent.CONNECTION_ADDED,
+                            port_name, cport_name)
+                    else:
+                        self.patch_event_queue.add(
+                            PatchEvent.CONNECTION_ADDED,
+                            cport_name, port_name)
+            except BaseException as e:
+                _logger.debug(
+                    f'New port {port_name} seems to already have connections '
+                    f'but getting theses ports failed\n'
+                    f'{str(e)}')
 
         @self.client.set_port_connect_callback
         def port_connect(port_a: jack.Port, port_b: jack.Port, connect: bool):
