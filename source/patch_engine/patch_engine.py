@@ -216,6 +216,7 @@ class PatchEngine:
         if not self.patch_event_queue.empty():
             print('PatchEvnetQueueue start')
         
+        block_size_changed = False
         
         for event, event_arg in self.patch_event_queue:
             print('ninie', event.name)
@@ -296,6 +297,7 @@ class PatchEngine:
                     buffer_size: int = event_arg #type:ignore
                     self.buffer_size = buffer_size
                     self.peo.send_buffersize(self.buffer_size)
+                    block_size_changed = True
                 
                 case PatchEvent.SAMPLERATE_CHANGED:
                     samplerate: int = event_arg #type:ignore
@@ -361,6 +363,9 @@ class PatchEngine:
                     self.jack_running = False
 
         # print('PatchEventQQueueu done')
+        if block_size_changed:
+            self._collect_graph()
+            self.peo.server_restarted()
 
     def check_pretty_names_export(self):
         client_names = set[str]()
