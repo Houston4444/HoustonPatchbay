@@ -139,6 +139,20 @@ class PatchEngine:
         self._client_uuid = 0
         self._client_name = ''
         
+        self._buffer_size_previously_changed = False
+        '''With PipeWire, there are sometimes connections not sent to callback
+        after the buffersize change callback (
+            Connections are disconnected,
+            ports are removed,
+            buffersize is changed,
+            ports are re-added,
+            connections are re-connected (here is the problem))
+        
+        This attribute is set to True at buffersize change callback,
+        sometime after, the engine simulates a server restarted
+        to update the graph.
+        '''
+        
         self.peo: Optional[PatchEngineOuter] = None
         
     def start(self, patchbay_engine: PatchEngineOuter):
@@ -362,10 +376,13 @@ class PatchEngine:
                     self.peo.server_stopped()
                     self.jack_running = False
 
-        # print('PatchEventQQueueu done')
-        if block_size_changed:
+        if self._buffer_size_previously_changed and not block_size_changed:
             self._collect_graph()
             self.peo.server_restarted()
+            self._buffer_size_previously_changed = False
+
+        if block_size_changed:
+            self._buffer_size_previously_changed = True
 
     def check_pretty_names_export(self):
         client_names = set[str]()
