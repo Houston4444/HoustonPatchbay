@@ -714,9 +714,9 @@ class PatchEngine:
             try:
                 for cport in self.client.get_all_connections(port):
                     cport_name = cport.name
-                    exst_port = self.ports.from_name(cport_name)
-                    if exst_port is None:
-                        continue
+                    # exst_port = self.ports.from_name(cport_name)
+                    # if exst_port is None:
+                    #     continue
                     
                     if port.is_output:
                         self.patch_event_queue.add(
