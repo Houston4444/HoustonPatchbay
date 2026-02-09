@@ -76,9 +76,12 @@ class GroupedLinesWidget(QGraphicsPathItem):
     def __init__(self, group_out_id: int, group_in_id: int,
                  port_type: PortType,
                  theme_state: ConnectionThemeState):
-        ''' Class for connection line widget '''
+        ''' Class for group of connections lines widget.
+        Cointains in one widget all connections of same type 
+        (audio, midi, ...) from the same group out to the same group in,
+        with the same theme state (Normal, selected, disconnecting).'''
         canvas.ensure_init()
-        QGraphicsPathItem.__init__(self)
+        super().__init__()
 
         self._group_out_id = group_out_id
         self._group_in_id = group_in_id
@@ -158,8 +161,10 @@ class GroupedLinesWidget(QGraphicsPathItem):
 
     @staticmethod
     def connections_changed(group_out_id: int, group_in_id: int):
+        print('connections changed widget', group_out_id, group_in_id)
         gp_dict = _all_lines_widgets.get((group_out_id, group_in_id))
         if gp_dict is None:
+            print('gp_dict is None')
             gp_dict = {}
             _all_lines_widgets[(group_out_id, group_in_id)] = gp_dict
         
@@ -172,17 +177,19 @@ class GroupedLinesWidget(QGraphicsPathItem):
 
             to_update_type = to_update.get(conn.port_type)
             if to_update_type is None:
-                to_update_type = set()
+                to_update_type = set[ConnectionThemeState]()
                 to_update[conn.port_type] = to_update_type
             to_update_type.add(theme_state)
 
             pt_dict = gp_dict.get(conn.port_type)
             if pt_dict is None:
+                print('pt dict is None', conn.port_type)
                 pt_dict = {}
                 gp_dict[conn.port_type] = pt_dict
 
             widget = pt_dict.get(theme_state)
             if widget is None:
+                print('widget is None', theme_state.name)
                 pt_dict[theme_state] = GroupedLinesWidget(
                     group_out_id, group_in_id, conn.port_type,
                     theme_state)
