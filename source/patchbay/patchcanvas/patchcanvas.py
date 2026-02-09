@@ -523,6 +523,7 @@ def redraw_all_groups(force_no_prevent_overlap=False, theme_change=False):
             scene_checks=False,
             theme_change=theme_change)
 
+    print('REDRAW all groups please')
     for group_out in canvas.group_list:
         for group_in in canvas.group_list:
             GroupedLinesWidget.connections_changed(
