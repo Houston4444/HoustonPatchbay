@@ -151,11 +151,12 @@ class GroupedLinesWidget(QGraphicsPathItem):
 
     @staticmethod
     def prepare_conn_changes(group_out_id: int, group_in_id: int):
+        print('prepare conns changes', group_out_id, group_in_id)
         _groups_to_check.add((group_out_id, group_in_id))
         
     @staticmethod
     def change_all_prepared_conns():
-        print('change all prepare_conn_changes')
+        print('change all prepare_conn_changes', _groups_to_check)
         for gp_outin in _groups_to_check:
             GroupedLinesWidget.connections_changed(*gp_outin)
         _groups_to_check.clear()
