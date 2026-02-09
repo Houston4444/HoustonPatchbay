@@ -183,18 +183,20 @@ class GroupedLinesWidget(QGraphicsPathItem):
 
             pt_dict = gp_dict.get(conn.port_type)
             if pt_dict is None:
-                print('pt dict is None', conn.port_type)
+                print('  pt dict is None', conn.port_type)
                 pt_dict = {}
                 gp_dict[conn.port_type] = pt_dict
 
             widget = pt_dict.get(theme_state)
             if widget is None:
-                print('widget is None', theme_state.name)
+                print('  widget is None', theme_state.name)
                 pt_dict[theme_state] = GroupedLinesWidget(
                     group_out_id, group_in_id, conn.port_type,
                     theme_state)
                 canvas.scene.addItem(pt_dict[theme_state])
                 new_widgets.add(pt_dict[theme_state])
+
+        print(f'  {to_update=}')
 
         for port_type in gp_dict.keys():
             pt_dict = gp_dict.get(port_type)
