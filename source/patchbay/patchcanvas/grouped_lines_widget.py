@@ -223,6 +223,8 @@ class GroupedLinesWidget(QGraphicsPathItem):
 
     @staticmethod
     def group_removed(group_id: int):
+        return
+        
         rm_keys = set[tuple[int, int]]()
         for group_ids, gp_dict in _all_lines_widgets.items():
             if group_id in group_ids:
