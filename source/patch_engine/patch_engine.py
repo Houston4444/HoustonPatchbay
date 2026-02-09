@@ -701,8 +701,8 @@ class PatchEngine:
                 self.patch_event_queue.add(
                     PatchEvent.PORT_REMOVED, port_name)
             
-            if not register:
-                return
+            # if not register:
+            #     return
             
             if self.client is None:
                 return
@@ -718,14 +718,26 @@ class PatchEngine:
                     # if exst_port is None:
                     #     continue
                     
-                    if port.is_output:
-                        self.patch_event_queue.add(
-                            PatchEvent.CONNECTION_ADDED,
-                            port_name, cport_name)
+                    if register:
+                        event = PatchEvent.CONNECTION_ADDED
                     else:
-                        self.patch_event_queue.add(
-                            PatchEvent.CONNECTION_ADDED,
-                            cport_name, port_name)
+                        event = PatchEvent.CONNECTION_REMOVED
+                    
+                    if port.is_output:
+                        event_args = (port_name, cport_name)
+                    else:
+                        event_args = (cport_name, port_name)
+                    
+                    self.patch_event_queue.add(event, *event_args)
+                    
+                    # if port.is_output:
+                    #     self.patch_event_queue.add(
+                    #         PatchEvent.CONNECTION_ADDED,
+                    #         port_name, cport_name)
+                    # else:
+                    #     self.patch_event_queue.add(
+                    #         PatchEvent.CONNECTION_ADDED,
+                    #         cport_name, port_name)
             except BaseException as e:
                 _logger.debug(
                     f'New port {port_name} seems to already have connections '
