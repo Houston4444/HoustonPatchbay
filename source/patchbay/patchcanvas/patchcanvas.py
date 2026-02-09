@@ -321,6 +321,7 @@ def remove_group(group_id: int, save_positions=True):
     
     canvas.remove_group(group)
     canvas.group_plugin_map.pop(group.plugin_id, None)
+    GroupedLinesWidget.group_removed(group_id)
 
     if canvas.loading_items:
         canvas.groups_to_redraw_in.add(group_id)
