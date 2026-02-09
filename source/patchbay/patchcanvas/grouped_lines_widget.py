@@ -155,6 +155,7 @@ class GroupedLinesWidget(QGraphicsPathItem):
         
     @staticmethod
     def change_all_prepared_conns():
+        print('change all prepare_conn_changes')
         for gp_outin in _groups_to_check:
             GroupedLinesWidget.connections_changed(*gp_outin)
         _groups_to_check.clear()
