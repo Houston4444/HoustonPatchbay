@@ -92,14 +92,10 @@ def patchbay_api(func: Callable):
 
 
 class CanvasObject(QObject):
-    port_added = Signal(int, int)
-    port_removed = Signal(int, int)
-    connection_added = Signal(int)
-    connection_removed = Signal(int)
     move_boxes_finished = Signal()
 
     def __init__(self, parent=None):
-        QObject.__init__(self, parent)
+        super().__init__(parent)
         self._gps_to_join = set[int]()
         self.move_boxes_finished.connect(self._join_after_move)
 
@@ -888,8 +884,8 @@ def remove_port(group_id: int, port_id: int):
 
     del item
     canvas.remove_port(port)
+    GroupedLinesWidget.port_removed(port)
 
-    canvas.qobject.port_removed.emit(group_id, port_id)
     if canvas.loading_items:
         if port.port_mode is PortMode.OUTPUT:
             canvas.groups_to_redraw_out.add(group_id)
@@ -1079,7 +1075,6 @@ def connect_ports(connection_id: int, group_out_id: int, port_out_id: int,
 
     GroupedLinesWidget.prepare_conn_changes(group_out_id, group_in_id)
     canvas.qobject.connect_update_timer.start()
-    canvas.qobject.connection_added.emit(connection_id)
     
     if canvas.loading_items:
         return
@@ -1101,7 +1096,6 @@ def disconnect_ports(connection_id: int):
         tmp_conn.group_out_id, tmp_conn.group_in_id)
     
     canvas.qobject.connect_update_timer.start()
-    canvas.qobject.connection_removed.emit(connection_id)
 
     out_port = canvas.get_port(tmp_conn.group_out_id, tmp_conn.port_out_id)
     in_port = canvas.get_port(tmp_conn.group_in_id, tmp_conn.port_in_id)

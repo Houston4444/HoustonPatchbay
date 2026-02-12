@@ -23,10 +23,11 @@ import logging
 
 from qtpy.QtCore import QPointF, QRectF, QSettings, QPoint
 from qtpy.QtWidgets import QGraphicsItem
-from patchbay.patchcanvas.proto_callbacker import ProtoCallbacker
 
 from patshared import (
     PortMode, PortType, PortSubType, BoxType, BoxPos, GroupPos)
+
+from .proto_callbacker import ProtoCallbacker
 
 if TYPE_CHECKING:
     # all these classes are not importable normally because

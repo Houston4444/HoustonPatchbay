@@ -21,13 +21,14 @@ from typing import TYPE_CHECKING, Optional, Iterator
 
 from qtpy.QtCore import Qt
 from qtpy.QtGui import (QColor, QLinearGradient,
-                         QPainterPath, QPen, QBrush)
+                        QPainterPath, QPen, QBrush)
 from qtpy.QtWidgets import QGraphicsPathItem
 
 from patshared import PortType, PortMode
 from .init_values import (
     ConnectionThemeState,
     BoxHidding,
+    PortObject,
     canvas,
     options,
     CanvasItemType,
@@ -239,6 +240,22 @@ class GroupedLinesWidget(QGraphicsPathItem):
         
         for rm_key in rm_keys:
             _all_lines_widgets.pop(rm_key)
+
+    @staticmethod
+    def port_removed(port: PortObject):
+        if port.port_mode is PortMode.OUTPUT:
+            for connection in canvas.list_connections(
+                    group_out_id=port.group_id):
+                if connection.port_out_id is port.port_id:
+                    _groups_to_check.add(
+                        (port.group_id, connection.group_in_id))
+        
+        elif port.port_mode is PortMode.INPUT:
+            for connection in canvas.list_connections(
+                    group_in_id=port.group_id):
+                if connection.port_in_id is port.port_id:
+                    _groups_to_check.add(
+                        (connection.group_out_id, port.group_id))
 
     @staticmethod
     def widgets_for_box(
