@@ -227,21 +227,6 @@ class GroupedLinesWidget(QGraphicsPathItem):
                 pt_dict.__delitem__(attr_to_del)
 
     @staticmethod
-    def group_removed(group_id: int):
-        return
-        
-        rm_keys = set[tuple[int, int]]()
-        for group_ids, gp_dict in _all_lines_widgets.items():
-            if group_id in group_ids:
-                for theme_dict in gp_dict.values():
-                    for grouped_lines_widget in theme_dict.values():
-                        canvas.scene.removeItem(grouped_lines_widget)
-                rm_keys.add(group_ids)
-        
-        for rm_key in rm_keys:
-            _all_lines_widgets.pop(rm_key)
-
-    @staticmethod
     def port_removed(port: PortObject):
         if port.port_mode is PortMode.OUTPUT:
             for connection in canvas.list_connections(
