@@ -288,8 +288,6 @@ class PortWidget(ConnectableWidget):
         if canvas.loading_items:
             return
 
-        # print('patinttn', self)
-
         painter.save()
         painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
 

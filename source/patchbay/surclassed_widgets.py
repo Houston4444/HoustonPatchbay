@@ -5,7 +5,7 @@ from qtpy.QtCore import (
     Qt, Signal, Slot, QPoint, QSize, QRectF, QPointF) # type:ignore
 from qtpy.QtGui import (
     QWheelEvent, QKeyEvent, QMouseEvent, QPaintEvent,
-    QPainter, QPen, QPainterPath, QPixmap)
+    QPainter, QPen, QPainterPath, QPixmap, QColor)
 
 if TYPE_CHECKING:
     # FIX : QAction not found by pylance
@@ -381,6 +381,11 @@ class ViewsComboBox(QComboBox):
                         break
         else:
             for i in range(len(pcols)):
+                if pcols[i].lightnessF() == 0.0:
+                    # avoid black to stay black with lighter() 
+                    # and make an infinite loop
+                    pcols[i] = QColor(1, 1, 1)
+                
                 while pcols[i].lightnessF() - bg_ligthness < 0.25:
                     pcols[i] = pcols[i].lighter()
 
