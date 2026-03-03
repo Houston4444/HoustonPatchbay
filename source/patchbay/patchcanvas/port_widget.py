@@ -40,7 +40,8 @@ if TYPE_CHECKING:
     from .portgroup_widget import PortgroupWidget
 
 
-# --------------------
+MINIMALIST = False
+
 
 class PortWidget(ConnectableWidget):
     def __init__(self, port: PortObject, parent: 'BoxWidgetMoth'):
@@ -287,22 +288,25 @@ class PortWidget(ConnectableWidget):
         if canvas.loading_items:
             return
 
+        # print('patinttn', self)
+
         painter.save()
         painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
 
         theme = canvas.theme.port
 
-        if self._port_type is PortType.AUDIO_JACK:
-            if self._port_subtype is PortSubType.CV:
-                theme = theme.cv
-            else:
-                theme = theme.audio
-        elif self._port_type is PortType.MIDI_JACK:
-            theme = theme.midi
-        elif self._port_type is PortType.MIDI_ALSA:
-            theme = theme.alsa
-        elif self._port_type is PortType.VIDEO:
-            theme = theme.video
+        match self._port_type:
+            case PortType.AUDIO_JACK:
+                if self._port_subtype is PortSubType.CV:
+                    theme = theme.cv
+                else:
+                    theme = theme.audio
+            case PortType.MIDI_JACK:
+                theme = theme.midi
+            case PortType.MIDI_ALSA:
+                theme = theme.alsa
+            case PortType.VIDEO:
+                theme = theme.video
 
         if self.isSelected():
             theme = theme.selected
@@ -435,7 +439,11 @@ class PortWidget(ConnectableWidget):
             painter.setBrush(poly_color)
 
         painter.setPen(poly_pen)
-        painter.drawPolygon(polygon)
+        if MINIMALIST and not self.isSelected():
+            painter.drawLine(QPointF(x_box_border, y_top + 1.0),
+                             QPointF(x_box_border, y_bottom - 1.0))
+        else:
+            painter.drawPolygon(polygon)
 
         if not self._portgrp_id:
             if self._port_subtype is PortSubType.CV:

@@ -74,6 +74,7 @@ class ThemeManager:
             self._last_modified = last_modified
 
     def _update_theme(self) -> bool:
+        print('_update thmememe')
         conf = configparser.ConfigParser()
         try:
             # we don't need the file_list
@@ -96,6 +97,7 @@ class ThemeManager:
 
         theme_ref = self.current_theme_file.parent.name
         canvas.cb.theme_changed(theme_ref)
+        print('_updpate theme dione')
         return True
 
     @staticmethod
@@ -155,7 +157,9 @@ class ThemeManager:
         if not theme_is_valid:
             return False
 
+        print('chaieieiof')
         self.activate_watcher(os.access(self.current_theme_file, os.R_OK))
+        print('tu repond la')
         return True
 
     def set_fallback_theme(self):

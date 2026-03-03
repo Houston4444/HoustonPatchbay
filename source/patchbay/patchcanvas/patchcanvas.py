@@ -188,7 +188,9 @@ def init(view: PatchGraphicsView, callbacker: ProtoCallbacker,
 
     if canvas.theme_manager is None:
         canvas.theme_manager = ThemeManager(theme_paths)
+        print('hoppy set theme')
         if not canvas.theme_manager.set_theme(options.theme_name):
+            print('ohh failed to set theme', options.theme_name)
             if canvas.theme_manager.set_theme(fallback_theme):
                 _logger.warning(
                 f"theme '{options.theme_name}' has not been found,"
@@ -199,7 +201,10 @@ def init(view: PatchGraphicsView, callbacker: ProtoCallbacker,
                 "use the very ugly fallback theme.")
                 canvas.theme_manager.set_fallback_theme()
 
+        print('ok pzeofpf')
+
         canvas.theme.load_cache()
+        print('cahhe loaded')
 
     canvas._scene.zoom_reset()
 
@@ -1150,7 +1155,9 @@ def list_themes() -> list[ThemeData]:
 def change_theme(theme_name='') -> bool:
     if canvas.theme_manager is None:
         raise CanvasNeverInit
+    print('ok change theme to ', theme_name)
     ret = canvas.theme_manager.set_theme(theme_name)
+    print('voilovoila', ret)
     if ret:
         options.theme_name = theme_name
     return ret
