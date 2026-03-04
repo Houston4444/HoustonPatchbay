@@ -40,7 +40,7 @@ if TYPE_CHECKING:
     from .portgroup_widget import PortgroupWidget
 
 
-MINIMALIST = False
+MINIMALIST = True
 
 
 class PortWidget(ConnectableWidget):
@@ -436,11 +436,14 @@ class PortWidget(ConnectableWidget):
         else:
             painter.setBrush(poly_color)
 
-        painter.setPen(poly_pen)
-        if MINIMALIST and not self.isSelected():
-            painter.drawLine(QPointF(x_box_border, y_top + 1.0),
-                             QPointF(x_box_border, y_bottom - 1.0))
+        if MINIMALIST:
+            painter.setPen(Qt.PenStyle.NoPen)
+            painter.drawPolygon(polygon)
+            painter.setPen(poly_pen)
+            painter.drawLine(QPointF(x_box_border, y_top + 2 * line_hinting),
+                             QPointF(x_box_border, y_bottom - 2 * line_hinting))
         else:
+            painter.setPen(poly_pen)
             painter.drawPolygon(polygon)
 
         if not self._portgrp_id:
