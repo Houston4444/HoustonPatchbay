@@ -84,18 +84,22 @@ class ItemmDeleg(QAbstractItemDelegate):
 
         thmp = canvas.theme.port
 
-        if canvas.theme.thumbnail_port_colors.lower() == 'text':
-            self._port_colors = [
-                thmp.audio.text_color,
-                thmp.midi.text_color,
-                thmp.cv.text_color,
-                thmp.alsa.text_color]
-        else:
-            self._port_colors = [
-                thmp.audio.background_color,
-                thmp.midi.background_color,
-                thmp.cv.background_color,
-                thmp.alsa.background_color]
+        match canvas.theme.thumbnail_port_colors.lower():
+            case 'text':
+                pcols = [thmp.audio.text_color,
+                        thmp.midi.text_color,
+                        thmp.cv.text_color,
+                        thmp.alsa.text_color]
+            case 'border':
+                pcols = [thmp.audio.fill_pen.color(),
+                         thmp.midi.fill_pen.color(),
+                         thmp.cv.fill_pen.color(),
+                         thmp.alsa.fill_pen.color()]
+            case _:
+                pcols = [thmp.audio.background_color,
+                        thmp.midi.background_color,
+                        thmp.cv.background_color,
+                        thmp.alsa.background_color]
 
         bg_col = QApplication.palette().base().color()
         bg_ligthness = bg_col.lightnessF()

@@ -264,7 +264,12 @@ class PortgroupWidget(ConnectableWidget):
             x_arrowhead = self._portgrp_width - 2 * line_hinting
 
         elif self._port_mode is PortMode.OUTPUT:
-            text_pos = QPointF(3.0 + middle_width, text_y_pos)
+            if theme.output_align == 'right':
+                text_pos = QPointF(
+                    self._portgrp_width - self.get_text_width() - self._ports_width,
+                    text_y_pos)
+            else:
+                text_pos = QPointF(3.0 + middle_width, text_y_pos)
 
             x_ports_border = (self._portgrp_width - self._ports_width
                               + line_hinting)
@@ -273,8 +278,7 @@ class PortgroupWidget(ConnectableWidget):
             x_arrowhead = line_hinting * 2
 
         else:
-            self._logger.critical(f"CanvasPortGroup.paint() - "
-                                  "invalid port mode {str(self._port_mode)}")
+            self._logger.critical(f"invalid port mode {str(self._port_mode)}")
             return
 
         y_top = line_hinting
@@ -341,8 +345,24 @@ class PortgroupWidget(ConnectableWidget):
         else:
             painter.setBrush(color_main)
 
-        painter.setPen(poly_pen)
-        painter.drawPolygon(polygon)
+        if theme.shape == 'minimalist':
+            painter.setPen(Qt.PenStyle.NoPen)
+            painter.drawPolygon(polygon)
+            painter.setPen(poly_pen)
+
+            if self._port_type is PortType.MIDI_JACK:
+                pass
+            elif self._port_subtype is PortSubType.CV:
+                pass
+            elif self._port_type is PortType.MIDI_ALSA:
+                pass
+            elif self._port_type is PortType.VIDEO:
+                pass
+            else:
+                painter.drawPolyline([QPointF(*xy) for xy in points[1:5]])
+        else:
+            painter.setPen(poly_pen)
+            painter.drawPolygon(polygon)
 
         if self._port_subtype is PortSubType.CV:
             cv_line_pen = QPen(poly_pen)

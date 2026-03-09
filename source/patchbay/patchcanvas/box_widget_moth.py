@@ -1037,8 +1037,6 @@ class BoxWidgetMoth(QGraphicsItem):
             else:
                 painter.setBrush(color_main)
 
-            painter.setPen(mon_theme.fill_pen)
-
             BAND_MON_WIDTH = 9
             TRIANGLE_MON_SIZE_TOP = 7
             triangle_mon_size_bottom = 0
@@ -1063,15 +1061,25 @@ class BoxWidgetMoth(QGraphicsItem):
                 xtop = self._width - xtop
                 xbot = self._width - xbot
 
+            mon_points = [(xside, pen_width),
+                          (xtop, pen_width),
+                          (xband, pen_width + tms_top),
+                          (xband, self._height - tms_bot - pen_width),
+                          (xbot, self._height - pen_width),
+                          (xside, self._height - pen_width)]
+            
             mon_poly = QPolygonF()
-            mon_poly += QPointF(xside, pen_width)
-            mon_poly += QPointF(xtop, pen_width)
-            mon_poly += QPointF(xband, pen_width + tms_top)
-            mon_poly += QPointF(xband, self._height - tms_bot - pen_width)
-            mon_poly += QPointF(xbot, self._height - pen_width)
-            mon_poly += QPointF(xside, self._height - pen_width)
-
-            painter.drawPolygon(mon_poly)
+            for xy in mon_points:
+                mon_poly += QPointF(*xy)
+            
+            if mon_theme.shape == 'minimalist':
+                painter.setPen(Qt.PenStyle.NoPen)
+                painter.drawPolygon(mon_poly)
+                painter.setPen(mon_theme.fill_pen)
+                painter.drawPolyline([QPointF(*xy) for xy in mon_points[1:5]])
+            else:
+                painter.setPen(mon_theme.fill_pen)
+                painter.drawPolygon(mon_poly)
 
         # may draw horizontal lines around title (header lines)
         if (self._header_line_left is not None
@@ -1286,7 +1294,13 @@ class BoxWidgetMoth(QGraphicsItem):
             for xy in points:
                 hardware_poly += QPointF(*xy)
 
-            painter.drawPolygon(hardware_poly)
+            if theme.shape == 'minimalist':
+                painter.drawPolyline([QPointF(*xy) for xy in points[2:6]])
+                painter.drawPolyline([QPointF(*xy) for xy in points[10:14]])
+                painter.setPen(Qt.PenStyle.NoPen)
+                painter.drawPolygon(hardware_poly)
+            else:
+                painter.drawPolygon(hardware_poly)
         else:
             top_points = [
                 (- lh, - lh),
@@ -1321,12 +1335,22 @@ class BoxWidgetMoth(QGraphicsItem):
             hw_poly_top = QPolygonF()
             for xy in top_points:
                 hw_poly_top += QPointF(*xy)
-            painter.drawPolygon(hw_poly_top)
 
             hw_poly_bottom = QPolygonF()
             for xy in bottom_points:
                 hw_poly_bottom += QPointF(*xy)
-            painter.drawPolygon(hw_poly_bottom)
+
+            if theme.shape == 'minimalist':
+                painter.drawPolyline([QPointF(*xy) for xy in top_points[2:6]])
+                painter.drawPolyline([QPointF(*xy) for xy in top_points[6:10]])
+                painter.drawPolyline([QPointF(*xy) for xy in bottom_points[2:6]])
+                painter.drawPolyline([QPointF(*xy) for xy in bottom_points[6:10]])
+                painter.setPen(Qt.PenStyle.NoPen)
+                painter.drawPolygon(hw_poly_top)
+                painter.drawPolygon(hw_poly_bottom)
+            else:
+                painter.drawPolygon(hw_poly_top)
+                painter.drawPolygon(hw_poly_bottom)
 
     def _paint_inline_display(self, painter: QPainter):
         if self._plugin_inline is InlineDisplay.DISABLED:

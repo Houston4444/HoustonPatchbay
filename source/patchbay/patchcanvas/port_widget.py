@@ -40,9 +40,6 @@ if TYPE_CHECKING:
     from .portgroup_widget import PortgroupWidget
 
 
-MINIMALIST = True
-
-
 class PortWidget(ConnectableWidget):
     def __init__(self, port: PortObject, parent: 'BoxWidgetMoth'):
         ConnectableWidget.__init__(self, port, parent)
@@ -339,7 +336,12 @@ class PortWidget(ConnectableWidget):
             x_arrowhead = self._port_width - line_hinting * 2
 
         elif self._port_mode is PortMode.OUTPUT:
-            text_pos = QPointF(middle_width + 3.0, text_y_pos)
+            if theme.output_align == 'right':
+                text_pos = QPointF(
+                    self._port_width - 3.0 - self.get_text_width(),
+                    text_y_pos)
+            else:
+                text_pos = QPointF(middle_width + 3.0, text_y_pos)
 
             x_box_border = self._port_width - line_hinting
             x_arrowbase = middle_width + line_hinting
@@ -348,7 +350,7 @@ class PortWidget(ConnectableWidget):
 
         else:
             self._logger.critical(
-                f"paint() - invalid port mode {str(self._port_mode)}")
+                f"invalid port mode {str(self._port_mode)}")
             return
 
         polygon = QPolygonF()
@@ -436,31 +438,41 @@ class PortWidget(ConnectableWidget):
         else:
             painter.setBrush(poly_color)
 
-        if MINIMALIST:
+        if theme.shape == 'minimalist':
             painter.setPen(Qt.PenStyle.NoPen)
             painter.drawPolygon(polygon)
             painter.setPen(poly_pen)
             painter.drawLine(QPointF(x_box_border, y_top + 2 * line_hinting),
                              QPointF(x_box_border, y_bottom - 2 * line_hinting))
+            
+            if self._portgrp_id:
+                pass
+            elif self._port_type is PortType.MIDI_JACK:
+                painter.drawPolyline([QPointF(*xy) for xy in points[1:7]])
+            elif is_cv_port:
+                painter.drawPolyline([QPointF(*xy) for xy in points[1:3]])
+            elif self._port_type is PortType.MIDI_ALSA:
+                painter.drawPolyline([QPointF(*xy) for xy in points[1:3]])
+            elif self._port_type is PortType.VIDEO:
+                painter.drawPolyline([QPointF(*xy) for xy in points[0:3]])
+                painter.drawPolyline([QPointF(*xy) for xy in points[3:5]])
+                painter.drawPolyline([QPointF(*xy) for xy in points[5:8]])
+            else:
+                painter.drawPolyline([QPointF(*xy) for xy in points[1:4]])
+            
         else:
             painter.setPen(poly_pen)
             painter.drawPolygon(polygon)
 
         if not self._portgrp_id:
             if self._port_subtype is PortSubType.CV:
-                poly_pen.setWidthF(p_height * 0.167)
-                llh = poly_pen.widthF() * 0.5
-                painter.setPen(poly_pen)
-
-                y_line = canvas.theme.port_height / 2.0
-                if self._port_mode is PortMode.OUTPUT:
-                    painter.drawLine(
-                        QPointF(x_arrowhead + llh, y_line),
-                        QPointF(x_arrowbase - llh, y_line))
-                elif self._port_mode is PortMode.INPUT:
-                    painter.drawLine(
-                        QPointF(x_arrowhead - llh, y_line),
-                        QPointF(x_arrowbase + llh, y_line))
+                divid = (y_bottom - y_top) / 12 
+                painter.drawPolyline([
+                    QPointF(x_arrowbase, y_top + divid * 5),
+                    QPointF(x_arrowhead, y_top + divid * 5),
+                    QPointF(x_arrowhead, y_top + divid * 7),
+                    QPointF(x_arrowbase, y_top + divid * 7)
+                ])
 
             elif (self._port_subtype is PortSubType.A2J
                     or self._port_type is PortType.MIDI_ALSA):

@@ -117,6 +117,9 @@ class StyleAttributer:
         self._font_size = None
         self._font_width = None
 
+        self._shape = None
+        self._output_align = None
+
         self._port_offset = None
         self._port_in_offset = None
         self._port_out_offset = None
@@ -239,6 +242,18 @@ class StyleAttributer:
                         self._font_state = QFont.Weight.Bold
                     else:
                         err = True
+                else:
+                    err = True
+            
+            case 'shape':
+                if isinstance(value, str):
+                    self._shape = value
+                else:
+                    err = True
+
+            case 'output-align':
+                if isinstance(value, str):
+                    self._output_align = value
                 else:
                     err = True
 
@@ -450,6 +465,14 @@ class StyleAttributer:
         return tot_size
 
     @property
+    def shape(self) -> str:
+        return self.get_value_of('_shape') # type:ignore
+
+    @property
+    def output_align(self) -> str:
+        return self.get_value_of('_output_align') # type:ignore
+
+    @property
     def port_in_offset(self) -> float:
         return self.get_value_of('_port_in_offset') # type:ignore
 
@@ -646,6 +669,9 @@ class Theme(StyleAttributer):
         self._font_name = "Deja Vu Sans"
         self._font_size = 11
         self._font_width = QFont.Weight.Normal # QFont.Weight.Normal is 50
+
+        self._shape = 'default'
+        self._output_align = 'left'
 
         self._port_spacing = 2
         self._port_type_spacing = 2
