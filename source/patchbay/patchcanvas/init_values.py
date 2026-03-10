@@ -283,8 +283,10 @@ class PortObject(ConnectableObject):
         hidden_conn_widget: object
 
 
-    pg_pos = 0 # index in the portgroup (if any)
-    pg_len = 1 # length of the portgroup (if any)
+    pg_pos = 0
+    'the port position in its portgroup, 0 if port is not in a portgroup'
+    pg_len = 1
+    'the portgroup length, 1 if port is not in a portgroup'
 
     def __repr__(self) -> str:
         return f"PortObject({self.port_name} - {self.port_id} - {self.portgrp_id})"

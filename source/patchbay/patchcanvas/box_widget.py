@@ -161,7 +161,7 @@ class BoxWidget(BoxWidgetMoth):
 
                     # the port_grouped_width is also used to define
                     # the portgroup minimum width
-                    size = (max(portgrp.widget.get_text_width() + 3.0,
+                    size = (max(portgrp.widget.get_text_width() + 6.0,
                                 canvas.theme.port_grouped_width)
                             + max(port.widget.get_text_width() + 6.0,
                                   canvas.theme.port_grouped_width)

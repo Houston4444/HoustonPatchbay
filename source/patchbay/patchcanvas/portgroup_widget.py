@@ -67,7 +67,7 @@ class PortgroupWidget(ConnectableWidget):
 
         self._ports_width = canvas.theme.port_grouped_width
         self._print_name = ''
-        self._normal_print_name = '' # same as m_print_name but not reduced
+        self._normal_print_name = '' # same as _print_name but not reduced
         self._print_name_right = ''
         self._name_truncked = False
         self._trunck_sep = '⠿'
@@ -112,7 +112,7 @@ class PortgroupWidget(ConnectableWidget):
         self._portgrp_font = theme.font
 
     def set_print_name(self, print_name:str, width_limited: int):
-        self._print_name = print_name
+        self._print_name = print_name.rstrip()
         self._normal_print_name = print_name
         self._name_truncked = False
 
@@ -147,7 +147,7 @@ class PortgroupWidget(ConnectableWidget):
     def reduce_print_name(self, width_limited: int):
         self.set_print_name(self._normal_print_name, width_limited)
 
-    def get_text_width(self):
+    def get_text_width(self) -> float:
         if self._name_truncked:
             return (self._theme.get_text_width(self._print_name)
                     + self._theme.get_text_width(self._trunck_sep)
@@ -216,17 +216,18 @@ class PortgroupWidget(ConnectableWidget):
 
     def boundingRect(self) -> QRectF:
         middle_width = canvas.theme.port_height / 2.0
+        spacing = self.parentItem().get_theme().port_spacing
 
         if self._port_mode is PortMode.INPUT:
             return QRectF(
-                canvas.theme.port_grouped_width, 0.0,
+                canvas.theme.port_grouped_width, - spacing * 0.5,
                 self._portgrp_width + middle_width - canvas.theme.port_grouped_width,
-                canvas.theme.port_height * len(self._port_ids))
+                canvas.theme.port_height * len(self._port_ids) + spacing)
         else:
             return QRectF(
-                0.0, 0.0,
+                0.0, - spacing * 0.5,
                 self._portgrp_width + middle_width - canvas.theme.port_grouped_width,
-                canvas.theme.port_height * len(self._port_ids))
+                canvas.theme.port_height * len(self._port_ids) + spacing)
 
     def paint(self, painter: QPainter, option, widget):
         if canvas.loading_items:

@@ -51,7 +51,9 @@ class PortWidget(ConnectableWidget):
         self._port_name = port.port_name
         self._portgrp_id = port.portgrp_id
         self._pg_pos = port.pg_pos
+        'the port position in portgroup, 0 if port is not in a portgroup'
         self._pg_len = port.pg_len
+        'the portgroup length, 1 if port is not in a portgroup'
         self._port_subtype = port.port_subtype
         self._print_name = port.port_name
         self._print_name_right = ''
@@ -273,7 +275,20 @@ class PortWidget(ConnectableWidget):
             is_only_connect, start_point.x(), start_point.y())
 
     def boundingRect(self):
-        return QRectF(0.0, 0.0, self._port_width, canvas.theme.port_height)
+        spacing = self.parentItem().get_theme().port_spacing
+        port_height = canvas.theme.port_height
+
+        if self._pg_len == 1:
+            return QRectF(0.0, - spacing * 0.5,
+                          self._port_width, port_height + spacing)
+        if self._pg_pos == 0:
+            return QRectF(0.0, -spacing * 0.5,
+                          self._port_width, port_height + spacing * 0.5)
+        if self._pg_pos == self._pg_len - 1:
+            return QRectF(0.0, 0.0,
+                          self._port_width, port_height + spacing * 0.5)
+        
+        return QRectF(0.0, 0.0, self._port_width, port_height)
 
     def mousePressEvent(self, event):
         if (self._portgrp_widget is not None
