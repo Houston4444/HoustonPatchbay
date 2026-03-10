@@ -346,7 +346,7 @@ class PortgroupWidget(ConnectableWidget):
         else:
             painter.setBrush(color_main)
 
-        if theme.shape == 'minimalist':
+        if theme.border_mode == 'minimal':
             painter.setPen(Qt.PenStyle.NoPen)
             painter.drawPolygon(polygon)
             painter.setPen(poly_pen)

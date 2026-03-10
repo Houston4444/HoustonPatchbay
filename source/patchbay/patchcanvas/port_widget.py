@@ -453,7 +453,7 @@ class PortWidget(ConnectableWidget):
         else:
             painter.setBrush(poly_color)
 
-        if theme.shape == 'minimalist':
+        if theme.border_mode == 'minimal':
             painter.setPen(Qt.PenStyle.NoPen)
             painter.drawPolygon(polygon)
             painter.setPen(poly_pen)

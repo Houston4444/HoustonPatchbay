@@ -980,9 +980,6 @@ class BoxWidgetMoth(QGraphicsItem):
 
         # Draw toggle GUI client button
         if self._can_handle_gui:
-            header_rect = QRectF(
-                3.0 + pen_width, 3.0 + pen_width,
-                self._width - 6.0 - 2 * pen_width, self._header_height - 6.0)
             if self._has_side_title():
                 if self._current_port_mode is PortMode.INPUT:
                     header_rect = QRectF(
@@ -994,6 +991,10 @@ class BoxWidgetMoth(QGraphicsItem):
                     header_rect = QRectF(
                         3.0 + pen_width, 3.0 + pen_width,
                         self._header_width - 6.0, self._header_height - 6.0)
+            else:
+                header_rect = QRectF(
+                    3.0 + pen_width, 3.0 + pen_width,
+                    self._width - 6.0 - 2 * pen_width, self._header_height - 6.0)
 
             gui_theme = canvas.theme.gui_button
             if self._gui_visible:
@@ -1001,10 +1002,28 @@ class BoxWidgetMoth(QGraphicsItem):
             else:
                 gui_theme = gui_theme.gui_hidden
 
+            radius = gui_theme.border_radius
+
             painter.setBrush(gui_theme.background_color)
             painter.setPen(gui_theme.fill_pen)
+            
+            match gui_theme.border_mode:            
+                case 'minimal':
+                    painter.drawPolyline(
+                        [header_rect.bottomLeft(),
+                        header_rect.topLeft(),
+                        header_rect.topRight(),
+                        header_rect.bottomRight()]
+                    )
+                    painter.setPen(Qt.PenStyle.NoPen)
+                case 'sides':
+                    painter.drawPolyline(
+                        [header_rect.bottomLeft(), header_rect.topLeft()])
+                    painter.drawPolyline(
+                        [header_rect.topRight(), header_rect.bottomRight()]
+                    )
+                    painter.setPen(Qt.PenStyle.NoPen)
 
-            radius = gui_theme.border_radius
             if radius == 0.0:
                 painter.drawRect(header_rect)
             else:
@@ -1072,7 +1091,7 @@ class BoxWidgetMoth(QGraphicsItem):
             for xy in mon_points:
                 mon_poly += QPointF(*xy)
             
-            if mon_theme.shape == 'minimalist':
+            if mon_theme.border_mode == 'minimal':
                 painter.setPen(Qt.PenStyle.NoPen)
                 painter.drawPolygon(mon_poly)
                 painter.setPen(mon_theme.fill_pen)
@@ -1137,39 +1156,45 @@ class BoxWidgetMoth(QGraphicsItem):
             case _ if self._wrapping_state in(
                     WrappingState.WRAPPED, WrappingState.UNWRAPPING):
                 for port_mode in PortMode.INPUT, PortMode.OUTPUT:
-                    if self._current_port_mode & port_mode:
-                        if self._has_side_title():
-                            side = 9
-                            # offset = 4
-                            # ypos = self._height - offset
-                            ypos = self._height - pen_width - 2.0
+                    if not self._current_port_mode & port_mode:
+                        continue
+                    
+                    painter.setPen(wtheme.fill_pen)
+                    
+                    if self._has_side_title():
+                        side = 8.5
+                        ypos = self._height - pen_width - 2.0
 
-                            triangle = QPolygonF()
-                            if port_mode is PortMode.INPUT:
-                                xpos = pen_width + 2.0
-                                triangle += QPointF(xpos, ypos)
-                                triangle += QPointF(xpos, ypos - side)
-                                triangle += QPointF(xpos + side, ypos)
-                            else:
-                                xpos = self._width - pen_width - 2.0
-                                triangle += QPointF(xpos, ypos)
-                                triangle += QPointF(xpos, ypos - side)
-                                triangle += QPointF(xpos - side, ypos)
-                        else:
-                            side = 6
+                        triangle = QPolygonF()
+                        if port_mode is PortMode.INPUT:
                             xpos = pen_width + 2.0
-                            ypos = self._height - pen_width - side - 2.0
-
-                            if port_mode is PortMode.OUTPUT:
-                                xpos = \
-                                    self._width - pen_width - 2.0 - 2 * side
-
-                            triangle = QPolygonF()
+                            triangle += QPointF(xpos, ypos - side)
+                            triangle += QPointF(xpos + side, ypos)
                             triangle += QPointF(xpos, ypos)
-                            triangle += QPointF(xpos + 2 * side, ypos)
-                            triangle += QPointF(xpos + side, ypos + side)
+                        else:
+                            xpos = self._width - pen_width - 2.0
+                            triangle += QPointF(xpos, ypos - side)
+                            triangle += QPointF(xpos - side, ypos)
+                            triangle += QPointF(xpos, ypos)
+                    else:
+                        side = 6
+                        xpos = pen_width + 2.0
+                        ypos = self._height - pen_width - side - 2.0
 
-                        painter.drawPolygon(triangle)
+                        if port_mode is PortMode.OUTPUT:
+                            xpos = \
+                                self._width - pen_width - 2.0 - 2 * side
+
+                        triangle = QPolygonF()
+                        triangle += QPointF(xpos, ypos)
+                        triangle += QPointF(xpos + 2 * side, ypos)
+                        triangle += QPointF(xpos + side, ypos + side)
+
+                    if wtheme.border_mode == 'minimal':
+                        painter.drawPolyline(
+                            [triangle[0], triangle[2], triangle[1]])
+                        painter.setPen(Qt.PenStyle.NoPen)
+                    painter.drawPolygon(triangle)
 
             case UnwrapButton.LEFT:
                 side = 6
@@ -1180,6 +1205,10 @@ class BoxWidgetMoth(QGraphicsItem):
                 triangle += QPointF(xpos + 2 * side, ypos)
                 triangle += QPointF(xpos + side, ypos -side)
 
+                if wtheme.border_mode == 'minimal':
+                    painter.drawPolyline(
+                        [triangle[0], triangle[2], triangle[1]])
+                    painter.setPen(Qt.PenStyle.NoPen)
                 painter.drawPolygon(triangle)
 
             case UnwrapButton.RIGHT:
@@ -1191,6 +1220,11 @@ class BoxWidgetMoth(QGraphicsItem):
                 triangle += QPointF(xpos, ypos)
                 triangle += QPointF(xpos + 2 * side, ypos)
                 triangle += QPointF(xpos + side, ypos - side)
+                
+                if wtheme.border_mode == 'minimal':
+                    painter.drawPolyline(
+                        [triangle[0], triangle[2], triangle[1]])
+                    painter.setPen(Qt.PenStyle.NoPen)
                 painter.drawPolygon(triangle)
 
             case UnwrapButton.CENTER:
@@ -1204,6 +1238,11 @@ class BoxWidgetMoth(QGraphicsItem):
                 triangle += QPointF(xpos, ypos)
                 triangle += QPointF(xpos + 2 * side, ypos)
                 triangle += QPointF(xpos + side, ypos -side)
+                
+                if wtheme.border_mode == 'minimal':
+                    painter.drawPolyline(
+                        [triangle[0], triangle[2], triangle[1]])
+                    painter.setPen(Qt.PenStyle.NoPen)
                 painter.drawPolygon(triangle)
 
         painter.restore()
@@ -1294,7 +1333,7 @@ class BoxWidgetMoth(QGraphicsItem):
             for xy in points:
                 hardware_poly += QPointF(*xy)
 
-            if theme.shape == 'minimalist':
+            if theme.border_mode == 'minimal':
                 painter.drawPolyline([QPointF(*xy) for xy in points[2:6]])
                 painter.drawPolyline([QPointF(*xy) for xy in points[10:14]])
                 painter.setPen(Qt.PenStyle.NoPen)
@@ -1340,7 +1379,7 @@ class BoxWidgetMoth(QGraphicsItem):
             for xy in bottom_points:
                 hw_poly_bottom += QPointF(*xy)
 
-            if theme.shape == 'minimalist':
+            if theme.border_mode == 'minimal':
                 painter.drawPolyline([QPointF(*xy) for xy in top_points[2:6]])
                 painter.drawPolyline([QPointF(*xy) for xy in top_points[6:10]])
                 painter.drawPolyline([QPointF(*xy) for xy in bottom_points[2:6]])

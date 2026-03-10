@@ -117,7 +117,7 @@ class StyleAttributer:
         self._font_size = None
         self._font_width = None
 
-        self._shape = None
+        self._border_mode = None
         self._output_align = None
 
         self._port_offset = None
@@ -245,9 +245,9 @@ class StyleAttributer:
                 else:
                     err = True
             
-            case 'shape':
+            case 'border-mode':
                 if isinstance(value, str):
-                    self._shape = value
+                    self._border_mode = value
                 else:
                     err = True
 
@@ -465,8 +465,8 @@ class StyleAttributer:
         return tot_size
 
     @property
-    def shape(self) -> str:
-        return self.get_value_of('_shape') # type:ignore
+    def border_mode(self) -> str:
+        return self.get_value_of('_border_mode') # type:ignore
 
     @property
     def output_align(self) -> str:
@@ -670,7 +670,7 @@ class Theme(StyleAttributer):
         self._font_size = 11
         self._font_width = QFont.Weight.Normal # QFont.Weight.Normal is 50
 
-        self._shape = 'default'
+        self._border_mode = 'default'
         self._output_align = 'left'
 
         self._port_spacing = 2
