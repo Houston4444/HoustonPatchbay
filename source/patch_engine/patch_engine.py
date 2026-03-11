@@ -51,7 +51,11 @@ class AutoExportPretty(Enum):
 
 
 def jack_pretty_name(uuid: int) -> str:
-    value_type = jack.get_property(uuid, JackMetadata.PRETTY_NAME)
+    try:
+        value_type = jack.get_property(uuid, JackMetadata.PRETTY_NAME)
+    except:
+        return ''
+
     if value_type is None:
         return ''
     return value_type[0].decode()
@@ -845,7 +849,16 @@ class PatchEngine:
             self.client_name_uuids[client_name] = client_uuid
             known_uuids.add(client_uuid)
 
-        for uuid, uuid_dict in jack.get_all_properties().items():
+        try:
+            jack_properties = jack.get_all_properties()
+        except:
+            _logger.warning(
+                "Failed to get JACK properties, "
+                "JACK seems to be compiled without Metadatas support, ",
+                "you can't rename ports in the graph.")
+            jack_properties = {}
+
+        for uuid, uuid_dict in jack_properties.items():
             if uuid not in known_uuids:
                 # uuid seems to not belong to a port,
                 # or to a client containing ports.
