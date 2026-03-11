@@ -150,17 +150,10 @@ class StyleAttributer:
     def set_attribute(self, attribute: str, value: str | float):
         err = False
         match attribute:
-            case 'border-color'|'text-color':
+            case 'border-color'|'text-color'|'background'|'background2':
                 self._attrs[attribute] = _to_qcolor(value)
                 if self._attrs.get(attribute) is None:
                     err = True
-                    
-            case 'background'|'background2':
-                qcolor = _to_qcolor(value)
-                if qcolor is None:
-                    err = True
-                else:
-                    self._attrs[attribute] = qcolor
         
             case 'background-image':
                 image_path = (
@@ -170,7 +163,13 @@ class StyleAttributer:
                     image = QImage(str(image_path))
                     image.setDevicePixelRatio(3.0)
                     if image.isNull():
+                        _logger.error(
+                            f'{self._path}:{attribute} : '
+                            f'Failed to load {image_path} as an image')
                         image = None
+                else:
+                    _logger.error(
+                        f"{self._path}:{attribute} can not find image at {image_path}")
                 self._attrs[attribute] = image
 
             case 'border-width'|'border-radius'|'font-size'| \
