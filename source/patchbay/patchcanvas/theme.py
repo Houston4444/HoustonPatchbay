@@ -14,7 +14,33 @@ from . import xdg
 _logger = logging.getLogger(__name__)
 
 TitleCache: TypeAlias = dict[str, dict[str, dict[int, list[dict[str, int]]]]]
-
+    
+_DEFAULT_STYLE_ATTRS = {
+    'border-color': QColor('white'),
+    'border-width': 1,
+    'border-style': Qt.PenStyle.SolidLine,
+    'border-radius': 0,
+    'background-color': QColor('black'),
+    'background2-color': QColor('black'),
+    'background-image': QImage(),
+    'text-color': QColor('white'),
+    'font-name': "Deja Vu Sans",
+    'font-size': 11,
+    'font-width': QFont.Weight.Normal,
+    'border-mode': 'default',
+    'output-align': 'left',
+    'port-offset': 0,
+    'port-in-offset': 0,
+    'port-out-offset': 0,
+    'port-in-offset-mode': 'bore',
+    'port-out-offset-mode': 'bore',
+    'port-spacing': 2,
+    'port-type-spacing': 2,
+    'box-footer': 0,
+    'icon-size': 24,
+    'grid-min-width': 100,
+    'grid-min-height': 100
+}
 
 def _to_qcolor(color: str) -> Optional[QColor]:
     ''' convert a color given with a string to a QColor.
@@ -102,37 +128,14 @@ def rail_int(value, mini: int, maxi: int) -> int:
 
 
 class StyleAttributer:
-    def __init__(self, path: str, parent=None):
+    def __init__(self, path: str,
+                 parent: 'StyleAttributer | None' =None):
         self.subs = list[str]()
 
-        self._border_color = None
-        self._border_width = None
-        self._border_style = None
-        self._border_radius = None
-        self._background_color = None
-        self._background2_color = None
-        self._background_image = None
-        self._text_color = None
-        self._font_name = None
-        self._font_size = None
-        self._font_width = None
-
-        self._border_mode = None
-        self._output_align = None
-
-        self._port_offset = None
-        self._port_in_offset = None
-        self._port_out_offset = None
-        self._port_in_offset_mode = None
-        self._port_out_offset_mode = None
-        self._port_spacing = None
-        self._port_type_spacing = None
-        self._box_footer = None
-        self._icon_size = None
-
-        self._grid_min_width = None
-        self._grid_min_height = None
-
+        self._attrs = {}
+        for attr in _DEFAULT_STYLE_ATTRS.keys():
+            self._attrs[attr] = None
+ 
         self._path = path
         self._parent = parent
 
@@ -144,187 +147,119 @@ class StyleAttributer:
         if TYPE_CHECKING:
             assert isinstance(self._parent, StyleAttributer)
 
-    def set_attribute(self, attribute: str, value):
+    def set_attribute(self, attribute: str, value: str | float):
         err = False
         match attribute:
-            case 'border-color':
-                self._border_color = _to_qcolor(value)
-                if self._border_color is None:
+            case 'border-color'|'text-color':
+                self._attrs[attribute] = _to_qcolor(value)
+                if self._attrs.get(attribute) is None:
                     err = True
+                    
+            case 'background':
+                self._attrs['background-color'] = _to_qcolor(value)
+                if self._attrs.get('background-color') is None:
+                    err = True
+                    
+            case 'background2':
+                self._attrs['background2-color'] = _to_qcolor(value)
+                if self._attrs.get('background2-color') is None:
+                    err = True
+        
+            case 'background-image':
+                image_path = (
+                    Theme.theme_file_path.parent / 'images' / str(value))
+                image = None
+                if image_path.is_file():
+                    image = QImage(str(image_path))
+                    image.setDevicePixelRatio(3.0)
+                    if image.isNull():
+                        image = None
+                self._attrs[attribute] = image
 
-            case 'border-width':
+            case 'border-width'|'border-radius'|'font-size'| \
+                    'port-offset'|'port-in-offset'|'port-out-offset'| \
+                    'port-spacing'|'port-type-spacing'|'box-footer' | \
+                    'icon-size'|'grid-min-width'|'grid-min-height':
                 if isinstance(value, (int, float)):
-                    self._border_width = rail_float(value, 0, 20)
+                    match attribute:
+                        case 'border-width':
+                            min_, max_ = 0, 20
+                        case 'border-radius'|'box-footer':
+                            min_, max_ = 0, 50
+                        case 'font-size':
+                            min_, max_ = 1, 200
+                        case 'port-spacing'|'port-type-spacing':
+                            min_, max_ = 0, 100
+                        case 'icon-size':
+                            min_, max_ = 8, 1024
+                        case 'grid-min-width'|'grid-min-height':
+                            min_, max_ = 1, 100000
+                        case _:
+                            min_, max_ = -20, 20
+                    self._attrs[attribute] = rail_float(value, min_, max_)
                 else:
                     err = True
-
+            
             case 'border-style':
                 if isinstance(value, str):
                     value = value.lower()
                     match value:
                         case 'solid'|'normal':
-                            self._border_style = Qt.PenStyle.SolidLine
+                            border_style = Qt.PenStyle.SolidLine
                         case 'nopen'|'none':
-                            self._border_style = Qt.PenStyle.NoPen
+                            border_style = Qt.PenStyle.NoPen
                         case 'dash':
-                            self._border_style = Qt.PenStyle.DashLine
+                            border_style = Qt.PenStyle.DashLine
                         case 'dashdot':
-                            self._border_style = Qt.PenStyle.DashDotLine
+                            border_style = Qt.PenStyle.DashDotLine
                         case 'dashdotdot':
-                            self._border_style = Qt.PenStyle.DashDotDotLine
+                            border_style = Qt.PenStyle.DashDotDotLine
                         case _:
-                            err = True
+                            border_style = None
+                            
+                    if border_style is None:
+                        err = True
+                    else:
+                        self._attrs[attribute] = border_style
                 else:
                     err = True
-
-            case 'border-radius':
-                if isinstance(value, (int, float)):
-                    self._border_radius = rail_float(value, 0, 50)
-                else:
-                    err = True
-
-            case 'background':
-                self._background_color = _to_qcolor(value)
-                if self._background_color is None:
-                    err = True
-
-            case 'background2':
-                self._background2_color = _to_qcolor(value)
-                if self._background2_color is None:
-                    err = True
-
-            case 'background-image':
-                image_path = (Theme.theme_file_path.parent
-                              / 'images' / str(value))
-                if image_path.is_file():
-                    self._background_image = QImage(str(image_path))
-                    self._background_image.setDevicePixelRatio(3.0)
-                    if self._background_image.isNull():
-                        self._background_image = None
-                else:
-                    self._background_image = None
-
-            case 'text-color':
-                self._text_color = _to_qcolor(value)
-                if self._text_color is None:
-                    err = True
-
+                    
             case 'font-name':
                 if isinstance(value, str):
-                    self._font_name = value
+                    self._attrs[attribute] = value
 
                     # add the font to database if it is an embedded font
                     for ext in ('ttf', 'otf'):
-                        embedded_path = (Theme.theme_file_path.parent
-                                        / 'fonts' / f"{value}.{ext}")
+                        embedded_path = (
+                            Theme.theme_file_path.parent
+                            / 'fonts' / f"{value}.{ext}")
                         if embedded_path.is_file():
                             QFontDatabase.addApplicationFont(
                                 str(embedded_path))
                             break
-
                 else:
                     err = True
-
-            case 'font-size':
-                if isinstance(value, (int, float)):
-                    self._font_size = rail_int(value, 1, 200)
-                else:
-                    err = True
-
+            
             case 'font-width':
                 if isinstance(value, (int, float)):
-                    self._font_width = rail_int(value, 0, 99)
+                    self._attrs[attribute] = rail_int(value, 0, 99)
                 elif isinstance(value, str):
                     value = value.lower()
                     if value == 'normal':
-                        self._font_state = QFont.Weight.Normal
+                        self._attrs[attribute] = QFont.Weight.Normal
                     elif value == 'bold':
-                        self._font_state = QFont.Weight.Bold
+                        self._attrs[attribute] = QFont.Weight.Bold
                     else:
                         err = True
                 else:
                     err = True
-            
-            case 'border-mode':
+                    
+            case 'border-mode'|'output-align'|\
+                    'port-in-offset-mode'|'port-out-offset-mode':
                 if isinstance(value, str):
-                    self._border_mode = value
+                    self._attrs[attribute] = value
                 else:
                     err = True
-
-            case 'output-align':
-                if isinstance(value, str):
-                    self._output_align = value
-                else:
-                    err = True
-
-            case 'port-offset':
-                if isinstance(value, (int, float)):
-                    self._port_offset = rail_float(value, -20, 20)
-                else:
-                    err = True
-
-            case 'port-in-offset':
-                if isinstance(value, (int, float)):
-                    self._port_in_offset = rail_float(value, -20, 20)
-                else:
-                    err = True
-
-            case 'port-out-offset':
-                if isinstance(value, (int, float)):
-                    self._port_out_offset = rail_float(value, -20, 20)
-                else:
-                    err = True
-
-            case 'port-in-offset-mode':
-                if isinstance(value, str):
-                    self._port_in_offset_mode = value
-                else:
-                    err = True
-
-            case 'port-out-offset-mode':
-                if isinstance(value, str):
-                    self._port_out_offset_mode = value
-                else:
-                    err = True
-
-            case 'port-spacing':
-                if isinstance(value, (int, float)):
-                    self._port_spacing = rail_float(value, 0, 100)
-                else:
-                    err = True
-
-            case 'port-type-spacing':
-                if isinstance(value, (int, float)):
-                    self._port_type_spacing = rail_float(value, 0, 100)
-                else:
-                    err = True
-
-            case 'box-footer':
-                if isinstance(value, (int, float)):
-                    self._box_footer = rail_float(value, 0, 50)
-                else:
-                    err = True
-
-            case 'icon-size':
-                if isinstance(value, (int, float)):
-                    self._icon_size = rail_float(value, 8, 1024)
-                else:
-                    err = True
-
-            case 'grid-min-width':
-                if isinstance(value, (int, float)):
-                    self._grid_min_width = rail_float(value, 1, 100000)
-                else:
-                    err = True
-
-            case 'grid-min-height':
-                if isinstance(value, (int, float)):
-                    self._grid_min_height = rail_float(value, 1, 100000)
-                else:
-                    err = True
-
-            case _:
-                _logger.error(f"{self._path}: unknown key: {attribute}")
 
         if err:
             _logger.error(
@@ -337,6 +272,7 @@ class StyleAttributer:
             if begin not in self.subs:
                 _logger.error(f"{self._path}: invalid ignored key: {begin}")
                 return
+            
             self.__getattribute__(begin).set_style_dict(end, style_dict)
             return
 
@@ -349,7 +285,7 @@ class StyleAttributer:
         it will look into parent sections.
         Note that for 'selected' section, it will look in 'selected' section
         of parent before looking in parent section.'''
-        if attribute not in self.__dir__():
+        if attribute not in self._attrs:
             _logger.error(f"get_value_of, invalide attribute: {attribute}")
             return None
 
@@ -366,9 +302,10 @@ class StyleAttributer:
                 return self.selected.get_value_of(
                     attribute, self._path, needed_attribute)
 
-        if self.__getattribute__(attribute) is None:
+        if self._attrs.get(attribute) is None:
+        # if self.__getattribute__(attribute) is None:
             if (needed_attribute
-                    and self.__getattribute__(needed_attribute) is not None):
+                    and self._attrs.get(needed_attribute) is not None):
                 return None
 
             if self._parent is None:
@@ -379,7 +316,7 @@ class StyleAttributer:
             return self._parent.get_value_of(
                 attribute, orig_path, needed_attribute)
 
-        return self.__getattribute__(attribute)
+        return self._attrs.get(attribute)
 
     @property
     def fill_pen(self) -> QPen:
@@ -388,47 +325,47 @@ class StyleAttributer:
                 self._fill_pen = QPen()
             else:
                 self._fill_pen = QPen(
-                    QBrush(self.get_value_of('_border_color')),
-                    self.get_value_of('_border_width'),
-                    self.get_value_of('_border_style'))
+                    QBrush(self.get_value_of('border-color')),
+                    self.get_value_of('border-width'),
+                    self.get_value_of('border-style'))
 
         return self._fill_pen
 
     @property
     def border_radius(self) -> float:
-        return self.get_value_of('_border_radius') # type:ignore
+        return self.get_value_of('border-radius') # type:ignore
 
     @property
     def background_color(self) -> QColor:
-        return self.get_value_of('_background_color') # type:ignore
+        return self.get_value_of('background-color') # type:ignore
 
     @property
     def background2_color(self) -> Optional[QColor]:
-        return self.get_value_of('_background2_color', # type:ignore
-                                 needed_attribute='_background_color')
+        return self.get_value_of('background2-color', # type:ignore
+                                 needed_attribute='background-color')
 
     @property
     def background_image(self) -> QImage:
-        return self.get_value_of('_background_image') # type:ignore
+        return self.get_value_of('background-image') # type:ignore
 
     @property
     def text_color(self) -> QColor:
-        return self.get_value_of('_text_color') # type:ignore
+        return self.get_value_of('text-color') # type:ignore
 
     @property
     def font(self) -> QFont:
         if self._font is None:
-            self._font = QFont(self.get_value_of('_font_name'))
+            self._font = QFont(self.get_value_of('font-name'))
             self._font.setPixelSize(
-                int(self.get_value_of('_font_size'))) # type:ignore
+                int(self.get_value_of('font-size'))) # type:ignore
             self._font.setWeight(
-                int(self.get_value_of('_font_width'))) # type:ignore
+                int(self.get_value_of('font-width'))) # type:ignore
         return self._font
 
     def _get_font_metrics_cache(self) -> dict[str, float]:
-        font_name = str(self.get_value_of('_font_name'))
-        font_size = str(self.get_value_of('_font_size'))
-        font_width = str(self.get_value_of('_font_width'))
+        font_name = str(self.get_value_of('font-name'))
+        font_size = str(self.get_value_of('font-size'))
+        font_width = str(self.get_value_of('font-width'))
 
         if not font_name in Theme.font_metrics_cache.keys():
             Theme.font_metrics_cache[font_name] = \
@@ -466,52 +403,52 @@ class StyleAttributer:
 
     @property
     def border_mode(self) -> str:
-        return self.get_value_of('_border_mode') # type:ignore
+        return self.get_value_of('border-mode') # type:ignore
 
     @property
     def output_align(self) -> str:
-        return self.get_value_of('_output_align') # type:ignore
+        return self.get_value_of('output-align') # type:ignore
 
     @property
     def port_in_offset(self) -> float:
-        return self.get_value_of('_port_in_offset') # type:ignore
+        return self.get_value_of('port-in-offset') # type:ignore
 
     @property
     def port_out_offset(self) -> float:
-        return self.get_value_of('_port_out_offset') # type:ignore
+        return self.get_value_of('port-out-offset') # type:ignore
 
     @property
     def port_in_offset_mode(self) -> str:
-        return self.get_value_of('_port_in_offset_mode') # type:ignore
+        return self.get_value_of('port-in-offset-mode') # type:ignore
 
     @property
     def port_out_offset_mode(self) -> str:
-        return self.get_value_of('_port_out_offset_mode') # type:ignore
+        return self.get_value_of('port-out-offset-mode') # type:ignore
 
     @property
     def port_spacing(self) -> float:
-        return self.get_value_of('_port_spacing') # type:ignore
+        return self.get_value_of('port-spacing') # type:ignore
 
     @property
     def port_type_spacing(self) -> float:
-        return self.get_value_of('_port_type_spacing') # type:ignore
+        return self.get_value_of('port-type-spacing') # type:ignore
 
     @property
     def icon_size(self) -> float:
-        return self.get_value_of('_icon_size') # type:ignore
+        return self.get_value_of('icon-size') # type:ignore
 
     @property
     def grid_min_width(self) -> float:
-        return self.get_value_of('_grid_min_width') # type:ignore
+        return self.get_value_of('grid-min-width') # type:ignore
 
     @property
     def grid_min_height(self) -> float:
-        return self.get_value_of('_grid_min_height') # type:ignore
+        return self.get_value_of('grid-min-height') # type:ignore
 
     def _get_titles_templates_cache(self) -> TitleCache:
-        font_name = str(self.get_value_of('_font_name'))
-        font_size = str(self.get_value_of('_font_size'))
-        font_width = str(self.get_value_of('_font_width'))
+        font_name = str(self.get_value_of('font-name'))
+        font_size = str(self.get_value_of('font-size'))
+        font_width = str(self.get_value_of('font-width'))
 
         if not font_name in Theme.title_templates_cache.keys():
             Theme.title_templates_cache[font_name] = \
@@ -631,7 +568,7 @@ class IconTheme:
             return
 
         for key in ('hardware_capture', 'hardware_playback', 'hardware_grouped',
-                    'hardware_midi', 'monitor_capture', 'monitor_playback'):
+                    'hardware_midi', 'monitor_cap  ture', 'monitor_playback'):
             icon_path = icons_dir / f'{key}.svg'
             if icon_path.is_file():
                 self.__setattr__(key, str(icon_path))
@@ -658,30 +595,7 @@ class Theme(StyleAttributer):
         StyleAttributer.__init__(self, '')
 
         # fallbacks values for all (ugly style, but better than nothing)
-        self._border_color = QColor('white')
-        self._border_width = 1
-        self._border_style = Qt.PenStyle.SolidLine
-        self._border_radius = 0
-        self._background_color = QColor('black')
-        self._background2_color = QColor('black')
-        self._background_image = QImage()
-        self._text_color = QColor('white')
-        self._font_name = "Deja Vu Sans"
-        self._font_size = 11
-        self._font_width = QFont.Weight.Normal # QFont.Weight.Normal is 50
-
-        self._border_mode = 'default'
-        self._output_align = 'left'
-
-        self._port_spacing = 2
-        self._port_type_spacing = 2
-        self._port_offset = 0
-        self._port_in_offset = 0
-        self._port_out_offset = 0
-        self._port_in_offset_mode = 'bore'
-        self._port_out_offset_mode = 'bore'
-        self._box_footer = 0
-        self._icon_size = 24
+        self._attrs = _DEFAULT_STYLE_ATTRS
 
         self.scene_background_color = QColor('black')
         self.scene_background_image = QImage()
@@ -896,6 +810,10 @@ class Theme(StyleAttributer):
 
                         case 'thumbnail_port_colors':
                             self.thumbnail_port_colors = str(body_value)
+                            
+                        case _:
+                            _logger.warning(
+                                f'Theme [body]{body_key} is unknown and will have no effect')
 
                 continue
 
