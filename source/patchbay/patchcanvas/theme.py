@@ -20,8 +20,8 @@ _DEFAULT_STYLE_ATTRS = {
     'border-width': 1,
     'border-style': Qt.PenStyle.SolidLine,
     'border-radius': 0,
-    'background-color': QColor('black'),
-    'background2-color': QColor('black'),
+    'background': QColor('black'),
+    'background2': QColor('black'),
     'background-image': QImage(),
     'text-color': QColor('white'),
     'font-name': "Deja Vu Sans",
@@ -155,15 +155,12 @@ class StyleAttributer:
                 if self._attrs.get(attribute) is None:
                     err = True
                     
-            case 'background':
-                self._attrs['background-color'] = _to_qcolor(value)
-                if self._attrs.get('background-color') is None:
+            case 'background'|'background2':
+                qcolor = _to_qcolor(value)
+                if qcolor is None:
                     err = True
-                    
-            case 'background2':
-                self._attrs['background2-color'] = _to_qcolor(value)
-                if self._attrs.get('background2-color') is None:
-                    err = True
+                else:
+                    self._attrs[attribute] = qcolor
         
             case 'background-image':
                 image_path = (
@@ -260,6 +257,9 @@ class StyleAttributer:
                     self._attrs[attribute] = value
                 else:
                     err = True
+                    
+            case _:
+                _logger.error(f"{self._path}: unknown key: {attribute}")
 
         if err:
             _logger.error(
@@ -337,12 +337,12 @@ class StyleAttributer:
 
     @property
     def background_color(self) -> QColor:
-        return self.get_value_of('background-color') # type:ignore
+        return self.get_value_of('background') # type:ignore
 
     @property
     def background2_color(self) -> Optional[QColor]:
-        return self.get_value_of('background2-color', # type:ignore
-                                 needed_attribute='background-color')
+        return self.get_value_of('background2', # type:ignore
+                                 needed_attribute='background')
 
     @property
     def background_image(self) -> QImage:
