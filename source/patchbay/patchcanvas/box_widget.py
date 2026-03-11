@@ -1254,6 +1254,17 @@ class BoxWidget(BoxWidgetMoth):
                     self._portgrp_list.append(portgrp)
 
         if theme_change:
+            if self.shadow is not None:
+                shadow_theme = canvas.theme.box_shadow
+                match self._box_type:
+                    case BoxType.HARDWARE:
+                        shadow_theme = shadow_theme.hardware
+                    case BoxType.MONITOR:
+                        shadow_theme = shadow_theme.monitor
+                    case BoxType.CLIENT:
+                        shadow_theme = shadow_theme.client
+                self.shadow.set_theme(shadow_theme)
+            
             for portgrp in self._portgrp_list:
                 if portgrp.widget is not None:
                     portgrp.widget.update_theme()
