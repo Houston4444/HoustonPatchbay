@@ -118,7 +118,7 @@ def _to_qcolor(color: str) -> Optional[QColor]:
     if opacity_ratio != 1.0:
         qcolor.setAlphaF(opacity_ratio * qcolor.alphaF())
 
-    return qcolor.lighter(int(100 * intensity_ratio))
+    return qcolor.lighter(int(100 * abs(intensity_ratio)))
 
 def rail_float(value, mini: float, maxi: float) -> float:
     return max(min(float(value), float(maxi)), float(mini))
@@ -793,6 +793,8 @@ class Theme(StyleAttributer):
                     for word in sub_value.split(' '):
                         if word == alias_key:
                             new_words.append(alias_value)
+                        elif word == f'-{alias_key}':
+                            new_words.append(f'-{alias_value}')
                         else:
                             new_words.append(word)
 
