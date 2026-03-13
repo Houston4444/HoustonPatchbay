@@ -153,22 +153,22 @@ def read_theme(theme_path: Path):
     
     compare_colors(colors)
 
-    print('--- USED COLORS ---')
-    sorted_colors = sorted(colors.keys())
-    for scol in sorted_colors:
-        if scol in aliases_colors.keys():
-            print(scol, '|'.join(aliases_colors[scol]))
-        else:
-            print(scol)
+    # print('--- USED COLORS ---')
+    # sorted_colors = sorted(colors.keys())
+    # for scol in sorted_colors:
+    #     if scol in aliases_colors.keys():
+    #         print(scol, '|'.join(aliases_colors[scol]))
+    #     else:
+    #         print(scol)
         
-        for oth, ratio in colors[scol].equivalents:
-            ratio_str = '%.2f' % ratio
-            aliases = aliases_colors.get(oth)
-            if aliases is None:
-                print(f'    = {oth} * {ratio_str}')
-            else:
-                for alias_ in aliases:
-                    print(f'    = {alias_} * {ratio_str}')            
+    #     for oth, ratio in colors[scol].equivalents:
+    #         ratio_str = '%.2f' % ratio
+    #         aliases = aliases_colors.get(oth)
+    #         if aliases is None:
+    #             print(f'    = {oth} * {ratio_str}')
+    #         else:
+    #             for alias_ in aliases:
+    #                 print(f'    = {alias_} * {ratio_str}')            
 
     for thchild in th.all_childs():
         for attr in theme._DEFAULT_STYLE_ATTRS.keys():
