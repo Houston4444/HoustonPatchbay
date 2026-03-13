@@ -3,7 +3,7 @@ import logging
 import os
 from pathlib import Path
 import pickle
-from typing import TYPE_CHECKING, TypeAlias, TypedDict, Union, Optional
+from typing import TYPE_CHECKING, Iterator, TypeAlias, TypedDict, Optional
 
 from qtpy.QtCore import Qt
 from qtpy.QtGui import (QColor, QPen, QFont, QBrush, QFontMetricsF,
@@ -147,9 +147,45 @@ class StyleAttributer:
         if TYPE_CHECKING:
             assert isinstance(self._parent, StyleAttributer)
 
+    def child(self, path: str) -> 'StyleAttributer | None':
+        begin, _, end = path.partition('.')
+        if begin not in self.subs:
+            return
+        
+        child_: StyleAttributer = self.__getattribute__(begin)
+        if not end:
+            return child_
+        
+        return child_.child(end)
+
+    def childs(self) -> 'Iterator[StyleAttributer]':
+        for sub in self.subs:
+            yield self.__getattribute__(sub)
+
+    def all_childs(self) -> 'Iterator[StyleAttributer]':
+        for sub in self.subs:
+            child = self.__getattribute__(sub)
+            yield child
+            for sub_ in child.all_childs():
+                yield sub_
+
+    def inherit(self, other: 'StyleAttributer'):
+        for key, value in other._attrs.items():
+            self._attrs[key] = value
+
+        for sub_ in self.subs:
+            if sub_ in other.subs:
+                self.child(sub_).inherit(other.child(sub_))
+
+    @property
+    def log_path(self):
+        return f'[{self._path[1:]}]'
+
     def set_attribute(self, attribute: str, value: str | float):
         err = False
         match attribute:
+            case 'inherits':
+                ...
             case 'border-color'|'text-color'|'background'|'background2':
                 self._attrs[attribute] = _to_qcolor(value)
                 if self._attrs.get(attribute) is None:
@@ -169,7 +205,7 @@ class StyleAttributer:
                         image = None
                 else:
                     _logger.error(
-                        f"{self._path}:{attribute} can not find image at {image_path}")
+                        f"{self.log_path}{attribute} can not find image at {image_path}")
                 self._attrs[attribute] = image
 
             case 'border-width'|'border-radius'|'font-size'| \
@@ -258,7 +294,7 @@ class StyleAttributer:
                     err = True
                     
             case _:
-                _logger.error(f"{self._path}: unknown key: {attribute}")
+                _logger.error(f"{self.log_path}{attribute} unknown key !")
 
         if err:
             _logger.error(
@@ -272,7 +308,7 @@ class StyleAttributer:
                 _logger.error(f"{self._path}: invalid ignored key: {begin}")
                 return
             
-            self.__getattribute__(begin).set_style_dict(end, style_dict)
+            self.child(begin).set_style_dict(end, style_dict)
             return
 
         for key, value in style_dict.items():
@@ -680,8 +716,10 @@ class Theme(StyleAttributer):
         with open(cache_dir / 'patchbay_fonts', 'wb') as f:
             pickle.dump(cls.font_metrics_cache, f)
 
-    def read_theme(self, theme_dict: dict[str, dict], theme_file_path: Path):
+    def read_theme(self, theme_dict: dict[str, dict], theme_file_path: Path,
+                   for_linter=False):
         '''theme_file_path is only used here to find external resources'''
+        _logger.info(f'start to read theme {theme_dict}, {theme_file_path}')
         if not isinstance(theme_dict, dict):
             _logger.error("invalid dict read error")
             return
@@ -689,16 +727,17 @@ class Theme(StyleAttributer):
         Theme.set_file_path(theme_file_path)
         self.icon.read_theme(theme_file_path)
 
-        # install all fonts from theme 'fonts' directory
-        fonts_dir = Path(theme_file_path).parent / 'fonts'
-        if fonts_dir.is_dir():
-            for font_path in fonts_dir.iterdir():
-                if str(font_path).endswith(('.otf', '.ttf')):
-                    try:
-                        QFontDatabase.addApplicationFont(str(font_path))
-                    except:
-                        _logger.warning(
-                            f"failed to install font from file {str(font_path)}")
+        if not for_linter:
+            # install all fonts from theme 'fonts' directory
+            fonts_dir = Path(theme_file_path).parent / 'fonts'
+            if fonts_dir.is_dir():
+                for font_path in fonts_dir.iterdir():
+                    if str(font_path).endswith(('.otf', '.ttf')):
+                        try:
+                            QFontDatabase.addApplicationFont(str(font_path))
+                        except:
+                            _logger.warning(
+                                f"failed to install font from file {str(font_path)}")
 
         self.aliases.clear()
 
@@ -816,7 +855,20 @@ class Theme(StyleAttributer):
 
                 continue
 
-            sub_attributer = self.__getattribute__(begin)
-            if TYPE_CHECKING:
-                assert isinstance(sub_attributer, StyleAttributer)
+            inherits_name = value.get('inherits')
+            if isinstance(inherits_name, str):
+                this = self.child(key)
+                mother = self.child(inherits_name)
+
+                if this is None:
+                    # should not happen
+                    _logger.error(f'[{key}] not found to inherit')                
+                elif mother is None:
+                    _logger.warning(
+                        f'[{key}]{value}, {inherits_name} does not exists.')
+                else:
+                    _logger.info(f'{key} inherits {inherits_name}')
+                    this.inherit(mother)
+
+            sub_attributer = self.child(begin)
             sub_attributer.set_style_dict(end, value)

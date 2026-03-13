@@ -3,11 +3,13 @@ import logging
 from pathlib import Path
 import sys
 
-from qtpy.QtGui import QColor
+from qtpy.QtGui import QColor, QGuiApplication
 
 sys.path.insert(0, str(Path(__file__).parents[1]))
 
-from patchbay.patchcanvas import theme, theme_manager, canvas
+from patchbay.patchcanvas import theme, theme_manager
+
+from color import Color, compare_colors
 
 _logger = logging.getLogger(__name__)
 
@@ -16,7 +18,7 @@ def qcolor_name(qcolor: QColor) -> str:
     if qcolor.alphaF() == 1.0:
         return qcolor.name()
 
-    alphaf = '%.3f' % qcolor.alphaF()
+    alphaf = '%.2f' % qcolor.alphaF()
     while alphaf.endswith('0'):
         alphaf = alphaf[:-1]
         if alphaf[-1] == '.':
@@ -24,6 +26,9 @@ def qcolor_name(qcolor: QColor) -> str:
             break
 
     return f'{qcolor.name()} ** {alphaf}'
+
+def tuple_key(input: tuple[str, str]) -> str:
+    return f'[{input[0]}]{input[1]}'
 
 def read_theme(theme_path: Path):
     # tm = theme_manager.ThemeManager(
@@ -50,12 +55,11 @@ def read_theme(theme_path: Path):
             thdn[key][kkey] = vvalue
     
     th = theme.Theme()
-    th.read_theme(thd, theme_path)    
-    
-    colors = dict[str, list[tuple[str, str]]]()
+    th.read_theme(thd, theme_path, for_linter=True)    
     aliases = dict[str, str]()
+    colors = dict[str, Color]()
 
-    rwt_aliases: dict = thdn['aliases']
+    rwt_aliases: dict = thdn.get('aliases', {})
     for section_name, section in conf.items():
         if section_name != 'aliases':
             continue
@@ -67,9 +71,20 @@ def read_theme(theme_path: Path):
                 continue
             aliases[key] = qcolor_name(qcolor)
             rwt_aliases[key] = qcolor_name(qcolor)
-    
+
     print(aliases)
-    
+    aliases_colors = dict[str, set[str]]()
+    for alias, color_name in aliases.items():
+        exst = aliases_colors.get(color_name)
+        if exst is None:
+            aliases_colors[color_name] = {alias}
+        else:
+            aliases_colors[color_name].add(alias)
+        
+        color = colors.get(color_name)
+        if color is None:
+            color = Color(color_name)
+            colors[color_name] = color
 
     for section_name, section in conf.items():
         if section_name in ('Theme', 'aliases'):
@@ -82,7 +97,6 @@ def read_theme(theme_path: Path):
 
             for word in value.split():
                 if word in aliases:
-                    colors[aliases[word]] = []
                     _logger.debug(
                         f"Ignored word '{word}' in [{section_name}]{section} : "
                         f"it is an alias")
@@ -103,28 +117,66 @@ def read_theme(theme_path: Path):
                     assert qcolor_.isValid()
                 except:
                     _logger.info(f"ignore  '{word}', not a color")
+                    continue
                 
                 color_name = qcolor_.name()
-                color = colors.get(color_name)
-
-                if color is None:
-                    colors[color_name] = [(section_name, key)]
-                else:
-                    _logger.warning(
-                        f"[{section_name}]{key} : {word}. Color already used in\n"
-                        f"  {color}.\n"
-                        "    Use an alias")
-                    color.append((section_name, key))
+                
+                if word.startswith(('#', '-#', 'rgb(', 'rgba(')):
+                    if qcolor_.alphaF() != 1.0:
+                        new_col_name = qcolor_name(qcolor_)
+                        _logger.warning(
+                            f'color {word} has an alpha channel, '
+                            f'prefer to use {new_col_name}')
+                        thdn[section_name][key] = value.replace(word, new_col_name)
+                    color = colors.get(color_name)
+                    if color is None:
+                        color = Color(color_name)
+                        colors[color_name] = color
+                        
+                    color.exists_in.add(f'[{section_name}]{key}')
     
+    for color_name, color in colors.items():
+        if not color.exists_in:
+            continue
+
+        multi_uses = '\n    '.join(color.exists_in)
+
+        if color_name in aliases_colors.keys():
+            multi_alias = '|'.join(aliases_colors[color_name])
+            _logger.warning(
+                f'{color_name} is used in\n    {multi_uses}\n'
+                f'        could be replaced by alias {multi_alias}')
+        elif len(color.exists_in) >= 2:
+            _logger.warning(
+                f'{color_name} is used in\n    {multi_uses}\n'
+                '        It would be better to choose an alias')
+    
+    compare_colors(colors)
+
     print('--- USED COLORS ---')
     sorted_colors = sorted(colors.keys())
     for scol in sorted_colors:
-        col_aliases = list[str]()
-        for alias, col in aliases.items():
-            if col == scol:
-                col_aliases.append(alias)
+        if scol in aliases_colors.keys():
+            print(scol, '|'.join(aliases_colors[scol]))
+        else:
+            print(scol)
+        
+        for oth, ratio in colors[scol].equivalents:
+            ratio_str = '%.2f' % ratio
+            aliases = aliases_colors.get(oth)
+            if aliases is None:
+                print(f'    = {oth} * {ratio_str}')
+            else:
+                for alias_ in aliases:
+                    print(f'    = {alias_} * {ratio_str}')            
 
-        print(scol, '|'.join(col_aliases))
+    for thchild in th.all_childs():
+        for attr in theme._DEFAULT_STYLE_ATTRS.keys():
+            value = thchild._attrs.get(attr)
+            if value is None:
+                continue
+            if thchild._parent.get_value_of(attr) == value:
+                _logger.warning(f'[{thchild._path}]{attr} already defined')
 
     return thdn
 
