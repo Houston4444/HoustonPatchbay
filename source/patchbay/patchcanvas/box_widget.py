@@ -453,7 +453,7 @@ class BoxWidget(BoxWidgetMoth):
 
         # first look in cache if title sizes are stocked
         all_title_templates = box_theme.get_title_templates(
-            self._group_name, self._can_handle_gui, icon_size)
+            self._group_name, icon_size)
         lines_choice_max = len(all_title_templates) - 1
 
         if not all_title_templates:
@@ -468,7 +468,6 @@ class BoxWidget(BoxWidgetMoth):
             all_title_templates = [title_template.copy() for i in range(8)]
 
             last_lines_count = 0
-            GUI_MARGIN = 2
             title_line_y_start = 1 + font_size
             title_height = title_line_y_start + 3
 
@@ -491,7 +490,8 @@ class BoxWidget(BoxWidgetMoth):
                     max_title_width = int(max(max_title_width, title_line.size))
                     header_width = title_line.size + 10
 
-                    if self.has_top_icon() and title_line.y <= icon_size + 6 + font_size:
+                    if (self.has_top_icon()
+                            and title_line.y <= icon_size + 6 + font_size):
                         # text line is at right of the icon
                         header_width += icon_size + 4
 
@@ -504,9 +504,9 @@ class BoxWidget(BoxWidgetMoth):
 
                 header_height = max(header_height, title_height)
 
-                if self._can_handle_gui:
-                    max_header_width += 2 * GUI_MARGIN
-                    header_height += 2 * GUI_MARGIN
+                # if self._can_handle_gui:
+                #     max_header_width += 2 * GUI_MARGIN
+                #     header_height += 2 * GUI_MARGIN
 
                 new_title_template = title_template.copy()
                 new_title_template['title_width'] = max_title_width
@@ -527,7 +527,7 @@ class BoxWidget(BoxWidgetMoth):
                 icon_size = 0
 
             box_theme.save_title_templates(
-                self._group_name, self._can_handle_gui, icon_size,
+                self._group_name, icon_size,
                 all_title_templates[:lines_choice_max])
 
         # Now compare multiple possible areas for the box,
@@ -619,6 +619,7 @@ class BoxWidget(BoxWidgetMoth):
         port_spacing = box_theme.port_spacing
         port_type_spacing = box_theme.port_type_spacing
         pen_width = box_theme.fill_pen.widthF()
+        header_counts_border = box_theme.header_counts_border
         last_in_type_and_sub = (PortType.NULL, PortSubType.REGULAR)
         last_out_type_and_sub = (PortType.NULL, PortSubType.REGULAR)
         last_type_and_sub = (PortType.NULL, PortSubType.REGULAR)
@@ -629,7 +630,11 @@ class BoxWidget(BoxWidgetMoth):
         if self._has_side_title():
             start_pos = pen_width + port_spacing
         else:
-            start_pos = pen_width + self._header_height
+            start_pos = self._header_height
+            if header_counts_border:
+                start_pos += pen_width
+            if box_theme.header_background.isValid():
+                start_pos += 1
 
         if self._layout.title_on is TitleOn.TOP:
             wrapped_port_pos = (self._layout.wrapped_height
@@ -639,79 +644,79 @@ class BoxWidget(BoxWidgetMoth):
 
         last_in_pos = last_out_pos = start_pos
 
-        # manage exceedent height in the box
-        # due to the grid height (or to the others side ports
-        # in a grouped box).
-        exc_in = self._layout.exceeding_y_ins
-        exc_out = self._layout.exceeding_y_outs
-        exc_inout = self._layout.exceeding_y_inouts
-        n_types_in = self._layout._pms.n_in_type_and_subs
-        n_types_out = self._layout._pms.n_out_type_and_subs
-        n_types_inout = self._layout._pms.n_inout_type_and_subs
+        # # manage exceedent height in the box
+        # # due to the grid height (or to the others side ports
+        # # in a grouped box).
+        # exc_in = self._layout.exceeding_y_ins
+        # exc_out = self._layout.exceeding_y_outs
+        # exc_inout = self._layout.exceeding_y_inouts
+        # n_types_in = self._layout._pms.n_in_type_and_subs
+        # n_types_out = self._layout._pms.n_out_type_and_subs
+        # n_types_inout = self._layout._pms.n_inout_type_and_subs
 
-        if one_column:
-            new_pts = exc_inout / (1 + n_types_inout)
-            if new_pts > port_type_spacing:
-                port_type_spacing = port_type_spacing_in = \
-                    port_type_spacing_out = new_pts
-                last_in_pos += new_pts
-                last_out_pos += new_pts
-            else:
-                last_in_pos += exc_inout / 2
-                last_out_pos += exc_inout / 2
+        # if one_column:
+        #     new_pts = exc_inout / (1 + n_types_inout)
+        #     if new_pts > port_type_spacing:
+        #         port_type_spacing = port_type_spacing_in = \
+        #             port_type_spacing_out = new_pts
+        #         last_in_pos += new_pts
+        #         last_out_pos += new_pts
+        #     else:
+        #         last_in_pos += exc_inout / 2
+        #         last_out_pos += exc_inout / 2
 
-        elif align_port_types:
-            exceeding = min(exc_in, exc_out)
-            n_types = max(n_types_in, n_types_out)
-            new_pts = exceeding / (1 + n_types)
-            if new_pts > port_type_spacing:
-                port_type_spacing = new_pts
-                port_type_spacing_in = port_type_spacing_out = new_pts
-                last_in_pos += port_type_spacing
-                last_out_pos += port_type_spacing
-            else:
-                last_in_pos += exceeding / 2
-                last_out_pos += exceeding / 2
+        # elif align_port_types:
+        #     exceeding = min(exc_in, exc_out)
+        #     n_types = max(n_types_in, n_types_out)
+        #     new_pts = exceeding / (1 + n_types)
+        #     if new_pts > port_type_spacing:
+        #         port_type_spacing = new_pts
+        #         port_type_spacing_in = port_type_spacing_out = new_pts
+        #         last_in_pos += port_type_spacing
+        #         last_out_pos += port_type_spacing
+        #     else:
+        #         last_in_pos += exceeding / 2
+        #         last_out_pos += exceeding / 2
 
-        elif self._current_port_mode is PortMode.BOTH:
-            if exc_out < exc_in:
-                new_pts_out = exc_out / (1 + n_types_out)
-                more_out = 0.0
-                if new_pts_out > port_type_spacing:
-                    port_type_spacing_out = new_pts_out
-                    last_in_pos += new_pts_out
-                    last_out_pos += new_pts_out
-                    more_out = (new_pts_out - port_type_spacing) * (n_types_out -1)
+        # elif self._current_port_mode is PortMode.BOTH:
+        #     if exc_out < exc_in:
+        #         new_pts_out = exc_out / (1 + n_types_out)
+        #         more_out = 0.0
+        #         if new_pts_out > port_type_spacing:
+        #             port_type_spacing_out = new_pts_out
+        #             last_in_pos += new_pts_out
+        #             last_out_pos += new_pts_out
+        #             more_out = (new_pts_out - port_type_spacing) * (n_types_out -1)
 
-                if n_types_in > 1:
-                    port_type_spacing_in += (
-                        (exc_in + more_out - exc_out) / (n_types_in - 1))
-            else:
-                new_pts_in = exc_in / (1 + n_types_in)
-                more_in = 0.0
-                if new_pts_in > port_type_spacing:
-                    port_type_spacing_in = new_pts_in
-                    last_in_pos += new_pts_in
-                    last_out_pos += new_pts_in
-                    more_in = (new_pts_in - port_type_spacing) * (n_types_in - 1)
+        #         if n_types_in > 1:
+        #             port_type_spacing_in += (
+        #                 (exc_in + more_out - exc_out) / (n_types_in - 1))
+        #     else:
+        #         new_pts_in = exc_in / (1 + n_types_in)
+        #         more_in = 0.0
+        #         if new_pts_in > port_type_spacing:
+        #             port_type_spacing_in = new_pts_in
+        #             last_in_pos += new_pts_in
+        #             last_out_pos += new_pts_in
+        #             more_in = (new_pts_in - port_type_spacing) * (n_types_in - 1)
 
-                if n_types_out > 1:
-                    port_type_spacing_out += (
-                        (exc_out + more_in - exc_in) / (n_types_out - 1))
-        else:
-            new_pts_in = exc_in / (n_types_in + 1)
-            if new_pts_in > port_type_spacing_in:
-                port_type_spacing_in = new_pts_in
-                last_in_pos += new_pts_in
-            else:
-                last_in_pos += exc_in / 2
+        #         if n_types_out > 1:
+        #             port_type_spacing_out += (
+        #                 (exc_out + more_in - exc_in) / (n_types_out - 1))
+        # else:
+        #     new_pts_in = exc_in / (n_types_in + 1)
+        #     if new_pts_in > port_type_spacing_in:
+        #         port_type_spacing_in = new_pts_in
+        #         last_in_pos += new_pts_in
+        #     else:
+        #         last_in_pos += exc_in / 2
 
-            new_pts_out = exc_out / (n_types_out + 1)
-            if new_pts_out > port_type_spacing_out:
-                port_type_spacing_out = new_pts_out
-                last_out_pos += new_pts_out
-            else:
-                last_out_pos += exc_out / 2
+        #     new_pts_out = exc_out / (n_types_out + 1)
+        #     if new_pts_out > port_type_spacing_out:
+        #         port_type_spacing_out = new_pts_out
+        #         last_out_pos += new_pts_out
+        #     else:
+        #         last_out_pos += exc_out / 2
 
         input_segments = list[list[float]]()
         output_segments = list[list[float]]()
@@ -921,25 +926,33 @@ class BoxWidget(BoxWidgetMoth):
                         port.widget.setX(out_in_portgrp_x)
 
     def _set_title_positions(self):
-        ''' set title lines, header lines and icon positions '''
+        '''set title lines, header lines and icon positions'''
         self._header_line_left = None
         self._header_line_right = None
 
         box_theme = self.get_theme()
         font_size = box_theme.font.pixelSize()
         font_spacing = int(font_size * 1.4)
-        pen_width = box_theme.fill_pen.widthF()
         icon_size = box_theme.icon_size
+
+        if box_theme.header_counts_border:
+            pen_width = box_theme.fill_pen.widthF()
+        else:
+            pen_width = 0
 
         # when client is client capable of gui state
         # header has margins
-        gui_margin = 2 if self._can_handle_gui else 0
+        if self._can_handle_gui:
+            gui_margin = max(canvas.theme.gui_button.gui_hidden.margin,
+                             canvas.theme.gui_button.gui_visible.margin)
+        else:
+            gui_margin = 0
 
         # set title lines Y position
-        title_y_start = font_size + 1 + gui_margin + pen_width
+        title_y_start = pen_width + gui_margin + font_size + 1
 
         if self._title_under_icon:
-            title_y_start = 3 + gui_margin + icon_size + font_spacing + pen_width
+            title_y_start = pen_width + gui_margin + icon_size + font_spacing + 3
 
         for i, title_line in enumerate(self._title_lines):
             title_line.y = title_y_start + i * font_spacing
@@ -962,20 +975,24 @@ class BoxWidget(BoxWidgetMoth):
             # set title lines pos
             for title_line in self._title_lines:
                 if self._current_port_mode is PortMode.INPUT:
-                    title_line.x = self._width - self._header_width + 5 - pen_width
-                    if self._can_handle_gui:
-                        title_line.x += 2
+                    title_line.x = (
+                        self._width - pen_width - self._header_width
+                        + gui_margin + 4)
+                    
+                    # if self._can_handle_gui:
+                    #     title_line.x += 2
 
                     self.set_top_icon_pos(
                         self._width - int(icon_size) - 3 - pen_width - gui_margin,
                         int(3 + pen_width + gui_margin))
 
                 elif self._current_port_mode is PortMode.OUTPUT:
-                    title_line.x = (pen_width + self._header_width
-                                    - title_line.size - 6)
+                    # title_line.x = (pen_width + self._header_width
+                    #                 - title_line.size - 6 - gui_margin)
+                    title_line.x = (pen_width + gui_margin + 4)
 
-                    if self._can_handle_gui:
-                        title_line.x -= 2
+                    # if self._can_handle_gui:
+                    #     title_line.x -= 2
 
                     self.set_top_icon_pos(
                         3 + int(pen_width) + gui_margin,
@@ -1007,9 +1024,13 @@ class BoxWidget(BoxWidgetMoth):
                 title_line.x = int((self._width - title_line.size) / 2)
 
         # set icon position
+        y_icon_pos = pen_width + (self._header_height - box_theme.icon_size) * 0.5 
+        # self.set_top_icon_pos(
+        #     int((self._width - max_title_icon_size)/2),
+        #     int(3 + pen_width + gui_margin))
         self.set_top_icon_pos(
             int((self._width - max_title_icon_size)/2),
-            int(3 + pen_width + gui_margin))
+            y_icon_pos)
 
         # calculate header lines positions
         side_size = (self._width - max(max_title_icon_size, max_title_size)) * 0.5
@@ -1300,29 +1321,34 @@ class BoxWidget(BoxWidgetMoth):
             self._wrapped_width = box_layout.wrapped_width
             self._wrapped_height = box_layout.wrapped_height
 
-        if self._wrapping_state is WrappingState.NORMAL:
-            self._width = self._unwrapped_width
-            self._height = self._unwrapped_height
+        match self._wrapping_state:
+            case WrappingState.NORMAL:
+                self._width = self._unwrapped_width
+                self._height = self._unwrapped_height
 
-        elif self._wrapping_state is WrappingState.WRAPPED:
-            self._width = self._wrapped_width
-            self._height = self._wrapped_height
+            case WrappingState.WRAPPED:
+                self._width = self._wrapped_width
+                self._height = self._wrapped_height
 
-        elif self._wrapping_state is WrappingState.WRAPPING:
-            self._width = (self._unwrapped_width
-                           - (self._unwrapped_width - self._wrapped_width)
-                             * self._wrapping_ratio)
-            self._height = (self._unwrapped_height
-                            - (self._unwrapped_height - self._wrapped_height)
-                              * self._wrapping_ratio)
+            case WrappingState.WRAPPING:
+                self._width = (
+                    self._unwrapped_width
+                    - (self._unwrapped_width - self._wrapped_width)
+                        * self._wrapping_ratio)
+                self._height = (
+                    self._unwrapped_height
+                    - (self._unwrapped_height - self._wrapped_height)
+                        * self._wrapping_ratio)
 
-        elif self._wrapping_state is WrappingState.UNWRAPPING:
-            self._width = (self._wrapped_width
-                           + (self._unwrapped_width - self._wrapped_width)
-                             * self._wrapping_ratio)
-            self._height = (self._wrapped_height
-                            + (self._unwrapped_height - self._wrapped_height)
-                              * self._wrapping_ratio)
+            case WrappingState.UNWRAPPING:
+                self._width = (
+                    self._wrapped_width
+                    + (self._unwrapped_width - self._wrapped_width)
+                        * self._wrapping_ratio)
+                self._height = (
+                    self._wrapped_height
+                    + (self._unwrapped_height - self._wrapped_height)
+                        * self._wrapping_ratio)
 
         ports_y_segments_dict = self._set_ports_y_positions(align_port_types)
 

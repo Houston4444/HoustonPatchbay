@@ -128,7 +128,7 @@ class IconPixmapWidget(QGraphicsPixmapItem):
 
         return self.icon.isNull()
 
-    def set_pos(self, x: int, y: int):
+    def set_pos(self, x: int | float, y: int | float):
         self.setPos(float(x), float(y))
 
     def type(self) -> CanvasItemType:
@@ -241,7 +241,7 @@ class IconSvgWidget(QGraphicsSvgItem): # type:ignore
     def is_null(self) -> bool:
         return False
 
-    def set_pos(self, x: int, y: int):
+    def set_pos(self, x: int | float, y: int | float):
         self._size = QRectF(x, y, self._icon_size, self._icon_size)
 
     def boundingRect(self):

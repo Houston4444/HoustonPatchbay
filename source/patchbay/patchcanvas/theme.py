@@ -13,25 +13,30 @@ from . import xdg
 
 _logger = logging.getLogger(__name__)
 
-TitleCache: TypeAlias = dict[str, dict[str, dict[int, list[dict[str, int]]]]]
+TitleCache: TypeAlias = dict[str, dict[int, list[dict[str, int]]]]
     
 _DEFAULT_STYLE_ATTRS = {
     'border-color': QColor('white'),
     'border-width': 1,
     'border-style': Qt.PenStyle.SolidLine,
     'border-radius': 0,
+    'border-mode': 'default',
     'background': QColor('black'),
-    'background2': QColor('black'),
+    'background2': QColor(),
     'background-image': QImage(),
+    'header-background': QColor(),
+    'header-background2': QColor(),
+    'header-counts-border': True,
     'text-color': QColor('white'),
     'font-name': "Deja Vu Sans",
     'font-size': 11,
     'font-width': QFont.Weight.Normal,
-    'border-mode': 'default',
+    'margin': 3,
     'output-align': 'left',
     'port-offset': 0,
     'port-in-offset': 0,
     'port-out-offset': 0,
+    'port-offset-mode': 'bore',
     'port-in-offset-mode': 'bore',
     'port-out-offset-mode': 'bore',
     'port-spacing': 2,
@@ -133,8 +138,6 @@ class StyleAttributer:
         self.subs = list[str]()
 
         self._attrs = {}
-        for attr in _DEFAULT_STYLE_ATTRS.keys():
-            self._attrs[attr] = None
  
         self._path = path
         self._parent = parent
@@ -142,7 +145,7 @@ class StyleAttributer:
         self._fill_pen = None
         self._font = None
         self._font_metrics_cache: Optional[dict[str, float]] = None
-        self._titles_templates_cache: Optional[TitleCache] = None
+        self._titles_templates_cache: TitleCache | None = None
 
         if TYPE_CHECKING:
             assert isinstance(self._parent, StyleAttributer)
@@ -186,7 +189,8 @@ class StyleAttributer:
         match attribute:
             case 'inherits':
                 ...
-            case 'border-color'|'text-color'|'background'|'background2':
+            case 'border-color'|'text-color'|'background'|'background2'|\
+                    'header-background'|'header-background2':
                 self._attrs[attribute] = _to_qcolor(value)
                 if self._attrs.get(attribute) is None:
                     err = True
@@ -211,12 +215,12 @@ class StyleAttributer:
             case 'border-width'|'border-radius'|'font-size'| \
                     'port-offset'|'port-in-offset'|'port-out-offset'| \
                     'port-spacing'|'port-type-spacing'|'box-footer' | \
-                    'icon-size'|'grid-min-width'|'grid-min-height':
+                    'icon-size'|'grid-min-width'|'grid-min-height'|'margin':
                 if isinstance(value, (int, float)):
                     match attribute:
                         case 'border-width':
                             min_, max_ = 0, 20
-                        case 'border-radius'|'box-footer':
+                        case 'border-radius'|'box-footer'|'margin':
                             min_, max_ = 0, 50
                         case 'font-size':
                             min_, max_ = 1, 200
@@ -229,6 +233,11 @@ class StyleAttributer:
                         case _:
                             min_, max_ = -20, 20
                     self._attrs[attribute] = rail_float(value, min_, max_)
+
+                    if attribute == 'port-offset':
+                        self._attrs['port-in-offset'] = \
+                            self._attrs['port-out-offset'] = \
+                                self._attrs[attribute]
                 else:
                     err = True
             
@@ -286,13 +295,30 @@ class StyleAttributer:
                 else:
                     err = True
                     
-            case 'border-mode'|'output-align'|\
+            case 'border-mode'|'output-align'|'port-offset-mode'|\
                     'port-in-offset-mode'|'port-out-offset-mode':
                 if isinstance(value, str):
                     self._attrs[attribute] = value
+
+                    if attribute == 'port-offset-mode':
+                        self._attrs['port-in-offset-mode'] = \
+                            self._attrs['port-out-offset-mode'] = \
+                                self._attrs['port-offset-mode']
                 else:
                     err = True
-                    
+            
+            case 'header-counts-border':
+                if isinstance(value, str):
+                    hcb = value.lower() not in ('false', 'no')
+                elif isinstance(value, (int, float)):
+                    hcb = bool(value)
+                else:
+                    _logger.error(f'[{self._path}]{attribute} : '
+                                  f'"{value}" is not a valid value')
+                    return
+                
+                self._attrs[attribute] = hcb
+            
             case _:
                 _logger.error(f"{self.log_path}{attribute} unknown key !")
 
@@ -320,10 +346,6 @@ class StyleAttributer:
         it will look into parent sections.
         Note that for 'selected' section, it will look in 'selected' section
         of parent before looking in parent section.'''
-        if attribute not in self._attrs:
-            _logger.error(f"get_value_of, invalide attribute: {attribute}")
-            return None
-
         if not orig_path:
             orig_path = self._path
 
@@ -375,13 +397,30 @@ class StyleAttributer:
         return self.get_value_of('background') # type:ignore
 
     @property
-    def background2_color(self) -> Optional[QColor]:
+    def background2_color(self) -> QColor | None:
         return self.get_value_of('background2', # type:ignore
                                  needed_attribute='background')
 
     @property
     def background_image(self) -> QImage:
         return self.get_value_of('background-image') # type:ignore
+
+    @property
+    def header_background(self) -> QColor:
+        return self.get_value_of('header-background') # type:ignore
+    
+    @property
+    def header_background2(self) -> QColor | None:
+        return self.get_value_of('header-background2', # type:ignore
+                                 needed_attribute='header-background')
+
+    @property
+    def margin(self) -> int:
+        return self.get_value_of('margin') # type:ignore
+
+    @property
+    def header_counts_border(self) -> bool:
+        return self.get_value_of('header-counts-border') # type:ignore
 
     @property
     def text_color(self) -> QColor:
@@ -500,31 +539,23 @@ class StyleAttributer:
         return Theme.title_templates_cache[font_name][font_size][font_width]
 
     def save_title_templates(
-            self, title: str, handle_gui: bool, icon_size: int, templates: list):
+            self, title: str, icon_size: int, templates: list):
         if self._titles_templates_cache is None:
             self._titles_templates_cache = self._get_titles_templates_cache()
 
         if not title in self._titles_templates_cache:
             self._titles_templates_cache[title] = {}
 
-        gui_key = 'with_gui' if handle_gui else 'without_gui'
-
-        if not gui_key in self._titles_templates_cache[title]:
-            self._titles_templates_cache[title][gui_key] = {}
-
-        self._titles_templates_cache[title][gui_key][icon_size] = templates
+        self._titles_templates_cache[title][icon_size] = templates
 
     def get_title_templates(
-            self, title: str, handle_gui: bool, icon_size: int) -> list[dict[str, int]]:
+            self, title: str, icon_size: int) -> list[dict[str, int]]:
         if self._titles_templates_cache is None:
             self._titles_templates_cache = self._get_titles_templates_cache()
 
-        gui_key = 'with_gui' if handle_gui else 'without_gui'
-
         if (title in self._titles_templates_cache
-                and gui_key in self._titles_templates_cache[title]
-                and icon_size in self._titles_templates_cache[title][gui_key]):
-            return self._titles_templates_cache[title][gui_key][icon_size]
+                and icon_size in self._titles_templates_cache[title]):
+            return self._titles_templates_cache[title][icon_size]
 
         return []
 
@@ -618,7 +649,7 @@ class Theme(StyleAttributer):
 
     # if for some reason cache may be incompatible with this version
     # of the patchbay, we need to discard the cache files.
-    CACHE_VERSION = (1, 3)
+    CACHE_VERSION = (1, 4)
 
     title_templates_cache: dict[str, dict[str, dict[str, TitleCache]]] = \
         {'CACHE_VERSION': CACHE_VERSION} # type:ignore

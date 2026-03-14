@@ -3,7 +3,7 @@ import logging
 from pathlib import Path
 import sys
 
-from qtpy.QtGui import QColor, QGuiApplication
+from qtpy.QtGui import QColor
 
 sys.path.insert(0, str(Path(__file__).parents[1]))
 

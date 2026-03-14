@@ -317,7 +317,7 @@ class BoxWidgetMoth(QGraphicsItem):
 
         return not self.top_icon.is_null()
 
-    def set_top_icon_pos(self, x: int, y: int):
+    def set_top_icon_pos(self, x: int | float, y: int | float):
         if self.top_icon is None:
             return
         if self.top_icon.is_null():
@@ -967,10 +967,50 @@ class BoxWidgetMoth(QGraphicsItem):
         else:
             painter.setBrush(color_main)
 
-        if self.isSelected():
-            painter.drawPath(self._painter_path_sel)
+        header_bg = theme.header_background
+        
+        if header_bg.isValid():
+            painter.setPen(Qt.PenStyle.NoPen)
+            if self.isSelected():
+                painter.drawPath(self._painter_path_sel)
+            else:
+                painter.drawPath(self._painter_path)
+            
+            painter.setBrush(header_bg)
+            
+            border_width = 0.0
+            if theme.header_counts_border:
+                border_width = pen_width
+            
+            if self._has_side_title():
+                if self._current_port_mode is PortMode.OUTPUT:
+                    cutting_rect = QRectF(
+                        0.0, 0.0, self._header_width + border_width, self._height)
+                else:
+                    cutting_rect = QRectF(
+                        self._width - self._header_width - border_width, 0.0,
+                        self._header_width, self._height)
+            else:
+                cutting_rect = QRectF(0.0, 0.0, self._width,
+                                      self._header_height + border_width)
+
+            cutting_path = QPainterPath()
+            cutting_path.addRect(cutting_rect)
+            hd_rect = self._painter_path.intersected(cutting_path)
+            painter.drawPath(hd_rect)
+            
+            painter.setPen(pen)
+            painter.setBrush(Qt.BrushStyle.NoBrush)
+            if self.isSelected():
+                painter.drawPath(self._painter_path_sel)
+            else:
+                painter.drawPath(self._painter_path)
+
         else:
-            painter.drawPath(self._painter_path)
+            if self.isSelected():
+                painter.drawPath(self._painter_path_sel)
+            else:
+                painter.drawPath(self._painter_path)
 
         # draw hardware box decoration (flyrack like)
         self._paint_hardware_rack(painter)
@@ -980,21 +1020,32 @@ class BoxWidgetMoth(QGraphicsItem):
 
         # Draw toggle GUI client button
         if self._can_handle_gui:
+            if theme.header_counts_border:
+                border = pen_width
+            else:
+                border = 0
+            
+            gui_margin = max(canvas.theme.gui_button.gui_visible.margin,
+                             canvas.theme.gui_button.gui_hidden.margin)
+            
             if self._has_side_title():
                 if self._current_port_mode is PortMode.INPUT:
-                    header_rect = QRectF(
-                        self._width - self._header_width - pen_width + 3.0,
-                        3.0 + pen_width,
-                        self._header_width - 6.0,
-                        self._header_height -6.0)
+                    gui_rect = QRectF(
+                        self._width - self._header_width - border + gui_margin,
+                        gui_margin + border,
+                        self._header_width - 2 * gui_margin,
+                        self._header_height - 2 * gui_margin)
                 elif self._current_port_mode is PortMode.OUTPUT:
-                    header_rect = QRectF(
-                        3.0 + pen_width, 3.0 + pen_width,
-                        self._header_width - 6.0, self._header_height - 6.0)
+                    gui_rect = QRectF(
+                        gui_margin + border,
+                        gui_margin + border,
+                        self._header_width - 2 * gui_margin,
+                        self._header_height - 2 * gui_margin)
             else:
-                header_rect = QRectF(
-                    3.0 + pen_width, 3.0 + pen_width,
-                    self._width - 6.0 - 2 * pen_width, self._header_height - 6.0)
+                gui_rect = QRectF(
+                    gui_margin + border, gui_margin + border,
+                    self._width - 2 * (border + gui_margin),
+                    self._header_height - 2 * gui_margin)
 
             gui_theme = canvas.theme.gui_button
             if self._gui_visible:
@@ -1010,24 +1061,24 @@ class BoxWidgetMoth(QGraphicsItem):
             match gui_theme.border_mode:            
                 case 'minimal':
                     painter.drawPolyline(
-                        [header_rect.bottomLeft(),
-                        header_rect.topLeft(),
-                        header_rect.topRight(),
-                        header_rect.bottomRight()]
+                        [gui_rect.bottomLeft(),
+                        gui_rect.topLeft(),
+                        gui_rect.topRight(),
+                        gui_rect.bottomRight()]
                     )
                     painter.setPen(Qt.PenStyle.NoPen)
                 case 'sides':
                     painter.drawPolyline(
-                        [header_rect.bottomLeft(), header_rect.topLeft()])
+                        [gui_rect.bottomLeft(), gui_rect.topLeft()])
                     painter.drawPolyline(
-                        [header_rect.topRight(), header_rect.bottomRight()]
+                        [gui_rect.topRight(), gui_rect.bottomRight()]
                     )
                     painter.setPen(Qt.PenStyle.NoPen)
 
             if radius == 0.0:
-                painter.drawRect(header_rect)
+                painter.drawRect(gui_rect)
             else:
-                painter.drawRoundedRect(header_rect, radius, radius)
+                painter.drawRoundedRect(gui_rect, radius, radius)
 
         # draw Pipewire Monitor (or PulseAudio bridges) decorations
         elif self.is_monitor() and not self._current_port_mode is PortMode.BOTH:
