@@ -633,8 +633,6 @@ class BoxWidget(BoxWidgetMoth):
             start_pos = self._header_height
             if header_counts_border:
                 start_pos += pen_width
-            if box_theme.header_background.isValid():
-                start_pos += 1
 
         if self._layout.title_on is TitleOn.TOP:
             wrapped_port_pos = (self._layout.wrapped_height
@@ -978,21 +976,16 @@ class BoxWidget(BoxWidgetMoth):
                     title_line.x = (
                         self._width - pen_width - self._header_width
                         + gui_margin + 4)
-                    
-                    # if self._can_handle_gui:
-                    #     title_line.x += 2
 
                     self.set_top_icon_pos(
                         self._width - int(icon_size) - 3 - pen_width - gui_margin,
                         int(3 + pen_width + gui_margin))
 
                 elif self._current_port_mode is PortMode.OUTPUT:
-                    # title_line.x = (pen_width + self._header_width
-                    #                 - title_line.size - 6 - gui_margin)
-                    title_line.x = (pen_width + gui_margin + 4)
-
-                    # if self._can_handle_gui:
-                    #     title_line.x -= 2
+                    if self.has_top_icon() and not self._title_under_icon:
+                        title_line.x = pen_width + gui_margin + 3 + icon_size + 3
+                    else:
+                        title_line.x = (pen_width + gui_margin + 4)
 
                     self.set_top_icon_pos(
                         3 + int(pen_width) + gui_margin,
@@ -1436,9 +1429,9 @@ class BoxWidget(BoxWidgetMoth):
         return QRectF(-hwr, -hwr,
                       box_layout.full_width, box_layout.full_height)
 
-    def get_layout(self, layout_mode: Optional[BoxLayoutMode] = None) -> BoxLayout:
+    def get_layout(self, layout_mode: BoxLayoutMode | None =None) -> BoxLayout:
         if self._layout is None:
-            raise Exception('get_layout, .layout is required !')
+            raise Exception('get_layout, ._layout is required !')
 
         if layout_mode is None:
             return self._layout

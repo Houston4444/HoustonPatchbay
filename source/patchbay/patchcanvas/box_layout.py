@@ -175,8 +175,6 @@ class BoxLayout:
     def set_choosed(self):
         self._pms = PortsMinSizes(**self._pms.__dict__)
         
-        print('tadeomm', self._box, self.layout_mode.name, self.header_height)
-
         if (self._port_mode in (PortMode.INPUT, PortMode.OUTPUT)
                 and self.layout_mode is BoxLayoutMode.LARGE):
             needed_width = 2 * self._pen_width + self.header_width
