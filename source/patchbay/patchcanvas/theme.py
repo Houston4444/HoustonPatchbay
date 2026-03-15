@@ -32,6 +32,10 @@ _DEFAULT_STYLE_ATTRS = {
     'font-size': 11,
     'font-width': QFont.Weight.Normal,
     'margin': 3,
+    'margin-top': 0,
+    'margin-bottom': 0,
+    'margin-ports-side': 0,
+    'margin-free-side': 0,
     'output-align': 'left',
     'port-offset': 0,
     'port-in-offset': 0,
@@ -215,12 +219,16 @@ class StyleAttributer:
             case 'border-width'|'border-radius'|'font-size'| \
                     'port-offset'|'port-in-offset'|'port-out-offset'| \
                     'port-spacing'|'port-type-spacing'|'box-footer' | \
-                    'icon-size'|'grid-min-width'|'grid-min-height'|'margin':
+                    'icon-size'|'grid-min-width'|'grid-min-height'| \
+                    'margin'|'margin-top'|'margin-bottom'| \
+                    'margin-ports-side'|'margin-free-side':
                 if isinstance(value, (int, float)):
                     match attribute:
                         case 'border-width':
                             min_, max_ = 0, 20
-                        case 'border-radius'|'box-footer'|'margin':
+                        case 'border-radius'|'box-footer'|'margin'| \
+                                'margin-top'|'margin-bottom'| \
+                                'margin-ports-side'|'margin-free-side':
                             min_, max_ = 0, 50
                         case 'font-size':
                             min_, max_ = 1, 200
@@ -234,10 +242,18 @@ class StyleAttributer:
                             min_, max_ = -20, 20
                     self._attrs[attribute] = rail_float(value, min_, max_)
 
-                    if attribute == 'port-offset':
-                        self._attrs['port-in-offset'] = \
-                            self._attrs['port-out-offset'] = \
-                                self._attrs[attribute]
+                    match attribute:
+                        # theses attributes redefine others
+                        case 'port-offset':
+                            self._attrs['port-in-offset'] = \
+                                self._attrs['port-out-offset'] = \
+                                    self._attrs[attribute]
+                        case 'margin':
+                            self._attrs['margin-top'] = \
+                                self._attrs['margin-bottom'] = \
+                                    self._attrs['margin-ports-side'] = \
+                                        self._attrs['margin-free-side'] = \
+                                            self._attrs['margin']
                 else:
                     err = True
             
@@ -417,6 +433,22 @@ class StyleAttributer:
     @property
     def margin(self) -> int:
         return self.get_value_of('margin') # type:ignore
+
+    @property
+    def margin_top(self) -> int:
+        return self.get_value_of('margin-top') # type:ignore
+    
+    @property
+    def margin_bottom(self) -> int:
+        return self.get_value_of('margin-bottom') # type:ignore
+    
+    @property
+    def margin_ports_side(self) -> int:
+        return self.get_value_of('margin-ports-side') # type:ignore
+    
+    @property
+    def margin_free_side(self) -> int:
+        return self.get_value_of('margin-free-side') # type:ignore
 
     @property
     def header_counts_border(self) -> bool:
@@ -683,6 +715,7 @@ class Theme(StyleAttributer):
         self.box_wrapper = BoxStyleAttributer('.box_wrapper', self)
         self.box_header_line = BoxStyleAttributer('.box_header_line', self)
         self.box_shadow = BoxStyleAttributer('.box_shadow', self)
+        self.box_header = BoxStyleAttributer('.box_header', self)
         self.portgroup = PortStyleAttributer('.portgroup', self)
         self.port = PortStyleAttributer('.port', self)
         self.line = LineStyleAttributer('.line', self)

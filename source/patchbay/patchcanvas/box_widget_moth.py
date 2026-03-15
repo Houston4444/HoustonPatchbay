@@ -1027,31 +1027,54 @@ class BoxWidgetMoth(QGraphicsItem):
             
             gui_margin = max(canvas.theme.gui_button.gui_visible.margin,
                              canvas.theme.gui_button.gui_hidden.margin)
-            
-            if self._has_side_title():
-                if self._current_port_mode is PortMode.INPUT:
-                    gui_rect = QRectF(
-                        self._width - self._header_width - border + gui_margin,
-                        gui_margin + border,
-                        self._header_width - 2 * gui_margin,
-                        self._header_height - 2 * gui_margin)
-                elif self._current_port_mode is PortMode.OUTPUT:
-                    gui_rect = QRectF(
-                        gui_margin + border,
-                        gui_margin + border,
-                        self._header_width - 2 * gui_margin,
-                        self._header_height - 2 * gui_margin)
-            else:
-                gui_rect = QRectF(
-                    gui_margin + border, gui_margin + border,
-                    self._width - 2 * (border + gui_margin),
-                    self._header_height - 2 * gui_margin)
 
             gui_theme = canvas.theme.gui_button
             if self._gui_visible:
                 gui_theme = gui_theme.gui_visible
             else:
-                gui_theme = gui_theme.gui_hidden
+                gui_theme = gui_theme.gui_hidden            
+            
+            if self._has_side_title():
+                if self._current_port_mode is PortMode.INPUT:
+                    gui_rect = QRectF(
+                        self._width - self._header_width - border + gui_theme.margin_ports_side,
+                        gui_theme.margin_top + border,
+                        self._header_width - gui_theme.margin_ports_side - gui_theme.margin_free_side,
+                        self._header_height - gui_theme.margin_top - gui_theme.margin_bottom)
+                elif self._current_port_mode is PortMode.OUTPUT:
+                    gui_rect = QRectF(
+                        border + gui_theme.margin_free_side,
+                        border + gui_theme.margin_top,
+                        self._header_width - gui_theme.margin_free_side - gui_theme.margin_ports_side,
+                        self._header_height - gui_theme.margin_top - gui_theme.margin_bottom)
+            else:
+                match self._current_port_mode:
+                    case PortMode.OUTPUT:
+                        gui_rect = QRectF(
+                            border + gui_theme.margin_free_side,
+                            border + gui_theme.margin_top,
+                            self._width - 2 * border
+                                - gui_theme.margin_ports_side - gui_theme.margin_free_side,
+                            self._header_height - 2 * border
+                                - gui_theme.margin_top - gui_theme.margin_bottom)
+                    case PortMode.INPUT:
+                        gui_rect = QRectF(
+                            border + gui_theme.margin_ports_side,
+                            border + gui_theme.margin_top,
+                            self._width - 2 * border
+                                - gui_theme.margin_ports_side - gui_theme.margin_free_side,
+                            self._header_height - 2 * border
+                                - gui_theme.margin_top - gui_theme.margin_bottom)
+                    case PortMode.BOTH:
+                        gui_rect = QRectF(
+                            border + gui_theme.margin_ports_side,
+                            border + gui_theme.margin_top,
+                            self._width - 2 * (border + gui_theme.margin_ports_side),
+                            self._header_height - 2 * border
+                                - gui_theme.margin_top - gui_theme.margin_bottom)
+                    case _:
+                        gui_rect = QRectF()
+                
 
             radius = gui_theme.border_radius
 
@@ -1500,7 +1523,7 @@ class BoxWidgetMoth(QGraphicsItem):
 
         if self.is_hardware:
             theme = theme.hardware
-        elif self._box_type == BoxType.CLIENT:
+        elif self._box_type is BoxType.CLIENT:
             theme = theme.client
         elif self.is_monitor():
             theme = theme.monitor

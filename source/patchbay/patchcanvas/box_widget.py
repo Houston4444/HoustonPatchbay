@@ -939,31 +939,60 @@ class BoxWidget(BoxWidgetMoth):
             pen_width = 0
 
         # when client is client capable of gui state
-        # header has margins
+        # gui button has margins
         if self._can_handle_gui:
-            gui_margin = max(canvas.theme.gui_button.gui_hidden.margin,
-                             canvas.theme.gui_button.gui_visible.margin)
+            gui_button = canvas.theme.gui_button
+            if self._gui_visible:
+                gui_button = gui_button.gui_visible
+            else:
+                gui_button = gui_button.gui_hidden
+            
+            gm_top = gui_button.margin_top
+            gm_bottom = gui_button.margin_bottom
+            gm_ports_side = gui_button.margin_ports_side
+            gm_free_side = gui_button.margin_free_side
         else:
-            gui_margin = 0
+            gm_top, gm_bottom, gm_ports_side, gm_free_side = 0, 0, 0, 0
+
+        gm_left = gm_right = gm_free_side
+        if self._current_port_mode & PortMode.INPUT:
+            gm_left = gm_ports_side
+        if self._current_port_mode & PortMode.OUTPUT:
+            gm_right = gm_ports_side
+        
+        if self._has_side_title():
+            if self._current_port_mode is PortMode.INPUT:
+                left = self._width - self._header_width + gm_left
+                right = self._width - pen_width - gm_right
+            else:
+                left = pen_width + gm_left
+                right = self._header_width - gm_right
+        else:
+            left = pen_width + gm_left
+            right = self._width - pen_width - gm_right
+
+        top = pen_width + gm_top
+        bottom = self._header_height - gm_bottom
 
         # set title lines Y position
-        title_y_start = pen_width + gui_margin + font_size + 1
-
         if self._title_under_icon:
-            title_y_start = pen_width + gui_margin + icon_size + font_spacing + 3
+            title_y_start = top + icon_size + font_spacing + 3
+        else:
+            title_y_start = top + font_size + 1
 
         for i, title_line in enumerate(self._title_lines):
             title_line.y = title_y_start + i * font_spacing
 
         if not self._title_under_icon and len(self._title_lines) == 1:
             self._title_lines[0].y = int(
-                pen_width + font_size * 0.5 + (self._header_height - font_size * 0.5) / 2)
+                top + (bottom - top - font_size * 0.6) * 0.5 + font_size * 0.6)
 
         if self._has_side_title():
             y_correction = 0
 
             # In case the title is near to be vertically centered in the box
             # It's prettier to center it correctly
+            # TODO
             if (self._title_lines
                     and not self._title_under_icon
                     and not self._can_handle_gui
@@ -973,23 +1002,19 @@ class BoxWidget(BoxWidgetMoth):
             # set title lines pos
             for title_line in self._title_lines:
                 if self._current_port_mode is PortMode.INPUT:
-                    title_line.x = (
-                        self._width - pen_width - self._header_width
-                        + gui_margin + 4)
+                    title_line.x = left + 4
 
                     self.set_top_icon_pos(
-                        self._width - int(icon_size) - 3 - pen_width - gui_margin,
-                        int(3 + pen_width + gui_margin))
+                        right - int(icon_size) - 3,
+                        int(top + 3))
 
                 elif self._current_port_mode is PortMode.OUTPUT:
                     if self.has_top_icon() and not self._title_under_icon:
-                        title_line.x = pen_width + gui_margin + 3 + icon_size + 3
+                        title_line.x = left + 3 + icon_size + 3
                     else:
-                        title_line.x = (pen_width + gui_margin + 4)
+                        title_line.x = left + 4
 
-                    self.set_top_icon_pos(
-                        3 + int(pen_width) + gui_margin,
-                        3 + int(pen_width) + gui_margin)
+                    self.set_top_icon_pos(left + 3, top + 3)
 
                 title_line.y += y_correction
             return
@@ -1002,7 +1027,7 @@ class BoxWidget(BoxWidgetMoth):
 
         for title_line in self._title_lines:
             title_size = title_line.size
-            if self.has_top_icon() and title_line.y <= icon_size + 6 + font_size:
+            if self.has_top_icon() and title_line.y <= top + icon_size + 6 + font_size:
                 # title line is beside icon
                 title_size += icon_size + 4
                 max_title_icon_size = max(max_title_icon_size, title_size)
@@ -1010,26 +1035,30 @@ class BoxWidget(BoxWidgetMoth):
 
         # set title lines X position
         for title_line in self._title_lines:
-            if self.has_top_icon() and title_line.y <= icon_size + 6 + font_size:
+            if self.has_top_icon() and title_line.y <= top + icon_size + 6 + font_size:
                 # title line is beside the icon
-                title_line.x = int((self._width - max_title_icon_size) / 2 + icon_size + 4)
+                title_line.x = (left
+                                + (right - left - max_title_icon_size) * 0.5
+                                + icon_size + 4)
+                # title_line.x = int((self._width - max_title_icon_size) / 2 + icon_size + 4 + gm_hz_comp)
             else:
-                title_line.x = int((self._width - title_line.size) / 2)
+                title_line.x = left + (right - left - title_line.size) * 0.5
+                # title_line.x = int((self._width - title_line.size) / 2 + gm_hz_comp)
 
         # set icon position
-        y_icon_pos = pen_width + (self._header_height - box_theme.icon_size) * 0.5 
+        # y_icon_pos = top + 3
+        # # y_icon_pos = pen_width + (self._header_height - box_theme.icon_size + gm_top - gm_bottom) * 0.5
         # self.set_top_icon_pos(
         #     int((self._width - max_title_icon_size)/2),
-        #     int(3 + pen_width + gui_margin))
-        self.set_top_icon_pos(
-            int((self._width - max_title_icon_size)/2),
-            y_icon_pos)
+        #     y_icon_pos)
+        self.set_top_icon_pos(left + (right - left - max_title_icon_size) * 0.5, top + 3)
 
         # calculate header lines positions
         side_size = (self._width - max(max_title_icon_size, max_title_size)) * 0.5
 
         if side_size > 10:
-            y = self._header_height / 2 + pen_width
+            y = top + (bottom - top) * 0.5
+            # y = self._header_height / 2 + pen_width
 
             self._header_line_left = (5.0, y, side_size - 5.0, y)
             self._header_line_right = (self._width - side_size + 5.0, y,
