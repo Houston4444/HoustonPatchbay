@@ -65,7 +65,7 @@ def read_theme(theme_path: Path):
             continue
         
         for key, value in section.items():
-            qcolor = theme._to_qcolor(value)
+            qcolor = theme.to_qcolor(value)
             if qcolor is None:
                 _logger.warning(f'alias "{key}" is not a color')
                 continue

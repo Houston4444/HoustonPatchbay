@@ -1024,9 +1024,6 @@ class BoxWidgetMoth(QGraphicsItem):
                 border = pen_width
             else:
                 border = 0
-            
-            gui_margin = max(canvas.theme.gui_button.gui_visible.margin,
-                             canvas.theme.gui_button.gui_hidden.margin)
 
             gui_theme = canvas.theme.gui_button
             if self._gui_visible:
@@ -1034,44 +1031,43 @@ class BoxWidgetMoth(QGraphicsItem):
             else:
                 gui_theme = gui_theme.gui_hidden            
             
+            mg = gui_theme.margin
+            
             if self._has_side_title():
                 if self._current_port_mode is PortMode.INPUT:
                     gui_rect = QRectF(
-                        self._width - self._header_width - border + gui_theme.margin_ports_side,
-                        gui_theme.margin_top + border,
-                        self._header_width - gui_theme.margin_ports_side - gui_theme.margin_free_side,
-                        self._header_height - gui_theme.margin_top - gui_theme.margin_bottom)
+                        self._width - self._header_width - border + mg.ports_side,
+                        mg.top + border,
+                        self._header_width - mg.ports_side - mg.free_side,
+                        self._header_height - mg.height)
                 elif self._current_port_mode is PortMode.OUTPUT:
                     gui_rect = QRectF(
-                        border + gui_theme.margin_free_side,
-                        border + gui_theme.margin_top,
-                        self._header_width - gui_theme.margin_free_side - gui_theme.margin_ports_side,
-                        self._header_height - gui_theme.margin_top - gui_theme.margin_bottom)
+                        border + mg.free_side,
+                        border + mg.top,
+                        self._header_width - mg.free_side - mg.ports_side,
+                        self._header_height - mg.height)
             else:
                 match self._current_port_mode:
                     case PortMode.OUTPUT:
                         gui_rect = QRectF(
-                            border + gui_theme.margin_free_side,
-                            border + gui_theme.margin_top,
+                            border + mg.free_side,
+                            border + mg.top,
                             self._width - 2 * border
-                                - gui_theme.margin_ports_side - gui_theme.margin_free_side,
-                            self._header_height - 2 * border
-                                - gui_theme.margin_top - gui_theme.margin_bottom)
+                                - mg.ports_side - mg.free_side,
+                            self._header_height - 2 * border - mg.height)
                     case PortMode.INPUT:
                         gui_rect = QRectF(
-                            border + gui_theme.margin_ports_side,
-                            border + gui_theme.margin_top,
+                            border + mg.ports_side, border + mg.top,
                             self._width - 2 * border
-                                - gui_theme.margin_ports_side - gui_theme.margin_free_side,
-                            self._header_height - 2 * border
-                                - gui_theme.margin_top - gui_theme.margin_bottom)
+                                - mg.ports_side - mg.free_side,
+                            self._header_height - 2 * border - mg.height)
                     case PortMode.BOTH:
                         gui_rect = QRectF(
-                            border + gui_theme.margin_ports_side,
-                            border + gui_theme.margin_top,
-                            self._width - 2 * (border + gui_theme.margin_ports_side),
+                            border + mg.ports_side,
+                            border + mg.top,
+                            self._width - 2 * (border + mg.ports_side),
                             self._header_height - 2 * border
-                                - gui_theme.margin_top - gui_theme.margin_bottom)
+                                - mg.height)
                     case _:
                         gui_rect = QRectF()
                 

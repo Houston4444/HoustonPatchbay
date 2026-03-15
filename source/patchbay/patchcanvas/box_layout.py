@@ -52,18 +52,14 @@ class BoxLayout:
         cls._port_mode = box._current_port_mode
         cls._can_handle_gui = box._can_handle_gui
 
-        gui_button = canvas.theme.gui_button
+        margin_hidden = canvas.theme.gui_button.gui_hidden.margin
+        margin_visible = canvas.theme.gui_button.gui_visible.margin
         cls._gui_margin_vt = (
-            max(gui_button.gui_visible.margin_top,
-                gui_button.gui_hidden.margin_top)
-            + max(gui_button.gui_visible.margin_bottom,
-                  gui_button.gui_hidden.margin_bottom))
+            max(margin_visible.height, margin_hidden.height))
         cls._gui_margin_ports_side = max(
-            gui_button.gui_visible.margin_ports_side,
-            gui_button.gui_hidden.margin_ports_side)
+            margin_visible.ports_side, margin_hidden.ports_side)
         cls._gui_margin_free_side = max(
-            gui_button.gui_visible.margin_free_side,
-            gui_button.gui_hidden.margin_free_side)
+            margin_visible.free_side, margin_hidden.free_side)
         
         cls._is_hardware = box.is_hardware
 

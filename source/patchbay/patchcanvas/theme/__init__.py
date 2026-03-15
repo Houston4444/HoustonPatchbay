@@ -9,7 +9,10 @@ from qtpy.QtCore import Qt
 from qtpy.QtGui import (QColor, QPen, QFont, QBrush, QFontMetricsF,
                          QImage, QFontDatabase)
 
-from . import xdg
+from .. import xdg
+
+from .theme_utils import to_qcolor, rail_int, rail_float
+from .theme_structs import Margin
 
 _logger = logging.getLogger(__name__)
 
@@ -32,10 +35,10 @@ _DEFAULT_STYLE_ATTRS = {
     'font-size': 11,
     'font-width': QFont.Weight.Normal,
     'margin': 3,
-    'margin-top': 0,
-    'margin-bottom': 0,
-    'margin-ports-side': 0,
-    'margin-free-side': 0,
+    'margin-top': 3,
+    'margin-bottom': 3,
+    'margin-ports-side': 3,
+    'margin-free-side': 3,
     'output-align': 'left',
     'port-offset': 0,
     'port-in-offset': 0,
@@ -50,90 +53,6 @@ _DEFAULT_STYLE_ATTRS = {
     'grid-min-width': 100,
     'grid-min-height': 100
 }
-
-def _to_qcolor(color: str) -> Optional[QColor]:
-    ''' convert a color given with a string to a QColor.
-    returns None if color has a incorrect value.'''
-    if not isinstance(color, str):
-        return None
-
-    intensity_ratio = 1.0
-    opacity_ratio = 1.0
-
-    if color.startswith('-'):
-        color = color.partition('-')[2].strip()
-        intensity_ratio = - 1.0
-
-    if '*' in color:
-        words = color.split('*')
-        next_for_opac = False
-
-        for i, word in enumerate(words):
-            if i == 0:
-                color = word.strip()
-                continue
-
-            if not word:
-                next_for_opac = True
-                continue
-
-            if next_for_opac:
-                try:
-                    opacity_ratio *= float(word.strip())
-                except:
-                    pass
-
-                next_for_opac = False
-                continue
-
-            try:
-                intensity_ratio *= float(word.strip())
-            except:
-                pass
-
-    if color.startswith('rgb(') and color.endswith(')'):
-        try:
-            channels = [int(c.strip()) for c in
-                        color.partition('(')[2].rpartition(')')[0].split(',')]
-            assert len(channels) == 3
-            qcolor = QColor(*channels)
-        except:
-            return None
-
-    elif color.startswith('rgba(') and color.endswith(')'):
-        try:
-            values = [c.strip() for c in
-                      color.partition('(')[2].rpartition(')')[0].split(',')]
-            assert len(values) == 4
-            qcolor = QColor(*[int(v) for v in values[:3]],
-                            int(float(values[3]) * 255)) # type:ignore
-        except:
-            return None
-
-    else:
-        qcolor = QColor(color)
-
-    if not qcolor.isValid():
-        return None
-
-    if intensity_ratio == 1.0 and opacity_ratio == 1.0:
-        return qcolor
-
-    if intensity_ratio < 0.0:
-        qcolor = QColor(
-            255 - qcolor.red(), 255 - qcolor.green(),
-            255 - qcolor.blue(), qcolor.alpha())
-
-    if opacity_ratio != 1.0:
-        qcolor.setAlphaF(opacity_ratio * qcolor.alphaF())
-
-    return qcolor.lighter(int(100 * abs(intensity_ratio)))
-
-def rail_float(value, mini: float, maxi: float) -> float:
-    return max(min(float(value), float(maxi)), float(mini))
-
-def rail_int(value, mini: int, maxi: int) -> int:
-    return max(min(int(value), int(maxi)), int(mini))
 
 
 class StyleAttributer:
@@ -195,7 +114,7 @@ class StyleAttributer:
                 ...
             case 'border-color'|'text-color'|'background'|'background2'|\
                     'header-background'|'header-background2':
-                self._attrs[attribute] = _to_qcolor(value)
+                self._attrs[attribute] = to_qcolor(value)
                 if self._attrs.get(attribute) is None:
                     err = True
         
@@ -431,24 +350,17 @@ class StyleAttributer:
                                  needed_attribute='header-background')
 
     @property
-    def margin(self) -> int:
-        return self.get_value_of('margin') # type:ignore
+    def margin(self) -> Margin:
+        margin = Margin()
+        margin.top = self.get_value_of('margin-top') # type:ignore
+        margin.bottom = self.get_value_of('margin-bottom') # type:ignore
+        margin.ports_side = self.get_value_of('margin-ports-side') # type:ignore
+        margin.free_side = self.get_value_of('margin-free-side') # type:ignore
+        return margin
 
     @property
-    def margin_top(self) -> int:
-        return self.get_value_of('margin-top') # type:ignore
-    
-    @property
-    def margin_bottom(self) -> int:
-        return self.get_value_of('margin-bottom') # type:ignore
-    
-    @property
-    def margin_ports_side(self) -> int:
-        return self.get_value_of('margin-ports-side') # type:ignore
-    
-    @property
-    def margin_free_side(self) -> int:
-        return self.get_value_of('margin-free-side') # type:ignore
+    def margin_empty(self) -> Margin:
+        return Margin()
 
     @property
     def header_counts_border(self) -> bool:
@@ -672,10 +584,6 @@ class IconTheme:
                 self.__setattr__(key, str(icon_path))
 
 
-class FontMetricsCacheType(TypedDict):
-    CACHE_VERSION: tuple[int, int]
-
-
 class Theme(StyleAttributer):
     theme_file_path = Path()
 
@@ -743,9 +651,6 @@ class Theme(StyleAttributer):
         with open(cache_file, 'rb') as f:
             try:
                 title_templates_cache = pickle.load(f)
-                # assert isinstance(title_templates_cache, dict)
-                # assert 'CACHE_VERSION' in title_templates_cache.keys()
-                # assert isinstance(title_templates_cache['CACHE_VERSION'], tuple)
                 assert title_templates_cache['CACHE_VERSION'] == cls.CACHE_VERSION
                 cls.title_templates_cache = title_templates_cache
             except:
@@ -881,7 +786,7 @@ class Theme(StyleAttributer):
                             self.box_spacing = 2 * (body_value // 2)
 
                         case 'background':
-                            scene_bg_color = _to_qcolor(body_value)
+                            scene_bg_color = to_qcolor(body_value)
                             if scene_bg_color is None:
                                 scene_bg_color = QColor('black')
                             self.scene_background_color = scene_bg_color
@@ -907,7 +812,7 @@ class Theme(StyleAttributer):
                                     f"Unable to find background-image \"{background_path}\"")
 
                         case 'monitor-color':
-                            monitor_color = _to_qcolor(body_value)
+                            monitor_color = to_qcolor(body_value)
                             if monitor_color is None:
                                 monitor_color = QColor(190, 158, 0)
                             self.monitor_color = monitor_color
