@@ -39,7 +39,6 @@ def list_port_types_and_subs() -> Iterator[tuple[PortType, PortSubType]]:
 
             yield (port_type, port_subtype)
 
-
 def from_float_to(from_f: float, to_f: float, ratio: float) -> float:
     if ratio >= 1.0:
         return to_f
@@ -328,7 +327,6 @@ def _get_ports_min_sizes(
         n_inout_types_and_sub,
         last_port_mode
     )
-
 
 def _split_title(box: 'BoxWidget', n_lines: int) -> tuple[TitleLine]:
     title, slash, subtitle = box._group_name.partition('/')
