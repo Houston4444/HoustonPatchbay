@@ -569,12 +569,16 @@ def paint(box: 'BoxWidget', painter: QPainter, option, widget):
 
     main_ppath = painter_paths.get(PaintElement.MAIN)
     header_ppath = painter_paths.get(PaintElement.HEADER)
+    anti_header_ppath = painter_paths.get(PaintElement.ANTI_HEADER)
 
     # draw the background image if exists
-    if main_ppath is not None and not bg_image.isNull():
+    if not bg_image.isNull():
         painter.setBrush(QBrush(bg_image))
         painter.setPen(Qt.PenStyle.NoPen)
-        painter.drawPath(main_ppath)
+        if anti_header_ppath is not None:
+            painter.drawPath(anti_header_ppath)
+        elif main_ppath is not None:
+            painter.drawPath(main_ppath)
 
     # draw the main rectangle
     pen = theme.fill_pen
@@ -588,7 +592,12 @@ def paint(box: 'BoxWidget', painter: QPainter, option, widget):
     
     if header_ppath is not None:
         painter.setPen(Qt.PenStyle.NoPen)
-        painter.drawPath(main_ppath)
+        
+        if anti_header_ppath is not None:
+            painter.drawPath(anti_header_ppath)
+        elif main_ppath is not None:
+            # should not happen
+            painter.drawPath(main_ppath)
 
         hbg_image = htheme.background_image
         if not hbg_image.isNull():

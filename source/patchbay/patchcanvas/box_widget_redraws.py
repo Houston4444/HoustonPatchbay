@@ -1178,6 +1178,12 @@ def _build_painter_path(
                 border_radius + epsd, border_radius - line_hinting + epsd))
             painter_path = painter_path.united(top_right_path)
 
+    painter_paths = box._painter_paths.get(selected)
+    if painter_paths is None:
+        painter_paths = box._painter_paths[selected] = \
+            dict[PaintElement, QPainterPath]()
+    painter_paths[PaintElement.MAIN] = painter_path
+
     header_theme = box.get_theme(for_header=True)
     if header_theme.visible:
         border_width = 0.0
@@ -1196,19 +1202,12 @@ def _build_painter_path(
             header_rect = QRectF(0.0, 0.0, box._width,
                                  box._header_height + border_width)
 
-        header_path = QPainterPath()
-        header_path.addRect(header_rect)
-        header_path = painter_path.intersected(header_path)
-    else:
-        header_path = None
-    
-    painters_paths = box._painter_paths.get(selected)
-    if painters_paths is None:
-        painters_paths = box._painter_paths[selected] = \
-            dict[PaintElement, QPainterPath]()
-    
-    painters_paths[PaintElement.MAIN] = painter_path
-    painters_paths[PaintElement.HEADER] = header_path
+        tmp_header_path = QPainterPath()
+        tmp_header_path.addRect(header_rect)
+        painter_paths[PaintElement.HEADER] = \
+            painter_path.intersected(tmp_header_path)
+        painter_paths[PaintElement.ANTI_HEADER] = \
+            painter_path.subtracted(tmp_header_path)
 
 def _get_wrap_triangle_pos(box: 'BoxWidget') -> UnwrapButton:
     if box._has_side_title():
