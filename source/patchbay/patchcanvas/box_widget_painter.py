@@ -14,7 +14,7 @@ from patshared import BoxType, PortMode
 from .init_values import InlineDisplay, options, MAX_PLUGIN_ID_ALLOWED
 from .patchcanvas import canvas
 from .theme import StyleAttributer
-from .box_widget_utils import UnwrapButton, WrappingState
+from .box_widget_utils import PaintElement, UnwrapButton, WrappingState
 
 if TYPE_CHECKING:
     from .box_widget import BoxWidget
@@ -554,18 +554,27 @@ def paint(box: 'BoxWidget', painter: QPainter, option, widget):
         wtheme = wtheme.monitor
         hltheme = hltheme.monitor
 
-    if box.isSelected():
+    selected = box.isSelected()
+    
+    if selected:
         theme = theme.selected
         wtheme = wtheme.selected
         hltheme = hltheme.selected
 
     bg_image = theme.background_image
+    painter_paths = box._painter_paths.get(selected)
+    if painter_paths is None:
+        _logger.error(f'Ask to paint {box} but no QPainterPath is created')
+        return
+
+    main_ppath = painter_paths.get(PaintElement.MAIN)
+    header_ppath = painter_paths.get(PaintElement.HEADER)
 
     # draw the background image if exists
-    if not bg_image.isNull():
+    if main_ppath is not None and not bg_image.isNull():
         painter.setBrush(QBrush(bg_image))
         painter.setPen(Qt.PenStyle.NoPen)
-        painter.drawPath(box._painter_path)
+        painter.drawPath(main_ppath)
 
     # draw the main rectangle
     pen = theme.fill_pen
@@ -577,35 +586,27 @@ def paint(box: 'BoxWidget', painter: QPainter, option, widget):
             theme.background_color, theme.background2_color,
             box._width, box._height))
     
-    if box.isSelected():
-        painter_path = box._painter_path_sel
-        header_path = box._header_path_sel
-    else:
-        painter_path = box._painter_path
-        header_path = box._header_path
-    
-    if header_path is not None:
+    if header_ppath is not None:
         painter.setPen(Qt.PenStyle.NoPen)
-        # painter.setPen(htheme.fill_pen)
-        painter.drawPath(painter_path)
+        painter.drawPath(main_ppath)
 
         hbg_image = htheme.background_image
         if not hbg_image.isNull():
             painter.setBrush(QBrush(hbg_image))
-            painter.drawPath(header_path)
+            painter.drawPath(header_ppath)
 
         painter.setPen(htheme.fill_pen)
         painter.setBrush(_get_gradient(
             htheme.background_color, htheme.background2_color,
             box._width, box._height))
-        painter.drawPath(header_path)
+        painter.drawPath(header_ppath)
 
         painter.setPen(pen)
         painter.setBrush(Qt.BrushStyle.NoBrush)
-        painter.drawPath(painter_path)
+        painter.drawPath(main_ppath)
 
     else:
-        painter.drawPath(painter_path)
+        painter.drawPath(main_ppath)
 
     # draw hardware box decoration (flyrack like)
     _paint_hardware_rack(box, painter)

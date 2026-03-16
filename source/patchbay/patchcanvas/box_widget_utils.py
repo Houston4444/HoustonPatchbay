@@ -1,4 +1,4 @@
-from enum import Enum
+from enum import Enum, auto
 
 from qtpy.QtGui import QFont
 
@@ -38,3 +38,10 @@ class TitleLine:
 
     def get_font(self) -> QFont:
         return self.theme.font
+
+
+class PaintElement(Enum):
+    MAIN = auto()
+    HEADER = auto()
+    ANTI_HEADER = auto()
+    

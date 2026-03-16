@@ -46,10 +46,11 @@ from .icon_widget import IconSvgWidget, IconPixmapWidget
 from .port_widget import PortWidget
 from .portgroup_widget import PortgroupWidget
 from .grouped_lines_widget import GroupedLinesWidget
-from .theme import StyleAttributer, UnselectedStyleAttributer
+from .theme import UnselectedStyleAttributer
 from .box_layout import BoxLayout
 from .box_hidder import BoxHidder
-from .box_widget_utils import TitleLine, UnwrapButton, WrappingState
+from .box_widget_utils import (
+    PaintElement, TitleLine, UnwrapButton, WrappingState)
 
 _logger = logging.getLogger(__name__)
 
@@ -178,10 +179,7 @@ class BoxWidget(QGraphicsItem):
         self._layout_mode = group.gpos.boxes[port_mode].layout_mode
         self._current_layout_mode = BoxLayoutMode.LARGE
         self._title_under_icon = False
-        self._painter_path = QPainterPath()
-        self._painter_path_sel = QPainterPath()
-        self._header_path: QPainterPath | None = None
-        self._header_path_sel: QPainterPath | None = None
+        self._painter_paths = dict[bool, dict[PaintElement, QPainterPath]]()
         self._layout: BoxLayout | None = None
         self._alter_layout: BoxLayout | None = None
 

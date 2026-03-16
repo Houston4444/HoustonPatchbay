@@ -12,7 +12,7 @@ from patshared import (
 from .box_layout import PortsMinSizes, TitleOn, BoxLayout
 from .init_values import (
     canvas, options, InlineDisplay, GroupObject)
-from .box_widget_utils import TitleLine, UnwrapButton, WrappingState
+from .box_widget_utils import PaintElement, TitleLine, UnwrapButton, WrappingState
 
 if TYPE_CHECKING:
     from .box_widget import (
@@ -1202,12 +1202,13 @@ def _build_painter_path(
     else:
         header_path = None
     
-    if selected:
-        box._painter_path_sel = painter_path
-        box._header_path_sel = header_path
-    else:
-        box._painter_path = painter_path
-        box._header_path = header_path
+    painters_paths = box._painter_paths.get(selected)
+    if painters_paths is None:
+        painters_paths = box._painter_paths[selected] = \
+            dict[PaintElement, QPainterPath]()
+    
+    painters_paths[PaintElement.MAIN] = painter_path
+    painters_paths[PaintElement.HEADER] = header_path
 
 def _get_wrap_triangle_pos(box: 'BoxWidget') -> UnwrapButton:
     if box._has_side_title():
