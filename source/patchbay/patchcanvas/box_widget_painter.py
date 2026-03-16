@@ -537,6 +537,7 @@ def paint(box: 'BoxWidget', painter: QPainter, option, widget):
     # define theme for box, wrappers and header lines
     theme = canvas.theme.box
     wtheme = canvas.theme.box_wrapper
+    htheme = canvas.theme.box_header
     hltheme = canvas.theme.box_header_line
 
     if box.is_hardware:
@@ -575,8 +576,6 @@ def paint(box: 'BoxWidget', painter: QPainter, option, widget):
         _get_gradient(
             theme.background_color, theme.background2_color,
             box._width, box._height))
-
-    header_bg = theme.header_background
     
     if box.isSelected():
         painter_path = box._painter_path_sel
@@ -588,8 +587,10 @@ def paint(box: 'BoxWidget', painter: QPainter, option, widget):
     if header_path is not None:
         painter.setPen(Qt.PenStyle.NoPen)
         painter.drawPath(painter_path)
-        
-        painter.setBrush(header_bg)
+
+        painter.setBrush(_get_gradient(
+            htheme.background_color, htheme.background2_color,
+            box._width, box._height))
         painter.drawPath(header_path)
 
         painter.setPen(pen)

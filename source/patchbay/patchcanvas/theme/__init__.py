@@ -34,16 +34,13 @@ _DEFAULT_STYLE_ATTRS = {
     'font-name': "Deja Vu Sans",
     'font-size': 11,
     'font-width': QFont.Weight.Normal,
-    'margin': 3,
     'margin-top': 3,
     'margin-bottom': 3,
     'margin-ports-side': 3,
     'margin-free-side': 3,
     'output-align': 'left',
-    'port-offset': 0,
     'port-in-offset': 0,
     'port-out-offset': 0,
-    'port-offset-mode': 'bore',
     'port-in-offset-mode': 'bore',
     'port-out-offset-mode': 'bore',
     'port-spacing': 2,
@@ -172,7 +169,7 @@ class StyleAttributer:
                                 self._attrs['margin-bottom'] = \
                                     self._attrs['margin-ports-side'] = \
                                         self._attrs['margin-free-side'] = \
-                                            self._attrs['margin']
+                                            self._attrs[attribute]
                 else:
                     err = True
             
@@ -634,7 +631,7 @@ class Theme(StyleAttributer):
         self.grid = GridStyleAttributer('.grid', self)
 
         self.subs += ['box', 'box_wrapper', 'box_header_line', 'box_shadow',
-                      'portgroup', 'port', 'line',
+                      'box_header', 'portgroup', 'port', 'line',
                       'rubberband', 'hardware_rack',
                       'monitor_decoration', 'gui_button', 'grid']
 
