@@ -465,7 +465,7 @@ def _choose_box_layout(
             if box._plugin_inline is not InlineDisplay.DISABLED:
                 max_header_width = 200
 
-            title_lines = box._split_title(i)
+            title_lines = _split_title(box, i)
 
             for j, title_line in enumerate(title_lines):
                 title_line.y = title_line_y_start + j * int(font_size * 1.4)
@@ -485,10 +485,6 @@ def _choose_box_layout(
                 + font_size / 2)
 
             header_height = max(header_height, title_height)
-
-            # if self._can_handle_gui:
-            #     max_header_width += 2 * GUI_MARGIN
-            #     header_height += 2 * GUI_MARGIN
 
             new_title_template = title_template.copy()
             new_title_template['title_width'] = max_title_width
