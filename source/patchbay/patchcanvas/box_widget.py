@@ -46,7 +46,7 @@ from .icon_widget import IconSvgWidget, IconPixmapWidget
 from .port_widget import PortWidget
 from .portgroup_widget import PortgroupWidget
 from .grouped_lines_widget import GroupedLinesWidget
-from .theme import UnselectedStyleAttributer
+from .theme import StyleAttributer, UnselectedStyleAttributer
 from .box_layout import BoxLayout
 from .box_hidder import BoxHidder
 from .box_widget_utils import TitleLine, UnwrapButton, WrappingState
@@ -881,10 +881,14 @@ class BoxWidget(QGraphicsItem):
                           self._height + 2 * hws)
         return QRectF(0, 0, self._width, self._height)
 
-    def get_theme(self, for_wrapper=False) -> UnselectedStyleAttributer:
+    def get_theme(
+            self, for_wrapper=False,
+            for_header=False) -> UnselectedStyleAttributer:
         theme = canvas.theme.box
         if for_wrapper:
             theme = canvas.theme.box_wrapper
+        elif for_header:
+            theme = canvas.theme.box_header
 
         if self.is_hardware:
             theme = theme.hardware
@@ -894,6 +898,6 @@ class BoxWidget(QGraphicsItem):
             theme = theme.monitor
 
         return theme
-    
+
     def paint(self, painter, option, widget):
         box_widget_painter.paint(self, painter, option, widget)

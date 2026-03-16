@@ -1178,7 +1178,8 @@ def _build_painter_path(
                 border_radius + epsd, border_radius - line_hinting + epsd))
             painter_path = painter_path.united(top_right_path)
 
-    if theme.header_background.isValid():
+    header_theme = box.get_theme(for_header=True)
+    if header_theme.visible:
         border_width = 0.0
         if theme.header_counts_border:
             border_width = line_hinting * 2.0

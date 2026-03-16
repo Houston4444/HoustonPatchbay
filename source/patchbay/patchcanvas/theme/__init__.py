@@ -19,36 +19,35 @@ _logger = logging.getLogger(__name__)
 TitleCache: TypeAlias = dict[str, dict[int, list[dict[str, int]]]]
     
 _DEFAULT_STYLE_ATTRS = {
-    'border-color': QColor('white'),
-    'border-width': 1,
-    'border-style': Qt.PenStyle.SolidLine,
-    'border-radius': 0,
-    'border-mode': 'default',
     'background': QColor('black'),
     'background2': QColor(),
     'background-image': QImage(),
-    'header-background': QColor(),
-    'header-background2': QColor(),
+    'border-color': QColor('white'),
+    'border-mode': 'default',
+    'border-radius': 0,
+    'border-style': Qt.PenStyle.SolidLine,
+    'border-width': 1,
+    'box-footer': 0,
     'header-counts-border': True,
-    'text-color': QColor('white'),
     'font-name': "Deja Vu Sans",
     'font-size': 11,
     'font-width': QFont.Weight.Normal,
-    'margin-top': 3,
+    'grid-min-width': 100,
+    'grid-min-height': 100,
+    'icon-size': 24,
     'margin-bottom': 3,
-    'margin-ports-side': 3,
     'margin-free-side': 3,
+    'margin-ports-side': 3,
+    'margin-top': 3,
     'output-align': 'left',
     'port-in-offset': 0,
-    'port-out-offset': 0,
     'port-in-offset-mode': 'bore',
+    'port-out-offset': 0,
     'port-out-offset-mode': 'bore',
     'port-spacing': 2,
     'port-type-spacing': 2,
-    'box-footer': 0,
-    'icon-size': 24,
-    'grid-min-width': 100,
-    'grid-min-height': 100
+    'text-color': QColor('white'),
+    'visible': False
 }
 
 
@@ -109,8 +108,7 @@ class StyleAttributer:
         match attribute:
             case 'inherits':
                 ...
-            case 'border-color'|'text-color'|'background'|'background2'|\
-                    'header-background'|'header-background2':
+            case 'border-color'|'text-color'|'background'|'background2':
                 self._attrs[attribute] = to_qcolor(value)
                 if self._attrs.get(attribute) is None:
                     err = True
@@ -239,7 +237,7 @@ class StyleAttributer:
                 else:
                     err = True
             
-            case 'header-counts-border':
+            case 'header-counts-border'|'visible':
                 if isinstance(value, str):
                     hcb = value.lower() not in ('false', 'no')
                 elif isinstance(value, (int, float)):
@@ -459,6 +457,10 @@ class StyleAttributer:
     @property
     def grid_min_height(self) -> float:
         return self.get_value_of('grid-min-height') # type:ignore
+
+    @property
+    def visible(self) -> bool:
+        return self.get_value_of('visible') # type:ignore
 
     def _get_titles_templates_cache(self) -> TitleCache:
         font_name = str(self.get_value_of('font-name'))
