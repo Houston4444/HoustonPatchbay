@@ -1178,10 +1178,35 @@ def _build_painter_path(
                 border_radius + epsd, border_radius - line_hinting + epsd))
             painter_path = painter_path.united(top_right_path)
 
+    if theme.header_background.isValid():
+        border_width = 0.0
+        if theme.header_counts_border:
+            border_width = line_hinting * 2.0
+        
+        if box._has_side_title():
+            if box._current_port_mode is PortMode.OUTPUT:
+                header_rect = QRectF(
+                    0.0, 0.0, box._header_width + border_width, box._height)
+            else:
+                header_rect = QRectF(
+                    box._width - box._header_width - border_width, 0.0,
+                    box._header_width, box._height)
+        else:
+            header_rect = QRectF(0.0, 0.0, box._width,
+                                 box._header_height + border_width)
+
+        header_path = QPainterPath()
+        header_path.addRect(header_rect)
+        header_path = painter_path.intersected(header_path)
+    else:
+        header_path = None
+    
     if selected:
         box._painter_path_sel = painter_path
+        box._header_path_sel = header_path
     else:
         box._painter_path = painter_path
+        box._header_path = header_path
 
 def _get_wrap_triangle_pos(box: 'BoxWidget') -> UnwrapButton:
     if box._has_side_title():

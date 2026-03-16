@@ -504,6 +504,26 @@ def _paint_wrappers(
                 painter.setPen(Qt.PenStyle.NoPen)
             painter.drawPolygon(triangle)
 
+def _get_gradient(
+        color_main: QColor, color_alter: QColor | None,
+        width: int, height: int) -> QLinearGradient | QColor:
+    if color_alter is None:
+        return color_main
+    
+    max_size = max(width, height)
+    box_gradient = QLinearGradient(0, 0, max_size, max_size)
+    gradient_size = 20
+
+    box_gradient.setColorAt(0, color_main)
+    tot = int(max_size / gradient_size)
+    for i in range(tot):
+        if i % 2 == 0:
+            box_gradient.setColorAt((i/tot) ** 0.7, color_main)
+        else:
+            box_gradient.setColorAt((i/tot) ** 0.7, color_alter)
+
+    return box_gradient
+
 def paint(box: 'BoxWidget', painter: QPainter, option, widget):
     if canvas.loading_items:
         return
@@ -551,70 +571,33 @@ def paint(box: 'BoxWidget', painter: QPainter, option, widget):
     painter.setPen(pen)
     pen_width = pen.widthF()
 
-    color_main = theme.background_color
-    color_alter = theme.background2_color
-
-    if color_alter is not None:
-        max_size = max(box._height, box._width)
-        box_gradient = QLinearGradient(0, 0, max_size, max_size)
-        gradient_size = 20
-
-        box_gradient.setColorAt(0, color_main)
-        tot = int(max_size / gradient_size)
-        for i in range(tot):
-            if i % 2 == 0:
-                box_gradient.setColorAt((i/tot) ** 0.7, color_main)
-            else:
-                box_gradient.setColorAt((i/tot) ** 0.7, color_alter)
-
-        painter.setBrush(box_gradient)
-    else:
-        painter.setBrush(color_main)
+    painter.setBrush(
+        _get_gradient(
+            theme.background_color, theme.background2_color,
+            box._width, box._height))
 
     header_bg = theme.header_background
     
-    if header_bg.isValid():
+    if box.isSelected():
+        painter_path = box._painter_path_sel
+        header_path = box._header_path_sel
+    else:
+        painter_path = box._painter_path
+        header_path = box._header_path
+    
+    if header_path is not None:
         painter.setPen(Qt.PenStyle.NoPen)
-        if box.isSelected():
-            painter.drawPath(box._painter_path_sel)
-        else:
-            painter.drawPath(box._painter_path)
+        painter.drawPath(painter_path)
         
         painter.setBrush(header_bg)
-        
-        border_width = 0.0
-        if theme.header_counts_border:
-            border_width = pen_width
-        
-        if box._has_side_title():
-            if box._current_port_mode is PortMode.OUTPUT:
-                cutting_rect = QRectF(
-                    0.0, 0.0, box._header_width + border_width, box._height)
-            else:
-                cutting_rect = QRectF(
-                    box._width - box._header_width - border_width, 0.0,
-                    box._header_width, box._height)
-        else:
-            cutting_rect = QRectF(0.0, 0.0, box._width,
-                                    box._header_height + border_width)
+        painter.drawPath(header_path)
 
-        cutting_path = QPainterPath()
-        cutting_path.addRect(cutting_rect)
-        hd_rect = box._painter_path.intersected(cutting_path)
-        painter.drawPath(hd_rect)
-        
         painter.setPen(pen)
         painter.setBrush(Qt.BrushStyle.NoBrush)
-        if box.isSelected():
-            painter.drawPath(box._painter_path_sel)
-        else:
-            painter.drawPath(box._painter_path)
+        painter.drawPath(painter_path)
 
     else:
-        if box.isSelected():
-            painter.drawPath(box._painter_path_sel)
-        else:
-            painter.drawPath(box._painter_path)
+        painter.drawPath(painter_path)
 
     # draw hardware box decoration (flyrack like)
     _paint_hardware_rack(box, painter)

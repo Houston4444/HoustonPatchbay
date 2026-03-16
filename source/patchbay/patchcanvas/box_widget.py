@@ -180,6 +180,8 @@ class BoxWidget(QGraphicsItem):
         self._title_under_icon = False
         self._painter_path = QPainterPath()
         self._painter_path_sel = QPainterPath()
+        self._header_path: QPainterPath | None = None
+        self._header_path_sel: QPainterPath | None = None
         self._layout: BoxLayout | None = None
         self._alter_layout: BoxLayout | None = None
 
