@@ -16,7 +16,7 @@ from .line_move_widget import LineMoveWidget
 from .grouped_lines_widget import GroupedLinesWidget, GroupOutInsDict
 
 if TYPE_CHECKING:
-    from .box_widget_moth import BoxWidgetMoth
+    from .box_widget import BoxWidget
     from .theme import Theme
     from .scene import PatchScene
 
@@ -28,7 +28,7 @@ class ConnectableWidget(QGraphicsItem):
     if TYPE_CHECKING:
         _hover_item: Optional['ConnectableWidget']
 
-    def __init__(self, connectable: ConnectableObject, parent: 'BoxWidgetMoth'):
+    def __init__(self, connectable: ConnectableObject, parent: 'BoxWidget'):
         canvas.ensure_init()
         QGraphicsItem.__init__(self, parent)
         self.setFlags(QGraphicsItem.GraphicsItemFlag.ItemIsSelectable)
@@ -231,8 +231,8 @@ class ConnectableWidget(QGraphicsItem):
                                     hover_group_id, hover_port_id,
                                     self._group_id, port_id)
 
-    def parentItem(self) -> 'BoxWidgetMoth':
-        # only here to say IDE parent is a CanvasBox
+    def parentItem(self) -> 'BoxWidget':
+        # only here to say IDE parent is a BoxWidget
         return super().parentItem() # type:ignore
 
     def hoverEnterEvent(self, event):

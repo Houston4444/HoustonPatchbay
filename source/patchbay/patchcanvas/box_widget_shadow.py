@@ -25,7 +25,7 @@ from .init_values import canvas
 from .theme import StyleAttributer
 
 if TYPE_CHECKING:
-    from .box_widget_moth import BoxWidgetMoth
+    from .box_widget import BoxWidget
 
 
 class BoxWidgetShadow(QGraphicsDropShadowEffect):
@@ -50,7 +50,7 @@ class BoxWidgetShadow(QGraphicsDropShadowEffect):
         color.setAlphaF(opacity)
         self.setColor(color)
 
-    def set_fake_parent(self, parent: 'BoxWidgetMoth'):
+    def set_fake_parent(self, parent: 'BoxWidget'):
         self._fake_parent = parent
 
     def draw(self, painter):

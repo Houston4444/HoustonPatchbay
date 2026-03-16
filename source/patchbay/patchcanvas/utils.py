@@ -29,7 +29,7 @@ from patshared import PortMode, BoxType
 from .init_values import canvas, options
 
 if TYPE_CHECKING:
-    from .box_widget_moth import BoxWidgetMoth
+    from .box_widget import BoxWidget
 
 _logger = logging.getLogger(__name__)
 _logging_str = ''
@@ -251,7 +251,7 @@ def is_dark_theme(widget: QWidget) -> bool:
                                QPalette.ColorRole.WindowText).color().lightness()
         > 128)
 
-def boxes_in_dict(boxes: 'list[BoxWidgetMoth]') -> dict[int, PortMode]:
+def boxes_in_dict(boxes: 'list[BoxWidget]') -> dict[int, PortMode]:
     '''concatenate a list of boxes to have a dict
     where key is group_id.'''
     serial_dict = dict[int, PortMode]()
@@ -281,7 +281,7 @@ def nearest_on_grid(xy: tuple[int, int]) -> tuple[int, int]:
     return (ret_x, ret_y)
 
 def nearest_on_grid_check_others(
-        xy: tuple[int, int], orig_box: 'BoxWidgetMoth') -> tuple[int, int]:
+        xy: tuple[int, int], orig_box: 'BoxWidget') -> tuple[int, int]:
     '''return the pos for a just moved box,
     may be not exactly the nearest point on grid,
     to prevent unwanted other boxes move.'''

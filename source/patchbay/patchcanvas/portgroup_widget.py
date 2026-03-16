@@ -33,11 +33,11 @@ from .init_values import (
     CanvasItemType, PortgrpObject, ZvBox, canvas)
 
 if TYPE_CHECKING:
-    from .box_widget_moth import BoxWidgetMoth
+    from .box_widget import BoxWidget
 
 
 class PortgroupWidget(ConnectableWidget):
-    def __init__(self, portgrp: PortgrpObject, parent: 'BoxWidgetMoth'):
+    def __init__(self, portgrp: PortgrpObject, parent: 'BoxWidget'):
         ConnectableWidget.__init__(self, portgrp, parent)
         self._logger = logging.getLogger(__name__)
 

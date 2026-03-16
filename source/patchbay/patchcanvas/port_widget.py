@@ -36,12 +36,12 @@ from .connectable_widget import ConnectableWidget
 from .grouped_lines_widget import GroupedLinesWidget
 
 if TYPE_CHECKING:
-    from .box_widget_moth import BoxWidgetMoth
+    from .box_widget import BoxWidget
     from .portgroup_widget import PortgroupWidget
 
 
 class PortWidget(ConnectableWidget):
-    def __init__(self, port: PortObject, parent: 'BoxWidgetMoth'):
+    def __init__(self, port: PortObject, parent: 'BoxWidget'):
         ConnectableWidget.__init__(self, port, parent)
         self._logger = logging.getLogger(__name__)
 

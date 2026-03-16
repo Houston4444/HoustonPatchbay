@@ -1,59 +1,209 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 
+# PatchBay Canvas engine using QGraphicsView/Scene
+# Copyright (C) 2010-2019 Filipe Coelho <falktx@falktx.com>
+# Copyright (C) 2019-2026 Mathieu Picot <picotmathieu@gmail.com>
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License as
+# published by the Free Software Foundation; either version 2 of
+# the License, or any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU General Public License for more details.
+#
+# For a full copy of the GNU General Public License see the doc/GPL.txt file.
+
+from enum import Enum
 import logging
-from typing import Iterator, Optional
+from math import ceil
+from struct import pack
+from typing import Optional
 
-from qtpy.QtCore import QRectF
-from qtpy.QtGui import QPainterPath
-from qtpy.QtWidgets import QGraphicsItem
 
-from patshared import (
-    BoxLayoutMode, PortMode, PortType, PortSubType, BoxType)
+try:
+    from sip import voidptr # type:ignore
+except:
+    # not really used for now because there is no InlineDisplay
+    pass
+
+
+from qtpy.QtCore import Qt, QPointF, QRectF, QTimer, QMarginsF
+from qtpy.QtGui import (QCursor, QFontMetrics, QImage, QFont,
+                         QLinearGradient, QPainter, QPen, QPolygonF,
+                         QColor, QPainterPath, QBrush)
+from qtpy.QtWidgets import QGraphicsItem, QApplication
+
+from patshared import PortMode, BoxLayoutMode, BoxType
 from .init_values import (
-    canvas, options, InlineDisplay, GroupObject)
-from .utils import get_portgroup_name_from_ports_names
-from .box_widget_moth import BoxWidgetMoth, UnwrapButton, TitleLine, WrappingState
-from .box_layout import PortsMinSizes, TitleOn, BoxLayout
+    AliasingReason,
+    CanvasItemType,
+    GroupObject,
+    PortObject,
+    PortgrpObject,
+    InlineDisplay,
+    canvas,
+    options,
+    MAX_PLUGIN_ID_ALLOWED,
+    Direction,
+    Zv)
 
+from .utils import (
+    nearest_on_grid, nearest_on_grid_check_others,
+    get_portgroup_name_from_ports_names)
+from . import box_widget_redraws
+from .box_widget_shadow import BoxWidgetShadow
+from .icon_widget import IconSvgWidget, IconPixmapWidget
+from .port_widget import PortWidget
+from .portgroup_widget import PortgroupWidget
+from .grouped_lines_widget import GroupedLinesWidget
+from .theme import StyleAttributer, UnselectedStyleAttributer
+from .box_layout import BoxLayout
+from .box_hidder import BoxHidder
+from .box_widget_utils import TitleLine, UnwrapButton, WrappingState
 
 _logger = logging.getLogger(__name__)
 
 
-def list_port_types_and_subs() -> Iterator[tuple[PortType, PortSubType]]:
-    ''' simple fast generator port PortType and PortSubType preventing
-        incoherent couples '''
-    for port_type in PortType:
-        if port_type is PortType.NULL:
-            continue
-
-        for port_subtype in PortSubType:
-            if ((port_subtype is PortSubType.A2J
-                    and not port_type is PortType.MIDI_JACK)
-                or (port_subtype is PortSubType.CV
-                    and not port_type is PortType.AUDIO_JACK)):
-                # No such port should exist, it is just for win some time
-                continue
-
-            yield (port_type, port_subtype)
-
-
-def from_float_to(from_f: float, to_f: float, ratio: float) -> float:
-    if ratio >= 1.0:
-        return to_f
-    if ratio <= 0.0:
-        return from_f
-
-    return from_f + (to_f - from_f) * ratio
-
-
-class BoxWidget(BoxWidgetMoth):
+class BoxWidget(QGraphicsItem):
     def __init__(self, group: GroupObject, port_mode: PortMode):
-        BoxWidgetMoth.__init__(self, group, port_mode)
+        canvas.ensure_init()
+        QGraphicsItem.__init__(self)
+        self.setCacheMode(QGraphicsItem.CacheMode.DeviceCoordinateCache)
+
+        # Save Variables, useful for later
+        self._group_id = group.group_id
+        self._group_name = group.group_name
+        self._box_type = group.box_type
+
+        # plugin Id, < 0 if invalid
+        self._plugin_id = -1
+        self._plugin_ui = False
+        self._plugin_inline = InlineDisplay.DISABLED
+
+        # Base Variables
+        self._width = 50
+        self._width_in = 0
+        self._width_out = 0
+        self._header_width = self._width
+        self._header_height = 0
+        self._wrapped_width = 0
+        self._unwrapped_width = 0
+        self._wrapped_height = 0
+        self._unwrapped_height = 0
+        self._height = self._header_height + 1
+        self._ports_y_start = self._header_height
+
+        self._last_pos = QPointF()
+        self._port_mode = port_mode
+        'port modes  it can contain (OUTPUT, INPUT or BOTH)'
+
+        self._current_port_mode = PortMode.NULL
+        'depends on present ports'
+
+        self._cursor_moving = False
+        self._mouse_down = False
+        self._inline_data = None
+        self._inline_image = None
+        self._inline_scaling = 1.0
+
+        self.is_hardware = bool(group.box_type is BoxType.HARDWARE)
+        self._icon_name = group.icon_name
+
+        self._title_lines = list[TitleLine]()
+        self._header_line_left = None
+        self._header_line_right = None
+
+        if group.gpos.boxes[port_mode].is_wrapped():
+            self._wrapping_state = WrappingState.WRAPPED
+        else:
+            self._wrapping_state = WrappingState.NORMAL
+
+        self.hidder_widget: Optional[BoxHidder] = None
+
+        self._wrapping_ratio = 1.0
+        self._wrap_triangle_pos = UnwrapButton.NONE
+
+        self._port_list = list[PortObject]()
+        self._portgrp_list = list[PortgrpObject]()
+
+        # Icon
+        if group.box_type in (BoxType.HARDWARE, BoxType.MONITOR):
+            self.top_icon = IconSvgWidget(
+                group.box_type, group.icon_name, self._port_mode, self)
+        else:
+            self.top_icon = IconPixmapWidget(
+                group.box_type, group.icon_name, self)
+            if self.top_icon.is_null():
+                top_icon = self.top_icon
+                self.top_icon = None
+                del top_icon
+
+        # Shadow
+        shadow_theme = canvas.theme.box_shadow
+        if self.is_hardware:
+            shadow_theme = shadow_theme.hardware
+        elif self._box_type is BoxType.CLIENT:
+            shadow_theme = shadow_theme.client
+        elif self.is_monitor():
+            shadow_theme = shadow_theme.monitor
+
+        self.shadow = None
+        # FIXME FX on top of graphic items make them lose high-dpi
+        # See https://bugreports.qt.io/browse/QTBUG-65035
+        if (options.show_shadows
+                and canvas.scene.get_device_pixel_ratio_f() == 1.0):
+            self.shadow = BoxWidgetShadow(self.toGraphicsObject())
+            self.shadow.set_fake_parent(self)
+            self.shadow.set_theme(shadow_theme)
+            self.setGraphicsEffect(self.shadow)
+
+            if port_mode is PortMode.INPUT:
+                self.shadow.setOffset(4, 2)
+            elif port_mode is PortMode.OUTPUT:
+                self.shadow.setOffset(-4, 2)
+            elif port_mode is PortMode.BOTH:
+                self.shadow.setOffset(0, 2)
+
+        # Final touches
+        self.setFlags(QGraphicsItem.GraphicsItemFlag.ItemIsFocusable
+                      | QGraphicsItem.GraphicsItemFlag.ItemIsMovable
+                      | QGraphicsItem.GraphicsItemFlag.ItemIsSelectable)
+
+        # Wait for at least 1 port
+        if options.auto_hide_groups:
+            self.setVisible(False)
+
+        if options.auto_select_items:
+            self.setAcceptHoverEvents(True)
+
+        self._is_semi_hidden = False
+        '''is True when the group name does not match
+        with the filter bar text. The box opacity becomes lighter.'''
+
+        self._can_handle_gui = group.handle_client_gui
+        'used for optional-gui switch (NSM)'
+        self._gui_visible = group.gui_visible
+        'NSM GUI visibility state'
+
+        self._layout_mode = group.gpos.boxes[port_mode].layout_mode
+        self._current_layout_mode = BoxLayoutMode.LARGE
+        self._title_under_icon = False
+        self._painter_path = QPainterPath()
+        self._painter_path_sel = QPainterPath()
+        self._layout: BoxLayout | None = None
+        self._alter_layout: BoxLayout | None = None
+
         self.update_positions_pending = False
+
+        canvas.scene.addItem(self)
+        self.setZValue(Zv.NEW_BOX.value)
+        
         self._ex_width = self._width
         self._ex_height = self._height
-
-        self._y_normal_rab = 0.0
-        self._y_wrapped_rab = 0.0
 
         self._ex_scene_pos = self.scenePos()
         self._ex_ports_y_segments_dict = dict[str, list[list[int]]]()
@@ -61,1409 +211,1310 @@ class BoxWidget(BoxWidgetMoth):
     def __repr__(self) -> str:
         return f"BoxWidget({self._group_name}, {self._port_mode.name})"
 
+    def get_group_id(self):
+        return self._group_id
+
+    def get_group_name(self):
+        return self._group_name
+
     def _get_portgroup_name(self, portgrp_id: int):
         return get_portgroup_name_from_ports_names(
             [p.port_name for p in self._port_list
              if p.portgrp_id == portgrp_id])
 
-    def _should_align_port_types(self) -> bool:
-        '''check if we can align port types
-           eg, align first midi input to first midi output'''
-        if self._current_port_mode is not PortMode.BOTH:
-            return False
-
-        port_types_aligner = list[tuple[int, int]]()
-
-        for port_type, port_subtype in list_port_types_and_subs():
-            n_ins = 0
-            n_outs = 0
-
-            for port in self._port_list:
-                if (port.port_type == port_type
-                        and port.port_subtype == port_subtype):
-                    if port.port_mode is PortMode.INPUT:
-                        n_ins += 1
-                    elif port.port_mode is PortMode.OUTPUT:
-                        n_outs += 1
-
-            port_types_aligner.append((n_ins, n_outs))
-
-        winner = PortMode.NULL
-
-        for n_ins, n_outs in port_types_aligner:
-            if ((winner is PortMode.INPUT and n_outs > n_ins)
-                    or (winner is PortMode.OUTPUT and n_ins > n_outs)):
-                return False
-
-            if n_ins > n_outs:
-                winner = PortMode.INPUT
-            elif n_outs > n_ins:
-                winner = PortMode.OUTPUT
-
-        return True
-
-    def _get_ports_min_sizes(
-            self, align_port_types: bool) -> PortsMinSizes:
-        max_in_width = max_out_width = 0.0
-
-        box_theme = self.get_theme()
-        port_spacing = box_theme.port_spacing
-        port_in_offset = box_theme.port_in_offset
-        port_out_offset = box_theme.port_out_offset
-        port_type_spacing = box_theme.port_type_spacing
-        last_in_pos = last_out_pos = 0.0
-        final_last_in_pos = final_last_out_pos = last_in_pos
-        last_in_type_and_sub = (PortType.NULL, PortSubType.REGULAR)
-        last_out_type_and_sub = (PortType.NULL, PortSubType.REGULAR)
-        n_in_type_and_subs = 0
-        n_out_type_and_subs = 0
-        last_port_mode = PortMode.NULL
-
-        for port_type, port_subtype in list_port_types_and_subs():
-            for port in self._port_list:
-                if (port.port_type is not port_type
-                        or port.port_subtype is not port_subtype):
-                    continue
-
-                last_of_portgrp = bool(port.pg_pos + 1 == port.pg_len)
-                size = 0
-                max_pwidth = options.max_port_width
-
-                if port.port_mode is PortMode.INPUT:
-                    port_offset = port_in_offset
-                else:
-                    port_offset = port_out_offset
-
-                if port.portgrp_id:
-                    portgrp = canvas.get_portgroup(self._group_id, port.portgrp_id)
-                    if port.pg_pos == 0:
-                        portgrp_name = self._get_portgroup_name(port.portgrp_id)
-
-                        if portgrp is not None and portgrp.widget is not None:
-                            portgrp.widget.set_print_name(
-                                portgrp_name,
-                                max_pwidth - canvas.theme.port_grouped_width - 5)
-
-                    port.widget.set_print_name(
-                        port.port_name.replace(
-                            self._get_portgroup_name(port.portgrp_id), '', 1),
-                        int(max_pwidth/2))
-
-                    if portgrp is None or portgrp.widget is None:
-                        _logger.warning('_get_ports_min_sizes, '
-                                        'no portgrp or no portgrp.widget')
-                        continue
-
-                    if (portgrp.widget.get_text_width() + 5
-                            > max_pwidth - port.widget.get_text_width()):
-                        portgrp.widget.reduce_print_name(
-                            max_pwidth - int(port.widget.get_text_width()) - 5)
-
-                    # the port_grouped_width is also used to define
-                    # the portgroup minimum width
-                    size = (max(portgrp.widget.get_text_width() + 6.0,
-                                canvas.theme.port_grouped_width)
-                            + max(port.widget.get_text_width() + 6.0,
-                                  canvas.theme.port_grouped_width)
-                            + port_offset)
-                else:
-                    port.widget.set_print_name(port.port_name, max_pwidth)
-                    size = max(port.widget.get_text_width() + 6.0 + port_offset, 20.0)
-
-                type_and_sub = (port.port_type, port.port_subtype)
-
-                if port.port_mode is PortMode.INPUT:
-                    max_in_width = max(max_in_width, size)
-                    if type_and_sub != last_in_type_and_sub:
-                        if (last_in_type_and_sub
-                                != (PortType.NULL, PortSubType.REGULAR)):
-                            last_in_pos += port_type_spacing
-                        last_in_type_and_sub = type_and_sub
-                        n_in_type_and_subs += 1
-
-                    last_in_pos += canvas.theme.port_height
-                    if last_of_portgrp:
-                        last_in_pos += port_spacing
-
-                elif port.port_mode is PortMode.OUTPUT:
-                    max_out_width = max(max_out_width, size)
-
-                    if type_and_sub != last_out_type_and_sub:
-                        if (last_out_type_and_sub !=
-                                (PortType.NULL, PortSubType.REGULAR)):
-                            last_out_pos += port_type_spacing
-                        last_out_type_and_sub = type_and_sub
-                        n_out_type_and_subs += 1
-
-                    last_out_pos += canvas.theme.port_height
-                    if last_of_portgrp:
-                        last_out_pos += port_spacing
-
-                final_last_in_pos = last_in_pos
-                final_last_out_pos = last_out_pos
-
-            if align_port_types:
-                # align port types horizontally
-                if last_in_pos > last_out_pos:
-                    last_out_type_and_sub = last_in_type_and_sub
-                else:
-                    last_in_type_and_sub = last_out_type_and_sub
-                last_in_pos = last_out_pos = max(last_in_pos, last_out_pos)
-
-        # calculates height in case of one column only
-        last_inout_pos = 0.0
-        last_type_and_sub = (PortType.NULL, PortSubType.REGULAR)
-        n_inout_types_and_sub = 0
-
-        if self._current_port_mode is PortMode.BOTH:
-            for port_type, port_subtype in list_port_types_and_subs():
-                for port in self._port_list:
-                    if (port.port_type is not port_type
-                            or port.port_subtype is not port_subtype):
-                        continue
-
-                    if (port.port_type, port.port_subtype) != last_type_and_sub:
-                        if last_type_and_sub != (PortType.NULL, PortSubType.REGULAR):
-                            last_inout_pos += port_type_spacing
-                        last_type_and_sub = (port.port_type, port.port_subtype)
-                        n_inout_types_and_sub += 1
-
-                    if port.pg_pos:
-                        continue
-
-                    last_inout_pos += port.pg_len * canvas.theme.port_height
-                    last_inout_pos += port_spacing
-
-                    last_port_mode = port.port_mode
-
-        return PortsMinSizes(
-            final_last_in_pos,
-            final_last_out_pos,
-            last_inout_pos,
-            max_in_width + canvas.theme.port_height / 2.0,
-            max_out_width + canvas.theme.port_height / 2.0,
-            n_in_type_and_subs,
-            n_out_type_and_subs,
-            n_inout_types_and_sub,
-            last_port_mode
-        )
-
-    @staticmethod
-    def split_in_two(string: str, n_lines: int) -> list[str]:
-        def polished_list(input_list: list[str]) -> list:
-            output_list = list[str]()
-
-            for string in input_list:
-                if not string:
-                    continue
-                if len(string) == 1:
-                    if output_list:
-                        output_list[-1] += string
-                    else:
-                        output_list.append(string)
-                else:
-                    if output_list and len(output_list[-1]) <= 1:
-                        output_list[-1] += string
-                    else:
-                        output_list.append(string)
-
-            return [s.strip() for s in output_list]
-
-        if n_lines <= 1:
-            return [string]
-
-        sep_indexes = list[int]()
-        last_was_digit = False
-        last_was_upper = False
-
-        for i, c in enumerate(string):
-            if c in (' ', '-', '_', '.'):
-                sep_indexes.append(i)
-            else:
-                if c.upper() == c:
-                    if c.isdigit():
-                        if not last_was_digit:
-                            sep_indexes.append(i)
-                    else:
-                        if last_was_digit or not last_was_upper:
-                            sep_indexes.append(i)
-
-                    last_was_upper = True
-                else:
-                    if last_was_digit:
-                        sep_indexes.append(i)
-                    last_was_upper = False
-
-                last_was_digit = c.isdigit()
-
-        if not sep_indexes:
-            return [string]
-
-        if len(sep_indexes) + 1 <= n_lines:
-            return_list = list[str]()
-            last_index = 0
-
-            for sep_index in sep_indexes:
-                return_list.append(string[last_index:sep_index])
-                last_index = sep_index
-
-            return_list.append(string[last_index:])
-
-            return polished_list(return_list)
-
-        best_indexes = [0]
-        string_rest = string
-
-        for i in range(n_lines, 1, -1):
-
-            target = best_indexes[-1] + int(len(string_rest)/i)
-            best_index = None
-            best_dif = len(string)
-
-            for s in sep_indexes:
-                if s <= best_indexes[-1]:
-                    continue
-
-                dif = abs(target - s)
-                if dif < best_dif:
-                    best_index = s
-                    best_dif = dif
-                else:
-                    break
-
-            if best_index is None:
-                continue
-
-            string_rest = string[best_index:]
-            best_indexes.append(best_index)
-
-        best_indexes = best_indexes[1:]
-        last_index = 0
-        return_list = list[str]()
-
-        for i in best_indexes:
-            return_list.append(string[last_index:i])
-            last_index = i
-
-        return_list.append(string[last_index:])
-        return polished_list(return_list)
-
-    def _split_title(self, n_lines: int) -> tuple[TitleLine]:
-        title, slash, subtitle = self._group_name.partition('/')
-
-        if (not subtitle
-                and self._box_type == BoxType.CLIENT
-                and ' (' in self._group_name
-                and self._group_name.endswith(')')):
-            title, parenthese, subtitle = self._group_name.partition(' (')
-            subtitle = subtitle[:-1]
-
-        theme = self.get_theme()
-
-        if self._box_type == BoxType.CLIENT and subtitle:
-            # if there is a subtitle, title is not bold when subtitle is.
-            # so title is 'little'
-            client_line = TitleLine(title, theme, little=True)
-            subclient_line = TitleLine(subtitle, theme)
-            title_lines = []
-
-            if n_lines <= 2:
-                title_lines.append(client_line)
-                title_lines.append(subclient_line)
-
-            else:
-                if client_line.size > subclient_line.size:
-                    client_strs = self.split_in_two(title, 2)
-                    for client_str in client_strs:
-                        title_lines.append(TitleLine(client_str, theme, little=True))
-
-                    for subclient_str in self.split_in_two(subtitle, n_lines - 2):
-                        title_lines.append(TitleLine(subclient_str, theme))
-                else:
-                    two_lines_title = False
-
-                    if n_lines >= 4:
-                        # Check if we need to split the client title
-                        # it could be "Carla-Multi-Client.Carla".
-                        subtitles = self.split_in_two(subtitle, n_lines - 2)
-
-                        for subtt in subtitles:
-                            subtt_line = TitleLine(subtt, theme)
-                            if subtt_line.size > client_line.size:
-                                break
-                        else:
-                            client_strs = self.split_in_two(title, 2)
-                            for client_str in client_strs:
-                                title_lines.append(
-                                    TitleLine(client_str, theme, little=True))
-                            two_lines_title = True
-
-                    if not two_lines_title:
-                        title_lines.append(client_line)
-
-                    subt_len = n_lines - 1
-                    if two_lines_title:
-                        subt_len -= 1
-                        titles = self.split_in_two(subtitle, subt_len)
-                        for title in titles:
-                            title_lines.append(TitleLine(title, theme))
-                    else:
-                        titles = self.split_in_two('uuuu' + subtitle, subt_len)
-
-                        # supress the uuuu
-                        for i, title in enumerate(titles):
-                            if i == 0:
-                                title = title[4:]
-                                if not title:
-                                    continue
-                            title_lines.append(TitleLine(title, theme))
-        else:
-            if n_lines >= 2:
-                titles = list[str]()
-                if (self._group_name.startswith(
-                     ('Carla.', 'Carla-Multi-Client.', 'Carla-Single-Client.'))
-                        and '/' in self._group_name):
-                    first_line, slash, last_line = self._group_name.partition('/')
-                    titles = [first_line + '/'] + self.split_in_two(last_line, n_lines - 1)
-                else:
-                    titles = self.split_in_two(self._group_name, n_lines)
-
-                title_lines = [TitleLine(tt, theme) for tt in titles]
-            else:
-                title_lines = [TitleLine(self._group_name, theme)]
-
-        return tuple(title_lines)
-
-    def _choose_box_layout(
-            self,
-            ports_min_sizes: PortsMinSizes) -> tuple[BoxLayout, BoxLayout]:
-        '''choose in how many lines the title should be splitted
-        and if the box layout should be large or high.
-        Return the 2 best layout choices.'''
-
-        box_theme = self.get_theme()
-        font_size = box_theme.font.pixelSize()
-
-        if self.has_top_icon():
-            icon_size = int(box_theme.icon_size)
-        else:
-            icon_size = 0
-
-        # Check Text Name size
-
-        # first look in cache if title sizes are stocked
-        all_title_templates = box_theme.get_title_templates(
-            self._group_name, icon_size)
-        lines_choice_max = len(all_title_templates) - 1
-
-        if not all_title_templates:
-            # this box title is not in cache, we need to estimate all its sizes
-            # depending number of splitted lines.
-            title_template = {
-                "title_width": 0,
-                "header_width": 0,
-                "title_height": 0,
-                "header_height": 0}
-
-            all_title_templates = [title_template.copy() for i in range(8)]
-
-            last_lines_count = 0
-            title_line_y_start = 1 + font_size
-            title_height = title_line_y_start + 3
-
-            if self.has_top_icon():
-                header_height = 3 + icon_size + 3
-            else:
-                header_height = title_height
-
-            i = 0
-            for i in range(1, 8):
-                max_title_width = 0
-                max_header_width = 50
-                if self._plugin_inline is not InlineDisplay.DISABLED:
-                    max_header_width = 200
-
-                title_lines = self._split_title(i)
-
-                for j, title_line in enumerate(title_lines):
-                    title_line.y = title_line_y_start + j * int(font_size * 1.4)
-                    max_title_width = int(max(max_title_width, title_line.size))
-                    header_width = title_line.size + 10
-
-                    if (self.has_top_icon()
-                            and title_line.y <= icon_size + 6 + font_size):
-                        # text line is at right of the icon
-                        header_width += icon_size + 4
-
-                    max_header_width = max(max_header_width, int(header_width))
-
-                title_height = int(
-                    title_line_y_start
-                    + int(font_size * 1.4) * (len(title_lines) - 1)
-                    + font_size / 2)
-
-                header_height = max(header_height, title_height)
-
-                # if self._can_handle_gui:
-                #     max_header_width += 2 * GUI_MARGIN
-                #     header_height += 2 * GUI_MARGIN
-
-                new_title_template = title_template.copy()
-                new_title_template['title_width'] = max_title_width
-                new_title_template['header_width'] = max_header_width
-                new_title_template['title_height'] = title_height
-                new_title_template['header_height'] = header_height
-                all_title_templates[i] = new_title_template
-
-                if i > 2 and len(title_lines) <= last_lines_count:
-                    break
-
-                last_lines_count = len(title_lines)
-
-            lines_choice_max = i
-            if self.has_top_icon():
-                icon_size = int(box_theme.icon_size)
-            else:
-                icon_size = 0
-
-            box_theme.save_title_templates(
-                self._group_name, icon_size,
-                all_title_templates[:lines_choice_max])
-
-        # Now compare multiple possible areas for the box,
-        # depending on BoxLayoutMode and number of lines for the box title.
-
-        layout_mode = self._layout_mode
-        BoxLayout.init_from_box(self, ports_min_sizes)
-        box_layouts = list[BoxLayout]()
-
-        if self._current_port_mode in (PortMode.INPUT, PortMode.OUTPUT):
-            for i in range(1, lines_choice_max + 1):
-                box_layouts.append(
-                    BoxLayout(i, BoxLayoutMode.LARGE,
-                              TitleOn.SIDE, all_title_templates[i]))
-
-            if self.has_top_icon():
-                for i in range(1, lines_choice_max + 1):
-                    box_layouts.append(
-                        BoxLayout(i, BoxLayoutMode.LARGE,
-                                  TitleOn.SIDE_UNDER_ICON,
-                                  all_title_templates[i]))
-
-            for i in range(1, lines_choice_max + 1):
-                box_layouts.append(
-                    BoxLayout(i, BoxLayoutMode.HIGH,
-                              TitleOn.TOP, all_title_templates[i]))
-        else:
-            for i in range(1, lines_choice_max + 1):
-                box_layouts.append(
-                    BoxLayout(i, BoxLayoutMode.LARGE,
-                              TitleOn.TOP, all_title_templates[i]))
-
-            for i in range(1, lines_choice_max + 1):
-                box_layouts.append(
-                    BoxLayout(i, BoxLayoutMode.HIGH,
-                              TitleOn.TOP, all_title_templates[i]))
-
-        # sort areas and choose the first one (the littlest area)
-        box_layouts.sort()
-
-        high_layout, large_layout = None, None
-
-        for layout in box_layouts:
-            if (high_layout is None
-                    and layout.layout_mode is BoxLayoutMode.HIGH):
-                high_layout = layout
-            elif (large_layout is None
-                    and layout.layout_mode is BoxLayoutMode.LARGE):
-                large_layout = layout
-
-        if high_layout is None or large_layout is None:
-            # can not happen, just for typing
-            raise Exception
-
-        high_layout.set_choosed()
-        large_layout.set_choosed()
-
-        if layout_mode is BoxLayoutMode.AUTO:
-            if high_layout is box_layouts[0]:
-                return high_layout, large_layout
-            return large_layout, high_layout
-
-        if layout_mode is BoxLayoutMode.HIGH:
-            return high_layout, large_layout
-
-        return large_layout, high_layout
-
-    def _set_ports_y_positions(
-            self, align_port_types: bool) -> dict[str, list[list[float]]]:
-        ''' ports Y positioning, return height segments info
-            used if port-in-offset or port-out-offset are not zero in box theme'''
-
-        def set_widget_pos(widget: QGraphicsItem, pos: float):
-            if self._wrapping_state is WrappingState.WRAPPING:
-                widget.setY(pos - ((pos - wrapped_port_pos)
-                                   * self._wrapping_ratio))
-            elif self._wrapping_state is WrappingState.UNWRAPPING:
-                widget.setY(wrapped_port_pos + ((pos - wrapped_port_pos)
-                                                * self._wrapping_ratio))
-            elif self._wrapping_state is WrappingState.WRAPPED:
-                widget.setY(wrapped_port_pos)
-            else:
-                widget.setY(pos)
-
-        if self._layout is None:
-            raise Exception('._layout is needed')
-
-        box_theme = self.get_theme()
-        port_spacing = box_theme.port_spacing
-        port_type_spacing = box_theme.port_type_spacing
-        pen_width = box_theme.fill_pen.widthF()
-        header_counts_border = box_theme.header_counts_border
-        last_in_type_and_sub = (PortType.NULL, PortSubType.REGULAR)
-        last_out_type_and_sub = (PortType.NULL, PortSubType.REGULAR)
-        last_type_and_sub = (PortType.NULL, PortSubType.REGULAR)
-
-        port_type_spacing_in = port_type_spacing_out = port_type_spacing
-        one_column = self._layout.one_column
-
-        if self._has_side_title():
-            start_pos = pen_width + port_spacing
-        else:
-            start_pos = self._header_height
-            if header_counts_border:
-                start_pos += pen_width
-
-        if self._layout.title_on is TitleOn.TOP:
-            wrapped_port_pos = (self._layout.wrapped_height
-                                - canvas.theme.port_height - pen_width)
-        else:
-            wrapped_port_pos = pen_width + port_spacing
-
-        last_in_pos = last_out_pos = start_pos
-
-        # # manage exceedent height in the box
-        # # due to the grid height (or to the others side ports
-        # # in a grouped box).
-        # exc_in = self._layout.exceeding_y_ins
-        # exc_out = self._layout.exceeding_y_outs
-        # exc_inout = self._layout.exceeding_y_inouts
-        # n_types_in = self._layout._pms.n_in_type_and_subs
-        # n_types_out = self._layout._pms.n_out_type_and_subs
-        # n_types_inout = self._layout._pms.n_inout_type_and_subs
-
-        # if one_column:
-        #     new_pts = exc_inout / (1 + n_types_inout)
-        #     if new_pts > port_type_spacing:
-        #         port_type_spacing = port_type_spacing_in = \
-        #             port_type_spacing_out = new_pts
-        #         last_in_pos += new_pts
-        #         last_out_pos += new_pts
-        #     else:
-        #         last_in_pos += exc_inout / 2
-        #         last_out_pos += exc_inout / 2
-
-        # elif align_port_types:
-        #     exceeding = min(exc_in, exc_out)
-        #     n_types = max(n_types_in, n_types_out)
-        #     new_pts = exceeding / (1 + n_types)
-        #     if new_pts > port_type_spacing:
-        #         port_type_spacing = new_pts
-        #         port_type_spacing_in = port_type_spacing_out = new_pts
-        #         last_in_pos += port_type_spacing
-        #         last_out_pos += port_type_spacing
-        #     else:
-        #         last_in_pos += exceeding / 2
-        #         last_out_pos += exceeding / 2
-
-        # elif self._current_port_mode is PortMode.BOTH:
-        #     if exc_out < exc_in:
-        #         new_pts_out = exc_out / (1 + n_types_out)
-        #         more_out = 0.0
-        #         if new_pts_out > port_type_spacing:
-        #             port_type_spacing_out = new_pts_out
-        #             last_in_pos += new_pts_out
-        #             last_out_pos += new_pts_out
-        #             more_out = (new_pts_out - port_type_spacing) * (n_types_out -1)
-
-        #         if n_types_in > 1:
-        #             port_type_spacing_in += (
-        #                 (exc_in + more_out - exc_out) / (n_types_in - 1))
-        #     else:
-        #         new_pts_in = exc_in / (1 + n_types_in)
-        #         more_in = 0.0
-        #         if new_pts_in > port_type_spacing:
-        #             port_type_spacing_in = new_pts_in
-        #             last_in_pos += new_pts_in
-        #             last_out_pos += new_pts_in
-        #             more_in = (new_pts_in - port_type_spacing) * (n_types_in - 1)
-
-        #         if n_types_out > 1:
-        #             port_type_spacing_out += (
-        #                 (exc_out + more_in - exc_in) / (n_types_out - 1))
-        # else:
-        #     new_pts_in = exc_in / (n_types_in + 1)
-        #     if new_pts_in > port_type_spacing_in:
-        #         port_type_spacing_in = new_pts_in
-        #         last_in_pos += new_pts_in
-        #     else:
-        #         last_in_pos += exc_in / 2
-
-        #     new_pts_out = exc_out / (n_types_out + 1)
-        #     if new_pts_out > port_type_spacing_out:
-        #         port_type_spacing_out = new_pts_out
-        #         last_out_pos += new_pts_out
-        #     else:
-        #         last_out_pos += exc_out / 2
-
-        input_segments = list[list[float]]()
-        output_segments = list[list[float]]()
-        in_segment = [last_in_pos, last_in_pos]
-        out_segment = [last_out_pos, last_out_pos]
-
-        for port_type, port_subtype in list_port_types_and_subs():
-            for port in self._port_list:
-                if (port.port_type is not port_type
-                        or port.port_subtype is not port_subtype):
-                    continue
-
-                if one_column:
-                    last_in_pos = last_out_pos = max(last_in_pos, last_out_pos)
-
-                if port.portgrp_id and port.pg_pos > 0:
-                    continue
-
-                type_and_sub = (port.port_type, port.port_subtype)
-                if one_column:
-                    if type_and_sub != last_type_and_sub:
-                        if last_type_and_sub != (PortType.NULL, PortSubType.REGULAR):
-                            last_in_pos += port_type_spacing
-                            last_out_pos += port_type_spacing
-                        last_type_and_sub = type_and_sub
-
-                if port.port_mode is PortMode.INPUT:
-                    if not one_column and type_and_sub != last_in_type_and_sub:
-                        if last_in_type_and_sub != (PortType.NULL, PortSubType.REGULAR):
-                            last_in_pos += port_type_spacing_in
-                        last_in_type_and_sub = type_and_sub
-
-                    if last_in_pos >= in_segment[1] + port_spacing + port_type_spacing_in:
-                        if in_segment[0] != in_segment[1]:
-                            input_segments.append(in_segment)
-                        in_segment = [last_in_pos, last_in_pos]
-
-                    if port.portgrp_id:
-                        # we place the portgroup widget and all its ports now
-                        # because in one column mode, we can't be sure
-                        # that port consecutivity isn't break by a port with
-                        # another mode:
-                        #
-                        # input L
-                        #     output L
-                        # input R
-                        #     output R
-                        portgrp = port.portgrp
-                        if portgrp is not None:
-                            if portgrp.widget is not None:
-                                set_widget_pos(portgrp.widget, last_in_pos)
-
-                            for gp_port in portgrp.ports:
-                                set_widget_pos(gp_port.widget, last_in_pos)
-                                last_in_pos += canvas.theme.port_height
-                    else:
-                        set_widget_pos(port.widget, last_in_pos)
-                        last_in_pos += canvas.theme.port_height
-                    in_segment[1] = last_in_pos
-                    last_in_pos += port_spacing
-
-                elif port.port_mode is PortMode.OUTPUT:
-                    if not one_column and type_and_sub != last_out_type_and_sub:
-                        if last_out_type_and_sub != (PortType.NULL, PortSubType.REGULAR):
-                            last_out_pos += port_type_spacing_out
-                        last_out_type_and_sub = type_and_sub
-
-                    if last_out_pos >= out_segment[1] + port_spacing + port_type_spacing_out:
-                        if out_segment[0] != out_segment[1]:
-                            output_segments.append(out_segment)
-                        out_segment = [last_out_pos, last_out_pos]
-
-                    if port.portgrp_id:
-                        portgrp = port.portgrp
-                        if portgrp is not None:
-                            if portgrp.widget is not None:
-                                set_widget_pos(portgrp.widget, last_out_pos)
-
-                            for gp_port in portgrp.ports:
-                                set_widget_pos(gp_port.widget, last_out_pos)
-                                last_out_pos += canvas.theme.port_height
-                    else:
-                        set_widget_pos(port.widget, last_out_pos)
-                        last_out_pos += canvas.theme.port_height
-
-                    out_segment[1] = last_out_pos
-                    last_out_pos += port_spacing
-
-            if align_port_types:
-                # align port types horizontally
-                if last_in_pos > last_out_pos:
-                    last_out_type_and_sub = last_in_type_and_sub
-                else:
-                    last_in_type_and_sub = last_out_type_and_sub
-                last_in_pos = last_out_pos = max(last_in_pos, last_out_pos)
-
-        if in_segment[0] != in_segment[1]:
-            input_segments.append(in_segment)
-        if out_segment[0] != out_segment[1]:
-            output_segments.append(out_segment)
-
-        ports_top_in = 0.0
-        ports_bottom_in = 0.0
-        ports_top_out = 0.0
-        ports_bottom_out = 0.0
-
-        if input_segments:
-            ports_top_in = input_segments[0][0]
-            ports_bottom_in = input_segments[-1][1]
-
-        if output_segments:
-            ports_top_out = output_segments[0][0]
-            ports_bottom_out = output_segments[-1][1]
-
-        wp_ports_bottom = wrapped_port_pos + canvas.theme.port_height
-
-        match self._wrapping_state:
-            case WrappingState.WRAPPED:
-                ports_top_in = ports_top_out = wrapped_port_pos
-                ports_bottom_in = ports_bottom_out = wp_ports_bottom
-
-            case WrappingState.WRAPPING:
-                ports_top_in = from_float_to(
-                    ports_top_in, wrapped_port_pos, self._wrapping_ratio)
-                ports_top_out = from_float_to(
-                    ports_top_out, wrapped_port_pos, self._wrapping_ratio)
-                ports_bottom_in = from_float_to(
-                    ports_bottom_in, wp_ports_bottom, self._wrapping_ratio)
-                ports_bottom_out = from_float_to(
-                    ports_bottom_out, wp_ports_bottom, self._wrapping_ratio)
-
-            case WrappingState.UNWRAPPING:
-                ports_top_in = from_float_to(
-                    wrapped_port_pos, ports_top_in, self._wrapping_ratio)
-                ports_top_out = from_float_to(
-                    wrapped_port_pos, ports_top_out, self._wrapping_ratio)
-                ports_bottom_in = from_float_to(
-                    wp_ports_bottom, ports_bottom_in, self._wrapping_ratio)
-                ports_bottom_out = from_float_to(
-                    wp_ports_bottom, ports_bottom_out, self._wrapping_ratio)
-
-        self._layout.set_ports_top_bottom(
-            ports_top_in, ports_bottom_in,
-            ports_top_out, ports_bottom_out)
-
-        return {'input_segments': input_segments,
-                'output_segments': output_segments}
-
-    def _set_ports_x_positions(self, ports_min_sizes: PortsMinSizes):
-        box_theme = self.get_theme()
-        port_in_offset = box_theme.port_in_offset
-        port_out_offset = box_theme.port_out_offset
-
-        max_in_width = ports_min_sizes.ins_width
-        max_out_width = ports_min_sizes.outs_width
-
-        # Horizontal ports re-positioning
-        in_x = port_in_offset
-        out_x = self._width - max_out_width
-
-        # Horizontal ports not in portgroup re-positioning
-        for port in self._port_list:
-            if port.portgrp_id:
-                continue
-
-            if port.port_mode is PortMode.INPUT:
-                port.widget.setX(in_x)
-                port.widget.set_port_width(max_in_width - port_in_offset)
-            elif port.port_mode is PortMode.OUTPUT:
-                port.widget.setX(out_x)
-                port.widget.set_port_width(max_out_width - port_out_offset)
-
-        # Horizontal portgroups and ports in portgroup re-positioning
-        for portgrp in self._portgrp_list:
-            if portgrp.widget is not None:
-                if portgrp.port_mode is PortMode.INPUT:
-                    portgrp.widget.set_portgrp_width(max_in_width - port_in_offset)
-                    portgrp.widget.setX(in_x)
-                elif portgrp.port_mode is PortMode.OUTPUT:
-                    portgrp.widget.set_portgrp_width(max_out_width - port_out_offset)
-                    portgrp.widget.setX(out_x)
-
-            max_port_in_pg_width = canvas.theme.port_grouped_width
-
-            for port in portgrp.ports:
-                if port.widget is not None:
-                    port_print_width = int(port.widget.get_text_width())
-
-                    # change port in portgroup width only if
-                    # portgrp will have a name
-                    # to ensure that portgroup widget is large enough
-                    max_port_in_pg_width = max(max_port_in_pg_width,
-                                               port_print_width + 6)
-
-            out_in_portgrp_x = (self._width - port_out_offset
-                                - max_port_in_pg_width)
-
-            if portgrp.widget is not None:
-                portgrp.widget.set_ports_width(max_port_in_pg_width)
-
-            for port in portgrp.ports:
-                if port.widget is not None:
-                    port.widget.set_port_width(max_port_in_pg_width)
-                    if port.port_mode is PortMode.INPUT:
-                        port.widget.setX(in_x)
-                    elif port.port_mode is PortMode.OUTPUT:
-                        port.widget.setX(out_in_portgrp_x)
-
-    def _set_title_positions(self):
-        '''set title lines, header lines and icon positions'''
-        self._header_line_left = None
-        self._header_line_right = None
-
-        box_theme = self.get_theme()
-        font_size = box_theme.font.pixelSize()
-        font_spacing = int(font_size * 1.4)
-        icon_size = box_theme.icon_size
-
-        if box_theme.header_counts_border:
-            pen_width = box_theme.fill_pen.widthF()
-        else:
-            pen_width = 0
-
-        # when client is client capable of gui state
-        # gui button has margins
-        if self._can_handle_gui:
-            gui_button = canvas.theme.gui_button
-            if self._gui_visible:
-                gui_button = gui_button.gui_visible
-            else:
-                gui_button = gui_button.gui_hidden
-            
-            gui_margin = gui_button.margin
-        else:
-            gui_margin = canvas.theme.margin_empty
-
-        gm_left = gm_right = gui_margin.free_side
-        if self._current_port_mode & PortMode.INPUT:
-            gm_left = gui_margin.ports_side
-        if self._current_port_mode & PortMode.OUTPUT:
-            gm_right = gui_margin.ports_side
-        
-        if self._has_side_title():
-            if self._current_port_mode is PortMode.INPUT:
-                left = self._width - self._header_width + gm_left
-                right = self._width - pen_width - gm_right
-            else:
-                left = pen_width + gm_left
-                right = self._header_width - gm_right
-        else:
-            left = pen_width + gm_left
-            right = self._width - pen_width - gm_right
-
-        top = pen_width + gui_margin.top
-        bottom = self._header_height - gui_margin.bottom
-
-        # set title lines Y position
-        if self._title_under_icon:
-            title_y_start = top + icon_size + font_spacing + 3
-        else:
-            title_y_start = top + font_size + 1
-
-        for i, title_line in enumerate(self._title_lines):
-            title_line.y = title_y_start + i * font_spacing
-
-        if not self._title_under_icon and len(self._title_lines) == 1:
-            self._title_lines[0].y = int(
-                top + (bottom - top - font_size * 0.6) * 0.5 + font_size * 0.6)
-
-        if self._has_side_title():
-            y_correction = 0
-
-            # In case the title is near to be vertically centered in the box
-            # It's prettier to center it correctly
-            # TODO
-            if (self._title_lines
-                    and not self._title_under_icon
-                    and not self._can_handle_gui
-                    and self._title_lines[-1].y + int(font_size * 1.4) > self._height):
-                y_correction = (self._height - self._title_lines[-1].y - 2) / 2 - 2
-
-            # set title lines pos
-            for title_line in self._title_lines:
-                if self._current_port_mode is PortMode.INPUT:
-                    title_line.x = left + 4
-
-                    self.set_top_icon_pos(
-                        right - int(icon_size) - 3,
-                        int(top + 3))
-
-                elif self._current_port_mode is PortMode.OUTPUT:
-                    if self.has_top_icon() and not self._title_under_icon:
-                        title_line.x = left + 3 + icon_size + 3
-                    else:
-                        title_line.x = left + 4
-
-                    self.set_top_icon_pos(left + 3, top + 3)
-
-                title_line.y += y_correction
+    def is_monitor(self):
+        return (self._box_type is BoxType.MONITOR
+                and self._icon_name in ('monitor_playback', 'monitor_capture'))
+
+    def get_port_mode(self):
+        return self._port_mode
+
+    def set_port_mode(self, port_mode: PortMode):
+        'Use it only at split/join !!!'
+        group = canvas.get_group(self._group_id)
+        if group is None:
+            _logger.error(
+                'set_port_mode impossible, it fails to find its group')
             return
 
-        # Now we are sure title is on top
+        self._port_mode = port_mode
+        self._layout_mode = group.gpos.boxes[port_mode].layout_mode
 
-        # get title global sizes
-        max_title_size = 0
-        max_title_icon_size = 0
+    def get_current_port_mode(self):
+        return self._current_port_mode
 
-        for title_line in self._title_lines:
-            title_size = title_line.size
-            if (self.has_top_icon()
-                    and title_line.y <= top + icon_size + 6 + font_size):
-                # title line is beside icon
-                title_size += icon_size + 4
-                max_title_icon_size = max(max_title_icon_size, title_size)
-            max_title_size = max(max_title_size, title_size)
+    def set_layout_mode(self, layout_mode: BoxLayoutMode):
+        self._layout_mode = layout_mode
 
-        # set title lines X position
-        for title_line in self._title_lines:
-            if (self.has_top_icon()
-                    and title_line.y <= top + icon_size + 6 + font_size):
-                # title line is beside the icon
-                title_line.x = (left
-                                + (right - left - max_title_icon_size) * 0.5
-                                + icon_size + 4)
-            else:
-                title_line.x = left + (right - left - title_line.size) * 0.5
-
-        # set icon position
-        self.set_top_icon_pos(
-            left + (right - left - max_title_icon_size) * 0.5, top + 3)
-
-        # calculate header lines positions
-        side_size = (self._width - max(max_title_icon_size, max_title_size)) * 0.5
-
-        if side_size > 10:
-            y = top + (bottom - top) * 0.5
-            self._header_line_left = (5.0, y, side_size - 5.0, y)
-            self._header_line_right = (self._width - side_size + 5.0, y,
-                                       self._width - 5.0, y)
-
-    def _build_painter_path(
-            self, pos_dict: dict[str, list[list[float]]],
-            selected=False):
-        input_segments = pos_dict['input_segments']
-        output_segments = pos_dict['output_segments']
-
-        painter_path = QPainterPath()
-        theme = self.get_theme()
-        if selected:
-            theme = theme.selected
-
-        border_radius = theme.border_radius
-        port_in_offset = abs(theme.port_in_offset)
-        port_out_offset = abs(theme.port_out_offset)
-        bore_in = bool(theme.port_in_offset_mode == 'bore')
-        bore_out = bool(theme.port_out_offset_mode == 'bore')
-        pen = theme.fill_pen
-        line_hinting = pen.widthF() / 2.0
-
-        # theses values are needed to prevent some incorrect painter_path
-        # united or subtracted results
-        epsy = 0.001
-        epsd = epsy * 2.0
-
-        rect = QRectF(0.0, 0.0, self._width, self._height)
-        rect.adjust(line_hinting, line_hinting, -line_hinting, -line_hinting)
-
-        if border_radius == 0.0:
-            painter_path.addRect(rect)
-        else:
-            painter_path.addRoundedRect(rect, border_radius, border_radius)
-
-        if not bore_in:
-            port_in_offset = 0.0
-        if not bore_out:
-            port_out_offset = 0.0
-
-        if self._wrapping_state is WrappingState.NORMAL:
-            # substract rects in the box shape in case of port_offset (even negativ)
-            # logic would want to add rects if port_offset is negativ
-            # But that also means that we should change the boudingRect,
-            # So we won't.
-            if port_in_offset != 0.0:
-                for in_segment in input_segments:
-                    moins_path = QPainterPath()
-                    moins_path.addRect(QRectF(
-                        0.0 - epsy,
-                        in_segment[0] - line_hinting - epsy,
-                        port_in_offset + line_hinting + epsd,
-                        in_segment[1] - in_segment[0] + line_hinting * 2 + epsd))
-                    painter_path = painter_path.subtracted(moins_path)
-
-            if port_out_offset != 0.0:
-                for out_segment in output_segments:
-                    moins_path = QPainterPath()
-                    moins_path.addRect(QRectF(
-                        self._width - line_hinting - port_out_offset - epsy,
-                        out_segment[0] - line_hinting - epsy,
-                        port_out_offset + line_hinting + epsd,
-                        out_segment[1] - out_segment[0] + line_hinting * 2 + epsd))
-                    painter_path = painter_path.subtracted(moins_path)
-
-            # No rounded corner if the last port is to close from the corner
-            if (input_segments
-                    and self._height - input_segments[-1][1] <= border_radius):
-                left_path = QPainterPath()
-                left_path.addRect(QRectF(
-                    0.0 + line_hinting - epsy,
-                    max(self._height - border_radius, input_segments[-1][1])
-                        + line_hinting - epsy,
-                    border_radius + epsd,
-                    min(border_radius, self._height - input_segments[-1][1])
-                        - 2 * line_hinting + epsd))
-                painter_path = painter_path.united(left_path)
-
-            if (input_segments
-                    and input_segments[0][0] <= border_radius):
-                top_left_path = QPainterPath()
-                top_left_path.addRect(QRectF(
-                    0.0 + line_hinting - epsy,
-                    0.0 + line_hinting - epsy,
-                    border_radius + epsd,
-                    min(border_radius, input_segments[0][0])
-                    - 2 * line_hinting + epsd))
-                painter_path = painter_path.united(top_left_path)
-
-            if (output_segments
-                    and self._height - output_segments[-1][1] <= border_radius):
-                right_path = QPainterPath()
-                right_path.addRect(QRectF(
-                    self._width - border_radius - line_hinting - epsy,
-                    max(self._height - border_radius, output_segments[-1][1])
-                        + line_hinting - epsy,
-                    border_radius + epsd,
-                    min(border_radius, self._height - output_segments[-1][1])
-                        - 2 * line_hinting + epsd))
-                painter_path = painter_path.united(right_path)
-
-            if (output_segments
-                    and output_segments[0][0] <= border_radius):
-                top_right_path = QPainterPath()
-                top_right_path.addRect(QRectF(
-                    self._width - line_hinting + epsy - border_radius,
-                    0.0 + line_hinting - epsy,
-                    border_radius + epsd,
-                    min(border_radius, output_segments[0][0])
-                    - 2 * line_hinting + epsd))
-                painter_path = painter_path.united(top_right_path)
-
-        if self.is_monitor() and border_radius:
-            if self._current_port_mode is PortMode.OUTPUT:
-                left_path = QPainterPath()
-                left_path.addRect(QRectF(
-                    0.0 + line_hinting - epsy,
-                    self._height - border_radius - epsy,
-                    border_radius + epsd, border_radius - line_hinting + epsd))
-                painter_path = painter_path.united(left_path)
-
-                top_left_path = QPainterPath()
-                top_left_path.addRect(QRectF(
-                    0.0 + line_hinting - epsy, 0.0 + line_hinting - epsy,
-                    border_radius + epsd, border_radius - line_hinting + epsd))
-                painter_path = painter_path.united(top_left_path)
-
-            elif self._current_port_mode is PortMode.INPUT:
-                right_path = QPainterPath()
-                right_path.addRect(QRectF(
-                    self._width - line_hinting - epsy - border_radius,
-                    self._height - border_radius - epsy,
-                    border_radius + epsd, border_radius - line_hinting + epsd))
-                painter_path = painter_path.united(right_path)
-
-                top_right_path = QPainterPath()
-                top_right_path.addRect(QRectF(
-                    self._width - line_hinting - epsy - border_radius,
-                    0.0 + line_hinting - epsy,
-                    border_radius + epsd, border_radius - line_hinting + epsd))
-                painter_path = painter_path.united(top_right_path)
-
-        if selected:
-            self._painter_path_sel = painter_path
-        else:
-            self._painter_path = painter_path
-
-    def _get_wrap_triangle_pos(self) -> UnwrapButton:
-        if self._has_side_title():
-            if self._height - self._header_height >= 15.0:
-                if self._current_port_mode is PortMode.OUTPUT:
-                    return UnwrapButton.LEFT
-                else:
-                    return UnwrapButton.RIGHT
-
+    def get_current_layout_mode(self) -> BoxLayoutMode:
         if self._layout is None:
-            raise Exception('_get_wrap_triangle_pos, _layout is needed')
+            return BoxLayoutMode.AUTO
+        return self._layout.layout_mode
 
-        last_in_pos = self._layout.ports_bottom_in
-        last_out_pos = self._layout.ports_bottom_out
+    def redraw_inline_display(self):
+        if self._plugin_inline is InlineDisplay.CACHED:
+            self._plugin_inline = InlineDisplay.ENABLED
+            self.update()
 
-        if self._height - self._header_height >= 64.0:
-            if (self._current_port_mode is PortMode.BOTH
-                    and self._current_layout_mode is BoxLayoutMode.HIGH):
-                if last_in_pos > last_out_pos:
-                    return UnwrapButton.RIGHT
-                else:
-                    return UnwrapButton.LEFT
+    def remove_as_plugin(self):
+        self._plugin_id = -1
+        self._plugin_ui = False
 
-            elif self._current_port_mode is PortMode.INPUT:
-                return UnwrapButton.RIGHT
+    def set_as_plugin(self, plugin_id, has_ui, has_inline_display):
+        if has_inline_display and not options.inline_displays:
+            has_inline_display = False
 
-            elif self._current_port_mode is PortMode.OUTPUT:
-                return UnwrapButton.LEFT
+        if not has_inline_display:
+            del self._inline_image
+            self._inline_data = None
+            self._inline_image = None
+            self._inline_scaling = 1.0
 
-            y_side_space = last_in_pos - last_out_pos
+        self._plugin_id = plugin_id
+        self._plugin_ui = has_ui
+        self._plugin_inline = (
+            InlineDisplay.ENABLED if has_inline_display
+            else InlineDisplay.DISABLED)
+        self.update()
 
-            if y_side_space < -10.0:
-                return UnwrapButton.LEFT
-            if y_side_space > 10.0:
-                return UnwrapButton.RIGHT
-            return UnwrapButton.CENTER
+    def set_icon(self, box_type: BoxType, icon_name: str):
+        if isinstance(self.top_icon, IconSvgWidget):
+            self.remove_icon_from_scene()
 
-        return UnwrapButton.NONE
+        if (box_type is BoxType.HARDWARE
+                and (not icon_name or icon_name == 'a2j')):
+            self.top_icon = IconSvgWidget(
+                box_type, icon_name, self._port_mode, self)
+            return
+
+        if self.top_icon is not None:
+            self.top_icon.set_icon(
+                box_type, icon_name, self._current_port_mode)
+        else:
+            self.top_icon = IconPixmapWidget(box_type, icon_name, self)
+
+    def has_top_icon(self) -> bool:
+        if self.top_icon is None:
+            return False
+
+        return not self.top_icon.is_null()
+
+    def set_top_icon_pos(self, x: int | float, y: int | float):
+        if self.top_icon is None:
+            return
+        if self.top_icon.is_null():
+            return
+        self.top_icon.set_pos(x, y)
+
+    def set_optional_gui_state(self, visible: bool):
+        self._can_handle_gui = True
+        self._gui_visible = visible
+        self.update()
+
+    def set_shadow_opacity(self, opacity):
+        if self.shadow:
+            self.shadow.set_opacity(opacity)
+
+    def add_port_from_group(self, port: PortObject):
+        self.setVisible(True)
+
+        new_widget = PortWidget(port, self)
+        if self._wrapping_state is not WrappingState.NORMAL:
+            new_widget.setVisible(False)
+
+        return new_widget
+
+    def add_portgroup_from_group(self, portgroup: PortgrpObject):
+        new_widget = PortgroupWidget(portgroup, self)
+
+        if self._wrapping_state is not WrappingState.NORMAL:
+            new_widget.setVisible(False)
+
+        return new_widget
+
+    def check_item_pos(self):
+        if canvas.size_rect.isNull():
+            return
+
+        pos = self.scenePos()
+        if not (canvas.size_rect.contains(pos) and
+                canvas.size_rect.contains(
+                    pos + QPointF(self._width, self._height))): #type:ignore
+                    # something is wrong in PyQt6 typing doc
+            if pos.x() < canvas.size_rect.x():
+                self.setPos(canvas.size_rect.x(), pos.y())
+            elif pos.x() + self._width > canvas.size_rect.width():
+                self.setPos(canvas.size_rect.width() - self._width, pos.y())
+
+            pos = self.scenePos()
+            if pos.y() < canvas.size_rect.y():
+                self.setPos(pos.x(), canvas.size_rect.y())
+            elif pos.y() + self._height > canvas.size_rect.height():
+                self.setPos(pos.x(), canvas.size_rect.height() - self._height)
+
+    def remove_icon_from_scene(self):
+        if self.top_icon is None:
+            return
+
+        item = self.top_icon
+        self.top_icon = None
+        canvas.scene.removeItem(item)
+        del item
+
+    def animate_wrapping(self, ratio: float):
+        # we expose wrapping ratio only for prettier animation
+        # i.e. self._wrapping_ratio = ratio would also works fine
+        if self._wrapping_state is WrappingState.WRAPPING:
+            self._wrapping_ratio = ratio ** 0.25
+        elif self._wrapping_state is WrappingState.UNWRAPPING:
+            self._wrapping_ratio = ratio ** 4
+        else:
+            return
+
+        if ratio == 1.00:
+            # counter is terminated
+            if self._wrapping_state is WrappingState.UNWRAPPING:
+                self.hide_ports_for_wrap(False)
+                self._wrapping_state = WrappingState.NORMAL
+            else:
+                self._wrapping_state = WrappingState.WRAPPED
+
+        self.update_positions(wrap_anim=True, scene_checks=False)
+
+    def animate_hidding(self, ratio: float):
+        'ratio goes from 0.0 (box shown) to 1.0 (box hidden)'
+        if ratio >= 1.0:
+            if self.hidder_widget is not None:
+                canvas.scene.removeItem(self.hidder_widget)
+                self.hidder_widget = None
+
+            self.setVisible(False)
+            self.setZValue(
+                Zv.SEL_BOX.value if self.isSelected() else Zv.BOX.value)
+        else:
+            if self.hidder_widget is None:
+                self.hidder_widget = BoxHidder(self)
+            self.hidder_widget.set_hide_ratio(ratio)
+
+            self.setZValue(Zv.HIDDING_BOX.value)
+
+    def animate_restoring(self, ratio: float):
+        'ratio goes from 0.0 (box hidden) to 1.0 (box shown)'
+        if ratio >= 1.0:
+            if self.hidder_widget is not None:
+                canvas.scene.removeItem(self.hidder_widget)
+                self.hidder_widget = None
+
+            self.setZValue(
+                Zv.SEL_BOX.value if self.isSelected() else Zv.BOX.value)
+
+        else:
+            if self.hidder_widget is None:
+                self.hidder_widget = BoxHidder(self)
+            self.hidder_widget.set_hide_ratio(1.0 - ratio)
+            self.setZValue(Zv.HIDDING_BOX.value)
+
+    def is_hidding_or_restore(self) -> bool:
+        return self.hidder_widget is not None
+
+    def hide_ports_for_wrap(self, hide: bool):
+        for portgrp in canvas.list_portgroups(group_id=self._group_id):
+            if not portgrp.port_mode & self._port_mode:
+                continue
+
+            if portgrp.widget is not None:
+                portgrp.widget.setVisible(not hide)
+
+        for port in canvas.list_ports(group_id=self._group_id):
+            if not port.port_mode & self._port_mode:
+                continue
+
+            if port.widget is not None:
+                port.widget.setVisible(not hide)
+
+    def ports_are_visible(self) -> bool:
+        return self._wrapping_state is WrappingState.NORMAL
+
+    def is_wrapped(self) -> bool:
+        return bool(
+            self._wrapping_state in (
+                WrappingState.WRAPPED, WrappingState.WRAPPING))
+
+    def set_wrapped(self, yesno: bool, animate=True, prevent_overlap=True):
+        if yesno == bool(self._wrapping_state
+                         in (WrappingState.WRAPPED, WrappingState.WRAPPING)):
+            return
+
+        if yesno:
+            self.hide_ports_for_wrap(True)
+
+        if not animate:
+            if yesno:
+                self._wrapping_state = WrappingState.WRAPPED
+            else:
+                self._wrapping_state = WrappingState.NORMAL
+                self.hide_ports_for_wrap(False)
+            return
+
+        if yesno:
+            self._wrapping_state = WrappingState.WRAPPING
+        else:
+            self._wrapping_state = WrappingState.UNWRAPPING
+
+        canvas.scene.add_box_to_animation_wrapping(self, yesno)
+
+        if not prevent_overlap:
+            return
+
+        if self._has_side_title() and self._current_port_mode is PortMode.OUTPUT:
+            # keep ports at same right pos in this case.
+            x, y = self.top_left()
+
+            if yesno:
+                new_x = int(x + self._width - self._wrapped_width)
+            else:
+                new_x = int(x + self._width - self._unwrapped_width)
+            canvas.scene.add_box_to_animation(self, new_x, y)
+
+        if yesno:
+            hws = canvas.theme.hardware_rack_width
+            new_bounding_rect = QRectF(0, 0, self._width, self._wrapped_height)
+            if self.is_hardware:
+                new_bounding_rect = QRectF(- hws, - hws, self._width + 2 * hws,
+                                           self._wrapped_height + 2 * hws)
+            canvas.scene.bring_neighbors_and_deplace_boxes(
+                self, self.sceneBoundingRect())
+
+        else:
+            canvas.scene.deplace_boxes_from_repulsers(
+                [self], wanted_direction=Direction.DOWN)
 
     def update_positions(self, even_animated=False, without_connections=False,
                          scene_checks=True, theme_change=False,
                          wrap_anim=False):
-        '''Redraw the box, may take some time (~ 10ms for a 30 ports box).
-        It checks the present ports and portgroups, and choose the box size.
+        box_widget_redraws.update_positions(
+            self,
+            even_animated=even_animated,
+            without_connections=without_connections,
+            scene_checks=scene_checks,
+            theme_change=theme_change,
+            wrap_anim=wrap_anim)
 
-        even_animated : if we need to update the box even
-        if the box is in animation.
+    def get_dummy_rect(self) -> QRectF:
+        return box_widget_redraws.get_dummy_rect(self)
 
-        without_connections : optimization, if we redraw all groups, we can
-        redraw connections after having redrawn all boxes (2 times faster).
+    def get_layout(self,
+                   layout_mode: BoxLayoutMode | None =None) -> BoxLayout:
+        return box_widget_redraws.get_layout(self, layout_mode)
 
-        scene_checks : if we redraw multiple boxes, we can resize the scene
-        and check box overlapping after having redrawn all boxes.
+    def repaint_lines(self, forced=False, fast_move=False):
+        if forced or self.pos() != self._last_pos:
+            for port in self._port_list:
+                if port.hidden_conn_widget is not None:
+                    port.hidden_conn_widget.update_line_pos()
 
-        theme_change : only when we change theme.
+            for gp_lines in GroupedLinesWidget.widgets_for_box(
+                    self._group_id, self._current_port_mode):
+                gp_lines.update_lines_pos(fast_move=fast_move)
 
-        wrap_anim : only while wrapping/unwrapping, does not check the
-        present ports, size is based on saved sizes.'''
+        self._last_pos = self.pos()
 
+    def semi_hide(self, yesno: bool):
+        self._is_semi_hidden = yesno
+        if yesno:
+            self.setOpacity(options.semi_hide_opacity)
+        else:
+            self.setOpacity(1.0)
+
+        for port in self._port_list:
+            if port.hidden_conn_widget is not None:
+                port.hidden_conn_widget.semi_hide(yesno)
+
+    def update_opacity(self):
+        if not self._is_semi_hidden:
+            return
+
+        self.setOpacity(options.semi_hide_opacity)
+        for port in self._port_list:
+            if port.hidden_conn_widget is not None:
+                port.hidden_conn_widget.update_line_gradient()
+                port.hidden_conn_widget.update()
+
+    def _has_side_title(self):
+        return bool(
+            self._current_port_mode is not PortMode.BOTH
+            and self._current_layout_mode == BoxLayoutMode.LARGE)
+
+    def wrap_unwrap_at_point(self, scene_pos: QPointF) -> bool:
+        '''order a wrap or unwrap on the box if scene_pos is on the
+        triangle wrapper'''
+        if self._layout is None:
+            _logger.error(f"Can not wrap or unwrap {self} now, "
+                          "_layout is not set yet")
+            return False
+
+        if self._wrapping_state is WrappingState.WRAPPED:
+            # unwrap the box if scene_pos is in one of the triangles zones
+            triangle_rect_out = QRectF(0.0, self._height - 24.0, 24.0, 24.0)
+            triangle_rect_in = QRectF(
+                self._width - 24.0, self._height - 24.0, 24.0, 24.0)
+
+            mode = PortMode.INPUT
+            wrap = False
+
+            for trirect in triangle_rect_out, triangle_rect_in:
+                trirect.translate(self.scenePos())
+                if (self._current_port_mode & mode
+                        and trirect.contains(scene_pos)):
+                    wrap = True
+                    break
+
+                mode = PortMode.OUTPUT
+
+            if wrap:
+                canvas.cb.group_wrap(
+                    self._group_id, self._port_mode, False)
+                return True
+
+        elif self._wrap_triangle_pos is not UnwrapButton.NONE:
+            # wrap the box if scene_pos is on the triangle zone
+            trirect = QRectF(0, self._height - 16, 16, 16)
+
+            if self._wrap_triangle_pos is UnwrapButton.CENTER:
+                center_width = (self._width + self._layout._pms.ins_width
+                                - self._layout._pms.outs_width) / 2.0
+
+                trirect = QRectF(center_width - 8.0, self._height - 16.0,
+                                 16.0, 16.0)
+            elif self._wrap_triangle_pos is UnwrapButton.RIGHT:
+                trirect = QRectF(self._width - 16.0, self._height -16.0,
+                                 16.0, 16.0)
+
+            trirect.translate(self.scenePos())
+            if trirect.contains(scene_pos):
+                canvas.cb.group_wrap(
+                    self._group_id, self._port_mode, True)
+                return True
+
+        return False
+
+    def type(self) -> CanvasItemType:
+        return CanvasItemType.BOX
+
+    # --- protected Qt Functions redefined here ---
+
+    def itemChange(self, change, value):
+        if change == QGraphicsItem.GraphicsItemChange.ItemSelectedHasChanged:
+            is_selected = bool(value)
+            if is_selected:
+                self.setZValue(Zv.SEL_BOX.value)
+            else:
+                self.setZValue(Zv.BOX.value)
+
+            if not canvas.scene.selecting_boxes:
+                if is_selected:
+                    for lines in GroupedLinesWidget.widgets_for_box(
+                            self._group_id, self._port_mode):
+                        lines.setZValue(Zv.SEL_BOX_LINE.value)
+
+                    canvas.cb.group_selected(
+                        self._group_id, self._port_mode)
+                else:
+                    for lines in GroupedLinesWidget.widgets_for_box(
+                            self._group_id, self._port_mode):
+                        lines.setZValue(Zv.LINE.value)
+
+        return super().itemChange(change, value)
+
+    def contextMenuEvent(self, event):
+        if canvas.is_line_mov:
+            return
+
+        event.accept()
+        canvas.menu_shown = True
+
+        canvas.cb.group_menu_call(self._group_id, self._port_mode)
+
+        canvas.menu_click_pos = QCursor.pos()
+
+    def keyPressEvent(self, event):
+        if self._plugin_id >= 0 and event.key() == Qt.Key.Key_Delete:
+            event.accept()
+            canvas.cb.plugin_remove(self._plugin_id)
+            return
+        QGraphicsItem.keyPressEvent(self, event)
+
+    def hoverEnterEvent(self, event):
+        if options.auto_select_items:
+            if len(canvas.scene.selectedItems()) > 0:
+                canvas.scene.clearSelection()
+            self.setSelected(True)
+        QGraphicsItem.hoverEnterEvent(self, event)
+
+    def mouseDoubleClickEvent(self, event):
+        if self._can_handle_gui:
+            canvas.cb.client_show_gui(
+                self._group_id, not self._gui_visible)
+
+        if self._plugin_id >= 0:
+            event.accept()
+            if self._plugin_ui:
+                canvas.cb.plugin_show_ui(self._plugin_id)
+            else:
+                canvas.cb.plugin_edit(self._plugin_id)
+            return
+
+        QGraphicsItem.mouseDoubleClickEvent(self, event)
+
+    def mousePressEvent(self, event):
+        self._cursor_moving = False
+        if canvas.menu_shown and canvas.menu_click_pos == QCursor.pos():
+            # prevent box move if user just quit a context menu with click outside
+            # because it moves the box at the very strange position
+            # if the cursor didn't move between the click for menu quit
+            # and the next one (this one).
+            # strange Qt Bug.
+            self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsMovable, False)
+
+        elif event.button() == Qt.MouseButton.RightButton:
+            event.accept()
+            canvas.scene.clearSelection()
+            self.setSelected(True)
+            self._mouse_down = False
+            return
+
+        elif event.button() == Qt.MouseButton.LeftButton:
+            if self.sceneBoundingRect().contains(event.scenePos()):
+                if self.wrap_unwrap_at_point(event.scenePos()):
+                    event.ignore()
+                    return
+
+                self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsMovable, True)
+                self._mouse_down = True
+        else:
+            self._mouse_down = False
+
+        QGraphicsItem.mousePressEvent(self, event)
+
+    def mouseMoveEvent(self, event):
+        if canvas.scene.resizing_scene:
+            # QGraphicsScene.setSceneRect calls this method indirectly
+            # and resize_the_scene can be called from this method
+            # So, here we avoid a RecursionError
+            return
+
+        if canvas.scene.prevent_box_user_move:
+            return
+
+        if self._mouse_down:
+            if not self._cursor_moving:
+                # if box is moved by animation, animation could relocate
+                # the box just after, prevent this.
+                canvas.scene.remove_box_from_animation(self)
+
+                canvas.scene.set_cursor(QCursor(Qt.CursorShape.SizeAllCursor))
+                self._cursor_moving = True
+                canvas.scene.fix_temporary_scroll_bars()
+            QGraphicsItem.mouseMoveEvent(self, event)
+
+            for item in canvas.scene.get_selected_boxes():
+                item.repaint_lines(fast_move=True)
+
+            canvas.scene.resize_the_scene()
+            canvas.qobject.start_aliasing_check(AliasingReason.USER_MOVE)
+            return
+
+        QGraphicsItem.mouseMoveEvent(self, event)
+
+    def mouseReleaseEvent(self, event):
+        if self._cursor_moving:
+            canvas.scene.unset_cursor()
+            self.repaint_lines(forced=True)
+            canvas.scene.reset_scroll_bars()
+
+            selected_boxes = canvas.scene.get_selected_boxes()
+
+            # callback the state of positions
+            arg_list = list[tuple[int, PortMode, int, int]]()
+            if len(selected_boxes) == 1:
+                xy = nearest_on_grid_check_others(self.top_left(), self)
+                arg_list.append(
+                    (self._group_id, self._port_mode, *xy))
+            else:
+                # many selected boxes, do not auto-adapt the position
+                # to other existing boxes (no check_others)
+                for box in selected_boxes:
+                    xy = nearest_on_grid(box.top_left())
+                    arg_list.append((box._group_id, box._port_mode, *xy))
+
+            canvas.cb.boxes_moved(*arg_list)
+
+            canvas.set_aliasing_reason(AliasingReason.USER_MOVE, False)
+
+            QTimer.singleShot(0, canvas.scene.update)
+
+        self._mouse_down = False
+
+        if (QApplication.keyboardModifiers() & Qt.KeyboardModifier.ShiftModifier
+                and not self._cursor_moving):
+            return
+
+        self._cursor_moving = False
+
+        QGraphicsItem.mouseReleaseEvent(self, event)
+
+    def fix_pos(self, check_others=False):
+        xy = self.top_left()
+
+        if check_others:
+            new_xy = nearest_on_grid_check_others(xy, self)
+        else:
+            new_xy = nearest_on_grid(xy)
+
+        if xy == new_xy:
+            self.set_top_left(xy)
+            self.repaint_lines()
+        else:
+            canvas.scene.add_box_to_animation(self, *new_xy)
+
+    def top_left(self) -> tuple[int, int]:
+        return (round(self.sceneBoundingRect().left()),
+                round(self.sceneBoundingRect().top()))
+
+    def set_top_left(self, xy: tuple[int, int] | tuple[float, float]):
+        if self.is_hardware:
+            point = QPointF(*xy)
+            point += QPointF(
+                canvas.theme.hardware_rack_width,
+                canvas.theme.hardware_rack_width)
+            self.setPos(point)
+        else:
+            self.setPos(QPointF(*xy))
+
+    def send_move_callback(self):
+        group = canvas.get_group(self._group_id)
+        if group is None:
+            _logger.warning(
+                "send_move_callback - "
+                f"Box has no group_id {self._group_id} in canvas")
+            return
+
+        box_pos = group.gpos.boxes[self._port_mode]
+        box_pos.pos = self.top_left()
+        box_pos.set_wrapped(self.is_wrapped())
+        box_pos.layout_mode = self._layout_mode
+
+        canvas.cb.group_box_pos_changed(
+            self._group_id, self._port_mode, box_pos)
+        group.gpos.boxes[self._port_mode].pos = self.top_left()
+
+    def set_in_cache(self, yesno: bool):
+        cache_mode = self.cacheMode()
+        if yesno and cache_mode == QGraphicsItem.CacheMode.DeviceCoordinateCache:
+            return
+
+        if not yesno and cache_mode == QGraphicsItem.CacheMode.NoCache:
+            return
+
+        # toggle cache_mode value
+        if cache_mode == QGraphicsItem.CacheMode.DeviceCoordinateCache:
+            cache_mode = QGraphicsItem.CacheMode.NoCache
+        else:
+            cache_mode = QGraphicsItem.CacheMode.DeviceCoordinateCache
+
+        self.setCacheMode(cache_mode)
+        for port in self._port_list:
+            if port.widget is not None:
+                port.widget.setCacheMode(cache_mode)
+
+        for portgroup in self._portgrp_list:
+            if (self._current_port_mode & portgroup.port_mode
+                    and portgroup.widget is not None):
+                portgroup.widget.setCacheMode(cache_mode)
+
+    def after_wrap_rect(self) -> QRectF:
+        if self._wrapping_state in (WrappingState.NORMAL,
+                                    WrappingState.UNWRAPPING):
+            width = self._unwrapped_width
+            height = self._unwrapped_height
+        else:
+            width = self._wrapped_width
+            height = self._wrapped_height
+
+        if self.is_hardware:
+            hws = float(canvas.theme.hardware_rack_width)
+
+            return QRectF(- hws, - hws,
+                          width + 2.0 * hws,
+                          height + 2.0 * hws)
+        return QRectF(0.0, 0.0, float(width), float(height))
+
+    def rect_needed_in_scene(self, futur=False) -> QRectF:
+        '''return the rect that can change the scene size'''
+        if (self._current_port_mode is PortMode.NULL
+                or not self.isVisible()):
+            return QRectF()
+
+        if futur:
+            move_box = canvas.scene.move_boxes.get(self)
+            if move_box is not None:
+                if move_box.final_rect.isNull():
+                    return move_box.final_rect
+
+                if self._current_port_mode is PortMode.OUTPUT:
+                    return move_box.final_rect.marginsAdded(
+                        QMarginsF(20.0, 20.0, 50.0, 20.0))
+                if self._current_port_mode is PortMode.INPUT:
+                    return move_box.final_rect.marginsAdded(
+                        QMarginsF(50.0, 20.0, 20.0, 20.0))
+                return move_box.final_rect.marginsAdded(
+                    QMarginsF(50.0, 20.0, 50.0, 20.0))
+
+        # the scene size needs a little margin at top and bottom
+        # of the box.
+        # It needs a bigger margin on sides with ports,
+        # for the possible connections.
+
+        if self._current_port_mode is PortMode.OUTPUT:
+            return self.sceneBoundingRect().marginsAdded(
+                QMarginsF(20.0, 20.0, 50.0, 20.0))
+        if self._current_port_mode is PortMode.INPUT:
+            return self.sceneBoundingRect().marginsAdded(
+                QMarginsF(50.0, 20.0, 20.0, 20.0))
+        return self.sceneBoundingRect().marginsAdded(
+            QMarginsF(50.0, 20.0, 50.0, 20.0))
+
+    def boundingRect(self):
+        if self.is_hardware:
+            hws = canvas.theme.hardware_rack_width
+
+            return QRectF(- hws, - hws,
+                          self._width + 2 * hws,
+                          self._height + 2 * hws)
+        return QRectF(0, 0, self._width, self._height)
+
+    def paint(self, painter, option, widget):
         if canvas.loading_items:
             return
 
-        if (not (even_animated or wrap_anim)
-                and self in canvas.scene.move_boxes):
-            self.update_positions_pending = True
-            # do not change box layout while box is moved by animation
-            # update_positions will be called when animation is finished
+        if self._layout is None:
             return
 
-        self.prepareGeometryChange()
+        painter.save()
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
 
-        if (self._wrapping_state
-                in (WrappingState.NORMAL, WrappingState.WRAPPED)
-                or even_animated):
-            # update port/portgrp list if box is not in wrapping animation
-            # or forced with even_animated
-            self._current_port_mode = PortMode.NULL
-            self._port_list.clear()
-            self._portgrp_list.clear()
-
-            for port in canvas.list_ports(group_id=self._group_id):
-                if port.port_mode & self._port_mode:
-                    self._port_list.append(port)
-                    self._current_port_mode |= port.port_mode
-
-            for portgrp in canvas.list_portgroups(group_id=self._group_id):
-                if self._current_port_mode & portgrp.port_mode:
-                    self._portgrp_list.append(portgrp)
-
-        if theme_change:
-            if self.shadow is not None:
-                shadow_theme = canvas.theme.box_shadow
-                match self._box_type:
-                    case BoxType.HARDWARE:
-                        shadow_theme = shadow_theme.hardware
-                    case BoxType.MONITOR:
-                        shadow_theme = shadow_theme.monitor
-                    case BoxType.CLIENT:
-                        shadow_theme = shadow_theme.client
-                self.shadow.set_theme(shadow_theme)
-            
-            for portgrp in self._portgrp_list:
-                if portgrp.widget is not None:
-                    portgrp.widget.update_theme()
-
-            for port in self._port_list:
-                if port.hidden_conn_widget is not None:
-                    port.hidden_conn_widget.update_theme()
-                    port.hidden_conn_widget.update_line_gradient()
-
-        if options.auto_hide_groups and not self._port_list:
-            self.setVisible(False)
-            return
-
-        self.setVisible(True)
-
-        align_port_types = self._should_align_port_types()
-        ports_min_sizes = self._get_ports_min_sizes(align_port_types)
-
-        if (self._wrapping_state in (WrappingState.NORMAL, WrappingState.WRAPPED)
-                or even_animated):
-            box_layout, alter_layout = self._choose_box_layout(ports_min_sizes)
-            self._layout = box_layout
-            self._alter_layout = alter_layout
-            self._current_layout_mode = box_layout.layout_mode
-            self._title_under_icon = bool(
-                box_layout.title_on is TitleOn.SIDE_UNDER_ICON)
-            self._title_lines = self._split_title(box_layout.n_lines)
-            self._header_width = box_layout.header_width
-            self._header_height = box_layout.header_height
-
-            self._unwrapped_width = box_layout.width
-            self._unwrapped_height = box_layout.height
-            self._wrapped_width = box_layout.wrapped_width
-            self._wrapped_height = box_layout.wrapped_height
-
-        match self._wrapping_state:
-            case WrappingState.NORMAL:
-                self._width = self._unwrapped_width
-                self._height = self._unwrapped_height
-
-            case WrappingState.WRAPPED:
-                self._width = self._wrapped_width
-                self._height = self._wrapped_height
-
-            case WrappingState.WRAPPING:
-                self._width = (
-                    self._unwrapped_width
-                    - (self._unwrapped_width - self._wrapped_width)
-                        * self._wrapping_ratio)
-                self._height = (
-                    self._unwrapped_height
-                    - (self._unwrapped_height - self._wrapped_height)
-                        * self._wrapping_ratio)
-
-            case WrappingState.UNWRAPPING:
-                self._width = (
-                    self._wrapped_width
-                    + (self._unwrapped_width - self._wrapped_width)
-                        * self._wrapping_ratio)
-                self._height = (
-                    self._wrapped_height
-                    + (self._unwrapped_height - self._wrapped_height)
-                        * self._wrapping_ratio)
-
-        ports_y_segments_dict = self._set_ports_y_positions(align_port_types)
-
-        self._set_ports_x_positions(ports_min_sizes)
-        self._set_title_positions()
-
-        if self._wrapping_state is WrappingState.NORMAL:
-            self._wrap_triangle_pos = self._get_wrap_triangle_pos()
-
-        if (theme_change
-                or self._width != self._ex_width
-                or self._height != self._ex_height
-                or ports_y_segments_dict != self._ex_ports_y_segments_dict):
-            self._build_painter_path(ports_y_segments_dict)
-            self._build_painter_path(ports_y_segments_dict, selected=True)
-
-        if (self._width != self._ex_width
-                or self._height != self._ex_height
-                or self.scenePos() != self._ex_scene_pos):
-            if scene_checks:
-                canvas.scene.resize_the_scene()
-
-        self._ex_width = self._width
-        self._ex_height = self._height
-        self._ex_ports_y_segments_dict = ports_y_segments_dict
-        self._ex_scene_pos = self.scenePos()
-
-        if not without_connections:
-            self.repaint_lines(forced=True)
-
-        if scene_checks:
-            if (self._wrapping_state in (WrappingState.NORMAL,
-                                         WrappingState.WRAPPED)
-                    and self.isVisible()):
-                canvas.scene.deplace_boxes_from_repulsers([self])
-
-        self.update_positions_pending = False
-
-        self.update()
-
-        # I do not understand why without this,
-        # when a renamed port does not change the box geometry,
-        # port and portgroups widgets aren't updated,
-        # they will be if we click on it for exemple.
-        for portgrp in self._portgrp_list:
-            if portgrp.widget is not None:
-                portgrp.widget.update()
-
-        for port in self._port_list:
-            if port.widget is not None:
-                port.widget.update()
-                if port.hidden_conn_widget is not None:
-                    port.hidden_conn_widget.update_line_pos()
-                    port.hidden_conn_widget.update()
-
-    def get_dummy_rect(self) -> QRectF:
-        '''Used only for dummy box, to know its size
-        before joining or arranging.'''
-        self._current_port_mode = PortMode.NULL
-        self._port_list.clear()
-        self._portgrp_list.clear()
-
-        for port in canvas.list_ports(group_id=self._group_id):
-            if port.port_mode & self._port_mode:
-                self._port_list.append(port)
-                self._current_port_mode |= port.port_mode
-
-        for portgrp in canvas.list_portgroups(group_id=self._group_id):
-            if self._current_port_mode & portgrp.port_mode:
-                self._portgrp_list.append(portgrp)
-
-        align_port_types = self._should_align_port_types()
-        ports_min_sizes = self._get_ports_min_sizes(align_port_types)
-        box_layout, alter_layout = self._choose_box_layout(ports_min_sizes)
+        # define theme for box, wrappers and header lines
+        theme = canvas.theme.box
+        wtheme = canvas.theme.box_wrapper
+        hltheme = canvas.theme.box_header_line
 
         if self.is_hardware:
-            hwr = float(canvas.theme.hardware_rack_width)
+            theme = theme.hardware
+            wtheme = wtheme.hardware
+            hltheme = hltheme.hardware
+        elif self._box_type is BoxType.CLIENT:
+            theme = theme.client
+            wtheme = wtheme.client
+            hltheme = hltheme.client
+        elif (self._box_type is BoxType.INTERNAL
+                and self._icon_name == 'monitor_playback'):
+            theme = theme.monitor
+            wtheme = wtheme.monitor
+            hltheme = hltheme.monitor
+
+        if self.isSelected():
+            theme = theme.selected
+            wtheme = wtheme.selected
+            hltheme = hltheme.selected
+
+        bg_image = theme.background_image
+
+        # draw the background image if exists
+        if not bg_image.isNull():
+            painter.setBrush(QBrush(bg_image))
+            painter.setPen(Qt.PenStyle.NoPen)
+            painter.drawPath(self._painter_path)
+
+        # draw the main rectangle
+        pen = theme.fill_pen
+        painter.setPen(pen)
+        pen_width = pen.widthF()
+
+        color_main = theme.background_color
+        color_alter = theme.background2_color
+
+        if color_alter is not None:
+            max_size = max(self._height, self._width)
+            box_gradient = QLinearGradient(0, 0, max_size, max_size)
+            gradient_size = 20
+
+            box_gradient.setColorAt(0, color_main)
+            tot = int(max_size / gradient_size)
+            for i in range(tot):
+                if i % 2 == 0:
+                    box_gradient.setColorAt((i/tot) ** 0.7, color_main)
+                else:
+                    box_gradient.setColorAt((i/tot) ** 0.7, color_alter)
+
+            painter.setBrush(box_gradient)
         else:
-            hwr = 0.0
+            painter.setBrush(color_main)
 
-        if self.is_wrapped():
-            return QRectF(-hwr, -hwr, box_layout.full_wrapped_width,
-                          box_layout.full_wrapped_height)
+        header_bg = theme.header_background
+        
+        if header_bg.isValid():
+            painter.setPen(Qt.PenStyle.NoPen)
+            if self.isSelected():
+                painter.drawPath(self._painter_path_sel)
+            else:
+                painter.drawPath(self._painter_path)
+            
+            painter.setBrush(header_bg)
+            
+            border_width = 0.0
+            if theme.header_counts_border:
+                border_width = pen_width
+            
+            if self._has_side_title():
+                if self._current_port_mode is PortMode.OUTPUT:
+                    cutting_rect = QRectF(
+                        0.0, 0.0, self._header_width + border_width, self._height)
+                else:
+                    cutting_rect = QRectF(
+                        self._width - self._header_width - border_width, 0.0,
+                        self._header_width, self._height)
+            else:
+                cutting_rect = QRectF(0.0, 0.0, self._width,
+                                      self._header_height + border_width)
 
-        return QRectF(-hwr, -hwr,
-                      box_layout.full_width, box_layout.full_height)
+            cutting_path = QPainterPath()
+            cutting_path.addRect(cutting_rect)
+            hd_rect = self._painter_path.intersected(cutting_path)
+            painter.drawPath(hd_rect)
+            
+            painter.setPen(pen)
+            painter.setBrush(Qt.BrushStyle.NoBrush)
+            if self.isSelected():
+                painter.drawPath(self._painter_path_sel)
+            else:
+                painter.drawPath(self._painter_path)
 
-    def get_layout(self, layout_mode: BoxLayoutMode | None =None) -> BoxLayout:
+        else:
+            if self.isSelected():
+                painter.drawPath(self._painter_path_sel)
+            else:
+                painter.drawPath(self._painter_path)
+
+        # draw hardware box decoration (flyrack like)
+        self._paint_hardware_rack(painter)
+
+        # Draw plugin inline display if supported
+        self._paint_inline_display(painter)
+
+        # Draw toggle GUI client button
+        if self._can_handle_gui:
+            if theme.header_counts_border:
+                border = pen_width
+            else:
+                border = 0
+
+            gui_theme = canvas.theme.gui_button
+            if self._gui_visible:
+                gui_theme = gui_theme.gui_visible
+            else:
+                gui_theme = gui_theme.gui_hidden            
+            
+            mg = gui_theme.margin
+            
+            if self._has_side_title():
+                if self._current_port_mode is PortMode.INPUT:
+                    gui_rect = QRectF(
+                        self._width - self._header_width - border + mg.ports_side,
+                        mg.top + border,
+                        self._header_width - mg.ports_side - mg.free_side,
+                        self._header_height - mg.height)
+                elif self._current_port_mode is PortMode.OUTPUT:
+                    gui_rect = QRectF(
+                        border + mg.free_side,
+                        border + mg.top,
+                        self._header_width - mg.free_side - mg.ports_side,
+                        self._header_height - mg.height)
+            else:
+                match self._current_port_mode:
+                    case PortMode.OUTPUT:
+                        gui_rect = QRectF(
+                            border + mg.free_side,
+                            border + mg.top,
+                            self._width - 2 * border
+                                - mg.ports_side - mg.free_side,
+                            self._header_height - 2 * border - mg.height)
+                    case PortMode.INPUT:
+                        gui_rect = QRectF(
+                            border + mg.ports_side, border + mg.top,
+                            self._width - 2 * border
+                                - mg.ports_side - mg.free_side,
+                            self._header_height - 2 * border - mg.height)
+                    case PortMode.BOTH:
+                        gui_rect = QRectF(
+                            border + mg.ports_side,
+                            border + mg.top,
+                            self._width - 2 * (border + mg.ports_side),
+                            self._header_height - 2 * border
+                                - mg.height)
+                    case _:
+                        gui_rect = QRectF()
+                
+
+            radius = gui_theme.border_radius
+
+            painter.setBrush(gui_theme.background_color)
+            painter.setPen(gui_theme.fill_pen)
+            
+            match gui_theme.border_mode:            
+                case 'minimal':
+                    painter.drawPolyline(
+                        [gui_rect.bottomLeft(),
+                        gui_rect.topLeft(),
+                        gui_rect.topRight(),
+                        gui_rect.bottomRight()]
+                    )
+                    painter.setPen(Qt.PenStyle.NoPen)
+                case 'sides':
+                    painter.drawPolyline(
+                        [gui_rect.bottomLeft(), gui_rect.topLeft()])
+                    painter.drawPolyline(
+                        [gui_rect.topRight(), gui_rect.bottomRight()]
+                    )
+                    painter.setPen(Qt.PenStyle.NoPen)
+
+            if radius == 0.0:
+                painter.drawRect(gui_rect)
+            else:
+                painter.drawRoundedRect(gui_rect, radius, radius)
+
+        # draw Pipewire Monitor (or PulseAudio bridges) decorations
+        elif self.is_monitor() and not self._current_port_mode is PortMode.BOTH:
+            if self._current_port_mode is PortMode.OUTPUT:
+                bor_gradient = QLinearGradient(0, 0, self._height, self._height)
+            else:
+                bor_gradient = QLinearGradient(
+                    self._width, 0, self._height, self._width - self._height)
+
+            mon_theme = canvas.theme.monitor_decoration
+            if self.isSelected():
+                mon_theme = mon_theme.selected
+
+            color_main = mon_theme.background_color
+            color_alter = mon_theme.background2_color
+
+            if color_alter is not None:
+                tot = int(self._height / 20)
+                for i in range(tot):
+                    if i % 2 == 0:
+                        bor_gradient.setColorAt(i/tot, color_main)
+                    else:
+                        bor_gradient.setColorAt(i/tot, color_alter)
+
+                painter.setBrush(bor_gradient)
+            else:
+                painter.setBrush(color_main)
+
+            BAND_MON_WIDTH = 9
+            TRIANGLE_MON_SIZE_TOP = 7
+            triangle_mon_size_bottom = 0
+            if (self._wrapping_state in (WrappingState.WRAPPING,
+                                         WrappingState.UNWRAPPING)
+                    or (self._wrapping_state is WrappingState.NORMAL
+                        and self._wrap_triangle_pos is not UnwrapButton.NONE)):
+                triangle_mon_size_bottom = 13
+
+            bmw = BAND_MON_WIDTH
+            tms_top = TRIANGLE_MON_SIZE_TOP
+            tms_bot = triangle_mon_size_bottom
+
+            xside = pen_width
+            xband = pen_width + bmw
+            xtop = pen_width + bmw + tms_top
+            xbot = pen_width + bmw + tms_bot
+
+            if self._current_port_mode is PortMode.INPUT:
+                xside = self._width - xside
+                xband = self._width - xband
+                xtop = self._width - xtop
+                xbot = self._width - xbot
+
+            mon_points = [(xside, pen_width),
+                          (xtop, pen_width),
+                          (xband, pen_width + tms_top),
+                          (xband, self._height - tms_bot - pen_width),
+                          (xbot, self._height - pen_width),
+                          (xside, self._height - pen_width)]
+            
+            mon_poly = QPolygonF()
+            for xy in mon_points:
+                mon_poly += QPointF(*xy)
+            
+            if mon_theme.border_mode == 'minimal':
+                painter.setPen(Qt.PenStyle.NoPen)
+                painter.drawPolygon(mon_poly)
+                painter.setPen(mon_theme.fill_pen)
+                painter.drawPolyline([QPointF(*xy) for xy in mon_points[1:5]])
+            else:
+                painter.setPen(mon_theme.fill_pen)
+                painter.drawPolygon(mon_poly)
+
+        # may draw horizontal lines around title (header lines)
+        if (self._header_line_left is not None
+                and self._header_line_right is not None):
+            painter.setPen(hltheme.fill_pen)
+            painter.drawLine(QPointF(*self._header_line_left[0:2]),
+                             QPointF(*self._header_line_left[2:]))
+            painter.drawLine(QPointF(*self._header_line_right[0:2]),
+                             QPointF(*self._header_line_right[2:]))
+
+        normal_color = theme.text_color
+        opac_color = QColor(normal_color)
+        opac_color.setAlpha(int(normal_color.alpha() / 2))
+
+        text_pen = QPen(normal_color)
+        opac_text_pen = QPen(opac_color)
+
+        # draw title lines
+        for title_line in self._title_lines:
+            painter.setFont(title_line.get_font())
+
+            if title_line.is_little:
+                painter.setPen(opac_text_pen)
+            else:
+                painter.setPen(text_pen)
+
+            if (self.is_monitor()
+                    and title_line == self._title_lines[-1]
+                    and self._group_name.endswith(' Monitor')):
+                # Title line endswith " Monitor"
+                # Draw "Monitor" in yellow
+                # but keep the rest in white
+                pre_text = title_line.text.rpartition(' Monitor')[0]
+                painter.drawText(
+                    ceil(title_line.x), ceil(title_line.y), pre_text)
+
+                x_pos = title_line.x
+                if pre_text:
+                    t_font = title_line.get_font()
+                    x_pos += QFontMetrics(t_font).horizontalAdvance(pre_text)
+                    x_pos += QFontMetrics(t_font).horizontalAdvance(' ')
+
+                painter.setPen(QPen(canvas.theme.monitor_color, 0))
+                painter.drawText(ceil(x_pos), ceil(title_line.y), 'Monitor')
+            else:
+                painter.drawText(ceil(title_line.x), ceil(title_line.y),
+                                 title_line.text)
+
+        # draw (un)wrapper triangles
+        painter.setPen(wtheme.fill_pen)
+        painter.setBrush(wtheme.background_color)
+        tr_pen_width = pen.widthF()
+
+        match self._wrap_triangle_pos:
+            case _ if self._wrapping_state in(
+                    WrappingState.WRAPPED, WrappingState.UNWRAPPING):
+                for port_mode in PortMode.INPUT, PortMode.OUTPUT:
+                    if not self._current_port_mode & port_mode:
+                        continue
+                    
+                    painter.setPen(wtheme.fill_pen)
+                    
+                    if self._has_side_title():
+                        side = 8.5
+                        ypos = self._height - pen_width - 2.0
+
+                        triangle = QPolygonF()
+                        if port_mode is PortMode.INPUT:
+                            xpos = pen_width + 2.0
+                            triangle += QPointF(xpos, ypos - side)
+                            triangle += QPointF(xpos + side, ypos)
+                            triangle += QPointF(xpos, ypos)
+                        else:
+                            xpos = self._width - pen_width - 2.0
+                            triangle += QPointF(xpos, ypos - side)
+                            triangle += QPointF(xpos - side, ypos)
+                            triangle += QPointF(xpos, ypos)
+                    else:
+                        side = 6
+                        xpos = pen_width + 2.0
+                        ypos = self._height - pen_width - side - 2.0
+
+                        if port_mode is PortMode.OUTPUT:
+                            xpos = \
+                                self._width - pen_width - 2.0 - 2 * side
+
+                        triangle = QPolygonF()
+                        triangle += QPointF(xpos, ypos)
+                        triangle += QPointF(xpos + 2 * side, ypos)
+                        triangle += QPointF(xpos + side, ypos + side)
+
+                    if wtheme.border_mode == 'minimal':
+                        painter.drawPolyline(
+                            [triangle[0], triangle[2], triangle[1]])
+                        painter.setPen(Qt.PenStyle.NoPen)
+                    painter.drawPolygon(triangle)
+
+            case UnwrapButton.LEFT:
+                side = 6
+                xpos = 2.0 + pen_width
+                ypos = self._height - pen_width - 2.0
+                triangle = QPolygonF()
+                triangle += QPointF(xpos, ypos)
+                triangle += QPointF(xpos + 2 * side, ypos)
+                triangle += QPointF(xpos + side, ypos -side)
+
+                if wtheme.border_mode == 'minimal':
+                    painter.drawPolyline(
+                        [triangle[0], triangle[2], triangle[1]])
+                    painter.setPen(Qt.PenStyle.NoPen)
+                painter.drawPolygon(triangle)
+
+            case UnwrapButton.RIGHT:
+                side = 6
+                xpos = self._width - pen_width - 2 * side - 2.0
+
+                ypos = self._height - pen_width - 2.0
+                triangle = QPolygonF()
+                triangle += QPointF(xpos, ypos)
+                triangle += QPointF(xpos + 2 * side, ypos)
+                triangle += QPointF(xpos + side, ypos - side)
+                
+                if wtheme.border_mode == 'minimal':
+                    painter.drawPolyline(
+                        [triangle[0], triangle[2], triangle[1]])
+                    painter.setPen(Qt.PenStyle.NoPen)
+                painter.drawPolygon(triangle)
+
+            case UnwrapButton.CENTER:
+                side = 7
+                xpos = (self._width
+                        + self._layout._pms.ins_width
+                        - self._layout._pms.outs_width) / 2 - side
+
+                ypos = self._height - tr_pen_width / 2.0
+                triangle = QPolygonF()
+                triangle += QPointF(xpos, ypos)
+                triangle += QPointF(xpos + 2 * side, ypos)
+                triangle += QPointF(xpos + side, ypos -side)
+                
+                if wtheme.border_mode == 'minimal':
+                    painter.drawPolyline(
+                        [triangle[0], triangle[2], triangle[1]])
+                    painter.setPen(Qt.PenStyle.NoPen)
+                painter.drawPolygon(triangle)
+
+        painter.restore()
+
+    def _paint_hardware_rack(self, painter: QPainter):
+        if not self.is_hardware:
+            return
+
         if self._layout is None:
-            raise Exception('get_layout, ._layout is required !')
+            return
 
-        if layout_mode is None:
-            return self._layout
+        d = float(canvas.theme.hardware_rack_width)
+        sd = d * 0.5
 
-        if layout_mode is BoxLayoutMode.LARGE:
-            if self._current_layout_mode is BoxLayoutMode.LARGE:
-                return self._layout
-            return self._alter_layout
+        theme = canvas.theme.hardware_rack
+        if self.isSelected():
+            theme = theme.selected
 
-        if layout_mode is BoxLayoutMode.HIGH:
-            if self._current_layout_mode is BoxLayoutMode.HIGH:
-                return self._layout
-            return self._alter_layout
+        background1 = theme.background_color
+        background2 = theme.background2_color
 
-        return self._layout
+        if background2 is not None:
+            hw_gradient = QLinearGradient(
+                -d, -d, self._width + d, self._height + d)
+            hw_gradient.setColorAt(0, background1)
+            hw_gradient.setColorAt(0.5, background2)
+            hw_gradient.setColorAt(1, background1)
+
+            painter.setBrush(hw_gradient)
+        else:
+            painter.setBrush(background1)
+
+        pen = theme.fill_pen
+        painter.setPen(pen)
+        lh = pen.widthF() / 2.0
+
+        ports_top_in = self._layout.ports_top_in
+        ports_top_out = self._layout.ports_top_out
+        ports_bottom_in = self._layout.ports_bottom_in
+        ports_bottom_out = self._layout.ports_bottom_out
+
+        if self._current_port_mode is not PortMode.BOTH:
+            if self._current_port_mode is PortMode.INPUT:
+                points = [
+                    (- lh, - lh),
+                    (- lh, ports_top_in - lh),
+                    (- sd, ports_top_in - lh),
+                    (- d + lh, ports_top_in - sd),
+                    (- d + lh, - sd),
+                    (- sd, - d + lh),
+                    (self._width + sd, - d + lh),
+                    (self._width + d - lh, -sd),
+                    (self._width + d - lh, self._height - lh + sd),
+                    (self._width + sd, self._height + d - lh),
+                    (- sd, self._height + d - lh),
+                    (-d + lh, self._height + sd),
+                    (-d + lh, ports_bottom_in + sd),
+                    (- sd, ports_bottom_in + lh),
+                    (- lh, ports_bottom_in + lh),
+                    (- lh, self._height + lh),
+                    (self._width + lh, self._height + lh),
+                    (self._width + lh, - lh)
+                ]
+
+            else:
+                points = [
+                    (self._width + lh, - lh),
+                    (self._width + lh, ports_top_out - lh),
+                    (self._width + sd, ports_top_out - lh),
+                    (self._width + d - lh, ports_top_out - sd),
+                    (self._width + d - lh, - sd),
+                    (self._width + sd, -d + lh),
+                    (- sd, -d + lh),
+                    (-d + lh, - sd),
+                    (-d + lh, self._height + sd),
+                    (- sd, self._height + d - lh),
+                    (self._width + sd, self._height + d - lh),
+                    (self._width + d - lh, self._height + sd),
+                    (self._width + d - lh, ports_bottom_out + sd),
+                    (self._width + sd, ports_bottom_out + lh),
+                    (self._width + lh, ports_bottom_out + lh),
+                    (self._width + lh, self._height + lh),
+                    (-lh, self._height + lh),
+                    (-lh, -lh)
+                ]
+
+            hardware_poly = QPolygonF()
+            for xy in points:
+                hardware_poly += QPointF(*xy)
+
+            if theme.border_mode == 'minimal':
+                painter.drawPolyline([QPointF(*xy) for xy in points[2:6]])
+                painter.drawPolyline([QPointF(*xy) for xy in points[10:14]])
+                painter.setPen(Qt.PenStyle.NoPen)
+                painter.drawPolygon(hardware_poly)
+            else:
+                painter.drawPolygon(hardware_poly)
+        else:
+            top_points = [
+                (- lh, - lh),
+                (- lh, ports_top_in - lh),
+                (- sd, ports_top_in - lh),
+                (- d + lh, ports_top_in - sd),
+                (- d + lh, - sd),
+                (- sd, -d + lh),
+                (self._width + sd, -d + lh),
+                (self._width + d - lh, - sd),
+                (self._width + d - lh, ports_top_out - sd),
+                (self._width + d/2, ports_top_out - lh),
+                (self._width + lh, ports_top_out - lh),
+                (self._width + lh, -lh)
+            ]
+
+            bottom_points = [
+                (- lh, self._height + lh),
+                (- lh, ports_bottom_in + lh),
+                (- sd, ports_bottom_in + lh),
+                (- d + lh, ports_bottom_in + sd),
+                (-d + lh, self._height + sd),
+                (- sd, self._height + d - lh),
+                (self._width + sd, self._height + d - lh),
+                (self._width + d - lh, self._height + sd),
+                (self._width + d - lh, ports_bottom_out + sd),
+                (self._width + sd, ports_bottom_out + lh),
+                (self._width + lh, ports_bottom_out + lh),
+                (self._width + lh, self._height + lh)
+            ]
+
+            hw_poly_top = QPolygonF()
+            for xy in top_points:
+                hw_poly_top += QPointF(*xy)
+
+            hw_poly_bottom = QPolygonF()
+            for xy in bottom_points:
+                hw_poly_bottom += QPointF(*xy)
+
+            if theme.border_mode == 'minimal':
+                painter.drawPolyline([QPointF(*xy) for xy in top_points[2:6]])
+                painter.drawPolyline([QPointF(*xy) for xy in top_points[6:10]])
+                painter.drawPolyline([QPointF(*xy) for xy in bottom_points[2:6]])
+                painter.drawPolyline([QPointF(*xy) for xy in bottom_points[6:10]])
+                painter.setPen(Qt.PenStyle.NoPen)
+                painter.drawPolygon(hw_poly_top)
+                painter.drawPolygon(hw_poly_bottom)
+            else:
+                painter.drawPolygon(hw_poly_top)
+                painter.drawPolygon(hw_poly_bottom)
+
+    def _paint_inline_display(self, painter: QPainter):
+        if self._plugin_inline is InlineDisplay.DISABLED:
+            return
+        if not options.inline_displays:
+            return
+
+        inwidth  = self._width - self._width_in - self._width_out - 16
+        inheight = (self._height - self._header_height
+                    - self.get_theme().port_spacing - 3)
+        scaling  = (canvas.scene.get_scale_factor()
+                    * canvas.scene.get_device_pixel_ratio_f())
+
+        if (self._plugin_id >= 0
+                and self._plugin_id <= MAX_PLUGIN_ID_ALLOWED
+                and (self._plugin_inline is InlineDisplay.ENABLED
+                     or self._inline_scaling != scaling)):
+            data = canvas.cb.inline_display(
+                self._plugin_id,
+                int(inwidth*scaling), int(inheight*scaling))
+
+            if data is None:
+                return
+
+            # invalidate old image first
+            del self._inline_image
+
+            self._inline_data = pack(
+                "%iB" % (data['height'] * data['stride']), *data['data'])
+            self._inline_image = QImage(
+                voidptr(self._inline_data), data['width'], data['height'], # type:ignore
+                data['stride'], QImage.Format.Format_ARGB32)
+            self._inline_scaling = scaling
+            self._plugin_inline = InlineDisplay.CACHED
+
+        if self._inline_image is None:
+            _logger.warning(
+                'inline display image is None for '
+                f'{self._plugin_id}, {self._group_name}')
+            return
+
+        swidth = self._inline_image.width() / scaling
+        sheight = self._inline_image.height() / scaling
+
+        srcx = int(self._width_in
+                   + (self._width - self._width_in - self._width_out) / 2
+                   - swidth / 2)
+        srcy = int(self._header_height + 1 + (inheight - sheight) / 2)
+
+        painter.drawImage(
+            QRectF(srcx, srcy, swidth, sheight), self._inline_image)
+
+    def get_theme(self, for_wrapper=False) -> UnselectedStyleAttributer:
+        theme = canvas.theme.box
+        if for_wrapper:
+            theme = canvas.theme.box_wrapper
+
+        if self.is_hardware:
+            theme = theme.hardware
+        elif self._box_type is BoxType.CLIENT:
+            theme = theme.client
+        elif self.is_monitor():
+            theme = theme.monitor
+
+        return theme
