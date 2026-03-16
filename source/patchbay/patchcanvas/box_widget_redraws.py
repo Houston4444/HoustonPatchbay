@@ -1076,7 +1076,8 @@ def _build_painter_path(
         port_out_offset = 0.0
 
     if box._wrapping_state is WrappingState.NORMAL:
-        # substract rects in the box shape in case of port_offset (even negativ)
+        # substract rects in the box shape in case of 
+        # port_offset (even negativ).
         # logic would want to add rects if port_offset is negativ
         # But that also means that we should change the boudingRect,
         # So we won't.

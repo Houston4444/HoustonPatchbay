@@ -13,6 +13,7 @@ from patshared import BoxType, PortMode
 
 from .init_values import InlineDisplay, options, MAX_PLUGIN_ID_ALLOWED
 from .patchcanvas import canvas
+from .theme import StyleAttributer
 from .box_widget_utils import UnwrapButton, WrappingState
 
 if TYPE_CHECKING:
@@ -217,6 +218,292 @@ def _paint_inline_display(box: 'BoxWidget', painter: QPainter):
     painter.drawImage(
         QRectF(srcx, srcy, swidth, sheight), box._inline_image)
 
+def _paint_gui_button(box: 'BoxWidget', painter: QPainter, border: int):
+    gui_theme = canvas.theme.gui_button
+    if box._gui_visible:
+        gui_theme = gui_theme.gui_visible
+    else:
+        gui_theme = gui_theme.gui_hidden            
+    
+    mg = gui_theme.margin
+    
+    if box._has_side_title():
+        if box._current_port_mode is PortMode.INPUT:
+            gui_rect = QRectF(
+                box._width - box._header_width - border + mg.ports_side,
+                mg.top + border,
+                box._header_width - mg.ports_side - mg.free_side,
+                box._header_height - mg.height)
+        elif box._current_port_mode is PortMode.OUTPUT:
+            gui_rect = QRectF(
+                border + mg.free_side,
+                border + mg.top,
+                box._header_width - mg.free_side - mg.ports_side,
+                box._header_height - mg.height)
+    else:
+        match box._current_port_mode:
+            case PortMode.OUTPUT:
+                gui_rect = QRectF(
+                    border + mg.free_side,
+                    border + mg.top,
+                    box._width - 2 * border
+                        - mg.ports_side - mg.free_side,
+                    box._header_height - 2 * border - mg.height)
+            case PortMode.INPUT:
+                gui_rect = QRectF(
+                    border + mg.ports_side, border + mg.top,
+                    box._width - 2 * border
+                        - mg.ports_side - mg.free_side,
+                    box._header_height - 2 * border - mg.height)
+            case PortMode.BOTH:
+                gui_rect = QRectF(
+                    border + mg.ports_side,
+                    border + mg.top,
+                    box._width - 2 * (border + mg.ports_side),
+                    box._header_height - 2 * border
+                        - mg.height)
+            case _:
+                gui_rect = QRectF()
+        
+
+    radius = gui_theme.border_radius
+
+    painter.setBrush(gui_theme.background_color)
+    painter.setPen(gui_theme.fill_pen)
+    
+    match gui_theme.border_mode:            
+        case 'minimal':
+            painter.drawPolyline(
+                [gui_rect.bottomLeft(),
+                gui_rect.topLeft(),
+                gui_rect.topRight(),
+                gui_rect.bottomRight()]
+            )
+            painter.setPen(Qt.PenStyle.NoPen)
+        case 'sides':
+            painter.drawPolyline(
+                [gui_rect.bottomLeft(), gui_rect.topLeft()])
+            painter.drawPolyline(
+                [gui_rect.topRight(), gui_rect.bottomRight()]
+            )
+            painter.setPen(Qt.PenStyle.NoPen)
+
+    if radius == 0.0:
+        painter.drawRect(gui_rect)
+    else:
+        painter.drawRoundedRect(gui_rect, radius, radius)
+
+def _paint_monitor_deco(box: 'BoxWidget', painter: QPainter, pen_width: int):
+    if box._current_port_mode is PortMode.OUTPUT:
+        bor_gradient = QLinearGradient(0, 0, box._height, box._height)
+    else:
+        bor_gradient = QLinearGradient(
+            box._width, 0, box._height, box._width - box._height)
+
+    mon_theme = canvas.theme.monitor_decoration
+    if box.isSelected():
+        mon_theme = mon_theme.selected
+
+    color_main = mon_theme.background_color
+    color_alter = mon_theme.background2_color
+
+    if color_alter is not None:
+        tot = int(box._height / 20)
+        for i in range(tot):
+            if i % 2 == 0:
+                bor_gradient.setColorAt(i/tot, color_main)
+            else:
+                bor_gradient.setColorAt(i/tot, color_alter)
+
+        painter.setBrush(bor_gradient)
+    else:
+        painter.setBrush(color_main)
+
+    BAND_MON_WIDTH = 9
+    TRIANGLE_MON_SIZE_TOP = 7
+    triangle_mon_size_bottom = 0
+    if (box._wrapping_state in (WrappingState.WRAPPING,
+                                    WrappingState.UNWRAPPING)
+            or (box._wrapping_state is WrappingState.NORMAL
+                and box._wrap_triangle_pos is not UnwrapButton.NONE)):
+        triangle_mon_size_bottom = 13
+
+    bmw = BAND_MON_WIDTH
+    tms_top = TRIANGLE_MON_SIZE_TOP
+    tms_bot = triangle_mon_size_bottom
+
+    xside = pen_width
+    xband = pen_width + bmw
+    xtop = pen_width + bmw + tms_top
+    xbot = pen_width + bmw + tms_bot
+
+    if box._current_port_mode is PortMode.INPUT:
+        xside = box._width - xside
+        xband = box._width - xband
+        xtop = box._width - xtop
+        xbot = box._width - xbot
+
+    mon_points = [(xside, pen_width),
+                    (xtop, pen_width),
+                    (xband, pen_width + tms_top),
+                    (xband, box._height - tms_bot - pen_width),
+                    (xbot, box._height - pen_width),
+                    (xside, box._height - pen_width)]
+    
+    mon_poly = QPolygonF()
+    for xy in mon_points:
+        mon_poly += QPointF(*xy)
+    
+    if mon_theme.border_mode == 'minimal':
+        painter.setPen(Qt.PenStyle.NoPen)
+        painter.drawPolygon(mon_poly)
+        painter.setPen(mon_theme.fill_pen)
+        painter.drawPolyline([QPointF(*xy) for xy in mon_points[1:5]])
+    else:
+        painter.setPen(mon_theme.fill_pen)
+        painter.drawPolygon(mon_poly)
+
+def _paint_header_lines(box: 'BoxWidget', painter: QPainter):
+    ...
+    
+def _paint_title_lines(box: 'BoxWidget', painter: QPainter,
+                       normal_color: QColor):    
+    opac_color = QColor(normal_color)
+    opac_color.setAlpha(int(normal_color.alpha() / 2))
+
+    text_pen = QPen(normal_color)
+    opac_text_pen = QPen(opac_color)
+
+    # draw title lines
+    for title_line in box._title_lines:
+        painter.setFont(title_line.get_font())
+
+        if title_line.is_little:
+            painter.setPen(opac_text_pen)
+        else:
+            painter.setPen(text_pen)
+
+        if (box.is_monitor()
+                and title_line == box._title_lines[-1]
+                and box._group_name.endswith(' Monitor')):
+            # Title line endswith " Monitor"
+            # Draw "Monitor" in yellow
+            # but keep the rest in white
+            pre_text = title_line.text.rpartition(' Monitor')[0]
+            painter.drawText(
+                ceil(title_line.x), ceil(title_line.y), pre_text)
+
+            x_pos = title_line.x
+            if pre_text:
+                t_font = title_line.get_font()
+                x_pos += QFontMetrics(t_font).horizontalAdvance(pre_text)
+                x_pos += QFontMetrics(t_font).horizontalAdvance(' ')
+
+            painter.setPen(QPen(canvas.theme.monitor_color, 0))
+            painter.drawText(ceil(x_pos), ceil(title_line.y), 'Monitor')
+        else:
+            painter.drawText(ceil(title_line.x), ceil(title_line.y),
+                                title_line.text)
+
+def _paint_wrappers(
+        box: 'BoxWidget', painter: QPainter, wtheme: StyleAttributer,
+        pen_width: int, tr_pen_width: float):
+    painter.setPen(wtheme.fill_pen)
+    painter.setBrush(wtheme.background_color)
+
+    match box._wrap_triangle_pos:
+        case _ if box._wrapping_state in(
+                WrappingState.WRAPPED, WrappingState.UNWRAPPING):
+            for port_mode in PortMode.INPUT, PortMode.OUTPUT:
+                if not box._current_port_mode & port_mode:
+                    continue
+                
+                painter.setPen(wtheme.fill_pen)
+                
+                if box._has_side_title():
+                    side = 8.5
+                    ypos = box._height - pen_width - 2.0
+
+                    triangle = QPolygonF()
+                    if port_mode is PortMode.INPUT:
+                        xpos = pen_width + 2.0
+                        triangle += QPointF(xpos, ypos - side)
+                        triangle += QPointF(xpos + side, ypos)
+                        triangle += QPointF(xpos, ypos)
+                    else:
+                        xpos = box._width - pen_width - 2.0
+                        triangle += QPointF(xpos, ypos - side)
+                        triangle += QPointF(xpos - side, ypos)
+                        triangle += QPointF(xpos, ypos)
+                else:
+                    side = 6
+                    xpos = pen_width + 2.0
+                    ypos = box._height - pen_width - side - 2.0
+
+                    if port_mode is PortMode.OUTPUT:
+                        xpos = \
+                            box._width - pen_width - 2.0 - 2 * side
+
+                    triangle = QPolygonF()
+                    triangle += QPointF(xpos, ypos)
+                    triangle += QPointF(xpos + 2 * side, ypos)
+                    triangle += QPointF(xpos + side, ypos + side)
+
+                if wtheme.border_mode == 'minimal':
+                    painter.drawPolyline(
+                        [triangle[0], triangle[2], triangle[1]])
+                    painter.setPen(Qt.PenStyle.NoPen)
+                painter.drawPolygon(triangle)
+
+        case UnwrapButton.LEFT:
+            side = 6
+            xpos = 2.0 + pen_width
+            ypos = box._height - pen_width - 2.0
+            triangle = QPolygonF()
+            triangle += QPointF(xpos, ypos)
+            triangle += QPointF(xpos + 2 * side, ypos)
+            triangle += QPointF(xpos + side, ypos -side)
+
+            if wtheme.border_mode == 'minimal':
+                painter.drawPolyline(
+                    [triangle[0], triangle[2], triangle[1]])
+                painter.setPen(Qt.PenStyle.NoPen)
+            painter.drawPolygon(triangle)
+
+        case UnwrapButton.RIGHT:
+            side = 6
+            xpos = box._width - pen_width - 2 * side - 2.0
+
+            ypos = box._height - pen_width - 2.0
+            triangle = QPolygonF()
+            triangle += QPointF(xpos, ypos)
+            triangle += QPointF(xpos + 2 * side, ypos)
+            triangle += QPointF(xpos + side, ypos - side)
+            
+            if wtheme.border_mode == 'minimal':
+                painter.drawPolyline(
+                    [triangle[0], triangle[2], triangle[1]])
+                painter.setPen(Qt.PenStyle.NoPen)
+            painter.drawPolygon(triangle)
+
+        case UnwrapButton.CENTER:
+            side = 7
+            xpos = (box._width
+                    + box._layout._pms.ins_width
+                    - box._layout._pms.outs_width) / 2 - side
+
+            ypos = box._height - tr_pen_width / 2.0
+            triangle = QPolygonF()
+            triangle += QPointF(xpos, ypos)
+            triangle += QPointF(xpos + 2 * side, ypos)
+            triangle += QPointF(xpos + side, ypos -side)
+            
+            if wtheme.border_mode == 'minimal':
+                painter.drawPolyline(
+                    [triangle[0], triangle[2], triangle[1]])
+                painter.setPen(Qt.PenStyle.NoPen)
+            painter.drawPolygon(triangle)
+
 def paint(box: 'BoxWidget', painter: QPainter, option, widget):
     if canvas.loading_items:
         return
@@ -342,150 +629,11 @@ def paint(box: 'BoxWidget', painter: QPainter, option, widget):
         else:
             border = 0
 
-        gui_theme = canvas.theme.gui_button
-        if box._gui_visible:
-            gui_theme = gui_theme.gui_visible
-        else:
-            gui_theme = gui_theme.gui_hidden            
-        
-        mg = gui_theme.margin
-        
-        if box._has_side_title():
-            if box._current_port_mode is PortMode.INPUT:
-                gui_rect = QRectF(
-                    box._width - box._header_width - border + mg.ports_side,
-                    mg.top + border,
-                    box._header_width - mg.ports_side - mg.free_side,
-                    box._header_height - mg.height)
-            elif box._current_port_mode is PortMode.OUTPUT:
-                gui_rect = QRectF(
-                    border + mg.free_side,
-                    border + mg.top,
-                    box._header_width - mg.free_side - mg.ports_side,
-                    box._header_height - mg.height)
-        else:
-            match box._current_port_mode:
-                case PortMode.OUTPUT:
-                    gui_rect = QRectF(
-                        border + mg.free_side,
-                        border + mg.top,
-                        box._width - 2 * border
-                            - mg.ports_side - mg.free_side,
-                        box._header_height - 2 * border - mg.height)
-                case PortMode.INPUT:
-                    gui_rect = QRectF(
-                        border + mg.ports_side, border + mg.top,
-                        box._width - 2 * border
-                            - mg.ports_side - mg.free_side,
-                        box._header_height - 2 * border - mg.height)
-                case PortMode.BOTH:
-                    gui_rect = QRectF(
-                        border + mg.ports_side,
-                        border + mg.top,
-                        box._width - 2 * (border + mg.ports_side),
-                        box._header_height - 2 * border
-                            - mg.height)
-                case _:
-                    gui_rect = QRectF()
-            
-
-        radius = gui_theme.border_radius
-
-        painter.setBrush(gui_theme.background_color)
-        painter.setPen(gui_theme.fill_pen)
-        
-        match gui_theme.border_mode:            
-            case 'minimal':
-                painter.drawPolyline(
-                    [gui_rect.bottomLeft(),
-                    gui_rect.topLeft(),
-                    gui_rect.topRight(),
-                    gui_rect.bottomRight()]
-                )
-                painter.setPen(Qt.PenStyle.NoPen)
-            case 'sides':
-                painter.drawPolyline(
-                    [gui_rect.bottomLeft(), gui_rect.topLeft()])
-                painter.drawPolyline(
-                    [gui_rect.topRight(), gui_rect.bottomRight()]
-                )
-                painter.setPen(Qt.PenStyle.NoPen)
-
-        if radius == 0.0:
-            painter.drawRect(gui_rect)
-        else:
-            painter.drawRoundedRect(gui_rect, radius, radius)
+        _paint_gui_button(box, painter, border)
 
     # draw Pipewire Monitor (or PulseAudio bridges) decorations
-    elif box.is_monitor() and not box._current_port_mode is PortMode.BOTH:
-        if box._current_port_mode is PortMode.OUTPUT:
-            bor_gradient = QLinearGradient(0, 0, box._height, box._height)
-        else:
-            bor_gradient = QLinearGradient(
-                box._width, 0, box._height, box._width - box._height)
-
-        mon_theme = canvas.theme.monitor_decoration
-        if box.isSelected():
-            mon_theme = mon_theme.selected
-
-        color_main = mon_theme.background_color
-        color_alter = mon_theme.background2_color
-
-        if color_alter is not None:
-            tot = int(box._height / 20)
-            for i in range(tot):
-                if i % 2 == 0:
-                    bor_gradient.setColorAt(i/tot, color_main)
-                else:
-                    bor_gradient.setColorAt(i/tot, color_alter)
-
-            painter.setBrush(bor_gradient)
-        else:
-            painter.setBrush(color_main)
-
-        BAND_MON_WIDTH = 9
-        TRIANGLE_MON_SIZE_TOP = 7
-        triangle_mon_size_bottom = 0
-        if (box._wrapping_state in (WrappingState.WRAPPING,
-                                        WrappingState.UNWRAPPING)
-                or (box._wrapping_state is WrappingState.NORMAL
-                    and box._wrap_triangle_pos is not UnwrapButton.NONE)):
-            triangle_mon_size_bottom = 13
-
-        bmw = BAND_MON_WIDTH
-        tms_top = TRIANGLE_MON_SIZE_TOP
-        tms_bot = triangle_mon_size_bottom
-
-        xside = pen_width
-        xband = pen_width + bmw
-        xtop = pen_width + bmw + tms_top
-        xbot = pen_width + bmw + tms_bot
-
-        if box._current_port_mode is PortMode.INPUT:
-            xside = box._width - xside
-            xband = box._width - xband
-            xtop = box._width - xtop
-            xbot = box._width - xbot
-
-        mon_points = [(xside, pen_width),
-                        (xtop, pen_width),
-                        (xband, pen_width + tms_top),
-                        (xband, box._height - tms_bot - pen_width),
-                        (xbot, box._height - pen_width),
-                        (xside, box._height - pen_width)]
-        
-        mon_poly = QPolygonF()
-        for xy in mon_points:
-            mon_poly += QPointF(*xy)
-        
-        if mon_theme.border_mode == 'minimal':
-            painter.setPen(Qt.PenStyle.NoPen)
-            painter.drawPolygon(mon_poly)
-            painter.setPen(mon_theme.fill_pen)
-            painter.drawPolyline([QPointF(*xy) for xy in mon_points[1:5]])
-        else:
-            painter.setPen(mon_theme.fill_pen)
-            painter.drawPolygon(mon_poly)
+    elif box.is_monitor() and box._current_port_mode is not PortMode.BOTH:
+        _paint_monitor_deco(box, painter, pen_width)
 
     # may draw horizontal lines around title (header lines)
     if (box._header_line_left is not None
@@ -496,141 +644,10 @@ def paint(box: 'BoxWidget', painter: QPainter, option, widget):
         painter.drawLine(QPointF(*box._header_line_right[0:2]),
                             QPointF(*box._header_line_right[2:]))
 
-    normal_color = theme.text_color
-    opac_color = QColor(normal_color)
-    opac_color.setAlpha(int(normal_color.alpha() / 2))
-
-    text_pen = QPen(normal_color)
-    opac_text_pen = QPen(opac_color)
-
-    # draw title lines
-    for title_line in box._title_lines:
-        painter.setFont(title_line.get_font())
-
-        if title_line.is_little:
-            painter.setPen(opac_text_pen)
-        else:
-            painter.setPen(text_pen)
-
-        if (box.is_monitor()
-                and title_line == box._title_lines[-1]
-                and box._group_name.endswith(' Monitor')):
-            # Title line endswith " Monitor"
-            # Draw "Monitor" in yellow
-            # but keep the rest in white
-            pre_text = title_line.text.rpartition(' Monitor')[0]
-            painter.drawText(
-                ceil(title_line.x), ceil(title_line.y), pre_text)
-
-            x_pos = title_line.x
-            if pre_text:
-                t_font = title_line.get_font()
-                x_pos += QFontMetrics(t_font).horizontalAdvance(pre_text)
-                x_pos += QFontMetrics(t_font).horizontalAdvance(' ')
-
-            painter.setPen(QPen(canvas.theme.monitor_color, 0))
-            painter.drawText(ceil(x_pos), ceil(title_line.y), 'Monitor')
-        else:
-            painter.drawText(ceil(title_line.x), ceil(title_line.y),
-                                title_line.text)
+    _paint_title_lines(box, painter, theme.text_color)
 
     # draw (un)wrapper triangles
-    painter.setPen(wtheme.fill_pen)
-    painter.setBrush(wtheme.background_color)
-    tr_pen_width = pen.widthF()
-
-    match box._wrap_triangle_pos:
-        case _ if box._wrapping_state in(
-                WrappingState.WRAPPED, WrappingState.UNWRAPPING):
-            for port_mode in PortMode.INPUT, PortMode.OUTPUT:
-                if not box._current_port_mode & port_mode:
-                    continue
-                
-                painter.setPen(wtheme.fill_pen)
-                
-                if box._has_side_title():
-                    side = 8.5
-                    ypos = box._height - pen_width - 2.0
-
-                    triangle = QPolygonF()
-                    if port_mode is PortMode.INPUT:
-                        xpos = pen_width + 2.0
-                        triangle += QPointF(xpos, ypos - side)
-                        triangle += QPointF(xpos + side, ypos)
-                        triangle += QPointF(xpos, ypos)
-                    else:
-                        xpos = box._width - pen_width - 2.0
-                        triangle += QPointF(xpos, ypos - side)
-                        triangle += QPointF(xpos - side, ypos)
-                        triangle += QPointF(xpos, ypos)
-                else:
-                    side = 6
-                    xpos = pen_width + 2.0
-                    ypos = box._height - pen_width - side - 2.0
-
-                    if port_mode is PortMode.OUTPUT:
-                        xpos = \
-                            box._width - pen_width - 2.0 - 2 * side
-
-                    triangle = QPolygonF()
-                    triangle += QPointF(xpos, ypos)
-                    triangle += QPointF(xpos + 2 * side, ypos)
-                    triangle += QPointF(xpos + side, ypos + side)
-
-                if wtheme.border_mode == 'minimal':
-                    painter.drawPolyline(
-                        [triangle[0], triangle[2], triangle[1]])
-                    painter.setPen(Qt.PenStyle.NoPen)
-                painter.drawPolygon(triangle)
-
-        case UnwrapButton.LEFT:
-            side = 6
-            xpos = 2.0 + pen_width
-            ypos = box._height - pen_width - 2.0
-            triangle = QPolygonF()
-            triangle += QPointF(xpos, ypos)
-            triangle += QPointF(xpos + 2 * side, ypos)
-            triangle += QPointF(xpos + side, ypos -side)
-
-            if wtheme.border_mode == 'minimal':
-                painter.drawPolyline(
-                    [triangle[0], triangle[2], triangle[1]])
-                painter.setPen(Qt.PenStyle.NoPen)
-            painter.drawPolygon(triangle)
-
-        case UnwrapButton.RIGHT:
-            side = 6
-            xpos = box._width - pen_width - 2 * side - 2.0
-
-            ypos = box._height - pen_width - 2.0
-            triangle = QPolygonF()
-            triangle += QPointF(xpos, ypos)
-            triangle += QPointF(xpos + 2 * side, ypos)
-            triangle += QPointF(xpos + side, ypos - side)
-            
-            if wtheme.border_mode == 'minimal':
-                painter.drawPolyline(
-                    [triangle[0], triangle[2], triangle[1]])
-                painter.setPen(Qt.PenStyle.NoPen)
-            painter.drawPolygon(triangle)
-
-        case UnwrapButton.CENTER:
-            side = 7
-            xpos = (box._width
-                    + box._layout._pms.ins_width
-                    - box._layout._pms.outs_width) / 2 - side
-
-            ypos = box._height - tr_pen_width / 2.0
-            triangle = QPolygonF()
-            triangle += QPointF(xpos, ypos)
-            triangle += QPointF(xpos + 2 * side, ypos)
-            triangle += QPointF(xpos + side, ypos -side)
-            
-            if wtheme.border_mode == 'minimal':
-                painter.drawPolyline(
-                    [triangle[0], triangle[2], triangle[1]])
-                painter.setPen(Qt.PenStyle.NoPen)
-            painter.drawPolygon(triangle)
+    _paint_wrappers(box, painter, wtheme, pen_width, pen.widthF())
 
     painter.restore()
 

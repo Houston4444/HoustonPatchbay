@@ -529,7 +529,7 @@ class BoxWidget(QGraphicsItem):
     def _has_side_title(self):
         return bool(
             self._current_port_mode is not PortMode.BOTH
-            and self._current_layout_mode == BoxLayoutMode.LARGE)
+            and self._current_layout_mode is BoxLayoutMode.LARGE)
 
     def wrap_unwrap_at_point(self, scene_pos: QPointF) -> bool:
         '''order a wrap or unwrap on the box if scene_pos is on the
