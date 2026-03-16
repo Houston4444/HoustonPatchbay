@@ -586,8 +586,15 @@ def paint(box: 'BoxWidget', painter: QPainter, option, widget):
     
     if header_path is not None:
         painter.setPen(Qt.PenStyle.NoPen)
+        # painter.setPen(htheme.fill_pen)
         painter.drawPath(painter_path)
 
+        hbg_image = htheme.background_image
+        if not hbg_image.isNull():
+            painter.setBrush(QBrush(hbg_image))
+            painter.drawPath(header_path)
+
+        painter.setPen(htheme.fill_pen)
         painter.setBrush(_get_gradient(
             htheme.background_color, htheme.background2_color,
             box._width, box._height))
