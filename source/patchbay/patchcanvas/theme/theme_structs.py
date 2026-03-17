@@ -35,22 +35,39 @@ class Margin:
         return self.top + self.bottom
     
     @property
-    def width(self):
+    def width(self) -> int:
         return self.sides * 2
-
-    def width_with(self, port_mode=PortMode.BOTH):
-        match port_mode:
-            case PortMode.BOTH:
-                return 2 * self.ports_side
-            case PortMode.NULL:
-                return 2 * self.free_side
-            case _:
-                return self.ports_side + self.free_side
     
     @property
-    def sided_width(self):
+    def sided_width(self) -> int:
         return self.ports_side + self.free_side
     
     @property
-    def sided_height(self):
-        return self.top_side * 2  
+    def sided_height(self) -> int:
+        return self.top_side * 2
+
+    def super(self, other: 'Margin') -> 'SuperMargin':
+        return SuperMargin(self, other)
+
+
+class SuperMargin(Margin):
+    '''Combinaison of margins with the max values margins.
+    Useful to calculate the needed sizes of a box, depending
+    on the selected state, for example.'''
+    def __init__(self, *margins: Margin):
+        self.top = max([m.top for m in margins])
+        self.bottom = max([m.bottom for m in margins])
+        self.sides = max([m.sides for m in margins])
+        self.ports_side = max([m.ports_side for m in margins])
+        self.free_side = max([m.free_side for m in margins])
+        self.top_side = max([m.top_side for m in margins])
+        self._height = max([m.height for m in margins])
+        self._sided_width = max([m.sided_width for m in margins])
+        
+    @property
+    def height(self) -> int:
+        return self._height
+    
+    @property
+    def sided_width(self) -> int:
+        return self._sided_width
