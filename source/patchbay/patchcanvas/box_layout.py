@@ -52,14 +52,22 @@ class BoxLayout:
         cls._port_mode = box._current_port_mode
         cls._can_handle_gui = box._can_handle_gui
 
-        margin_hidden = canvas.theme.gui_button.gui_hidden.margin
-        margin_visible = canvas.theme.gui_button.gui_visible.margin
-        cls._gui_margin_vt = (
-            max(margin_visible.height, margin_hidden.height))
-        cls._gui_margin_ports_side = max(
-            margin_visible.ports_side, margin_hidden.ports_side)
-        cls._gui_margin_free_side = max(
-            margin_visible.free_side, margin_hidden.free_side)
+        cls._header_margin = box.get_theme(for_header=True).margin
+        
+        # margin_hidden = canvas.theme.gui_button.gui_hidden.margin
+        # margin_visible = canvas.theme.gui_button.gui_visible.margin
+        cls._gui_margin = canvas.theme.gui_button.margin
+        # cls._gui_margin.ports_side = max(
+        #     margin_visible.ports_side, margin_hidden.ports_side)
+        # cls._gui_margin.free_side = max(
+        #     margin_visible.free_side, margin_hidden.free_side)
+        
+        # cls._gui_margin_vt = (
+        #     max(margin_visible.height, margin_hidden.height))
+        # cls._gui_margin_ports_side = max(
+            
+        # cls._gui_margin_free_side = max(
+        #     margin_visible.free_side, margin_hidden.free_side)
         
         cls._is_hardware = box.is_hardware
 
@@ -77,18 +85,32 @@ class BoxLayout:
         self.layout_mode = layout_mode
         self.title_on = title_on
         self.one_column = False
-        self.header_width = title_template['header_width']
-        self.header_height = title_template['header_height']
-        if self._can_handle_gui:
-            self.header_height += self._gui_margin_vt
+        
+        if (layout_mode is BoxLayoutMode.LARGE
+                and title_on is TitleOn.SIDE_UNDER_ICON):
+            self.header_width = max(
+                38, title_template['title_width'] + 10)
+            self.header_height = title_template['title_height'] + 32
+        else:
+            self.header_width = title_template['header_width']
+            self.header_height = title_template['header_height']
+
+        if title_on is TitleOn.TOP:
+            self.header_width += self._header_margin.width
+            self.header_height += self._header_margin.height
+            if self._can_handle_gui:
+                self.header_width += self._gui_margin.width
+                self.header_height += self._gui_margin.height
+        else:
+            self.header_width += self._header_margin.sided_width
+            self.header_height += self._header_margin.sided_height
+            if self._can_handle_gui:
+                self.header_width += self._gui_margin.sided_width
+                self.header_height += self._gui_margin.sided_height
 
         height_for_ports = max(self._pms.last_in_pos, self._pms.last_out_pos)
 
         if self._port_mode in (PortMode.INPUT, PortMode.OUTPUT):
-            if self._can_handle_gui:
-                self.header_width += (self._gui_margin_ports_side
-                                      + self._gui_margin_free_side)
-            
             if self._port_mode is PortMode.INPUT:
                 ports_width = self._pms.ins_width
             else:
@@ -106,15 +128,6 @@ class BoxLayout:
                         + 2 * self._pen_width)
 
                 elif title_on is TitleOn.SIDE_UNDER_ICON:
-                    self.header_width = max(
-                        38, title_template['title_width'] + 10)
-                    self.header_height = title_template['title_height'] + 32
-                    if self._can_handle_gui:
-                        self.header_width += (
-                            self._gui_margin_ports_side
-                            + self._gui_margin_free_side)
-                        self.header_height += self._gui_margin_vt
-
                     self.needed_width = ports_width + self.header_width
                     if self._header_counts_border:
                         self.needed_width += self._pen_width
@@ -136,9 +149,6 @@ class BoxLayout:
                 if self._header_counts_border:
                     self.needed_height += self._pen_width
         else:
-            if self._can_handle_gui:
-                self.header_width += self._gui_margin_ports_side * 2
-            
             if layout_mode is BoxLayoutMode.HIGH:
                 self.one_column = True
                 self.needed_width = (

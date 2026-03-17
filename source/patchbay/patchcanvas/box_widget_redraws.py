@@ -917,6 +917,11 @@ def _set_title_positions(box: 'BoxWidget'):
     else:
         pen_width = 0
 
+    header_theme = box.get_theme(for_header=True)
+    if box.isSelected():
+        header_theme = header_theme.selected
+    mg = header_theme.margin
+    
     # when client is client capable of gui state
     # gui button has margins
     if box._can_handle_gui:
@@ -927,28 +932,34 @@ def _set_title_positions(box: 'BoxWidget'):
             gui_button = gui_button.gui_hidden
         
         gui_margin = gui_button.margin
+        mg += gui_margin
     else:
         gui_margin = canvas.theme.margin_empty
 
-    gm_left = gm_right = gui_margin.free_side
-    if box._current_port_mode & PortMode.INPUT:
-        gm_left = gui_margin.ports_side
-    if box._current_port_mode & PortMode.OUTPUT:
-        gm_right = gui_margin.ports_side
+    # gm_left = gm_right = gui_margin.free_side
+    # if box._current_port_mode & PortMode.INPUT:
+    #     gm_left = gui_margin.ports_side
+    # if box._current_port_mode & PortMode.OUTPUT:
+    #     gm_right = gui_margin.ports_side
+    
+    # header_mg = box.get_theme(for_header=True).margin
     
     if box._has_side_title():
         if box._current_port_mode is PortMode.INPUT:
-            left = box._width - box._header_width + gm_left
-            right = box._width - pen_width - gm_right
+            left = box._width - box._header_width + mg.ports_side
+            right = box._width - pen_width - mg.free_side
         else:
-            left = pen_width + gm_left
-            right = box._header_width - gm_right
-    else:
-        left = pen_width + gm_left
-        right = box._width - pen_width - gm_right
+            left = pen_width + mg.free_side
+            right = box._header_width - mg.ports_side
 
-    top = pen_width + gui_margin.top
-    bottom = box._header_height - gui_margin.bottom
+        top = pen_width + mg.top_side
+        bottom = box._header_height - mg.top_side
+    else:
+        left = pen_width + mg.sides
+        right = box._width - pen_width - mg.sides
+        top = pen_width + mg.top
+        bottom = box._header_height - mg.bottom
+
 
     # set title lines Y position
     if box._title_under_icon:
@@ -1181,7 +1192,11 @@ def _build_painter_path(
     painter_paths[PaintElement.MAIN] = painter_path
 
     header_theme = box.get_theme(for_header=True)
+    if selected:
+        header_theme = header_theme.selected
+
     if header_theme.visible:
+        mg = header_theme.margin
         border_width = 0.0
         if theme.header_counts_border:
             border_width = line_hinting * 2.0
@@ -1189,14 +1204,20 @@ def _build_painter_path(
         if box._has_side_title():
             if box._current_port_mode is PortMode.OUTPUT:
                 header_rect = QRectF(
-                    0.0, 0.0, box._header_width + border_width, box._height)
+                    mg.free_side, 0.0,
+                    border_width + box._header_width - mg.sided_width,
+                    box._height)
             else:
                 header_rect = QRectF(
-                    box._width - box._header_width - border_width, 0.0,
-                    box._header_width, box._height)
+                    box._width - border_width 
+                        - box._header_width + mg.ports_side,
+                    0.0,
+                    box._header_width - mg.sided_width,
+                    box._height)
         else:
-            header_rect = QRectF(0.0, 0.0, box._width,
-                                 box._header_height + border_width)
+            header_rect = QRectF(
+                0.0, mg.top,
+                box._width, box._header_height + border_width - mg.height)
 
         tmp_header_path = QPainterPath()
         tmp_header_path.addRect(header_rect)

@@ -225,46 +225,32 @@ def _paint_gui_button(box: 'BoxWidget', painter: QPainter, border: int):
     else:
         gui_theme = gui_theme.gui_hidden            
     
-    mg = gui_theme.margin
+    gmg = gui_theme.margin
+    header_theme = box.get_theme(for_header=True)
+    if box.isSelected():
+        header_theme = header_theme.selected
+    hmg = header_theme.margin
+    mg = hmg + gmg
     
     if box._has_side_title():
         if box._current_port_mode is PortMode.INPUT:
             gui_rect = QRectF(
                 box._width - box._header_width - border + mg.ports_side,
-                mg.top + border,
-                box._header_width - mg.ports_side - mg.free_side,
-                box._header_height - mg.height)
+                mg.top_side + border,
+                box._header_width - mg.sided_width,
+                box._header_height - mg.sided_height)
         elif box._current_port_mode is PortMode.OUTPUT:
             gui_rect = QRectF(
                 border + mg.free_side,
-                border + mg.top,
-                box._header_width - mg.free_side - mg.ports_side,
-                box._header_height - mg.height)
+                border + mg.top_side,
+                box._header_width - mg.sided_width,
+                box._header_height - mg.sided_height)
     else:
-        match box._current_port_mode:
-            case PortMode.OUTPUT:
-                gui_rect = QRectF(
-                    border + mg.free_side,
-                    border + mg.top,
-                    box._width - 2 * border
-                        - mg.ports_side - mg.free_side,
-                    box._header_height - 2 * border - mg.height)
-            case PortMode.INPUT:
-                gui_rect = QRectF(
-                    border + mg.ports_side, border + mg.top,
-                    box._width - 2 * border
-                        - mg.ports_side - mg.free_side,
-                    box._header_height - 2 * border - mg.height)
-            case PortMode.BOTH:
-                gui_rect = QRectF(
-                    border + mg.ports_side,
-                    border + mg.top,
-                    box._width - 2 * (border + mg.ports_side),
-                    box._header_height - 2 * border
-                        - mg.height)
-            case _:
-                gui_rect = QRectF()
-        
+        gui_rect = QRectF(
+            border + mg.sides,
+            border + mg.top,
+            box._width - 2 * border - mg.width,
+            box._header_height - border - mg.height)        
 
     radius = gui_theme.border_radius
 

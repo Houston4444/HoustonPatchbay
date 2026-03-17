@@ -38,7 +38,9 @@ _DEFAULT_STYLE_ATTRS = {
     'margin-bottom': 3,
     'margin-free-side': 3,
     'margin-ports-side': 3,
+    'margin-sides': 3,
     'margin-top': 3,
+    'margin-top-side': 3,
     'output-align': 'left',
     'port-in-offset': 0,
     'port-in-offset-mode': 'bore',
@@ -134,16 +136,18 @@ class StyleAttributer:
                     'port-offset'|'port-in-offset'|'port-out-offset'| \
                     'port-spacing'|'port-type-spacing'|'box-footer' | \
                     'icon-size'|'grid-min-width'|'grid-min-height'| \
-                    'margin'|'margin-top'|'margin-bottom'| \
+                    'margin'|'margin-top'|'margin-bottom'|'margin-sides'|\
                     'margin-ports-side'|'margin-free-side':
                 if isinstance(value, (int, float)):
                     match attribute:
                         case 'border-width':
                             min_, max_ = 0, 20
-                        case 'border-radius'|'box-footer'|'margin'| \
-                                'margin-top'|'margin-bottom'| \
-                                'margin-ports-side'|'margin-free-side':
+                        case 'border-radius'|'box-footer':
                             min_, max_ = 0, 50
+                        case 'margin'|'margin-top'|'margin-bottom'|\
+                                'margin-sides'|'margin-ports-side'|\
+                                'margin-free-side'|'margin-top-side':
+                            min_, max_ = -50, 50
                         case 'font-size':
                             min_, max_ = 1, 200
                         case 'port-spacing'|'port-type-spacing':
@@ -163,11 +167,10 @@ class StyleAttributer:
                                 self._attrs['port-out-offset'] = \
                                     self._attrs[attribute]
                         case 'margin':
-                            self._attrs['margin-top'] = \
-                                self._attrs['margin-bottom'] = \
-                                    self._attrs['margin-ports-side'] = \
-                                        self._attrs['margin-free-side'] = \
-                                            self._attrs[attribute]
+                            for key in ('top', 'bottom', 'sides',
+                                        'ports-side', 'free-side', 'top-side'):
+                                self._attrs[f'margin-{key}'] = \
+                                    self._attrs[attribute]
                 else:
                     err = True
             
@@ -349,8 +352,10 @@ class StyleAttributer:
         margin = Margin()
         margin.top = self.get_value_of('margin-top') # type:ignore
         margin.bottom = self.get_value_of('margin-bottom') # type:ignore
+        margin.sides = self.get_value_of('margin-sides') # type:ignore
         margin.ports_side = self.get_value_of('margin-ports-side') # type:ignore
         margin.free_side = self.get_value_of('margin-free-side') # type:ignore
+        margin.top_side = self.get_value_of('margin-top-side') # type:ignore
         return margin
 
     @property
