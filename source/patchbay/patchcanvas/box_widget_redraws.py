@@ -598,7 +598,6 @@ def _set_ports_y_positions(
     port_spacing = box_theme.port_spacing
     port_type_spacing = box_theme.port_type_spacing
     pen_width = box_theme.fill_pen.widthF()
-    header_counts_border = box_theme.header_counts_border
     last_in_type_and_sub = (PortType.NULL, PortSubType.REGULAR)
     last_out_type_and_sub = (PortType.NULL, PortSubType.REGULAR)
     last_type_and_sub = (PortType.NULL, PortSubType.REGULAR)
@@ -609,9 +608,7 @@ def _set_ports_y_positions(
     if box._has_side_title():
         start_pos = pen_width + port_spacing
     else:
-        start_pos = box._header_height
-        if header_counts_border:
-            start_pos += pen_width
+        start_pos = pen_width + box._header_height
 
     if box._layout.title_on is TitleOn.TOP:
         wrapped_port_pos = (box._layout.wrapped_height
@@ -946,19 +943,19 @@ def _set_title_positions(box: 'BoxWidget'):
     
     if box._has_side_title():
         if box._current_port_mode is PortMode.INPUT:
-            left = box._width - box._header_width + mg.ports_side
+            left = box._width - pen_width - box._header_width + mg.ports_side
             right = box._width - pen_width - mg.free_side
         else:
             left = pen_width + mg.free_side
-            right = box._header_width - mg.ports_side
+            right = pen_width + box._header_width - mg.ports_side
 
         top = pen_width + mg.top_side
-        bottom = box._header_height - mg.top_side
+        bottom = pen_width + box._header_height - mg.top_side
     else:
         left = pen_width + mg.sides
         right = box._width - pen_width - mg.sides
         top = pen_width + mg.top
-        bottom = box._header_height - mg.bottom
+        bottom = pen_width + box._header_height - mg.bottom
 
 
     # set title lines Y position
@@ -1216,8 +1213,9 @@ def _build_painter_path(
                     box._height)
         else:
             header_rect = QRectF(
-                0.0, mg.top,
-                box._width, box._header_height + border_width - mg.height)
+                border_width, border_width + mg.top,
+                box._width - 2 * line_hinting,
+                box._header_height - mg.height)
 
         tmp_header_path = QPainterPath()
         tmp_header_path.addRect(header_rect)

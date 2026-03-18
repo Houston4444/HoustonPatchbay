@@ -52,22 +52,9 @@ class BoxLayout:
         cls._port_mode = box._current_port_mode
         cls._can_handle_gui = box._can_handle_gui
 
-        cls._header_margin = box.get_theme(for_header=True).margin
-        
-        # margin_hidden = canvas.theme.gui_button.gui_hidden.margin
-        # margin_visible = canvas.theme.gui_button.gui_visible.margin
-        cls._gui_margin = canvas.theme.gui_button.margin
-        # cls._gui_margin.ports_side = max(
-        #     margin_visible.ports_side, margin_hidden.ports_side)
-        # cls._gui_margin.free_side = max(
-        #     margin_visible.free_side, margin_hidden.free_side)
-        
-        # cls._gui_margin_vt = (
-        #     max(margin_visible.height, margin_hidden.height))
-        # cls._gui_margin_ports_side = max(
-            
-        # cls._gui_margin_free_side = max(
-        #     margin_visible.free_side, margin_hidden.free_side)
+        cls._mg = box.get_theme(for_header=True).margin
+        if box._can_handle_gui:
+            cls._mg += canvas.theme.gui_button.margin
         
         cls._is_hardware = box.is_hardware
 
@@ -96,17 +83,11 @@ class BoxLayout:
             self.header_height = title_template['header_height']
 
         if title_on is TitleOn.TOP:
-            self.header_width += self._header_margin.width
-            self.header_height += self._header_margin.height
-            if self._can_handle_gui:
-                self.header_width += self._gui_margin.width
-                self.header_height += self._gui_margin.height
+            self.header_width += self._mg.width
+            self.header_height += self._mg.height
         else:
-            self.header_width += self._header_margin.sided_width
-            self.header_height += self._header_margin.sided_height
-            if self._can_handle_gui:
-                self.header_width += self._gui_margin.sided_width
-                self.header_height += self._gui_margin.sided_height
+            self.header_width += self._mg.sided_width
+            self.header_height += self._mg.sided_height
 
         height_for_ports = max(self._pms.last_in_pos, self._pms.last_out_pos)
 

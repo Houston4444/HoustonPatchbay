@@ -250,7 +250,7 @@ def _paint_gui_button(box: 'BoxWidget', painter: QPainter, border: int):
             border + mg.sides,
             border + mg.top,
             box._width - 2 * border - mg.width,
-            box._header_height - border - mg.height)        
+            box._header_height - mg.height)        
 
     radius = gui_theme.border_radius
 
@@ -540,6 +540,7 @@ def paint(box: 'BoxWidget', painter: QPainter, option, widget):
         wtheme = wtheme.monitor
         hltheme = hltheme.monitor
 
+    border_unselected = theme.fill_pen.widthF()
     selected = box.isSelected()
     
     if selected:
@@ -611,12 +612,7 @@ def paint(box: 'BoxWidget', painter: QPainter, option, widget):
 
     # Draw toggle GUI client button
     if box._can_handle_gui:
-        if theme.header_counts_border:
-            border = pen_width
-        else:
-            border = 0
-
-        _paint_gui_button(box, painter, border)
+        _paint_gui_button(box, painter, border_unselected)
 
     # draw Pipewire Monitor (or PulseAudio bridges) decorations
     elif box.is_monitor() and box._current_port_mode is not PortMode.BOTH:
