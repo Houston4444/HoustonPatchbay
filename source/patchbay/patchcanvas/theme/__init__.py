@@ -137,7 +137,7 @@ class StyleAttributer:
                     'port-spacing'|'port-type-spacing'|'box-footer' | \
                     'icon-size'|'grid-min-width'|'grid-min-height'| \
                     'margin'|'margin-top'|'margin-bottom'|'margin-sides'|\
-                    'margin-ports-side'|'margin-free-side':
+                    'margin-ports-side'|'margin-free-side'|'margin-top-side':
                 if isinstance(value, (int, float)):
                     match attribute:
                         case 'border-width':

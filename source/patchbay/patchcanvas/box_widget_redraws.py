@@ -932,14 +932,6 @@ def _set_title_positions(box: 'BoxWidget'):
         mg += gui_margin
     else:
         gui_margin = canvas.theme.margin_empty
-
-    # gm_left = gm_right = gui_margin.free_side
-    # if box._current_port_mode & PortMode.INPUT:
-    #     gm_left = gui_margin.ports_side
-    # if box._current_port_mode & PortMode.OUTPUT:
-    #     gm_right = gui_margin.ports_side
-    
-    # header_mg = box.get_theme(for_header=True).margin
     
     if box._has_side_title():
         if box._current_port_mode is PortMode.INPUT:
@@ -1201,16 +1193,16 @@ def _build_painter_path(
         if box._has_side_title():
             if box._current_port_mode is PortMode.OUTPUT:
                 header_rect = QRectF(
-                    mg.free_side, 0.0,
-                    border_width + box._header_width - mg.sided_width,
-                    box._height)
+                    border_width + mg.free_side, border_width,
+                    box._header_width - mg.sided_width,
+                    box._height - border_width)
             else:
                 header_rect = QRectF(
                     box._width - border_width 
                         - box._header_width + mg.ports_side,
-                    0.0,
+                    border_width,
                     box._header_width - mg.sided_width,
-                    box._height)
+                    box._height - border_width)
         else:
             header_rect = QRectF(
                 border_width, border_width + mg.top,
