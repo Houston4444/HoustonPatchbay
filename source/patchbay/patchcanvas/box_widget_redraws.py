@@ -1042,6 +1042,7 @@ def _build_painter_path(
 
     painter_path = QPainterPath()
     theme = box.get_theme()
+    pen = theme.fill_pen
     if selected:
         theme = theme.selected
 
@@ -1050,7 +1051,6 @@ def _build_painter_path(
     port_out_offset = abs(theme.port_out_offset)
     bore_in = bool(theme.port_in_offset_mode == 'bore')
     bore_out = bool(theme.port_out_offset_mode == 'bore')
-    pen = theme.fill_pen
     line_hinting = pen.widthF() / 2.0
 
     # theses values are needed to prevent some incorrect painter_path
@@ -1186,27 +1186,25 @@ def _build_painter_path(
 
     if header_theme.visible:
         mg = header_theme.margin
-        border_width = 0.0
-        if theme.header_counts_border:
-            border_width = line_hinting * 2.0
+        border = line_hinting * 2.0
         
         if box._has_side_title():
             if box._current_port_mode is PortMode.OUTPUT:
                 header_rect = QRectF(
-                    border_width + mg.free_side, border_width,
+                    line_hinting + mg.free_side, line_hinting,
                     box._header_width - mg.sided_width,
-                    box._height - border_width)
+                    box._height -  2 * line_hinting)
             else:
                 header_rect = QRectF(
-                    box._width - border_width 
+                    box._width - line_hinting
                         - box._header_width + mg.ports_side,
-                    border_width,
+                    line_hinting,
                     box._header_width - mg.sided_width,
-                    box._height - border_width)
+                    box._height - 2 * line_hinting)
         else:
             header_rect = QRectF(
-                border_width, border_width + mg.top,
-                box._width - 2 * line_hinting,
+                border, border + mg.top,
+                box._width - 2 * border,
                 box._header_height - mg.height)
 
         tmp_header_path = QPainterPath()

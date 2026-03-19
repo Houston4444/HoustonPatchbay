@@ -250,7 +250,7 @@ def _paint_gui_button(box: 'BoxWidget', painter: QPainter, border: int):
             border + mg.sides,
             border + mg.top,
             box._width - 2 * border - mg.width,
-            box._header_height - mg.height)        
+            box._header_height - mg.height)
 
     radius = gui_theme.border_radius
 
