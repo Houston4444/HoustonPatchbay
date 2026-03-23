@@ -1147,7 +1147,7 @@ def _build_painter_path(
                 - 2 * line_hinting + epsd))
             painter_path = painter_path.united(top_right_path)
 
-    if box.is_monitor() and border_radius:
+    if box.is_monitor and border_radius:
         if box._current_port_mode is PortMode.OUTPUT:
             left_path = QPainterPath()
             left_path.addRect(QRectF(
@@ -1315,15 +1315,7 @@ def update_positions(
 
     if theme_change:
         if box.shadow is not None:
-            shadow_theme = canvas.theme.box_shadow
-            match box._box_type:
-                case BoxType.HARDWARE:
-                    shadow_theme = shadow_theme.hardware
-                case BoxType.MONITOR:
-                    shadow_theme = shadow_theme.monitor
-                case BoxType.CLIENT:
-                    shadow_theme = shadow_theme.client
-            box.shadow.set_theme(shadow_theme)
+            box.shadow.set_theme(box.get_theme(BoxStyler.SHADOW))
         
         for portgrp in box._portgrp_list:
             if portgrp.widget is not None:

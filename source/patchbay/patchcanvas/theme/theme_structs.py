@@ -81,6 +81,7 @@ class SuperMargin(Margin):
 
 class BoxStyler(Enum):
     BOX = auto()
+    SHADOW = auto()
     HEADER = auto()
     HEADER_LINE = auto()
     WRAPPER = auto()

@@ -97,7 +97,6 @@ class BoxWidget(QGraphicsItem):
         self._inline_image = None
         self._inline_scaling = 1.0
 
-        self.is_hardware = bool(group.box_type is BoxType.HARDWARE)
         self._icon_name = group.icon_name
 
         self._title_lines = list[TitleLine]()
@@ -118,26 +117,20 @@ class BoxWidget(QGraphicsItem):
         self._portgrp_list = list[PortgrpObject]()
 
         # Icon
-        if group.box_type in (BoxType.HARDWARE, BoxType.MONITOR):
-            self.top_icon = IconSvgWidget(
-                group.box_type, group.icon_name, self._port_mode, self)
-        else:
-            self.top_icon = IconPixmapWidget(
+        match group.box_type:
+            case BoxType.HARDWARE | BoxType.MONITOR:
+                self.top_icon = IconSvgWidget(
+                    group.box_type, group.icon_name, self._port_mode, self)
+            case _:
+                self.top_icon = IconPixmapWidget(
                 group.box_type, group.icon_name, self)
-            if self.top_icon.is_null():
-                top_icon = self.top_icon
-                self.top_icon = None
-                del top_icon
+                if self.top_icon.is_null():
+                    top_icon = self.top_icon
+                    self.top_icon = None
+                    del top_icon
 
         # Shadow
-        shadow_theme = canvas.theme.box_shadow
-        if self.is_hardware:
-            shadow_theme = shadow_theme.hardware
-        elif self._box_type is BoxType.CLIENT:
-            shadow_theme = shadow_theme.client
-        elif self.is_monitor():
-            shadow_theme = shadow_theme.monitor
-
+        shadow_theme = self.get_theme(BoxStyler.SHADOW)
         self.shadow = None
         # FIXME FX on top of graphic items make them lose high-dpi
         # See https://bugreports.qt.io/browse/QTBUG-65035
@@ -197,6 +190,14 @@ class BoxWidget(QGraphicsItem):
     def __repr__(self) -> str:
         return f"BoxWidget({self._group_name}, {self._port_mode.name})"
 
+    @property
+    def is_hardware(self) -> bool:
+        return self._box_type is BoxType.HARDWARE
+
+    @property
+    def is_monitor(self):
+        return self._box_type is BoxType.MONITOR
+
     def get_group_id(self):
         return self._group_id
 
@@ -208,9 +209,6 @@ class BoxWidget(QGraphicsItem):
             [p.port_name for p in self._port_list
              if p.portgrp_id == portgrp_id])
 
-    def is_monitor(self):
-        return (self._box_type is BoxType.MONITOR
-                and self._icon_name in ('monitor_playback', 'monitor_capture'))
 
     def get_port_mode(self):
         return self._port_mode
@@ -882,7 +880,9 @@ class BoxWidget(QGraphicsItem):
     def get_theme(self, styler=BoxStyler.BOX) -> UnselectedStyleAttributer:
         match styler:
             case BoxStyler.BOX:
-                theme = canvas.theme.box            
+                theme = canvas.theme.box
+            case BoxStyler.SHADOW:
+                theme = canvas.theme.box_shadow
             case BoxStyler.HEADER:
                 theme = canvas.theme.box_header
             case BoxStyler.HEADER_LINE:
@@ -894,12 +894,13 @@ class BoxWidget(QGraphicsItem):
             case _:
                 raise Exception(f'Invalid styler {styler}')
 
-        if self.is_hardware:
-            theme = theme.hardware
-        elif self._box_type is BoxType.CLIENT:
-            theme = theme.client
-        elif self.is_monitor():
-            theme = theme.monitor
+        match self._box_type:
+            case BoxType.HARDWARE:
+                return theme.hardware
+            case BoxType.MONITOR:
+                return theme.monitor
+            case BoxType.CLIENT:
+                return theme.client
 
         return theme
 

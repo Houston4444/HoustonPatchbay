@@ -401,7 +401,7 @@ def _paint_title_lines(box: 'BoxWidget', painter: QPainter,
         else:
             painter.setPen(text_pen)
 
-        if (box.is_monitor()
+        if (box.is_monitor
                 and title_line == box._title_lines[-1]
                 and box._group_name.endswith(' Monitor')):
             # Title line endswith " Monitor"
@@ -553,23 +553,10 @@ def paint(box: 'BoxWidget', painter: QPainter, option, widget):
     painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
 
     # define theme for box, wrappers and header lines
-    theme = canvas.theme.box
-    wtheme = canvas.theme.box_wrapper
-    htheme = canvas.theme.box_header
-    hltheme = canvas.theme.box_header_line
-
-    if box.is_hardware:
-        theme = theme.hardware
-        wtheme = wtheme.hardware
-        hltheme = hltheme.hardware
-    elif box._box_type is BoxType.CLIENT:
-        theme = theme.client
-        wtheme = wtheme.client
-        hltheme = hltheme.client
-    elif box.is_monitor():
-        theme = theme.monitor
-        wtheme = wtheme.monitor
-        hltheme = hltheme.monitor
+    theme = box.get_theme()
+    wtheme = box.get_theme(BoxStyler.WRAPPER)
+    htheme = box.get_theme(BoxStyler.HEADER)
+    hltheme = box.get_theme(BoxStyler.HEADER_LINE)
 
     border_unselected = theme.fill_pen.widthF()
     selected = box.isSelected()
@@ -645,7 +632,7 @@ def paint(box: 'BoxWidget', painter: QPainter, option, widget):
         _paint_gui_button(box, painter, border_unselected)
 
     # draw Pipewire Monitor (or PulseAudio bridges) decorations
-    elif box.is_monitor() and box._current_port_mode is not PortMode.BOTH:
+    elif box.is_monitor and box._current_port_mode is not PortMode.BOTH:
         _paint_monitor_deco(box, painter, pen_width)
 
     # may draw horizontal lines around title (header lines)
