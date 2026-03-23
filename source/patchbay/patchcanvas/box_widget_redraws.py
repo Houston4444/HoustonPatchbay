@@ -618,79 +618,79 @@ def _set_ports_y_positions(
 
     last_in_pos = last_out_pos = start_pos
 
-    # # manage exceedent height in the box
-    # # due to the grid height (or to the others side ports
-    # # in a grouped box).
-    # exc_in = self._layout.exceeding_y_ins
-    # exc_out = self._layout.exceeding_y_outs
-    # exc_inout = self._layout.exceeding_y_inouts
-    # n_types_in = self._layout._pms.n_in_type_and_subs
-    # n_types_out = self._layout._pms.n_out_type_and_subs
-    # n_types_inout = self._layout._pms.n_inout_type_and_subs
+    # manage exceedent height in the box
+    # due to the grid height (or to the others side ports
+    # in a grouped box).
+    exc_in = box._layout.exceeding_y_ins
+    exc_out = box._layout.exceeding_y_outs
+    exc_inout = box._layout.exceeding_y_inouts
+    n_types_in = box._layout._pms.n_in_type_and_subs
+    n_types_out = box._layout._pms.n_out_type_and_subs
+    n_types_inout = box._layout._pms.n_inout_type_and_subs
 
-    # if one_column:
-    #     new_pts = exc_inout / (1 + n_types_inout)
-    #     if new_pts > port_type_spacing:
-    #         port_type_spacing = port_type_spacing_in = \
-    #             port_type_spacing_out = new_pts
-    #         last_in_pos += new_pts
-    #         last_out_pos += new_pts
-    #     else:
-    #         last_in_pos += exc_inout / 2
-    #         last_out_pos += exc_inout / 2
+    if one_column:
+        new_pts = exc_inout / (1 + n_types_inout)
+        if new_pts > port_type_spacing:
+            port_type_spacing = port_type_spacing_in = \
+                port_type_spacing_out = new_pts
+            last_in_pos += new_pts
+            last_out_pos += new_pts
+        else:
+            last_in_pos += exc_inout / 2
+            last_out_pos += exc_inout / 2
 
-    # elif align_port_types:
-    #     exceeding = min(exc_in, exc_out)
-    #     n_types = max(n_types_in, n_types_out)
-    #     new_pts = exceeding / (1 + n_types)
-    #     if new_pts > port_type_spacing:
-    #         port_type_spacing = new_pts
-    #         port_type_spacing_in = port_type_spacing_out = new_pts
-    #         last_in_pos += port_type_spacing
-    #         last_out_pos += port_type_spacing
-    #     else:
-    #         last_in_pos += exceeding / 2
-    #         last_out_pos += exceeding / 2
+    elif align_port_types:
+        exceeding = min(exc_in, exc_out)
+        n_types = max(n_types_in, n_types_out)
+        new_pts = exceeding / (1 + n_types)
+        if new_pts > port_type_spacing:
+            port_type_spacing = new_pts
+            port_type_spacing_in = port_type_spacing_out = new_pts
+            last_in_pos += port_type_spacing
+            last_out_pos += port_type_spacing
+        else:
+            last_in_pos += exceeding / 2
+            last_out_pos += exceeding / 2
 
-    # elif self._current_port_mode is PortMode.BOTH:
-    #     if exc_out < exc_in:
-    #         new_pts_out = exc_out / (1 + n_types_out)
-    #         more_out = 0.0
-    #         if new_pts_out > port_type_spacing:
-    #             port_type_spacing_out = new_pts_out
-    #             last_in_pos += new_pts_out
-    #             last_out_pos += new_pts_out
-    #             more_out = (new_pts_out - port_type_spacing) * (n_types_out -1)
+    elif box._current_port_mode is PortMode.BOTH:
+        if exc_out < exc_in:
+            new_pts_out = exc_out / (1 + n_types_out)
+            more_out = 0.0
+            if new_pts_out > port_type_spacing:
+                port_type_spacing_out = new_pts_out
+                last_in_pos += new_pts_out
+                last_out_pos += new_pts_out
+                more_out = (new_pts_out - port_type_spacing) * (n_types_out -1)
 
-    #         if n_types_in > 1:
-    #             port_type_spacing_in += (
-    #                 (exc_in + more_out - exc_out) / (n_types_in - 1))
-    #     else:
-    #         new_pts_in = exc_in / (1 + n_types_in)
-    #         more_in = 0.0
-    #         if new_pts_in > port_type_spacing:
-    #             port_type_spacing_in = new_pts_in
-    #             last_in_pos += new_pts_in
-    #             last_out_pos += new_pts_in
-    #             more_in = (new_pts_in - port_type_spacing) * (n_types_in - 1)
+            if n_types_in > 1:
+                port_type_spacing_in += (
+                    (exc_in + more_out - exc_out) / (n_types_in - 1))
+        else:
+            new_pts_in = exc_in / (1 + n_types_in)
+            more_in = 0.0
+            if new_pts_in > port_type_spacing:
+                port_type_spacing_in = new_pts_in
+                last_in_pos += new_pts_in
+                last_out_pos += new_pts_in
+                more_in = (new_pts_in - port_type_spacing) * (n_types_in - 1)
 
-    #         if n_types_out > 1:
-    #             port_type_spacing_out += (
-    #                 (exc_out + more_in - exc_in) / (n_types_out - 1))
-    # else:
-    #     new_pts_in = exc_in / (n_types_in + 1)
-    #     if new_pts_in > port_type_spacing_in:
-    #         port_type_spacing_in = new_pts_in
-    #         last_in_pos += new_pts_in
-    #     else:
-    #         last_in_pos += exc_in / 2
+            if n_types_out > 1:
+                port_type_spacing_out += (
+                    (exc_out + more_in - exc_in) / (n_types_out - 1))
+    else:
+        new_pts_in = exc_in / (n_types_in + 1)
+        if new_pts_in > port_type_spacing_in:
+            port_type_spacing_in = new_pts_in
+            last_in_pos += new_pts_in
+        else:
+            last_in_pos += exc_in / 2
 
-    #     new_pts_out = exc_out / (n_types_out + 1)
-    #     if new_pts_out > port_type_spacing_out:
-    #         port_type_spacing_out = new_pts_out
-    #         last_out_pos += new_pts_out
-    #     else:
-    #         last_out_pos += exc_out / 2
+        new_pts_out = exc_out / (n_types_out + 1)
+        if new_pts_out > port_type_spacing_out:
+            port_type_spacing_out = new_pts_out
+            last_out_pos += new_pts_out
+        else:
+            last_out_pos += exc_out / 2
 
     input_segments = list[list[float]]()
     output_segments = list[list[float]]()
@@ -1042,7 +1042,7 @@ def _build_painter_path(
 
     painter_path = QPainterPath()
     theme = box.get_theme()
-    pen = theme.fill_pen
+    usl_border = theme.border_width
     if selected:
         theme = theme.selected
 
@@ -1051,6 +1051,7 @@ def _build_painter_path(
     port_out_offset = abs(theme.port_out_offset)
     bore_in = bool(theme.port_in_offset_mode == 'bore')
     bore_out = bool(theme.port_out_offset_mode == 'bore')
+    pen = theme.fill_pen
     line_hinting = pen.widthF() / 2.0
 
     # theses values are needed to prevent some incorrect painter_path
@@ -1187,25 +1188,33 @@ def _build_painter_path(
     if header_theme.visible:
         mg = header_theme.margin
         border = line_hinting * 2.0
+        header_lh = header_theme.border_width * 0.5
         
         if box._has_side_title():
             if box._current_port_mode is PortMode.OUTPUT:
                 header_rect = QRectF(
-                    line_hinting + mg.free_side, line_hinting,
-                    box._header_width - mg.sided_width,
-                    box._height -  2 * line_hinting)
+                    border + header_lh + mg.free_side,
+                    border + header_lh - epsy,
+                    box._header_width - mg.sided_width
+                        - 2 * header_lh - border + usl_border,
+                    box._height - 2 * (border + header_lh) + epsd
+                )
             else:
                 header_rect = QRectF(
-                    box._width - line_hinting
-                        - box._header_width + mg.ports_side,
-                    line_hinting,
-                    box._header_width - mg.sided_width,
-                    box._height - 2 * line_hinting)
+                    box._width - border - box._header_width + mg.ports_side
+                        + header_lh + border - usl_border,
+                    border + header_lh - epsy,
+                    box._header_width - mg.sided_width - 2 * header_lh,
+                    box._height - 2 * (border + header_lh) + epsd
+                )
+
         else:
             header_rect = QRectF(
-                border, border + mg.top,
-                box._width - 2 * border,
-                box._header_height - mg.height)
+                border + header_lh,
+                border + mg.top + header_lh,
+                box._width - 2 * (border + header_lh),
+                box._header_height - mg.height
+                    - 2 * header_lh - border + usl_border)
 
         tmp_header_path = QPainterPath()
         tmp_header_path.addRect(header_rect)

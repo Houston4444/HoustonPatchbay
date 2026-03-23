@@ -12,7 +12,7 @@ from qtpy.QtGui import (QColor, QPen, QFont, QBrush, QFontMetricsF,
 from .. import xdg
 
 from .theme_utils import to_qcolor, rail_int, rail_float
-from .theme_structs import Margin
+from .theme_structs import BorderSide, Margin
 
 _logger = logging.getLogger(__name__)
 
@@ -25,6 +25,7 @@ _DEFAULT_STYLE_ATTRS = {
     'border-color': QColor('white'),
     'border-mode': 'default',
     'border-radius': 0,
+    'border-sides': BorderSide.FULL | BorderSide.FULL_ON_SIDE,
     'border-style': Qt.PenStyle.SolidLine,
     'border-width': 1,
     'box-footer': 0,
@@ -252,6 +253,9 @@ class StyleAttributer:
                 
                 self._attrs[attribute] = hcb
             
+            case 'border-sides':
+                self._attrs[attribute] = BorderSide.from_text(value)
+            
             case _:
                 _logger.error(f"{self.log_path}{attribute} unknown key !")
 
@@ -339,15 +343,6 @@ class StyleAttributer:
         return self.get_value_of('background-image') # type:ignore
 
     @property
-    def header_background(self) -> QColor:
-        return self.get_value_of('header-background') # type:ignore
-    
-    @property
-    def header_background2(self) -> QColor | None:
-        return self.get_value_of('header-background2', # type:ignore
-                                 needed_attribute='header-background')
-
-    @property
     def margin(self) -> Margin:
         margin = Margin()
         margin.top = self.get_value_of('margin-top') # type:ignore
@@ -422,6 +417,14 @@ class StyleAttributer:
     @property
     def border_mode(self) -> str:
         return self.get_value_of('border-mode') # type:ignore
+
+    @property
+    def border_width(self) -> float:
+        '''The border width defined in theme,
+        or 0.0 if there is no border'''
+        if self.get_value_of('border-style') == Qt.PenStyle.NoPen:
+            return 0.0
+        return self.get_value_of('border-width') # type:ignore
 
     @property
     def output_align(self) -> str:
@@ -628,6 +631,7 @@ class Theme(StyleAttributer):
         self.box_header_line = BoxStyleAttributer('.box_header_line', self)
         self.box_shadow = BoxStyleAttributer('.box_shadow', self)
         self.box_header = BoxStyleAttributer('.box_header', self)
+        self.box_ports_border = BoxStyleAttributer('.box_ports_border', self)
         self.portgroup = PortStyleAttributer('.portgroup', self)
         self.port = PortStyleAttributer('.port', self)
         self.line = LineStyleAttributer('.line', self)
@@ -638,7 +642,7 @@ class Theme(StyleAttributer):
         self.grid = GridStyleAttributer('.grid', self)
 
         self.subs += ['box', 'box_wrapper', 'box_header_line', 'box_shadow',
-                      'box_header', 'portgroup', 'port', 'line',
+                      'box_header', 'box_ports_border', 'portgroup', 'port', 'line',
                       'rubberband', 'hardware_rack',
                       'monitor_decoration', 'gui_button', 'grid']
 

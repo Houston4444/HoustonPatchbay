@@ -23,6 +23,38 @@ if TYPE_CHECKING:
 _logger = logging.getLogger(__name__)
 
 
+def _paint_ports_border_lines(box: 'BoxWidget', painter: QPainter):
+    theme = box.get_theme(for_ports_border=True)
+    if not theme.visible:
+        return
+
+    box_theme = box.get_theme()
+    border_width = box_theme.border_width
+    pen = theme.fill_pen
+    painter.setPen(theme.fill_pen)
+    
+    lh2 = pen.widthF()
+    lh = lh2 * 0.5
+    
+    for port_mode in (PortMode.OUTPUT, PortMode.INPUT):
+        if not box._current_port_mode & port_mode:
+            continue
+
+        if port_mode is PortMode.INPUT:
+            x = border_width + lh
+        else:
+            x = box._width - border_width - lh
+        
+        if box._has_side_title():
+            painter.drawLine(
+                QPointF(x, lh2), QPointF(x, box._height - border_width -lh))
+
+        else:
+            header_theme = box.get_theme(for_header=True)
+            top = header_theme.margin.top + box._header_height
+            painter.drawLine(QPointF(x, top + lh * 2),
+                             QPointF(x, box._height - border_width - lh))
+
 def _paint_hardware_rack(box: 'BoxWidget', painter: QPainter):
     if not box.is_hardware:
         return
@@ -534,8 +566,7 @@ def paint(box: 'BoxWidget', painter: QPainter, option, widget):
         theme = theme.client
         wtheme = wtheme.client
         hltheme = hltheme.client
-    elif (box._box_type is BoxType.INTERNAL
-            and box._icon_name == 'monitor_playback'):
+    elif box.is_monitor():
         theme = theme.monitor
         wtheme = wtheme.monitor
         hltheme = hltheme.monitor
@@ -577,15 +608,17 @@ def paint(box: 'BoxWidget', painter: QPainter, option, widget):
             theme.background_color, theme.background2_color,
             box._width, box._height))
     
-    if header_ppath is not None:
-        painter.setPen(Qt.PenStyle.NoPen)
-        
-        if anti_header_ppath is not None:
-            painter.drawPath(anti_header_ppath)
-        elif main_ppath is not None:
-            # should not happen
-            painter.drawPath(main_ppath)
+    painter.setPen(Qt.PenStyle.NoPen)
+    
+    if anti_header_ppath is not None:
+        painter.drawPath(anti_header_ppath)
+    elif main_ppath is not None:
+        # should not happen
+        painter.drawPath(main_ppath)
 
+    _paint_ports_border_lines(box, painter)
+
+    if header_ppath is not None:
         hbg_image = htheme.background_image
         if not hbg_image.isNull():
             painter.setBrush(QBrush(hbg_image))
@@ -597,12 +630,9 @@ def paint(box: 'BoxWidget', painter: QPainter, option, widget):
             box._width, box._height))
         painter.drawPath(header_ppath)
 
-        painter.setPen(pen)
-        painter.setBrush(Qt.BrushStyle.NoBrush)
-        painter.drawPath(main_ppath)
-
-    else:
-        painter.drawPath(main_ppath)
+    painter.setPen(pen)        
+    painter.setBrush(Qt.BrushStyle.NoBrush)
+    painter.drawPath(main_ppath)
 
     # draw hardware box decoration (flyrack like)
     _paint_hardware_rack(box, painter)

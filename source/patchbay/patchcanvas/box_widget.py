@@ -881,12 +881,15 @@ class BoxWidget(QGraphicsItem):
 
     def get_theme(
             self, for_wrapper=False,
-            for_header=False) -> UnselectedStyleAttributer:
+            for_header=False,
+            for_ports_border=False) -> UnselectedStyleAttributer:
         theme = canvas.theme.box
         if for_wrapper:
             theme = canvas.theme.box_wrapper
         elif for_header:
             theme = canvas.theme.box_header
+        elif for_ports_border:
+            theme = canvas.theme.box_ports_border
 
         if self.is_hardware:
             theme = theme.hardware
