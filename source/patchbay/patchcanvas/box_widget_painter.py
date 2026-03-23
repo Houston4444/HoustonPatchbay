@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 
 from qtpy.QtCore import Qt, QRectF, QPointF
 from qtpy.QtGui import (
-    QColor, QPen, QPainter, QPainterPath, QBrush, QLinearGradient,
+    QColor, QPen, QPainter, QBrush, QLinearGradient,
     QFontMetrics, QImage, QPolygonF)
 # from sip import voidptr
 
@@ -13,7 +13,7 @@ from patshared import BoxType, PortMode
 
 from .init_values import InlineDisplay, options, MAX_PLUGIN_ID_ALLOWED
 from .patchcanvas import canvas
-from .theme import StyleAttributer
+from .theme import BoxStyler, StyleAttributer
 from .box_widget_utils import PaintElement, UnwrapButton, WrappingState
 
 if TYPE_CHECKING:
@@ -24,7 +24,7 @@ _logger = logging.getLogger(__name__)
 
 
 def _paint_ports_border_lines(box: 'BoxWidget', painter: QPainter):
-    theme = box.get_theme(for_ports_border=True)
+    theme = box.get_theme(BoxStyler.PORTS_BORDER)
     if not theme.visible:
         return
 
@@ -50,7 +50,7 @@ def _paint_ports_border_lines(box: 'BoxWidget', painter: QPainter):
                 QPointF(x, lh2), QPointF(x, box._height - border_width -lh))
 
         else:
-            header_theme = box.get_theme(for_header=True)
+            header_theme = box.get_theme(BoxStyler.HEADER)
             top = header_theme.margin.top + box._header_height
             painter.drawLine(QPointF(x, top + lh * 2),
                              QPointF(x, box._height - border_width - lh))
@@ -258,7 +258,7 @@ def _paint_gui_button(box: 'BoxWidget', painter: QPainter, border: int):
         gui_theme = gui_theme.gui_hidden            
     
     gmg = gui_theme.margin
-    header_theme = box.get_theme(for_header=True)
+    header_theme = box.get_theme(BoxStyler.HEADER)
     if box.isSelected():
         header_theme = header_theme.selected
     hmg = header_theme.margin

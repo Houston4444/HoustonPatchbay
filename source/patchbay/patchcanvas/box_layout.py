@@ -4,7 +4,9 @@ import logging
 from typing import TYPE_CHECKING
 
 from patshared import PortMode, BoxLayoutMode
-from .init_values import CanvasNeverInit, canvas, options
+
+from .init_values import canvas, options
+from .theme import BoxStyler
 from .utils import next_width_on_grid, next_height_on_grid
 
 if TYPE_CHECKING:
@@ -52,7 +54,7 @@ class BoxLayout:
         cls._port_mode = box._current_port_mode
         cls._can_handle_gui = box._can_handle_gui
 
-        cls._mg = box.get_theme(for_header=True).margin
+        cls._mg = box.get_theme(BoxStyler.HEADER).margin
         if box._can_handle_gui:
             cls._mg += canvas.theme.gui_button.margin
         

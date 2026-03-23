@@ -5,6 +5,7 @@ from typing import Iterator, TYPE_CHECKING
 from qtpy.QtCore import QRectF
 from qtpy.QtGui import QPainterPath
 from qtpy.QtWidgets import QGraphicsItem
+from patchbay.patchcanvas.theme.theme_structs import BoxStyler
 
 from patshared import (
     BoxLayoutMode, PortMode, PortType, PortSubType, BoxType)
@@ -13,6 +14,7 @@ from .box_layout import PortsMinSizes, TitleOn, BoxLayout
 from .init_values import (
     canvas, options, InlineDisplay, GroupObject)
 from .box_widget_utils import PaintElement, TitleLine, UnwrapButton, WrappingState
+from .theme import BoxStyler
 
 if TYPE_CHECKING:
     from .box_widget import (
@@ -914,7 +916,7 @@ def _set_title_positions(box: 'BoxWidget'):
     else:
         pen_width = 0
 
-    header_theme = box.get_theme(for_header=True)
+    header_theme = box.get_theme(BoxStyler.HEADER)
     if box.isSelected():
         header_theme = header_theme.selected
     mg = header_theme.margin
@@ -1181,7 +1183,7 @@ def _build_painter_path(
             dict[PaintElement, QPainterPath]()
     painter_paths[PaintElement.MAIN] = painter_path
 
-    header_theme = box.get_theme(for_header=True)
+    header_theme = box.get_theme(BoxStyler.HEADER)
     if selected:
         header_theme = header_theme.selected
 

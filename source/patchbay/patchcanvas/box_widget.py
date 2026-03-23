@@ -46,7 +46,7 @@ from .icon_widget import IconSvgWidget, IconPixmapWidget
 from .port_widget import PortWidget
 from .portgroup_widget import PortgroupWidget
 from .grouped_lines_widget import GroupedLinesWidget
-from .theme import UnselectedStyleAttributer
+from .theme import UnselectedStyleAttributer, BoxStyler
 from .box_layout import BoxLayout
 from .box_hidder import BoxHidder
 from .box_widget_utils import (
@@ -879,17 +879,20 @@ class BoxWidget(QGraphicsItem):
                           self._height + 2 * hws)
         return QRectF(0, 0, self._width, self._height)
 
-    def get_theme(
-            self, for_wrapper=False,
-            for_header=False,
-            for_ports_border=False) -> UnselectedStyleAttributer:
-        theme = canvas.theme.box
-        if for_wrapper:
-            theme = canvas.theme.box_wrapper
-        elif for_header:
-            theme = canvas.theme.box_header
-        elif for_ports_border:
-            theme = canvas.theme.box_ports_border
+    def get_theme(self, styler=BoxStyler.BOX) -> UnselectedStyleAttributer:
+        match styler:
+            case BoxStyler.BOX:
+                theme = canvas.theme.box            
+            case BoxStyler.HEADER:
+                theme = canvas.theme.box_header
+            case BoxStyler.HEADER_LINE:
+                theme = canvas.theme.box_header_line
+            case BoxStyler.WRAPPER:
+                theme = canvas.theme.box_wrapper
+            case BoxStyler.PORTS_BORDER:
+                theme = canvas.theme.box_ports_border
+            case _:
+                raise Exception(f'Invalid styler {styler}')
 
         if self.is_hardware:
             theme = theme.hardware
