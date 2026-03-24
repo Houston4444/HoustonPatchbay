@@ -49,7 +49,8 @@ _DEFAULT_STYLE_ATTRS = {
     'port-spacing': 2,
     'port-type-spacing': 2,
     'text-color': QColor('white'),
-    'visible': False
+    'visible': False,
+    'dug': False
 }
 
 
@@ -245,7 +246,7 @@ class StyleAttributer:
                 else:
                     err = True
             
-            case 'visible':
+            case 'visible'|'dug':
                 if isinstance(value, str):
                     hcb = value.lower() not in ('false', 'no')
                 elif isinstance(value, (int, float)):
@@ -469,6 +470,10 @@ class StyleAttributer:
     @property
     def visible(self) -> bool:
         return self.get_value_of('visible') # type:ignore
+
+    @property
+    def dug(self) -> bool:
+        return self.get_value_of('dug') # type:ignore
 
     def _get_titles_templates_cache(self) -> TitleCache:
         font_name = str(self.get_value_of('font-name'))

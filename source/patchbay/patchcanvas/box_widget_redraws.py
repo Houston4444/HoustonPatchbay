@@ -1219,8 +1219,12 @@ def _build_painter_path(
         tmp_header_path.addRect(header_rect)
         painter_paths[PaintElement.HEADER] = \
             painter_path.intersected(tmp_header_path)
-        painter_paths[PaintElement.ANTI_HEADER] = \
-            painter_path.subtracted(tmp_header_path)
+        
+        if header_theme.dug:
+            painter_paths[PaintElement.ANTI_HEADER] = \
+                painter_path.subtracted(tmp_header_path)
+        else:
+            painter_paths[PaintElement.ANTI_HEADER] = painter_path
     else:
         painter_paths[PaintElement.HEADER] = None
         painter_paths[PaintElement.ANTI_HEADER] = None
