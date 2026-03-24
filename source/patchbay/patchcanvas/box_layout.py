@@ -49,7 +49,6 @@ class BoxLayout:
         theme = box.get_theme()
         cls._pen_width = theme.fill_pen.widthF()
         cls._port_spacing = theme.port_spacing
-        cls._header_counts_border = theme.header_counts_border
         cls._hwr = canvas.theme.hardware_rack_width if box.is_hardware else 0
         cls._port_mode = box._current_port_mode
         cls._can_handle_gui = box._can_handle_gui
@@ -101,20 +100,14 @@ class BoxLayout:
 
             if layout_mode is BoxLayoutMode.LARGE:
                 if title_on is TitleOn.SIDE:
-                    self.needed_width = ports_width + self.header_width
-                    if self._header_counts_border:
-                        self.needed_width += self._pen_width
-
+                    self.needed_width = ports_width + self.header_width + self._pen_width
                     self.needed_height = (
                         max(self.header_height,
                             height_for_ports + self._port_spacing)
                         + 2 * self._pen_width)
 
                 elif title_on is TitleOn.SIDE_UNDER_ICON:
-                    self.needed_width = ports_width + self.header_width
-                    if self._header_counts_border:
-                        self.needed_width += self._pen_width
-
+                    self.needed_width = ports_width + self.header_width + self._pen_width
                     self.needed_height = (
                         max(height_for_ports + self._port_spacing,
                             self.header_height)
@@ -128,9 +121,7 @@ class BoxLayout:
                     max(self.header_width + 2 * self._pen_width,
                         self.width_for_ports()))
                 self.needed_height = (
-                    self.header_height + height_for_ports + self._pen_width)
-                if self._header_counts_border:
-                    self.needed_height += self._pen_width
+                    self.header_height + height_for_ports + self._pen_width * 2)
         else:
             if layout_mode is BoxLayoutMode.HIGH:
                 self.one_column = True
@@ -146,11 +137,8 @@ class BoxLayout:
                         self.width_for_ports()))
                 self.needed_height = (
                     self.header_height + height_for_ports
-                    + self._pen_width)
+                    + self._pen_width * 2)
                 
-            if self._header_counts_border:
-                self.needed_height += self._pen_width
-
         self.full_width = next_width_on_grid(self._hwr * 2 + self.needed_width)
         self.full_height = next_height_on_grid(self._hwr * 2 + self.needed_height)
 

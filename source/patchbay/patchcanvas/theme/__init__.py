@@ -29,7 +29,6 @@ _DEFAULT_STYLE_ATTRS = {
     'border-style': Qt.PenStyle.SolidLine,
     'border-width': 1,
     'box-footer': 0,
-    'header-counts-border': True,
     'font-name': "Deja Vu Sans",
     'font-size': 11,
     'font-width': QFont.Weight.Normal,
@@ -241,7 +240,7 @@ class StyleAttributer:
                 else:
                     err = True
             
-            case 'header-counts-border'|'visible':
+            case 'visible':
                 if isinstance(value, str):
                     hcb = value.lower() not in ('false', 'no')
                 elif isinstance(value, (int, float)):
@@ -356,10 +355,6 @@ class StyleAttributer:
     @property
     def margin_empty(self) -> Margin:
         return Margin()
-
-    @property
-    def header_counts_border(self) -> bool:
-        return self.get_value_of('header-counts-border') # type:ignore
 
     @property
     def text_color(self) -> QColor:

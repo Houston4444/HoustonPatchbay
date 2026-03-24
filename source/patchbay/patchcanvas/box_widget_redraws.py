@@ -911,10 +911,7 @@ def _set_title_positions(box: 'BoxWidget'):
     font_spacing = int(font_size * 1.4)
     icon_size = box_theme.icon_size
 
-    if box_theme.header_counts_border:
-        pen_width = box_theme.fill_pen.widthF()
-    else:
-        pen_width = 0
+    pen_width = box_theme.fill_pen.widthF()
 
     header_theme = box.get_theme(BoxStyler.HEADER)
     if box.isSelected():
