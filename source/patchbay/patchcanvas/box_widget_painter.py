@@ -278,10 +278,11 @@ def _paint_gui_button(box: 'BoxWidget', painter: QPainter, border: int):
                 box._header_width - mg.sided_width,
                 box._header_height - mg.sided_height)
     else:
+        space_left = (box._width - box._header_width - 2 * border) / 2
         gui_rect = QRectF(
-            border + mg.sides,
+            border + mg.sides + space_left,
             border + mg.top,
-            box._width - 2 * border - mg.width,
+            box._header_width - mg.width,
             box._header_height - mg.height)
 
     radius = gui_theme.border_radius
