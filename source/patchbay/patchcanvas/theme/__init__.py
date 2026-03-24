@@ -105,6 +105,11 @@ class StyleAttributer:
     def log_path(self):
         return f'[{self._path[1:]}]'
 
+    def clear(self):
+        self._attrs.clear()
+        for child in self.childs():
+            child.clear()
+
     def set_attribute(self, attribute: str, value: str | float):
         err = False
         match attribute:
@@ -695,6 +700,11 @@ class Theme(StyleAttributer):
         if not isinstance(theme_dict, dict):
             _logger.error("invalid dict read error")
             return
+
+        # reset the current theme
+        self._attrs = _DEFAULT_STYLE_ATTRS
+        for child in self.childs():
+            child.clear()
 
         Theme.set_file_path(theme_file_path)
         self.icon.read_theme(theme_file_path)
