@@ -1192,28 +1192,28 @@ def _build_painter_path(
         if box._has_side_title():
             if box._current_port_mode is PortMode.OUTPUT:
                 header_rect = QRectF(
-                    border + header_lh + mg.free_side,
+                    border + header_lh + mg.free_side - epsy,
                     border + header_lh - epsy,
                     box._header_width - mg.sided_width
-                        - 2 * header_lh - border + usl_border,
+                        - 2 * header_lh - border + usl_border + epsd,
                     box._height - 2 * (border + header_lh) + epsd
                 )
             else:
                 header_rect = QRectF(
                     box._width - border - box._header_width + mg.ports_side
-                        + header_lh + border - usl_border,
+                        + header_lh + border - usl_border - epsy,
                     border + header_lh - epsy,
-                    box._header_width - mg.sided_width - 2 * header_lh,
+                    box._header_width - mg.sided_width - 2 * header_lh + epsd,
                     box._height - 2 * (border + header_lh) + epsd
                 )
 
         else:
             header_rect = QRectF(
-                border + header_lh,
-                border + mg.top + header_lh,
-                box._width - 2 * (border + header_lh),
+                border + header_lh - epsy,
+                border + mg.top + header_lh -epsy,
+                box._width - 2 * (border + header_lh) + epsd,
                 box._header_height - mg.height
-                    - 2 * header_lh - border + usl_border)
+                    - 2 * header_lh - border + usl_border + epsd)
 
         tmp_header_path = QPainterPath()
         tmp_header_path.addRect(header_rect)
