@@ -705,7 +705,8 @@ class Theme(StyleAttributer):
             child.clear()
             
         # set some specific default values
-        self.child('box_header').set_attribute('margin', 0.0)
+        self.box_header.set_attribute('margin', 0.0)
+        self.gui_button._attrs['text-color'] = QColor()
 
     def read_theme(self, theme_dict: dict[str, dict], theme_file_path: Path,
                    for_linter=False):

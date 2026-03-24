@@ -386,7 +386,17 @@ def _paint_header_lines(box: 'BoxWidget', painter: QPainter):
     ...
     
 def _paint_title_lines(box: 'BoxWidget', painter: QPainter,
-                       normal_color: QColor):    
+                       normal_color: QColor):
+    if box._can_handle_gui:
+        # allow text color to be defined in gui_button theme entry
+        if box._gui_visible:
+            gui_text_color = canvas.theme.gui_button.gui_visible.text_color
+        else:
+            gui_text_color = canvas.theme.gui_button.gui_hidden.text_color
+        
+        if gui_text_color.isValid():
+            normal_color = gui_text_color
+    
     opac_color = QColor(normal_color)
     opac_color.setAlpha(int(normal_color.alpha() / 2))
 
@@ -421,8 +431,8 @@ def _paint_title_lines(box: 'BoxWidget', painter: QPainter,
             painter.setPen(QPen(canvas.theme.monitor_color, 0))
             painter.drawText(ceil(x_pos), ceil(title_line.y), 'Monitor')
         else:
-            painter.drawText(ceil(title_line.x), ceil(title_line.y),
-                                title_line.text)
+            painter.drawText(
+                ceil(title_line.x), ceil(title_line.y), title_line.text)
 
 def _paint_wrappers(
         box: 'BoxWidget', painter: QPainter, wtheme: StyleAttributer,
