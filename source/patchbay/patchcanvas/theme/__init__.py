@@ -693,6 +693,15 @@ class Theme(StyleAttributer):
         with open(cache_dir / 'patchbay_fonts', 'wb') as f:
             pickle.dump(cls.font_metrics_cache, f)
 
+    def clear(self):
+        'reset the current theme'
+        self._attrs = _DEFAULT_STYLE_ATTRS
+        for child in self.childs():
+            child.clear()
+            
+        # set some specific default values
+        self.child('box_header').set_attribute('margin', 0.0)
+
     def read_theme(self, theme_dict: dict[str, dict], theme_file_path: Path,
                    for_linter=False):
         '''theme_file_path is only used here to find external resources'''
@@ -702,9 +711,7 @@ class Theme(StyleAttributer):
             return
 
         # reset the current theme
-        self._attrs = _DEFAULT_STYLE_ATTRS
-        for child in self.childs():
-            child.clear()
+        self.clear()
 
         Theme.set_file_path(theme_file_path)
         self.icon.read_theme(theme_file_path)
