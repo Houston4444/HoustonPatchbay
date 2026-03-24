@@ -457,24 +457,30 @@ class PortWidget(ConnectableWidget):
             painter.setPen(Qt.PenStyle.NoPen)
             painter.drawPolygon(polygon)
             painter.setPen(poly_pen)
-            painter.drawLine(QPointF(x_box_border, y_top + 2 * line_hinting),
-                             QPointF(x_box_border, y_bottom - 2 * line_hinting))
+            painter.drawLine(
+                QPointF(x_box_border, y_top + 2 * line_hinting),
+                QPointF(x_box_border, y_bottom - 2 * line_hinting))
             
-            if self._portgrp_id:
-                pass
-            elif self._port_type is PortType.MIDI_JACK:
-                painter.drawPolyline([QPointF(*xy) for xy in points[1:7]])
-            elif is_cv_port:
-                painter.drawPolyline([QPointF(*xy) for xy in points[1:3]])
-            elif self._port_type is PortType.MIDI_ALSA:
-                painter.drawPolyline([QPointF(*xy) for xy in points[1:3]])
-            elif self._port_type is PortType.VIDEO:
-                painter.drawPolyline([QPointF(*xy) for xy in points[0:3]])
-                painter.drawPolyline([QPointF(*xy) for xy in points[3:5]])
-                painter.drawPolyline([QPointF(*xy) for xy in points[5:8]])
-            else:
-                painter.drawPolyline([QPointF(*xy) for xy in points[1:4]])
-            
+            match self._port_type:
+                case _ if self._portgrp_id:
+                    pass
+                case PortType.MIDI_JACK:
+                    painter.drawPolyline([QPointF(*xy) for xy in points[1:7]])
+                case PortType.MIDI_ALSA:
+                    painter.drawPolyline([QPointF(*xy) for xy in points[1:3]])
+                case PortType.VIDEO:
+                    painter.drawPolyline([QPointF(*xy) for xy in points[0:3]])
+                    painter.drawPolyline([QPointF(*xy) for xy in points[3:5]])
+                    painter.drawPolyline([QPointF(*xy) for xy in points[5:8]])
+                case _:
+                    if is_cv_port:
+                        painter.drawPolyline(
+                            [QPointF(*xy) for xy in points[1:3]])
+                    else:
+                        # should be audio
+                        painter.drawPolyline(
+                            [QPointF(*xy) for xy in points[1:4]])
+
         else:
             painter.setPen(poly_pen)
             painter.drawPolygon(polygon)
