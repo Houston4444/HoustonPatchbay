@@ -267,7 +267,8 @@ class PortgroupWidget(ConnectableWidget):
         elif self._port_mode is PortMode.OUTPUT:
             if theme.output_align == 'right':
                 text_pos = QPointF(
-                    self._portgrp_width - self.get_text_width() - self._ports_width,
+                    self._portgrp_width - self.get_text_width()
+                    - self._ports_width - 3.0,
                     text_y_pos)
             else:
                 text_pos = QPointF(3.0 + middle_width, text_y_pos)

@@ -198,17 +198,10 @@ class BoxWidget(QGraphicsItem):
     def is_monitor(self):
         return self._box_type is BoxType.MONITOR
 
-    def get_group_id(self):
-        return self._group_id
-
-    def get_group_name(self):
-        return self._group_name
-
     def _get_portgroup_name(self, portgrp_id: int):
         return get_portgroup_name_from_ports_names(
             [p.port_name for p in self._port_list
              if p.portgrp_id == portgrp_id])
-
 
     def get_port_mode(self):
         return self._port_mode

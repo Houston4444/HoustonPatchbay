@@ -509,8 +509,7 @@ class PatchSceneMoth(QGraphicsScene):
             # if needed.
             if moving_box.is_joining and joining is Joining.NO:
                 moving_box.is_joining = False
-                canvas.qobject.rm_group_to_join(
-                    box_widget.get_group_id())
+                canvas.qobject.rm_group_to_join(box_widget._group_id)
 
         moving_box.from_pt = QPointF(*box_widget.top_left())
         moving_box.to_pt = QPointF(to_x, to_y)
@@ -607,7 +606,7 @@ class PatchSceneMoth(QGraphicsScene):
                 continue
 
             for lw in GroupedLinesWidget.widgets_for_box(
-                    box_widget.get_group_id(), port_mode):
+                    box_widget._group_id, port_mode):
                 lw.set_mode_hidding(port_mode, BoxHidding.HIDDING)
 
         self._start_move_timer()
