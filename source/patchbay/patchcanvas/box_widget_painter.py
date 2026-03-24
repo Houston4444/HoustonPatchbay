@@ -436,7 +436,7 @@ def _paint_title_lines(box: 'BoxWidget', painter: QPainter,
 
 def _paint_wrappers(
         box: 'BoxWidget', painter: QPainter, wtheme: StyleAttributer,
-        pen_width: int, tr_pen_width: float):
+        pen_width: float):
     painter.setPen(wtheme.fill_pen)
     painter.setBrush(wtheme.background_color)
 
@@ -521,7 +521,7 @@ def _paint_wrappers(
                     + box._layout._pms.ins_width
                     - box._layout._pms.outs_width) / 2 - side
 
-            ypos = box._height - tr_pen_width / 2.0
+            ypos = box._height - pen_width / 2.0
             triangle = QPolygonF()
             triangle += QPointF(xpos, ypos)
             triangle += QPointF(xpos + 2 * side, ypos)
@@ -569,7 +569,7 @@ def paint(box: 'BoxWidget', painter: QPainter, option, widget):
     htheme = box.get_theme(BoxStyler.HEADER)
     hltheme = box.get_theme(BoxStyler.HEADER_LINE)
 
-    border_unselected = theme.fill_pen.widthF()
+    border_unselected = theme.border_width
     selected = box.isSelected()
     
     if selected:
@@ -599,7 +599,7 @@ def paint(box: 'BoxWidget', painter: QPainter, option, widget):
     # draw the main rectangle
     pen = theme.fill_pen
     painter.setPen(pen)
-    pen_width = pen.widthF()
+    pen_width = theme.border_width
 
     painter.setBrush(
         _get_gradient(
@@ -651,14 +651,14 @@ def paint(box: 'BoxWidget', painter: QPainter, option, widget):
             and box._header_line_right is not None):
         painter.setPen(hltheme.fill_pen)
         painter.drawLine(QPointF(*box._header_line_left[0:2]),
-                            QPointF(*box._header_line_left[2:]))
+                         QPointF(*box._header_line_left[2:]))
         painter.drawLine(QPointF(*box._header_line_right[0:2]),
-                            QPointF(*box._header_line_right[2:]))
+                         QPointF(*box._header_line_right[2:]))
 
     _paint_title_lines(box, painter, theme.text_color)
 
     # draw (un)wrapper triangles
-    _paint_wrappers(box, painter, wtheme, pen_width, pen.widthF())
+    _paint_wrappers(box, painter, wtheme, pen_width)
 
     painter.restore()
 

@@ -599,7 +599,7 @@ def _set_ports_y_positions(
     box_theme = box.get_theme()
     port_spacing = box_theme.port_spacing
     port_type_spacing = box_theme.port_type_spacing
-    pen_width = box_theme.fill_pen.widthF()
+    pen_width = box_theme.border_width
     last_in_type_and_sub = (PortType.NULL, PortSubType.REGULAR)
     last_out_type_and_sub = (PortType.NULL, PortSubType.REGULAR)
     last_type_and_sub = (PortType.NULL, PortSubType.REGULAR)
@@ -911,7 +911,7 @@ def _set_title_positions(box: 'BoxWidget'):
     font_spacing = int(font_size * 1.4)
     icon_size = box_theme.icon_size
 
-    pen_width = box_theme.fill_pen.widthF()
+    pen_width = box_theme.border_width
 
     header_theme = box.get_theme(BoxStyler.HEADER)
     if box.isSelected():
@@ -1050,8 +1050,7 @@ def _build_painter_path(
     port_out_offset = abs(theme.port_out_offset)
     bore_in = bool(theme.port_in_offset_mode == 'bore')
     bore_out = bool(theme.port_out_offset_mode == 'bore')
-    pen = theme.fill_pen
-    line_hinting = pen.widthF() / 2.0
+    line_hinting = theme.border_width / 2
 
     # theses values are needed to prevent some incorrect painter_path
     # united or subtracted results
