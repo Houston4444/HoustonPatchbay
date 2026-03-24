@@ -126,11 +126,12 @@ class BoxLayout:
             if layout_mode is BoxLayoutMode.HIGH:
                 self.one_column = True
                 self.needed_width = (
-                    max(self.header_width + 2 * self._pen_width,
-                        30.0 + max(self._pms.ins_width, self._pms.outs_width)))
+                    max(self.header_width,
+                        30.0 + max(self._pms.ins_width, self._pms.outs_width))
+                    + 2 * self._pen_width)
                 self.needed_height = (
                     self.header_height + self._pms.last_inout_pos
-                    + self._pen_width)
+                    + 2 * self._pen_width)
             else:
                 self.needed_width = (
                     max(self.header_width + 2 * self._pen_width,
