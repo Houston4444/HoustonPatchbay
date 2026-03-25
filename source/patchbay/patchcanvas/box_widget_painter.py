@@ -259,7 +259,8 @@ def _paint_gui_button(box: 'BoxWidget', painter: QPainter, border: int):
     
     gmg = gui_theme.margin
     header_theme = box.get_theme(BoxStyler.HEADER)
-    if box.isSelected():
+    selected = box.isSelected()
+    if selected:
         header_theme = header_theme.selected
     hmg = header_theme.margin
     mg = hmg + gmg
@@ -272,7 +273,7 @@ def _paint_gui_button(box: 'BoxWidget', painter: QPainter, border: int):
                 mg.top_side + border + gui_lh,
                 box._header_width - mg.sided_width - gui_lh * 2,
                 box._header_height - mg.sided_height - gui_lh * 2)
-        elif box._current_port_mode is PortMode.OUTPUT:
+        else:
             gui_rect = QRectF(
                 border + mg.free_side + gui_lh,
                 border + mg.top_side + gui_lh,
@@ -285,8 +286,6 @@ def _paint_gui_button(box: 'BoxWidget', painter: QPainter, border: int):
             border + mg.top + gui_lh,
             box._header_width - mg.width - gui_lh * 2,
             box._header_height - mg.height - gui_lh * 2)
-
-    radius = gui_theme.border_radius
 
     painter.setBrush(
         _get_gradient(gui_theme.background_color,
@@ -311,10 +310,9 @@ def _paint_gui_button(box: 'BoxWidget', painter: QPainter, border: int):
             )
             painter.setPen(Qt.PenStyle.NoPen)
 
-    if radius == 0.0:
-        painter.drawRect(gui_rect)
-    else:
-        painter.drawRoundedRect(gui_rect, radius, radius)
+    gui_path = box._painter_paths.get(selected).get(PaintElement.GUI_BUTTON)
+    if gui_path is not None:
+        painter.drawPath(gui_path)
 
 def _paint_monitor_deco(box: 'BoxWidget', painter: QPainter, pen_width: int):
     if box._current_port_mode is PortMode.OUTPUT:

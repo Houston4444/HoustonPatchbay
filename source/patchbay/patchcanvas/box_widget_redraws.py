@@ -1220,12 +1220,57 @@ def _build_painter_path(
                 box._header_height - mg.height
                     - 2 * header_lh - border + usl_border + epsd)
 
+        gui_path = None
+        if box._can_handle_gui:
+            gui_theme = canvas.theme.gui_button
+            if gui_theme.drilled:
+                gui_path = QPainterPath()
+                gmg = gui_theme.margin
+                # header_theme = box.get_theme(BoxStyler.HEADER)
+                hmg = header_theme.margin
+                mg = hmg + gmg
+                gui_lh = gui_theme.border_width / 2
+                border = theme.border_width
+                
+                if box._has_side_title():
+                    if box._current_port_mode is PortMode.OUTPUT:
+                        gui_rect = QRectF(
+                            usl_border + mg.free_side + gui_lh,
+                            usl_border + mg.top_side + gui_lh,
+                            box._header_width - mg.sided_width - 2 * gui_lh,
+                            box._header_height - mg.sided_height - 2 * gui_lh)
+                    else:
+                        gui_rect = QRectF(
+                            box._width - box._header_width - usl_border + mg.ports_side + gui_lh,
+                            mg.top_side + usl_border + gui_lh,
+                            box._header_width - mg.sided_width - gui_lh * 2,
+                            box._header_height - mg.sided_height - gui_lh * 2)
+                else:
+                    space_left = (box._width - box._header_width - 2 * usl_border) / 2
+                    gui_rect = QRectF(
+                        usl_border + mg.sides + space_left + gui_lh,
+                        usl_border + mg.top + gui_lh,
+                        box._header_width - mg.width - gui_lh * 2,
+                        box._header_height - mg.height - gui_lh * 2)
+                    
+                radius = gui_theme.border_radius
+                if radius:
+                    gui_path.addRoundedRect(gui_rect, radius, radius)
+                else:
+                    gui_path.addRect(gui_rect)
+
         tmp_header_path = QPainterPath()
         tmp_header_path.addRect(header_rect)
+        if gui_path is not None:
+            tmp_header_path = tmp_header_path.subtracted(gui_path)
+            painter_paths[PaintElement.GUI_BUTTON] = gui_path
+        else:
+            painter_paths[PaintElement.GUI_BUTTON] = None
+
         painter_paths[PaintElement.HEADER] = \
-            painter_path.intersected(tmp_header_path)
+            painter_path.intersected(tmp_header_path)        
         
-        if header_theme.dug:
+        if header_theme.drilled:
             painter_paths[PaintElement.ANTI_HEADER] = \
                 painter_path.subtracted(tmp_header_path)
         else:

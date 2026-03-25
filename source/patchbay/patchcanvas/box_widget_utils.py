@@ -44,4 +44,5 @@ class PaintElement(Enum):
     MAIN = auto()
     HEADER = auto()
     ANTI_HEADER = auto()
+    GUI_BUTTON = auto()
     
