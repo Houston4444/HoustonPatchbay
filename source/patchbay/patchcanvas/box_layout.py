@@ -56,6 +56,7 @@ class BoxLayout:
         cls._mg = box.get_theme(BoxStyler.HEADER).margin
         if box._can_handle_gui:
             cls._mg += canvas.theme.gui_button.margin
+            cls._mg += canvas.theme.gui_button.border_width
         
         cls._is_hardware = box.is_hardware
 

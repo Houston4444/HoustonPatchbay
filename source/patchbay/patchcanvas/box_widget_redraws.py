@@ -582,16 +582,17 @@ def _set_ports_y_positions(
     used if port-in-offset or port-out-offset are not zero in box theme'''
 
     def set_widget_pos(widget: QGraphicsItem, pos: float):
-        if box._wrapping_state is WrappingState.WRAPPING:
-            widget.setY(pos - ((pos - wrapped_port_pos)
-                                * box._wrapping_ratio))
-        elif box._wrapping_state is WrappingState.UNWRAPPING:
-            widget.setY(wrapped_port_pos + ((pos - wrapped_port_pos)
-                                            * box._wrapping_ratio))
-        elif box._wrapping_state is WrappingState.WRAPPED:
-            widget.setY(wrapped_port_pos)
-        else:
-            widget.setY(pos)
+        match box._wrapping_state:          
+            case WrappingState.WRAPPING:
+                widget.setY(pos - ((pos - wrapped_port_pos)
+                                    * box._wrapping_ratio))
+            case WrappingState.UNWRAPPING:
+                widget.setY(wrapped_port_pos + ((pos - wrapped_port_pos)
+                                                * box._wrapping_ratio))
+            case WrappingState.WRAPPED:
+                widget.setY(wrapped_port_pos)
+            case _:
+                widget.setY(pos)
 
     if box._layout is None:
         raise Exception('._layout is needed')
@@ -929,6 +930,7 @@ def _set_title_positions(box: 'BoxWidget'):
         
         gui_margin = gui_button.margin
         mg += gui_margin
+        mg += gui_button.border_width
     else:
         gui_margin = canvas.theme.margin_empty
     

@@ -81,14 +81,10 @@ class PortWidget(ConnectableWidget):
         self._connect_pos = QPointF(0.0, 0.0)
         self._update_connect_pos()
         self.setZValue(ZvBox.PORT.value)
-
-    def get_port_id(self) -> int:
-        return self._port_id
+        
+        self._bounding_rect = QRectF()
 
     def get_connection_distance(self) -> float:
-        return self._port_width
-
-    def get_port_width(self) -> float:
         return self._port_width
 
     def set_portgroup_id(self, portgrp_id: int, index: int, portgrp_len: int):
@@ -182,7 +178,19 @@ class PortWidget(ConnectableWidget):
         self._connect_pos = QPointF(x_delta, y_delta)
 
     def connect_pos(self) -> QPointF:
-        return self.scenePos() + self._connect_pos # type:ignore
+        return self.scenePos() + self._connect_pos
+
+    def set_bounding_rect(self, spacing: float):
+        top, bottom = 0.0, 0.0
+        if self._pg_pos == 0:
+            top = spacing / 2
+        if self._pg_pos + 1 == self._pg_len:
+            bottom = spacing / 2
+        
+        self._bounding_rect = QRectF(
+            0.0, - top,
+            self._port_width,
+            canvas.theme.port_height + top + bottom)
 
     def setVisible(self, visible: bool):
         super().setVisible(visible)
@@ -274,7 +282,7 @@ class PortWidget(ConnectableWidget):
             self._group_id, self._port_id,
             is_only_connect, start_point.x(), start_point.y())
 
-    def boundingRect(self):
+    def boundingRect(self) -> QRectF:
         spacing = self.parentItem().get_theme().port_spacing
         port_height = canvas.theme.port_height
 

@@ -263,27 +263,28 @@ def _paint_gui_button(box: 'BoxWidget', painter: QPainter, border: int):
         header_theme = header_theme.selected
     hmg = header_theme.margin
     mg = hmg + gmg
+    gui_lh = gui_theme.border_width / 2
     
     if box._has_side_title():
         if box._current_port_mode is PortMode.INPUT:
             gui_rect = QRectF(
-                box._width - box._header_width - border + mg.ports_side,
-                mg.top_side + border,
-                box._header_width - mg.sided_width,
-                box._header_height - mg.sided_height)
+                box._width - box._header_width - border + mg.ports_side + gui_lh,
+                mg.top_side + border + gui_lh,
+                box._header_width - mg.sided_width - gui_lh * 2,
+                box._header_height - mg.sided_height - gui_lh * 2)
         elif box._current_port_mode is PortMode.OUTPUT:
             gui_rect = QRectF(
-                border + mg.free_side,
-                border + mg.top_side,
-                box._header_width - mg.sided_width,
-                box._header_height - mg.sided_height)
+                border + mg.free_side + gui_lh,
+                border + mg.top_side + gui_lh,
+                box._header_width - mg.sided_width - 2 * gui_lh,
+                box._header_height - mg.sided_height - 2 * gui_lh)
     else:
         space_left = (box._width - box._header_width - 2 * border) / 2
         gui_rect = QRectF(
-            border + mg.sides + space_left,
-            border + mg.top,
-            box._header_width - mg.width,
-            box._header_height - mg.height)
+            border + mg.sides + space_left + gui_lh,
+            border + mg.top + gui_lh,
+            box._header_width - mg.width - gui_lh * 2,
+            box._header_height - mg.height - gui_lh * 2)
 
     radius = gui_theme.border_radius
 
