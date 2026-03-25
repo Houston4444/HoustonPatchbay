@@ -287,7 +287,10 @@ def _paint_gui_button(box: 'BoxWidget', painter: QPainter, border: int):
 
     radius = gui_theme.border_radius
 
-    painter.setBrush(gui_theme.background_color)
+    painter.setBrush(
+        _get_gradient(gui_theme.background_color,
+                      gui_theme.background2_color,
+                      box._header_width, box._header_height))
     painter.setPen(gui_theme.fill_pen)
     
     match gui_theme.border_mode:            
