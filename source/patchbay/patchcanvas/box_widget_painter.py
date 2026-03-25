@@ -30,12 +30,9 @@ def _paint_ports_border_lines(box: 'BoxWidget', painter: QPainter):
 
     box_theme = box.get_theme()
     border_width = box_theme.border_width
-    pen = theme.fill_pen
-    painter.setPen(theme.fill_pen)
-    
-    lh2 = pen.widthF()
-    lh = lh2 * 0.5
-    
+    painter.setPen(theme.fill_pen)    
+    lh = theme.border_width / 2
+
     for port_mode in (PortMode.OUTPUT, PortMode.INPUT):
         if not box._current_port_mode & port_mode:
             continue
@@ -47,13 +44,16 @@ def _paint_ports_border_lines(box: 'BoxWidget', painter: QPainter):
         
         if box._has_side_title():
             painter.drawLine(
-                QPointF(x, lh2), QPointF(x, box._height - border_width -lh))
+                QPointF(x, border_width + lh),
+                QPointF(x, box._height - border_width -lh))
 
         else:
             header_theme = box.get_theme(BoxStyler.HEADER)
-            top = header_theme.margin.top + box._header_height
-            painter.drawLine(QPointF(x, top + lh * 2),
-                             QPointF(x, box._height - border_width - lh))
+            painter.drawLine(
+                QPointF(x,
+                        border_width + box._header_height
+                            - header_theme.margin.bottom + lh),
+                QPointF(x, box._height - border_width - lh))
 
 def _paint_hardware_rack(box: 'BoxWidget', painter: QPainter):
     if not box.is_hardware:
