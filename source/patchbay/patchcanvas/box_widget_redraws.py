@@ -1185,8 +1185,12 @@ def _build_painter_path(
 
     if header_theme.visible:
         mg = header_theme.margin
-        border = line_hinting * 2.0
         header_lh = header_theme.border_width * 0.5
+        if header_lh == 0:
+            # fix artefacts in case there is no border for the header
+            border = 0
+        else:
+            border = line_hinting * 2.0
         
         if box._has_side_title():
             if box._current_port_mode is PortMode.OUTPUT:
