@@ -399,7 +399,7 @@ def _paint_title_lines(box: 'BoxWidget', painter: QPainter,
         
         if gui_text_color.isValid():
             normal_color = gui_text_color
-    
+
     opac_color = QColor(normal_color)
     opac_color.setAlpha(int(normal_color.alpha() / 2))
 

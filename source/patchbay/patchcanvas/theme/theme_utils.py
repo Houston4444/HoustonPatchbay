@@ -1,4 +1,10 @@
+from pathlib import Path
+
 from qtpy.QtGui import QColor
+
+
+class ThemeFile:
+    path = Path()
 
 
 def to_qcolor(color: str) -> QColor | None:
