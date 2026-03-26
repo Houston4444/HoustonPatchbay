@@ -244,6 +244,7 @@ def build_painter_path(
     if painter_paths is None:
         painter_paths = box._painter_paths[selected] = \
             dict[PaintElement, QPainterPath]()
+    painter_paths.clear()
 
     main_path = _build_main_path(box, pos_dict, selected)
     painter_paths[PaintElement.MAIN] = main_path
@@ -257,28 +258,24 @@ def build_painter_path(
     if selected:
         header_theme = header_theme.selected
 
+    drill_gui_button = False
+
+    if box._can_handle_gui:
+        painter_paths[PaintElement.GUI_BUTTON] = \
+            _build_gui_button_path(box, header_theme, usl_border)
+        drill_gui_button = canvas.theme.gui_button.drilled
+
     if header_theme.visible:
         tmp_header_path = _build_header_path(
             box, header_theme, usl_border, theme.border_width / 2)
 
-        gui_path = None
-        if box._can_handle_gui:
-            gui_path = _build_gui_button_path(box, header_theme, usl_border)
-
-        if gui_path is not None:
-            tmp_header_path = tmp_header_path.subtracted(gui_path)
-            painter_paths[PaintElement.GUI_BUTTON] = gui_path
-        else:
-            painter_paths[PaintElement.GUI_BUTTON] = None
+        if drill_gui_button:
+            tmp_header_path = tmp_header_path.subtracted(
+                painter_paths[PaintElement.GUI_BUTTON])
 
         painter_paths[PaintElement.HEADER] = \
-            main_path.intersected(tmp_header_path)        
+            main_path.intersected(tmp_header_path)   
         
         if header_theme.drilled:
             painter_paths[PaintElement.ANTI_HEADER] = \
                 main_path.subtracted(tmp_header_path)
-        else:
-            painter_paths[PaintElement.ANTI_HEADER] = main_path
-    else:
-        painter_paths[PaintElement.HEADER] = None
-        painter_paths[PaintElement.ANTI_HEADER] = None

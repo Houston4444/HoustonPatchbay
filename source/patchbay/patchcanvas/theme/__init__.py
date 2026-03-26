@@ -4,7 +4,7 @@ import logging
 import os
 from pathlib import Path
 import pickle
-from typing import TYPE_CHECKING, Iterator, TypeAlias, TypedDict, Optional
+from typing import TYPE_CHECKING, Iterator, TypeAlias, Optional
 
 from qtpy.QtCore import Qt
 from qtpy.QtGui import (QColor, QPen, QFont, QBrush, QFontMetricsF,
