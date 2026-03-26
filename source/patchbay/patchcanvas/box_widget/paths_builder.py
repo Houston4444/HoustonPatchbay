@@ -15,15 +15,14 @@ if TYPE_CHECKING:
     from .box_widget import BoxWidget
 
 
-def build_painter_path(
+def _build_main_path(
         box: 'BoxWidget', pos_dict: dict[str, list[list[float]]],
-        selected=False):
+        selected=False) -> QPainterPath:
     input_segments = pos_dict['input_segments']
     output_segments = pos_dict['output_segments']
 
     painter_path = QPainterPath()
     theme = box.get_theme()
-    usl_border = theme.border_width
     if selected:
         theme = theme.selected
 
@@ -154,6 +153,25 @@ def build_painter_path(
                 0.0 + line_hinting - epsy,
                 border_radius + epsd, border_radius - line_hinting + epsd))
             painter_path = painter_path.united(top_right_path)
+    
+    return painter_path
+
+def build_painter_path(
+        box: 'BoxWidget', pos_dict: dict[str, list[list[float]]],
+        selected=False):
+    painter_path = _build_main_path(box, pos_dict, selected)
+
+    theme = box.get_theme()
+    usl_border = theme.border_width
+    if selected:
+        theme = theme.selected
+
+    line_hinting = theme.border_width / 2
+
+    # theses values are needed to prevent some incorrect painter_path
+    # united or subtracted results
+    epsy = 0.001
+    epsd = epsy * 2.0
 
     painter_paths = box._painter_paths.get(selected)
     if painter_paths is None:
