@@ -10,11 +10,11 @@ from patchbay.patchcanvas.theme.theme_structs import BoxStyler
 from patshared import (
     BoxLayoutMode, PortMode, PortType, PortSubType, BoxType)
 
-from ..box_layout import PortsMinSizes, TitleOn, BoxLayout
-from ..init_values import (
-    canvas, options, InlineDisplay, GroupObject)
-from .box_utils import PaintElement, TitleLine, UnwrapButton, WrappingState
+from ..init_values import canvas, options, InlineDisplay
 from ..theme import BoxStyler
+
+from .box_layout import PortsMinSizes, TitleOn, BoxLayout
+from .box_utils import PaintElement, TitleLine, UnwrapButton, WrappingState
 
 if TYPE_CHECKING:
     from . import (

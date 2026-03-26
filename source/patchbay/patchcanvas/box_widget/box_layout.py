@@ -5,12 +5,12 @@ from typing import TYPE_CHECKING
 
 from patshared import PortMode, BoxLayoutMode
 
-from .init_values import canvas, options
-from .theme import BoxStyler
-from .utils import next_width_on_grid, next_height_on_grid
+from ..init_values import canvas, options
+from ..theme import BoxStyler
+from ..utils import next_width_on_grid, next_height_on_grid
 
 if TYPE_CHECKING:
-    from .box_widget import BoxWidget
+    from .__init__ import BoxWidget
 
 _logger = logging.getLogger(__name__)
 
