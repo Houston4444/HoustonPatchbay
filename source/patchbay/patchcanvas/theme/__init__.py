@@ -106,11 +106,6 @@ class StyleAttributer:
     def log_path(self):
         return f'[{self._path[1:]}]'
 
-    def clear(self):
-        self._attrs.clear()
-        for child in self.childs():
-            child.clear()
-
     def set_attribute(self, attribute: str, value: str | float):
         err = False
         match attribute:
@@ -698,16 +693,6 @@ class Theme(StyleAttributer):
         with open(cache_dir / 'patchbay_fonts', 'wb') as f:
             pickle.dump(cls.font_metrics_cache, f)
 
-    def clear(self):
-        'reset the current theme'
-        self._attrs = _DEFAULT_STYLE_ATTRS
-        for child in self.childs():
-            child.clear()
-            
-        # set some specific default values
-        self.box_header.set_attribute('margin', 0.0)
-        self.gui_button._attrs['text-color'] = QColor()
-
     def read_theme(self, theme_dict: dict[str, dict], theme_file_path: Path,
                    for_linter=False):
         '''theme_file_path is only used here to find external resources'''
@@ -716,8 +701,9 @@ class Theme(StyleAttributer):
             _logger.error("invalid dict read error")
             return
 
-        # reset the current theme
-        self.clear()
+        # set some specific default values
+        self.box_header.set_attribute('margin', 0.0)
+        self.gui_button._attrs['text-color'] = QColor()
 
         Theme.set_file_path(theme_file_path)
         self.icon.read_theme(theme_file_path)
