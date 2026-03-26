@@ -27,9 +27,6 @@ class StyleAttributer:
         self._path = path
         self._parent = parent
 
-        self._fill_pen = None
-        self._font = None
-
         if TYPE_CHECKING:
             assert isinstance(self._parent, StyleAttributer)
 
@@ -279,16 +276,10 @@ class StyleAttributer:
 
     @cached_property
     def fill_pen(self) -> QPen:
-        if self._fill_pen is None:
-            if TYPE_CHECKING:
-                self._fill_pen = QPen()
-            else:
-                self._fill_pen = QPen(
-                    QBrush(self.get_value_of('border-color')),
-                    self.get_value_of('border-width'),
-                    self.get_value_of('border-style'))
-
-        return self._fill_pen
+        return QPen(
+            QBrush(self.get_value_of('border-color')),
+            self.get_value_of('border-width'),
+            self.get_value_of('border-style'))
 
     @cached_property
     def border_radius(self) -> float:
@@ -328,13 +319,10 @@ class StyleAttributer:
 
     @cached_property
     def font(self) -> QFont:
-        if self._font is None:
-            self._font = QFont(self.get_value_of('font-name'))
-            self._font.setPixelSize(
-                int(self.get_value_of('font-size'))) # type:ignore
-            self._font.setWeight(
-                int(self.get_value_of('font-width'))) # type:ignore
-        return self._font
+        font = QFont(self.get_value_of('font-name'))
+        font.setPixelSize(int(self.get_value_of('font-size'))) # type:ignore
+        font.setWeight(int(self.get_value_of('font-width'))) # type:ignore
+        return font
 
     @cached_property
     def border_mode(self) -> str:
