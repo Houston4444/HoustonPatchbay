@@ -29,8 +29,6 @@ class StyleAttributer:
 
         self._fill_pen = None
         self._font = None
-        self._font_metrics_cache: dict[str, float] | None = None
-        self._titles_templates_cache: theme_cache.TitleCache | None = None
 
         if TYPE_CHECKING:
             assert isinstance(self._parent, StyleAttributer)
@@ -69,7 +67,7 @@ class StyleAttributer:
             if sub_ in other.subs:
                 self.child(sub_).inherit(other.child(sub_))
 
-    @cached_property
+    @property
     def log_path(self):
         return f'[{self._path[1:]}]'
 
@@ -338,34 +336,6 @@ class StyleAttributer:
                 int(self.get_value_of('font-width'))) # type:ignore
         return self._font
 
-    def _get_font_metrics_cache(self) -> dict[str, float]:
-        font_name = str(self.get_value_of('font-name'))
-        font_size = str(self.get_value_of('font-size'))
-        font_width = str(self.get_value_of('font-width'))
-
-        return theme_cache.get_font_metrics_cache(
-            font_name, font_size, font_width)
-
-    def get_text_width(self, string: str) -> float:
-        if self._font_metrics_cache is None:
-            self._font_metrics_cache = self._get_font_metrics_cache()
-
-        if string in self._font_metrics_cache.keys():
-            return self._font_metrics_cache[string]
-
-        tot_size = 0.0
-        for s in string:
-            if s in self._font_metrics_cache.keys():
-                tot_size += self._font_metrics_cache[s]
-            else:
-                letter_size = QFontMetricsF(self.font).horizontalAdvance(s)
-                self._font_metrics_cache[s] = letter_size
-                tot_size += letter_size
-
-        self._font_metrics_cache[string] = tot_size
-
-        return tot_size
-
     @cached_property
     def border_mode(self) -> str:
         return self.get_value_of('border-mode') # type:ignore
@@ -426,7 +396,8 @@ class StyleAttributer:
     def drilled(self) -> bool:
         return self.get_value_of('drilled') # type:ignore
 
-    def _get_titles_templates_cache(self) -> theme_cache.TitleCache:
+    @cached_property
+    def _titles_templates_cache(self) -> theme_cache.TitleCache:
         font_name = str(self.get_value_of('font-name'))
         font_size = str(self.get_value_of('font-size'))
         font_width = str(self.get_value_of('font-width'))
@@ -434,11 +405,34 @@ class StyleAttributer:
         return theme_cache.get_title_templates_cache(
             font_name, font_size, font_width)
 
+    @cached_property
+    def _font_metrics_cache(self) -> dict[str, float]:
+        font_name = str(self.get_value_of('font-name'))
+        font_size = str(self.get_value_of('font-size'))
+        font_width = str(self.get_value_of('font-width'))
+
+        return theme_cache.get_font_metrics_cache(
+            font_name, font_size, font_width)
+
+    def get_text_width(self, string: str) -> float:
+        if string in self._font_metrics_cache.keys():
+            return self._font_metrics_cache[string]
+
+        tot_size = 0.0
+        for s in string:
+            if s in self._font_metrics_cache.keys():
+                tot_size += self._font_metrics_cache[s]
+            else:
+                letter_size = QFontMetricsF(self.font).horizontalAdvance(s)
+                self._font_metrics_cache[s] = letter_size
+                tot_size += letter_size
+
+        self._font_metrics_cache[string] = tot_size
+
+        return tot_size
+    
     def save_title_templates(
             self, title: str, icon_size: int, templates: list):
-        if self._titles_templates_cache is None:
-            self._titles_templates_cache = self._get_titles_templates_cache()
-
         if not title in self._titles_templates_cache:
             self._titles_templates_cache[title] = {}
 
