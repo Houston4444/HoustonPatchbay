@@ -40,7 +40,7 @@ from ..init_values import (
 from ..utils import (
     nearest_on_grid, nearest_on_grid_check_others,
     get_portgroup_name_from_ports_names)
-from .. import box_widget_redraws, box_widget_painter
+from . import box_widget_redraws, box_widget_painter
 from ..box_widget_shadow import BoxWidgetShadow
 from ..icon_widget import IconSvgWidget, IconPixmapWidget
 from ..port_widget import PortWidget
@@ -49,7 +49,7 @@ from ..grouped_lines_widget import GroupedLinesWidget
 from ..theme import BoxStyleAttributer, BoxStyler
 from ..box_layout import BoxLayout
 from ..box_hidder import BoxHidder
-from ..box_widget_utils import (
+from .box_widget_utils import (
     PaintElement, TitleLine, UnwrapButton, WrappingState)
 
 _logger = logging.getLogger(__name__)

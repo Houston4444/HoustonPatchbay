@@ -9,15 +9,15 @@ from qtpy.QtGui import (
     QFontMetrics, QImage, QPolygonF)
 # from sip import voidptr
 
-from patshared import BoxType, PortMode
+from patshared import PortMode
 
-from .init_values import InlineDisplay, options, MAX_PLUGIN_ID_ALLOWED
-from .patchcanvas import canvas
-from .theme import BoxStyler, StyleAttributer
+from ..init_values import InlineDisplay, options, MAX_PLUGIN_ID_ALLOWED
+from ..patchcanvas import canvas
+from ..theme import BoxStyler, StyleAttributer
 from .box_widget_utils import PaintElement, UnwrapButton, WrappingState
 
 if TYPE_CHECKING:
-    from .box_widget import BoxWidget
+    from .__init__ import BoxWidget
 
 
 _logger = logging.getLogger(__name__)

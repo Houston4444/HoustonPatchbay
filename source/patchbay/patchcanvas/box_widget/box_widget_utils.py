@@ -2,7 +2,7 @@ from enum import Enum, auto
 
 from qtpy.QtGui import QFont
 
-from .theme import StyleAttributer
+from ..theme import StyleAttributer
 
 
 class UnwrapButton(Enum):
