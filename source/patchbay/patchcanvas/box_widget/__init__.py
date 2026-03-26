@@ -48,7 +48,7 @@ from ..portgroup_widget import PortgroupWidget
 from ..grouped_lines_widget import GroupedLinesWidget
 from ..theme import BoxStyleAttributer, BoxStyler
 from ..box_layout import BoxLayout
-from ..box_hidder import BoxHidder
+from .box_hidder import BoxHidder
 from .box_utils import (
     PaintElement, TitleLine, UnwrapButton, WrappingState)
 

@@ -4,10 +4,11 @@ from qtpy.QtGui import QPainter, QPen, QBrush, QPolygonF
 from qtpy.QtCore import QRectF, Qt, QPointF
 
 from patshared import PortMode
-from .init_values import canvas, ZvBox
+
+from ..init_values import canvas, ZvBox
 
 if TYPE_CHECKING:
-    from .box_widget import BoxWidget
+    from .__init__ import BoxWidget
 
 
 class BoxHidder(QGraphicsItem):
