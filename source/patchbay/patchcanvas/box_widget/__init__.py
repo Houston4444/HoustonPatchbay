@@ -40,7 +40,7 @@ from ..init_values import (
 from ..utils import (
     nearest_on_grid, nearest_on_grid_check_others,
     get_portgroup_name_from_ports_names)
-from . import box_widget_redraws, box_widget_painter
+from . import box_painters, box_positions
 from ..box_widget_shadow import BoxWidgetShadow
 from ..icon_widget import IconSvgWidget, IconPixmapWidget
 from ..port_widget import PortWidget
@@ -49,7 +49,7 @@ from ..grouped_lines_widget import GroupedLinesWidget
 from ..theme import BoxStyleAttributer, BoxStyler
 from ..box_layout import BoxLayout
 from ..box_hidder import BoxHidder
-from .box_widget_utils import (
+from .box_utils import (
     PaintElement, TitleLine, UnwrapButton, WrappingState)
 
 _logger = logging.getLogger(__name__)
@@ -469,7 +469,7 @@ class BoxWidget(QGraphicsItem):
     def update_positions(self, even_animated=False, without_connections=False,
                          scene_checks=True, theme_change=False,
                          wrap_anim=False):
-        box_widget_redraws.update_positions(
+        box_positions.update_positions(
             self,
             even_animated=even_animated,
             without_connections=without_connections,
@@ -478,11 +478,11 @@ class BoxWidget(QGraphicsItem):
             wrap_anim=wrap_anim)
 
     def get_dummy_rect(self) -> QRectF:
-        return box_widget_redraws.get_dummy_rect(self)
+        return box_positions.get_dummy_rect(self)
 
     def get_layout(self,
                    layout_mode: BoxLayoutMode | None =None) -> BoxLayout:
-        return box_widget_redraws.get_layout(self, layout_mode)
+        return box_positions.get_layout(self, layout_mode)
 
     def repaint_lines(self, forced=False, fast_move=False):
         if forced or self.pos() != self._last_pos:
@@ -898,4 +898,4 @@ class BoxWidget(QGraphicsItem):
         return theme
 
     def paint(self, painter, option, widget):
-        box_widget_painter.paint(self, painter, option, widget)
+        box_painters.paint(self, painter, option, widget)

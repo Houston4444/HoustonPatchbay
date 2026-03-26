@@ -13,11 +13,11 @@ from patshared import (
 from ..box_layout import PortsMinSizes, TitleOn, BoxLayout
 from ..init_values import (
     canvas, options, InlineDisplay, GroupObject)
-from .box_widget_utils import PaintElement, TitleLine, UnwrapButton, WrappingState
+from .box_utils import PaintElement, TitleLine, UnwrapButton, WrappingState
 from ..theme import BoxStyler
 
 if TYPE_CHECKING:
-    from .__init__ import (
+    from . import (
         BoxWidget, UnwrapButton, TitleLine, WrappingState)
 
 
