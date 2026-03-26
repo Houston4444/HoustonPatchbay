@@ -40,7 +40,6 @@ from ..init_values import (
 from ..utils import (
     nearest_on_grid, nearest_on_grid_check_others,
     get_portgroup_name_from_ports_names)
-from ..box_widget_shadow import BoxWidgetShadow
 from ..icon_widget import IconSvgWidget, IconPixmapWidget
 from ..port_widget import PortWidget
 from ..portgroup_widget import PortgroupWidget
@@ -48,8 +47,9 @@ from ..grouped_lines_widget import GroupedLinesWidget
 from ..theme import BoxStyleAttributer, BoxStyler
 
 from . import box_painters, box_positions
-from .box_layout import BoxLayout
 from .box_hidder import BoxHidder
+from .box_layout import BoxLayout
+from .box_shadow import BoxWidgetShadow
 from .box_utils import (
     PaintElement, TitleLine, UnwrapButton, WrappingState)
 

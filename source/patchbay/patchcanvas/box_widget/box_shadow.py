@@ -21,11 +21,11 @@ from typing import TYPE_CHECKING
 from qtpy.QtGui import QColor
 from qtpy.QtWidgets import QGraphicsDropShadowEffect, QGraphicsObject
 
-from .init_values import canvas
-from .theme import StyleAttributer
+from ..init_values import canvas
+from ..theme import StyleAttributer
 
 if TYPE_CHECKING:
-    from .box_widget import BoxWidget
+    from .__init__ import BoxWidget
 
 
 class BoxWidgetShadow(QGraphicsDropShadowEffect):
