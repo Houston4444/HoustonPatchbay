@@ -343,19 +343,8 @@ class StyleAttributer:
         font_size = str(self.get_value_of('font-size'))
         font_width = str(self.get_value_of('font-width'))
 
-        if not font_name in theme_cache.font_metrics_cache.keys():
-            theme_cache.font_metrics_cache[font_name] = \
-                dict[str, dict[str, dict[str, float]]]()
-
-        if not font_size in theme_cache.font_metrics_cache[font_name].keys():
-            theme_cache.font_metrics_cache[font_name][font_size] = \
-                dict[str, dict[str, float]]()
-
-        if not font_width in theme_cache.font_metrics_cache[font_name][font_size].keys():
-            theme_cache.font_metrics_cache[font_name][font_size][font_width] = \
-                dict[str, float]()
-
-        return theme_cache.font_metrics_cache[font_name][font_size][font_width]
+        return theme_cache.get_font_metrics_cache(
+            font_name, font_size, font_width)
 
     def get_text_width(self, string: str) -> float:
         if self._font_metrics_cache is None:
@@ -442,19 +431,8 @@ class StyleAttributer:
         font_size = str(self.get_value_of('font-size'))
         font_width = str(self.get_value_of('font-width'))
 
-        if not font_name in theme_cache.title_templates_cache.keys():
-            theme_cache.title_templates_cache[font_name] = \
-                dict[str, dict[str, theme_cache.TitleCache]]()
-
-        if not font_size in theme_cache.title_templates_cache[font_name].keys():
-            theme_cache.title_templates_cache[font_name][font_size] = \
-                dict[str, theme_cache.TitleCache]()
-
-        if not font_width in theme_cache.title_templates_cache[font_name][font_size].keys():
-            theme_cache.title_templates_cache[font_name][font_size][font_width] = \
-                theme_cache.TitleCache()
-
-        return theme_cache.title_templates_cache[font_name][font_size][font_width]
+        return theme_cache.get_title_templates_cache(
+            font_name, font_size, font_width)
 
     def save_title_templates(
             self, title: str, icon_size: int, templates: list):

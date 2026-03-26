@@ -61,3 +61,33 @@ def save():
 
     with open(cache_dir / 'patchbay_fonts', 'wb') as f:
         pickle.dump(font_metrics_cache, f)
+        
+def get_font_metrics_cache(
+        font_name: str, font_size: str, font_width: str) -> dict[str, float]:
+    if not font_name in font_metrics_cache.keys():
+        font_metrics_cache[font_name] = \
+            dict[str, dict[str, dict[str, float]]]()
+
+    if not font_size in font_metrics_cache[font_name].keys():
+        font_metrics_cache[font_name][font_size] = \
+            dict[str, dict[str, float]]()
+
+    if not font_width in font_metrics_cache[font_name][font_size].keys():
+        font_metrics_cache[font_name][font_size][font_width] = \
+            dict[str, float]()
+
+    return font_metrics_cache[font_name][font_size][font_width]
+
+def get_title_templates_cache(
+        font_name: str, font_size: str, font_width: str) -> TitleCache:
+    if not font_name in title_templates_cache.keys():
+        title_templates_cache[font_name] = \
+            dict[str, dict[str, TitleCache]]()
+
+    if not font_size in title_templates_cache[font_name].keys():
+        title_templates_cache[font_name][font_size] = dict[str, TitleCache]()
+
+    if not font_width in title_templates_cache[font_name][font_size].keys():
+        title_templates_cache[font_name][font_size][font_width] = TitleCache()
+
+    return title_templates_cache[font_name][font_size][font_width]
