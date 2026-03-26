@@ -44,14 +44,14 @@ from ..icon_widget import IconSvgWidget, IconPixmapWidget
 from ..port_widget import PortWidget
 from ..portgroup_widget import PortgroupWidget
 from ..grouped_lines_widget import GroupedLinesWidget
-from ..theme import BoxStyleAttributer, BoxStyler
+from ..theme import BoxStyleAttributer
 
 from . import box_painters, box_positions
 from .box_hidder import BoxHidder
 from .box_layout import BoxLayout
 from .box_shadow import BoxWidgetShadow
 from .box_utils import (
-    PaintElement, TitleLine, UnwrapButton, WrappingState)
+    BoxStyler, PaintElement, TitleLine, UnwrapButton, WrappingState)
 
 
 _logger = logging.getLogger(__name__)

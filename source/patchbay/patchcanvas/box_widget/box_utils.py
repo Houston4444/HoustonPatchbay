@@ -45,4 +45,12 @@ class PaintElement(Enum):
     HEADER = auto()
     ANTI_HEADER = auto()
     GUI_BUTTON = auto()
-    
+
+
+class BoxStyler(Enum):
+    BOX = auto()
+    SHADOW = auto()
+    HEADER = auto()
+    HEADER_LINE = auto()
+    WRAPPER = auto()
+    PORTS_BORDER = auto()

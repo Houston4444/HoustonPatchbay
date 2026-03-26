@@ -13,8 +13,9 @@ from patshared import PortMode
 
 from ..init_values import InlineDisplay, options, MAX_PLUGIN_ID_ALLOWED
 from ..patchcanvas import canvas
-from ..theme import BoxStyler, StyleAttributer
-from .box_utils import PaintElement, UnwrapButton, WrappingState
+from ..theme import StyleAttributer
+
+from .box_utils import BoxStyler, PaintElement, UnwrapButton, WrappingState
 
 if TYPE_CHECKING:
     from .box_widget import BoxWidget

@@ -85,15 +85,6 @@ class SuperMargin(Margin):
     @property
     def sided_width(self) -> int:
         return self._sided_width
-    
-
-class BoxStyler(Enum):
-    BOX = auto()
-    SHADOW = auto()
-    HEADER = auto()
-    HEADER_LINE = auto()
-    WRAPPER = auto()
-    PORTS_BORDER = auto()
 
 
 class BorderSide(Flag):

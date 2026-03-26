@@ -12,7 +12,7 @@ from qtpy.QtGui import (QColor, QPen, QFont, QBrush, QFontMetricsF,
 from .. import xdg
 
 from .theme_utils import to_qcolor, rail_int, rail_float
-from .theme_structs import BorderSide, Margin, BoxStyler
+from .theme_structs import BorderSide, Margin
 
 _logger = logging.getLogger(__name__)
 

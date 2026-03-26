@@ -7,9 +7,9 @@ from qtpy.QtGui import QPainterPath
 from patshared import PortMode
 
 from ..patchcanvas import canvas
-from ..theme import BoxStyler, BoxStyleAttributer
+from ..theme import BoxStyleAttributer
 
-from .box_utils import PaintElement, WrappingState
+from .box_utils import BoxStyler, PaintElement, WrappingState
 
 if TYPE_CHECKING:
     from .box_widget import BoxWidget
@@ -240,11 +240,12 @@ def _build_gui_button_path(
 def build_painter_path(
         box: 'BoxWidget', pos_dict: dict[str, list[list[float]]],
         selected=False):
-    main_path = _build_main_path(box, pos_dict, selected)
     painter_paths = box._painter_paths.get(selected)
     if painter_paths is None:
         painter_paths = box._painter_paths[selected] = \
             dict[PaintElement, QPainterPath]()
+
+    main_path = _build_main_path(box, pos_dict, selected)
     painter_paths[PaintElement.MAIN] = main_path
 
     theme = box.get_theme()

@@ -1,16 +1,18 @@
-from enum import IntEnum
 from dataclasses import dataclass
+from enum import IntEnum
 import logging
 from typing import TYPE_CHECKING
 
 from patshared import PortMode, BoxLayoutMode
 
 from ..init_values import canvas, options
-from ..theme import BoxStyler
 from ..utils import next_width_on_grid, next_height_on_grid
+
+from .box_utils import BoxStyler
 
 if TYPE_CHECKING:
     from .box_widget import BoxWidget
+
 
 _logger = logging.getLogger(__name__)
 

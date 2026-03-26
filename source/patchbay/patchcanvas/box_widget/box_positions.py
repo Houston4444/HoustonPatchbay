@@ -9,10 +9,9 @@ from patshared import (
     BoxLayoutMode, PortMode, PortType, PortSubType, BoxType)
 
 from ..init_values import canvas, options, InlineDisplay
-from ..theme import BoxStyler
 
 from .box_layout import PortsMinSizes, TitleOn, BoxLayout
-from .box_utils import TitleLine, UnwrapButton, WrappingState
+from .box_utils import BoxStyler, TitleLine, UnwrapButton, WrappingState
 from .paths_builder import build_painter_path
 
 if TYPE_CHECKING:
@@ -149,7 +148,7 @@ def split_in_two(string: str, n_lines: int) -> list[str]:
 
 def _should_align_port_types(box: 'BoxWidget') -> bool:
     '''check if we can align port types
-        eg, align first midi input to first midi output'''
+    eg, align first midi input to first midi output'''
     if box._current_port_mode is not PortMode.BOTH:
         return False
 
@@ -160,12 +159,13 @@ def _should_align_port_types(box: 'BoxWidget') -> bool:
         n_outs = 0
 
         for port in box._port_list:
-            if (port.port_type == port_type
-                    and port.port_subtype == port_subtype):
-                if port.port_mode is PortMode.INPUT:
-                    n_ins += 1
-                elif port.port_mode is PortMode.OUTPUT:
-                    n_outs += 1
+            if (port.port_type is port_type
+                    and port.port_subtype is port_subtype):
+                match port.port_mode:
+                    case PortMode.INPUT:
+                        n_ins += 1
+                    case PortMode.OUTPUT:
+                        n_outs += 1
 
         port_types_aligner.append((n_ins, n_outs))
 
