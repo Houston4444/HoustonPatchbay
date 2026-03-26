@@ -1,4 +1,5 @@
 #!/usr/bin/python3
+from functools import cached_property
 import logging
 import os
 from pathlib import Path
@@ -102,7 +103,7 @@ class StyleAttributer:
             if sub_ in other.subs:
                 self.child(sub_).inherit(other.child(sub_))
 
-    @property
+    @cached_property
     def log_path(self):
         return f'[{self._path[1:]}]'
 
@@ -312,7 +313,7 @@ class StyleAttributer:
 
         return self._attrs.get(attribute)
 
-    @property
+    @cached_property
     def fill_pen(self) -> QPen:
         if self._fill_pen is None:
             if TYPE_CHECKING:
@@ -325,24 +326,24 @@ class StyleAttributer:
 
         return self._fill_pen
 
-    @property
+    @cached_property
     def border_radius(self) -> float:
         return self.get_value_of('border-radius') # type:ignore
 
-    @property
+    @cached_property
     def background_color(self) -> QColor:
         return self.get_value_of('background') # type:ignore
 
-    @property
+    @cached_property
     def background2_color(self) -> QColor | None:
         return self.get_value_of('background2', # type:ignore
                                  needed_attribute='background')
 
-    @property
+    @cached_property
     def background_image(self) -> QImage:
         return self.get_value_of('background-image') # type:ignore
 
-    @property
+    @cached_property
     def margin(self) -> Margin:
         margin = Margin()
         margin.top = self.get_value_of('margin-top') # type:ignore
@@ -353,15 +354,15 @@ class StyleAttributer:
         margin.top_side = self.get_value_of('margin-top-side') # type:ignore
         return margin
 
-    @property
+    @cached_property
     def margin_empty(self) -> Margin:
         return Margin()
 
-    @property
+    @cached_property
     def text_color(self) -> QColor:
         return self.get_value_of('text-color') # type:ignore
 
-    @property
+    @cached_property
     def font(self) -> QFont:
         if self._font is None:
             self._font = QFont(self.get_value_of('font-name'))
@@ -410,11 +411,11 @@ class StyleAttributer:
 
         return tot_size
 
-    @property
+    @cached_property
     def border_mode(self) -> str:
         return self.get_value_of('border-mode') # type:ignore
 
-    @property
+    @cached_property
     def border_width(self) -> float:
         '''The border width defined in theme,
         or 0.0 if there is no border'''
@@ -422,51 +423,51 @@ class StyleAttributer:
             return 0.0
         return self.get_value_of('border-width') # type:ignore
 
-    @property
+    @cached_property
     def output_align(self) -> str:
         return self.get_value_of('output-align') # type:ignore
 
-    @property
+    @cached_property
     def port_in_offset(self) -> float:
         return self.get_value_of('port-in-offset') # type:ignore
 
-    @property
+    @cached_property
     def port_out_offset(self) -> float:
         return self.get_value_of('port-out-offset') # type:ignore
 
-    @property
+    @cached_property
     def port_in_offset_mode(self) -> str:
         return self.get_value_of('port-in-offset-mode') # type:ignore
 
-    @property
+    @cached_property
     def port_out_offset_mode(self) -> str:
         return self.get_value_of('port-out-offset-mode') # type:ignore
 
-    @property
+    @cached_property
     def port_spacing(self) -> float:
         return self.get_value_of('port-spacing') # type:ignore
 
-    @property
+    @cached_property
     def port_type_spacing(self) -> float:
         return self.get_value_of('port-type-spacing') # type:ignore
 
-    @property
+    @cached_property
     def icon_size(self) -> float:
         return self.get_value_of('icon-size') # type:ignore
 
-    @property
+    @cached_property
     def grid_min_width(self) -> float:
         return self.get_value_of('grid-min-width') # type:ignore
 
-    @property
+    @cached_property
     def grid_min_height(self) -> float:
         return self.get_value_of('grid-min-height') # type:ignore
 
-    @property
+    @cached_property
     def visible(self) -> bool:
         return self.get_value_of('visible') # type:ignore
 
-    @property
+    @cached_property
     def drilled(self) -> bool:
         return self.get_value_of('drilled') # type:ignore
 
