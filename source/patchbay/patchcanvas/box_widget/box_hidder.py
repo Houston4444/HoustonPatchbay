@@ -8,7 +8,7 @@ from patshared import PortMode
 from ..init_values import canvas, ZvBox
 
 if TYPE_CHECKING:
-    from .__init__ import BoxWidget
+    from .box_widget import BoxWidget
 
 
 class BoxHidder(QGraphicsItem):

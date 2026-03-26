@@ -25,7 +25,7 @@ from ..init_values import canvas
 from ..theme import StyleAttributer
 
 if TYPE_CHECKING:
-    from .__init__ import BoxWidget
+    from .box_widget import BoxWidget
 
 
 class BoxWidgetShadow(QGraphicsDropShadowEffect):

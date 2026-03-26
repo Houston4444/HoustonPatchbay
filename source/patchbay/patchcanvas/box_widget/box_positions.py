@@ -17,7 +17,7 @@ from .box_layout import PortsMinSizes, TitleOn, BoxLayout
 from .box_utils import PaintElement, TitleLine, UnwrapButton, WrappingState
 
 if TYPE_CHECKING:
-    from . import (
+    from .box_widget import (
         BoxWidget, UnwrapButton, TitleLine, WrappingState)
 
 

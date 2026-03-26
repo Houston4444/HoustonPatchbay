@@ -10,7 +10,7 @@ from ..theme import BoxStyler
 from ..utils import next_width_on_grid, next_height_on_grid
 
 if TYPE_CHECKING:
-    from .__init__ import BoxWidget
+    from .box_widget import BoxWidget
 
 _logger = logging.getLogger(__name__)
 

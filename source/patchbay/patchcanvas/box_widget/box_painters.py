@@ -17,7 +17,7 @@ from ..theme import BoxStyler, StyleAttributer
 from .box_utils import PaintElement, UnwrapButton, WrappingState
 
 if TYPE_CHECKING:
-    from . import BoxWidget
+    from .box_widget import BoxWidget
 
 
 _logger = logging.getLogger(__name__)
