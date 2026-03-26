@@ -258,6 +258,4 @@ class IconSvgWidget(QGraphicsSvgItem): # type:ignore
         self._renderer.render(painter, self._size)
         painter.restore()
 
-# ------------------------------------------------------------------------------------------------------------
-
 

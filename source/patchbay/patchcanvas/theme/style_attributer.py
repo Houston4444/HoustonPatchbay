@@ -428,12 +428,8 @@ class StyleAttributer:
 
     def get_title_templates(
             self, title: str, icon_size: int) -> list[dict[str, int]]:
-        if self._titles_templates_cache is None:
-            self._titles_templates_cache = self._get_titles_templates_cache()
-
         if (title in self._titles_templates_cache
                 and icon_size in self._titles_templates_cache[title]):
             return self._titles_templates_cache[title][icon_size]
-
         return []
 
