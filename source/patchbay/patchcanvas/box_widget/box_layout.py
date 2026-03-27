@@ -54,6 +54,7 @@ class BoxLayout:
         cls._hwr = canvas.theme.hardware_rack_width if box.is_hardware else 0
         cls._port_mode = box._current_port_mode
         cls._can_handle_gui = box._can_handle_gui
+        cls._icon_size = theme.icon_size
 
         cls._mg = box.get_theme(BoxStyler.HEADER).margin
         if box._can_handle_gui:
@@ -80,8 +81,9 @@ class BoxLayout:
         if (layout_mode is BoxLayoutMode.LARGE
                 and title_on is TitleOn.SIDE_UNDER_ICON):
             self.header_width = max(
-                38, title_template['title_width'] + 10)
-            self.header_height = title_template['title_height'] + 32
+                self._icon_size + 10, title_template['title_width'] + 10)
+            self.header_height = \
+                title_template['title_height'] + self._icon_size + 8
         else:
             self.header_width = title_template['header_width']
             self.header_height = title_template['header_height']
@@ -103,14 +105,16 @@ class BoxLayout:
 
             if layout_mode is BoxLayoutMode.LARGE:
                 if title_on is TitleOn.SIDE:
-                    self.needed_width = ports_width + self.header_width + self._pen_width
+                    self.needed_width = \
+                        ports_width + self.header_width + self._pen_width
                     self.needed_height = (
                         max(self.header_height,
                             height_for_ports + self._port_spacing)
                         + 2 * self._pen_width)
 
                 elif title_on is TitleOn.SIDE_UNDER_ICON:
-                    self.needed_width = ports_width + self.header_width + self._pen_width
+                    self.needed_width = \
+                        ports_width + self.header_width + self._pen_width
                     self.needed_height = (
                         max(height_for_ports + self._port_spacing,
                             self.header_height)
@@ -143,13 +147,17 @@ class BoxLayout:
                     self.header_height + height_for_ports
                     + self._pen_width * 2)
                 
-        self.full_width = next_width_on_grid(self._hwr * 2 + self.needed_width)
-        self.full_height = next_height_on_grid(self._hwr * 2 + self.needed_height)
+        self.full_width = \
+            next_width_on_grid(self._hwr * 2 + self.needed_width)
+        self.full_height = \
+            next_height_on_grid(self._hwr * 2 + self.needed_height)
 
         # n_cells is used to sort layouts, to use the littlest area
         self._n_cells = (
-            ((self.full_width + canvas.theme.box_spacing) / options.cell_width)
-            * ((self.full_height + canvas.theme.box_spacing) / options.cell_height))
+            ((self.full_width + canvas.theme.box_spacing)
+                / options.cell_width)
+            * ((self.full_height + canvas.theme.box_spacing)
+                / options.cell_height))
 
         # with the option box_grouped_auto_layout_ratio,
         # we simulate that the area can be higher in one_column mode
