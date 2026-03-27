@@ -2,6 +2,7 @@ from pathlib import Path
 
 from .style_attributer import StyleAttributer
 
+
 class UnselectedStyleAttributer(StyleAttributer):
     def __init__(self, path: str, parent=None):
         super().__init__(path, parent=parent)

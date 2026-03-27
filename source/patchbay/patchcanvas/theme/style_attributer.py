@@ -11,7 +11,7 @@ from .theme_utils import to_qcolor, rail_float, rail_int, ThemeFile
 from .theme_structs import Margin, BorderSide
 
 if TYPE_CHECKING:
-    from . import UnselectedStyleAttributer
+    from .style_attributer import UnselectedStyleAttributer
 
 
 _logger = logging.getLogger(__name__)
@@ -308,6 +308,21 @@ class StyleAttributer:
         margin.free_side = self.get_value_of('margin-free-side') # type:ignore
         margin.top_side = self.get_value_of('margin-top-side') # type:ignore
         return margin
+
+    @cached_property
+    def margin_empty(self) -> Margin:
+        return Margin()
+
+    @cached_property
+    def padding(self) -> Margin:
+        padding = Margin()
+        padding.top = self.get_value_of('padding-top') # type:ignore
+        padding.bottom = self.get_value_of('padding-bottom') # type:ignore
+        padding.sides = self.get_value_of('padding-sides') # type:ignore
+        padding.ports_side = self.get_value_of('padding-ports-side') # type:ignore
+        padding.free_side = self.get_value_of('padding-free-side') # type:ignore
+        padding.top_side = self.get_value_of('padding-top-side') # type:ignore
+        return padding
 
     @cached_property
     def margin_empty(self) -> Margin:
