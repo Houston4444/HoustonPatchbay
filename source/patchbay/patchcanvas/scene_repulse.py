@@ -12,7 +12,7 @@ from .utils import (
     previous_top_on_grid, next_top_on_grid)
 
 if TYPE_CHECKING:
-    from .scene_moth import PatchSceneMoth
+    from .scene import PatchScene
 
 @dataclass
 class BoxAndRect:
@@ -79,7 +79,7 @@ class MovingBox:
 
 
 def deplace_boxes_from_repulsers(
-        scene: 'PatchSceneMoth', repulser_boxes: list[BoxWidget],
+        scene: 'PatchScene', repulser_boxes: list[BoxWidget],
         wanted_direction=Direction.NONE,
         mov_repulsables: Optional[list[MovingBox]]=None):
     '''Change the place of boxes in order to have no box overlapping
@@ -424,7 +424,7 @@ def deplace_boxes_from_repulsers(
         scene.add_box_to_animation(
             item, int(new_rect.left()), int(new_rect.top()))
 
-def full_repulse(scene: 'PatchSceneMoth'):
+def full_repulse(scene: 'PatchScene'):
     if not options.prevent_overlap:
         return
 
@@ -451,7 +451,7 @@ def full_repulse(scene: 'PatchSceneMoth'):
     scene._full_repulse_boxes.clear()
 
 def bring_neighbors_and_deplace_boxes(
-        scene: 'PatchSceneMoth', box_widget: BoxWidget, ex_rect: QRectF):
+        scene: 'PatchScene', box_widget: BoxWidget, ex_rect: QRectF):
     if not options.prevent_overlap:
         return
 

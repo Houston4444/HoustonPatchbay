@@ -7,7 +7,7 @@ from qtpy.QtCore import QPointF, Qt, QRectF
 from .init_values import canvas, options, GridStyle
 
 if TYPE_CHECKING:
-    from .scene_moth import PatchSceneMoth
+    from .scene import PatchScene
 
 
 def x_multiply(path: QPainterPath, n_times: int, width: int) -> QPainterPath:
@@ -54,7 +54,7 @@ def y_multiply(path: QPainterPath, n_times: int, height: int) -> QPainterPath:
 
 
 class GridWidget(QGraphicsPathItem):
-    def __init__(self, scene: 'PatchSceneMoth', style=GridStyle.GRID):
+    def __init__(self, scene: 'PatchScene', style=GridStyle.GRID):
         QGraphicsPathItem.__init__(self)
         self._scene = scene
         self.style = style
