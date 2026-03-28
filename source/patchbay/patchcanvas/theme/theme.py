@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 import logging
 from pathlib import Path
+from typing import Any
 
 from qtpy.QtCore import Qt
 from qtpy.QtGui import QColor, QFont, QImage, QFontDatabase
@@ -79,11 +80,11 @@ class Theme(StyleAttributer):
         self.box_spacing_horizontal = 24
         self.magnet = 12
         self.hardware_rack_width = 5
-        self.thumbnail_port_colors = 'background'
+        self.port_type_colors = dict[str, QColor]()
 
         self.icon = IconTheme()
 
-        self.aliases = {}
+        self.aliases = dict[str, Any]()
 
         self.box = BoxStyleAttributer('.box', self)
         self.box_wrapper = BoxStyleAttributer('.box_wrapper', self)
@@ -169,9 +170,6 @@ class Theme(StyleAttributer):
                 if monitor_color is None:
                     monitor_color = QColor(190, 158, 0)
                 self.monitor_color = monitor_color
-
-            case 'thumbnail_port_colors':
-                self.thumbnail_port_colors = str(body_value)
                 
             case _:
                 _logger.warning(
@@ -213,6 +211,8 @@ class Theme(StyleAttributer):
             if key != 'aliases':
                 continue
 
+            port_types = ('audio', 'midi', 'cv', 'alsa', 'video')
+
             if not isinstance(value, dict):
                 _logger.error(f"'{key}' must contains a dictionnary, ignored")
                 continue
@@ -225,6 +225,17 @@ class Theme(StyleAttributer):
                     continue
 
                 self.aliases[alias_key] = str(alias_value)
+                if alias_key in port_types:
+                    port_color = to_qcolor(alias_value)
+                    if port_color is None:
+                        port_color = QColor('black')
+                    port_color = port_color.toRgb()
+                    self.port_type_colors[alias_key] = port_color
+
+            for port_type in port_types:
+                if self.port_type_colors.get(port_type) is None:
+                    _logger.error(f"An alias named '{port_type}' is needed")
+                    self.port_type_colors[port_type] = QColor()
 
             break
 

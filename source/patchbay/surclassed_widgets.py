@@ -359,22 +359,10 @@ class ViewsComboBox(QComboBox):
         # Draw PortTypesView thumbnail
         thmp = patchcanvas.canvas.theme.port
 
-        match patchcanvas.canvas.theme.thumbnail_port_colors.lower():
-            case 'text':
-                pcols = [thmp.audio.text_color,
-                        thmp.midi.text_color,
-                        thmp.cv.text_color,
-                        thmp.alsa.text_color]
-            case 'border':
-                pcols = [thmp.audio.fill_pen.color(),
-                         thmp.midi.fill_pen.color(),
-                         thmp.cv.fill_pen.color(),
-                         thmp.alsa.fill_pen.color()]
-            case _:
-                pcols = [thmp.audio.background_color,
-                        thmp.midi.background_color,
-                        thmp.cv.background_color,
-                        thmp.alsa.background_color]
+        port_type_colors = patchcanvas.canvas.theme.port_type_colors
+
+        pcols = [port_type_colors['audio'], port_type_colors['midi'],
+                 port_type_colors['cv'], port_type_colors['alsa']]
 
         # adapt colors lightness to be clearly visible on this background
         bg_ligthness = bg_col.lightnessF()
