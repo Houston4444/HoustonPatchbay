@@ -18,7 +18,7 @@
 # For a full copy of the GNU General Public License see the doc/GPL.txt file.
 
 import logging
-import os
+from pathlib import Path
 
 from qtpy.QtCore import QRectF, QFile, Qt
 from qtpy.QtGui import QPainter, QIcon, QPixmap
@@ -30,7 +30,7 @@ except:
     from qtpy.QtSvg import QGraphicsSvgItem
 
 from patshared import BoxType, PortMode
-from .init_values import canvas, CanvasItemType
+from ..init_values import canvas, CanvasItemType
 
 
 _logger = logging.getLogger(__name__)
@@ -46,7 +46,7 @@ def get_app_icon(icon_name: str) -> QIcon:
 
     if icon.isNull():
         for ext in ('svg', 'svgz', 'png'):
-            filename = ":app_icons/%s.%s" % (icon_name, ext)
+            filename = f':app_icons/{icon_name}.{ext}'
 
             if QFile.exists(filename):
                 del icon
@@ -55,13 +55,14 @@ def get_app_icon(icon_name: str) -> QIcon:
                 break
 
     if icon.isNull():
-        for path in ('/usr/local', '/usr', '%s/.local' % os.getenv('HOME')):
+        usr = Path('/usr')
+        for path in usr / 'local', usr, Path.home() / '.local':
             for ext in ('png', 'svg', 'svgz', 'xpm'):
-                filename = "%s/share/pixmaps/%s.%s" % (path, icon_name, ext)
-                if QFile.exists(filename):
+                filep = path / 'share' / 'pixmaps' / f'{icon_name}.{ext}'
+                if filep.exists():
                     del icon
                     icon = QIcon()
-                    icon.addFile(filename)
+                    icon.addFile(str(filep))
                     break
 
     _app_icons_cache[icon_name] = icon

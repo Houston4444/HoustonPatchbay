@@ -1126,6 +1126,8 @@ def update_positions(
         if box.shadow is not None:
             box.shadow.set_theme(box.get_theme(BoxStyler.SHADOW))
         
+        box.set_icon()
+
         for portgrp in box._portgrp_list:
             if portgrp.widget is not None:
                 portgrp.widget.update_theme()

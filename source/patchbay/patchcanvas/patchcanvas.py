@@ -783,7 +783,7 @@ def set_group_icon(group_id: int, box_type: BoxType, icon_name: str):
     group.icon_name = icon_name
 
     for box in group.widgets:
-        box.set_icon(box_type, icon_name)
+        box.set_icon()
 
     if canvas.loading_items:
         canvas.groups_to_redraw_out.add(group_id)

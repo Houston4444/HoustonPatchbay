@@ -40,7 +40,6 @@ from ..init_values import (
 from ..utils import (
     nearest_on_grid, nearest_on_grid_check_others,
     get_portgroup_name_from_ports_names)
-from ..icon_widget import IconSvgWidget, IconPixmapWidget
 from ..port_widget import PortWidget
 from ..portgroup_widget import PortgroupWidget
 from ..grouped_lines_widget import GroupedLinesWidget
@@ -52,6 +51,7 @@ from .box_layout import BoxLayout
 from .box_shadow import BoxWidgetShadow
 from .box_utils import (
     BoxStyler, PaintElement, TitleLine, UnwrapButton, WrappingState)
+from .icon_widget import IconSvgWidget, IconPixmapWidget
 
 
 _logger = logging.getLogger(__name__)
@@ -256,19 +256,16 @@ class BoxWidget(QGraphicsItem):
             else InlineDisplay.DISABLED)
         self.update()
 
-    def set_icon(self, box_type: BoxType, icon_name: str):
-        if isinstance(self.top_icon, IconSvgWidget):
-            self.remove_icon_from_scene()
+    def set_icon(self):
+        self.remove_icon_from_scene()
 
-        if (box_type is BoxType.HARDWARE
-                and (not icon_name or icon_name == 'a2j')):
+        group = canvas.get_group(self._group_id)
+        box_type = group.box_type
+        icon_name = group.icon_name
+
+        if box_type in (BoxType.HARDWARE, BoxType.MONITOR):
             self.top_icon = IconSvgWidget(
                 box_type, icon_name, self._port_mode, self)
-            return
-
-        if self.top_icon is not None:
-            self.top_icon.set_icon(
-                box_type, icon_name, self._current_port_mode)
         else:
             self.top_icon = IconPixmapWidget(box_type, icon_name, self)
 
