@@ -77,6 +77,7 @@ This folder contains images that you can use as background for the full scene or
 
 You can define in *[aliases]* block colors or numbers for faster general changes in other sections.
 For example, define _midi_ to a color, and re-use _midi_ for midi ports and midi lines.
+Note that aliases _audio_, _midi_, _cv_, _alsa_ and _video_ are now required for the view selector frame. Please affect them a color.
 
 [#body]
 == [body]

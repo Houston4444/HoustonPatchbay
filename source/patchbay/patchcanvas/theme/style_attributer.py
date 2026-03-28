@@ -8,7 +8,7 @@ from qtpy.QtGui import (
 
 from . import theme_cache
 from .theme_utils import to_qcolor, rail_float, rail_int, ThemeFile
-from .theme_structs import Margin, BorderSide
+from .theme_structs import Margin
 
 if TYPE_CHECKING:
     from .style_attributer import UnselectedStyleAttributer
@@ -214,9 +214,6 @@ class StyleAttributer:
                     return
                 
                 self._attrs[attribute] = hcb
-            
-            case 'border-sides':
-                self._attrs[attribute] = BorderSide.from_text(value)
             
             case _:
                 _logger.error(f"{self.log_path}{attribute} unknown key !")
