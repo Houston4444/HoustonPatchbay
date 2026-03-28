@@ -32,6 +32,8 @@ from qtpy.QtWidgets import (
     QGraphicsItem, QGraphicsView)
 
 from patshared import PortMode
+
+
 from .init_values import (
     AliasingReason,
     BoxHidding,
@@ -49,6 +51,8 @@ from .connectable_widget import ConnectableWidget
 from .line_widget import LineWidget
 from .grouped_lines_widget import GroupedLinesWidget
 from .grid_widget import GridWidget
+from . import scene_repulse
+from .scene_repulse import MovingBox
 from .scene_view import PatchGraphicsView
 from .utils import boxes_in_dict
 
@@ -68,34 +72,6 @@ class RubberbandRect(QGraphicsRectItem):
 
     def type(self) -> CanvasItemType:
         return CanvasItemType.RUBBERBAND
-
-
-class MovingBox:
-    widget: BoxWidget
-    from_pt: QPointF
-    to_pt: QPointF
-    final_rect: QRectF
-    start_time: float
-    is_joining: bool
-    is_wrapping: bool
-    hidding_state: BoxHidding
-    needs_move: bool
-
-    def __init__(self, widget: BoxWidget):
-        self.widget = widget
-        self.from_pt = QPointF(*widget.top_left())
-        self.to_pt = QPointF(*widget.top_left())
-        self.final_rect = widget.after_wrap_rect().translated(self.to_pt)
-        self.start_time = 0.0
-        self.is_joining = False
-        self.is_wrapping = False
-        self.hidding_state = BoxHidding.NONE
-        self.needs_move = False
-
-    def is_usefull(self) -> bool:
-        if self.needs_move or self.is_wrapping:
-            return True
-        return self.hidding_state is not BoxHidding.NONE
 
 
 class SelectingBoxes:
@@ -184,17 +160,27 @@ class PatchSceneMoth(QGraphicsScene):
 
         self._grid_widget: Optional[GridWidget] = None
 
+        self._full_repulse_boxes = set[BoxWidget]()
+
         self.sceneRectChanged.connect(self.update_grid_widget)
         # self.selectionChanged.connect(self._slot_selection_changed)
 
-    def deplace_boxes_from_repulsers(self, repulser_boxes: list[BoxWidget],
-                                     wanted_direction=Direction.NONE,
-                                     new_scene_rect=None):
+    def deplace_boxes_from_repulsers(
+            self, repulser_boxes: list[BoxWidget],
+            wanted_direction=Direction.NONE,
+            mov_repulsables: list[MovingBox] | None =None):
         '''Change the place of boxes in order to have no
         box overlapping other boxes.'''
-        # just for easier syntax, this method is overloaded in scene.py
-        # but executed in this file too.
-        pass
+        scene_repulse.deplace_boxes_from_repulsers(
+            self, repulser_boxes, wanted_direction, mov_repulsables)
+
+    def full_repulse(self):
+        scene_repulse.full_repulse(self)
+
+    def bring_neighbors_and_deplace_boxes(
+            self, box_widget: BoxWidget, ex_rect: QRectF):
+        scene_repulse.bring_neighbors_and_deplace_boxes(
+            self, box_widget, ex_rect)
 
     def clear(self):
         # reimplement Qt function and fix missing rubberband after clear
