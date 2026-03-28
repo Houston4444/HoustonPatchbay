@@ -119,6 +119,65 @@ class Theme(StyleAttributer):
     def save_cache(cls):
         theme_cache.save()
 
+    def _read_body_attr(self, body_key: str, body_value):
+        match body_key:
+            case 'port-height'|'box-spacing-horizontal' \
+                    |'magnet'|'hardware-rack-width':
+                if not isinstance(body_value, int):
+                    return
+                body_key: str
+                self.__setattr__(body_key.replace('-', '_'), body_value)
+
+            case 'box-spacing':
+                # box_spacing must be an even number
+                if not isinstance(body_value, int):
+                    return
+                self.box_spacing = 2 * (body_value // 2)
+
+            case 'background':
+                scene_bg_color = to_qcolor(body_value)
+                if scene_bg_color is None:
+                    scene_bg_color = QColor('black')
+                self.scene_background_color = scene_bg_color
+
+            case 'background-image':
+                if not isinstance(body_value, str):
+                    return
+
+                background_path = \
+                    ThemeFile.path.parent / 'images' / body_value
+                if background_path.is_file():
+                    try:
+                        self.scene_background_image = QImage(
+                            str(background_path))
+                        if self.scene_background_image.isNull():
+                            _logger.error(
+                                f"background {background_path} "
+                                "is not a valid image")
+                            self.scene_background_image = None
+                    except:
+                        _logger.error(
+                            f"background {background_path} "
+                            "is not a valid image")
+                else:
+                    _logger.error(
+                        "Unable to find background-image "
+                        f"\"{background_path}\"")
+
+            case 'monitor-color':
+                monitor_color = to_qcolor(body_value)
+                if monitor_color is None:
+                    monitor_color = QColor(190, 158, 0)
+                self.monitor_color = monitor_color
+
+            case 'thumbnail_port_colors':
+                self.thumbnail_port_colors = str(body_value)
+                
+            case _:
+                _logger.warning(
+                    f'Theme [body]{body_key} is unknown '
+                    'and will have no effect')
+
     def read_theme(self, theme_dict: dict[str, dict], theme_file_path: Path,
                    for_linter=False):
         '''theme_file_path is only used here to find external resources'''
@@ -144,7 +203,8 @@ class Theme(StyleAttributer):
                             QFontDatabase.addApplicationFont(str(font_path))
                         except:
                             _logger.warning(
-                                f"failed to install font from file {str(font_path)}")
+                                "failed to install font "
+                                f"from file {str(font_path)}")
 
         self.aliases.clear()
 
@@ -160,7 +220,8 @@ class Theme(StyleAttributer):
             for alias_key, alias_value in value.items():
                 if not isinstance(alias_key, str):
                     _logger.error(
-                        f"alias key must be a string. Ignore: {str(alias_key)}")
+                        "alias key must be a string. "
+                        f"Ignore: {str(alias_key)}")
                     continue
 
                 self.aliases[alias_key] = str(alias_value)
@@ -209,59 +270,7 @@ class Theme(StyleAttributer):
 
             if key == 'body':
                 for body_key, body_value in value.items():
-                    match body_key:
-                        case 'port-height'|'box-spacing-horizontal' \
-                                |'magnet'|'hardware-rack-width':
-                            if not isinstance(body_value, int):
-                                continue
-                            body_key: str
-                            self.__setattr__(body_key.replace('-', '_'), body_value)
-
-                        case 'box-spacing':
-                            # box_spacing must be an even number
-                            if not isinstance(body_value, int):
-                                continue
-                            self.box_spacing = 2 * (body_value // 2)
-
-                        case 'background':
-                            scene_bg_color = to_qcolor(body_value)
-                            if scene_bg_color is None:
-                                scene_bg_color = QColor('black')
-                            self.scene_background_color = scene_bg_color
-
-                        case 'background-image':
-                            if not isinstance(body_value, str):
-                                continue
-
-                            background_path = \
-                                theme_file_path.parent / 'images' / body_value
-                            if background_path.is_file():
-                                try:
-                                    self.scene_background_image = QImage(str(background_path))
-                                    if self.scene_background_image.isNull():
-                                        _logger.error(
-                                            f"background {background_path} is not a valid image")
-                                        self.scene_background_image = None
-                                except:
-                                    _logger.error(
-                                        f"background {background_path} is not a valid image")
-                            else:
-                                _logger.error(
-                                    f"Unable to find background-image \"{background_path}\"")
-
-                        case 'monitor-color':
-                            monitor_color = to_qcolor(body_value)
-                            if monitor_color is None:
-                                monitor_color = QColor(190, 158, 0)
-                            self.monitor_color = monitor_color
-
-                        case 'thumbnail_port_colors':
-                            self.thumbnail_port_colors = str(body_value)
-                            
-                        case _:
-                            _logger.warning(
-                                f'Theme [body]{body_key} is unknown and will have no effect')
-
+                    self._read_body_attr(body_key, body_value)
                 continue
 
             inherits_name = value.get('inherits')
