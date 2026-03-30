@@ -1,4 +1,4 @@
-from dataclasses import astuple, dataclass
+from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 from qtpy.QtCore import QRectF, QPointF, QMarginsF, Qt
@@ -192,7 +192,7 @@ def _rect_has_to_move_from(
             right_spacing, box_spacing))
 
 def _get_to_move_boxes_from_repulse_boxes(
-        scene: 'PatchScene', repulser_boxes: list[BoxWidget],
+        scene: 'PatchScene', pusher_boxes: list[BoxWidget],
         wanted_direction: Direction) -> \
             tuple[list[ToMoveBox], dict[BoxWidget, QRectF]]:
     box_spacing = canvas.theme.box_spacing
@@ -202,72 +202,75 @@ def _get_to_move_boxes_from_repulse_boxes(
         box_spacing_hor, box_spacing)
 
     to_move_boxes = list[ToMoveBox]()
-    repulsers = dict[BoxWidget, QRectF]()
+    pushers = dict[BoxWidget, QRectF]()
     wanted_directions = [wanted_direction]
     
-    for box in repulser_boxes:
+    for pusher_box in pusher_boxes:
         # if box is already moving, consider its end position
-        moving_box = scene.move_boxes.get(box)
+        moving_box = scene.move_boxes.get(pusher_box)
         if moving_box is None:
-            srect = box.after_wrap_rect().translated(box.pos())
+            pusher_rect = pusher_box.after_wrap_rect().translated(
+                pusher_box.pos())
         else:
-            srect = moving_box.final_rect
-            if srect.isNull():
+            pusher_rect = moving_box.final_rect
+            if pusher_rect.isNull():
                 # if this box is joining or hidding,
                 # it will be removed soon
                 # so, it has not to be a repulser.
                 continue
 
-        repulsers[box] = srect
-        items_to_move = dict[BoxWidget, QRectF]()
+        pushers[pusher_box] = pusher_rect
+        pusheds = dict[BoxWidget, QRectF]()
 
-        search_rect = srect.marginsAdded(normal_margins)
+        search_rect = pusher_rect.marginsAdded(normal_margins)
 
         # search intersections in non moving boxes
-        for widget in scene.items(
+        for candidate_box in scene.items(
                 search_rect, Qt.ItemSelectionMode.IntersectsItemShape,
                 Qt.SortOrder.AscendingOrder):
-            if not isinstance(widget, BoxWidget):
+            if not isinstance(candidate_box, BoxWidget):
                 continue
 
-            if (widget in repulser_boxes
-                    or widget in [b.item for b in to_move_boxes]
-                    or widget in scene.move_boxes):
+            if (candidate_box in pusher_boxes
+                    or candidate_box in [b.item for b in to_move_boxes]
+                    or candidate_box in scene.move_boxes):
                 continue
 
-            irect = widget.sceneBoundingRect()
+            pushed_rect = candidate_box.sceneBoundingRect()
 
             if _rect_has_to_move_from(
-                    srect, irect,
-                    box._current_port_mode,
-                    widget._current_port_mode,
+                    pusher_rect, pushed_rect,
+                    pusher_box._current_port_mode,
+                    candidate_box._current_port_mode,
                     box_spacing, box_spacing_hor):
-                items_to_move[widget] = irect
+                pusheds[candidate_box] = pushed_rect
 
         # search intersections in moving boxes
-        for widget, moving_box in scene.move_boxes.items():
-            if (widget in repulser_boxes
+        for candidate_box, moving_box in scene.move_boxes.items():
+            if (candidate_box in pusher_boxes
                     or moving_box.final_rect.isNull()
-                    or widget in [b.item for b in to_move_boxes]):
+                    or candidate_box in [b.item for b in to_move_boxes]):
                 continue
 
-            irect = moving_box.final_rect
+            pushed_rect = moving_box.final_rect
 
             if _rect_has_to_move_from(
-                    srect, irect,
-                    box._current_port_mode,
-                    widget._current_port_mode,
+                    pusher_rect, pushed_rect,
+                    pusher_box._current_port_mode,
+                    candidate_box._current_port_mode,
                     box_spacing, box_spacing_hor):
-                items_to_move[widget] = irect
+                pusheds[candidate_box] = pushed_rect
                 
-        for item, irect in items_to_move.items():
+        for pushed_box, pushed_rect in pusheds.items():
             # evaluate in which direction should go the box
-            direction = _get_direction(srect, irect, wanted_directions)
+            direction = _get_direction(
+                pusher_rect, pushed_rect, wanted_directions)
             to_move_boxes.append(
-                ToMoveBox([direction], item, irect, box, srect))
+                ToMoveBox([direction], pushed_box, pushed_rect,
+                          pusher_box, pusher_rect))
 
     to_move_boxes.sort()
-    return to_move_boxes, repulsers
+    return to_move_boxes, pushers
 
 def _get_to_move_boxes_in_full_repulse(
         scene: 'PatchScene', mov_repulsables: list[MovingBox]) -> \
