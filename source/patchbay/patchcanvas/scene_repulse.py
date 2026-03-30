@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import astuple, dataclass
 from typing import TYPE_CHECKING
 
 from qtpy.QtCore import QRectF, QPointF, QMarginsF, Qt
@@ -26,7 +26,8 @@ class ToMoveBox:
     directions: list[Direction]
     item: BoxWidget
     rect: QRectF
-    repulser: BoxAndRect
+    rep_box: BoxWidget
+    rep_rect: QRectF
 
     def __lt__(self, other: 'ToMoveBox'):
         if self.directions != other.directions:
@@ -207,7 +208,6 @@ def _get_to_move_boxes_from_repulse_boxes(
         box_spacing_hor, box_spacing)
 
     to_move_boxes = list[ToMoveBox]()
-    # repulsers = list[BoxAndRect]()
     repulsers = dict[BoxWidget, QRectF]()
     wanted_directions = [wanted_direction]
     
@@ -273,7 +273,7 @@ def _get_to_move_boxes_from_repulse_boxes(
             # evaluate in which direction should go the box
             direction = _get_direction(srect, irect, wanted_directions)
             to_move_boxes.append(
-                ToMoveBox([direction], item, irect, BoxAndRect(srect, box)))
+                ToMoveBox([direction], item, irect, box, srect))
 
     to_move_boxes.sort()
     return to_move_boxes, repulsers
@@ -318,7 +318,7 @@ def _get_to_move_boxes_in_full_repulse(
         direction = _get_direction(srect, item_to_move.rect)
         to_move_boxes.append(
             ToMoveBox([direction], item_to_move.item,
-                      item_to_move.rect, BoxAndRect(srect, repulser_box)))
+                      item_to_move.rect, repulser_box, srect))
 
     to_move_boxes.sort()
     return to_move_boxes, {repulser_box: srect}
@@ -345,17 +345,18 @@ def deplace_boxes_from_repulsers(
     # !!! to_move_boxes list is dynamic
     # elements can be added to the list while iteration !!!
     for to_move_box in to_move_boxes:
-        item, irect, repulser = \
-            to_move_box.item, to_move_box.rect, to_move_box.repulser
+        item, irect, rep_box, rep_rect = \
+            to_move_box.item, to_move_box.rect, \
+            to_move_box.rep_box, to_move_box.rep_rect
 
         directions = to_move_box.directions.copy()
-        new_direction = _get_direction(repulser.rect, irect, directions)
+        new_direction = _get_direction(rep_rect, irect, directions)
         directions.append(new_direction)
 
         # calculate the new position of the box repulsed by its repulser
-        new_rect = _repulse(new_direction, repulser.rect, irect,
-                            repulser.item.get_current_port_mode(),
-                            item.get_current_port_mode())
+        new_rect = _repulse(new_direction, rep_rect, irect,
+                            rep_box._current_port_mode,
+                            item._current_port_mode)
 
         active_repulsers = set[BoxWidget]()
 
@@ -388,7 +389,6 @@ def deplace_boxes_from_repulsers(
 
         # Now we know where the box will be definitely positioned
         # So, this is now a repulser for other boxes
-        repulser = BoxAndRect(new_rect, item)
         repulsers[item] = new_rect
         scene._full_repulse_boxes.add(item)
 
@@ -411,7 +411,7 @@ def deplace_boxes_from_repulsers(
                         box_spacing, box_spacing_hor):
                     adding_list.append(
                         ToMoveBox(directions, moving_box.widget,
-                                  moving_box.final_rect, repulser))
+                                  moving_box.final_rect, item, new_rect))
         else:
             search_rect = new_rect.marginsAdded(
                 QMarginsF(canvas.theme.box_spacing_horizontal,
@@ -434,7 +434,7 @@ def deplace_boxes_from_repulsers(
                         widget.get_current_port_mode(),
                         box_spacing, box_spacing_hor):
                     adding_list.append(
-                        ToMoveBox(directions, widget, mirect, repulser))
+                        ToMoveBox(directions, widget, mirect, item, new_rect))
 
             for mitem, moving_box in scene.move_boxes.items():
                 if (mitem in repulsers
@@ -450,7 +450,7 @@ def deplace_boxes_from_repulsers(
 
                     adding_list.append(
                         ToMoveBox(directions, moving_box.widget,
-                                    moving_box.final_rect, repulser))
+                                    moving_box.final_rect, item, new_rect))
 
         adding_list.sort()
 
