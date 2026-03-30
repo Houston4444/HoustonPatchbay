@@ -16,12 +16,6 @@ if TYPE_CHECKING:
 
 
 @dataclass
-class BoxAndRect:
-    rect: QRectF
-    item: BoxWidget
-
-
-@dataclass
 class ToMoveBox:
     directions: list[Direction]
     item: BoxWidget
@@ -225,7 +219,7 @@ def _get_to_move_boxes_from_repulse_boxes(
                 continue
 
         repulsers[box] = srect
-        items_to_move = list[BoxAndRect]()
+        items_to_move = dict[BoxWidget, QRectF]()
 
         search_rect = srect.marginsAdded(normal_margins)
 
@@ -248,7 +242,7 @@ def _get_to_move_boxes_from_repulse_boxes(
                     box._current_port_mode,
                     widget._current_port_mode,
                     box_spacing, box_spacing_hor):
-                items_to_move.append(BoxAndRect(irect, widget))
+                items_to_move[widget] = irect
 
         # search intersections in moving boxes
         for widget, moving_box in scene.move_boxes.items():
@@ -264,12 +258,9 @@ def _get_to_move_boxes_from_repulse_boxes(
                     box._current_port_mode,
                     widget._current_port_mode,
                     box_spacing, box_spacing_hor):
-                items_to_move.append(BoxAndRect(irect, widget))
-
-        for item_to_move in items_to_move:
-            item = item_to_move.item
-            irect = item_to_move.rect
-
+                items_to_move[widget] = irect
+                
+        for item, irect in items_to_move.items():
             # evaluate in which direction should go the box
             direction = _get_direction(srect, irect, wanted_directions)
             to_move_boxes.append(
@@ -293,7 +284,7 @@ def _get_to_move_boxes_in_full_repulse(
     srect = mov_repulsables[0].final_rect
     scene._full_repulse_boxes.add(repulser_box)
 
-    items_to_move = list[BoxAndRect]()
+    items_to_move = dict[BoxWidget, QRectF]()
     to_move_boxes = list[ToMoveBox]()
 
     for moving_box in mov_repulsables[1:]:
@@ -310,15 +301,13 @@ def _get_to_move_boxes_in_full_repulse(
                 repulser_box._current_port_mode,
                 moving_box.widget._current_port_mode,
                 box_spacing, box_spacing_hor):
-            items_to_move.append(
-                BoxAndRect(moving_box.final_rect, moving_box.widget))
+            items_to_move[moving_box.widget] = moving_box.final_rect
 
-    for item_to_move in items_to_move:
+    for item, irect in items_to_move.items():
         # evaluate in which direction should go the box
-        direction = _get_direction(srect, item_to_move.rect)
+        direction = _get_direction(srect, irect)
         to_move_boxes.append(
-            ToMoveBox([direction], item_to_move.item,
-                      item_to_move.rect, repulser_box, srect))
+            ToMoveBox([direction], item, irect, repulser_box, srect))
 
     to_move_boxes.sort()
     return to_move_boxes, {repulser_box: srect}
