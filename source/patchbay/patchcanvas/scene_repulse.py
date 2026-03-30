@@ -18,10 +18,10 @@ if TYPE_CHECKING:
 @dataclass
 class ToMoveBox:
     directions: list[Direction]
-    item: BoxWidget
+    box: BoxWidget
     rect: QRectF
-    rep_box: BoxWidget
-    rep_rect: QRectF
+    pusher_box: BoxWidget
+    pusher_rect: QRectF
 
     def __lt__(self, other: 'ToMoveBox'):
         if self.directions != other.directions:
@@ -102,21 +102,21 @@ def _get_direction(fixed_rect: QRectF, moving_rect: QRectF,
     return Direction.UP
 
 def _repulse(
-        direction: Direction, fixed: BoxWidget | QRectF,
-        moving: BoxWidget | QRectF, fixed_port_mode: PortMode,
-        moving_port_mode: PortMode) -> QRectF:
+        direction: Direction, pusher: BoxWidget | QRectF,
+        pushed: BoxWidget | QRectF, pusher_port_mode: PortMode,
+        pushed_port_mode: PortMode) -> QRectF:
     '''returns a QRectF to be placed at side of fixed_rect
     where fixed_rect is an already determinated futur place
     for a box'''
-    if isinstance(fixed, BoxWidget):
-        fixed_rect = fixed.boundingRect().translated(fixed.pos())
+    if isinstance(pusher, BoxWidget):
+        pusher_rect = pusher.boundingRect().translated(pusher.pos())
     else:
-        fixed_rect = fixed
+        pusher_rect = pusher
 
-    if isinstance(moving, BoxWidget):
-        rect = moving.boundingRect().translated(moving.pos())
+    if isinstance(pushed, BoxWidget):
+        rect = pushed.boundingRect().translated(pushed.pos())
     else:
-        rect = moving
+        rect = pushed
 
     x = rect.left()
     y = rect.top()
@@ -128,49 +128,48 @@ def _repulse(
     match direction:
         case Direction.LEFT | Direction.RIGHT:
             if direction is Direction.LEFT:
-                if (fixed_port_mode & PortMode.INPUT
-                        or moving_port_mode & PortMode.OUTPUT):
+                if (pusher_port_mode & PortMode.INPUT
+                        or pushed_port_mode & PortMode.OUTPUT):
                     x = previous_left_on_grid(
-                        fixed_rect.left() - rect.width() - spacing_hor)
+                        pusher_rect.left() - rect.width() - spacing_hor)
                 else:
                     x = previous_left_on_grid(
-                        fixed_rect.left() - rect.width() - spacing)
+                        pusher_rect.left() - rect.width() - spacing)
             else:
-                if (fixed_port_mode & PortMode.OUTPUT
-                        or moving_port_mode & PortMode.INPUT):
-                    x = next_left_on_grid(fixed_rect.right() + spacing_hor)
+                if (pusher_port_mode & PortMode.OUTPUT
+                        or pushed_port_mode & PortMode.INPUT):
+                    x = next_left_on_grid(pusher_rect.right() + spacing_hor)
                 else:
-                    x = next_left_on_grid(fixed_rect.right() + spacing)
+                    x = next_left_on_grid(pusher_rect.right() + spacing)
 
-            top_diff = abs(fixed_rect.top() - rect.top())
-            bottom_diff = abs(fixed_rect.bottom() - rect.bottom())
+            top_diff = abs(pusher_rect.top() - rect.top())
+            bottom_diff = abs(pusher_rect.bottom() - rect.bottom())
 
             if bottom_diff > top_diff and top_diff <= magnet:
-                y = fixed_rect.top()
+                y = pusher_rect.top()
             elif bottom_diff <= magnet:
-                y = fixed_rect.bottom() - rect.height()
+                y = pusher_rect.bottom() - rect.height()
 
         case Direction.UP | Direction.DOWN:
             if direction is Direction.UP:
                 y = previous_top_on_grid(
-                    fixed_rect.top() - rect.height() - spacing)
+                    pusher_rect.top() - rect.height() - spacing)
             else:
-                y = next_top_on_grid(fixed_rect.bottom() + spacing)
+                y = next_top_on_grid(pusher_rect.bottom() + spacing)
 
-            left_diff = abs(fixed_rect.left() - rect.left())
-            right_diff = abs(fixed_rect.right() - rect.right())
+            left_diff = abs(pusher_rect.left() - rect.left())
+            right_diff = abs(pusher_rect.right() - rect.right())
 
             if right_diff > left_diff and left_diff <= magnet:
-                x = fixed_rect.left()
+                x = pusher_rect.left()
             elif right_diff <= magnet:
-                x = fixed_rect.right() - rect.width()
+                x = pusher_rect.right() - rect.width()
 
     return QRectF(float(x), float(y), rect.width(), rect.height())
 
 def _rect_may_have_to_move_from(
         repulser_rect: QRectF, rect: QRectF, margins: QMarginsF) -> bool:
-    return rect.intersects(
-            repulser_rect.marginsAdded(margins))
+    return rect.intersects(repulser_rect.marginsAdded(margins))
 
 def _rect_has_to_move_from(
         repulser_rect: QRectF, rect: QRectF,
@@ -232,7 +231,7 @@ def _get_to_move_boxes_from_repulse_boxes(
                 continue
 
             if (candidate_box in pusher_boxes
-                    or candidate_box in [b.item for b in to_move_boxes]
+                    or candidate_box in [b.box for b in to_move_boxes]
                     or candidate_box in scene.move_boxes):
                 continue
 
@@ -249,7 +248,7 @@ def _get_to_move_boxes_from_repulse_boxes(
         for candidate_box, moving_box in scene.move_boxes.items():
             if (candidate_box in pusher_boxes
                     or moving_box.final_rect.isNull()
-                    or candidate_box in [b.item for b in to_move_boxes]):
+                    or candidate_box in [b.box for b in to_move_boxes]):
                 continue
 
             pushed_rect = moving_box.final_rect
@@ -278,42 +277,42 @@ def _get_to_move_boxes_in_full_repulse(
     box_spacing = canvas.theme.box_spacing
     box_spacing_hor = canvas.theme.box_spacing_horizontal
     normal_margins = QMarginsF(
-        box_spacing_hor,box_spacing,
+        box_spacing_hor, box_spacing,
         box_spacing_hor, box_spacing)
 
     # in full repulse, the moving box for this box
     # is the first of the list (optimisation).
-    repulser_box = mov_repulsables[0].widget
-    srect = mov_repulsables[0].final_rect
-    scene._full_repulse_boxes.add(repulser_box)
+    pusher_box = mov_repulsables[0].widget
+    pusher_rect = mov_repulsables[0].final_rect
+    scene._full_repulse_boxes.add(pusher_box)
 
-    items_to_move = dict[BoxWidget, QRectF]()
+    pusheds = dict[BoxWidget, QRectF]()
     to_move_boxes = list[ToMoveBox]()
 
     for moving_box in mov_repulsables[1:]:
-        if moving_box.widget in [b.item for b in to_move_boxes]:
+        if moving_box.widget in [b.box for b in to_move_boxes]:
             continue
 
-        if not _rect_may_have_to_move_from(
-                srect, moving_box.final_rect,
-                normal_margins):
+        if not moving_box.final_rect.intersects(
+                pusher_rect.marginsAdded(normal_margins)):
             continue
 
         if _rect_has_to_move_from(
-                srect, moving_box.final_rect,
-                repulser_box._current_port_mode,
+                pusher_rect, moving_box.final_rect,
+                pusher_box._current_port_mode,
                 moving_box.widget._current_port_mode,
                 box_spacing, box_spacing_hor):
-            items_to_move[moving_box.widget] = moving_box.final_rect
+            pusheds[moving_box.widget] = moving_box.final_rect
 
-    for item, irect in items_to_move.items():
+    for pushed_box, pushed_rect in pusheds.items():
         # evaluate in which direction should go the box
-        direction = _get_direction(srect, irect)
+        direction = _get_direction(pusher_rect, pushed_rect)
         to_move_boxes.append(
-            ToMoveBox([direction], item, irect, repulser_box, srect))
+            ToMoveBox([direction], pushed_box, pushed_rect,
+                      pusher_box, pusher_rect))
 
     to_move_boxes.sort()
-    return to_move_boxes, {repulser_box: srect}
+    return to_move_boxes, {pusher_box: pusher_rect}
 
 def deplace_boxes_from_repulsers(
         scene: 'PatchScene', repulser_boxes: list[BoxWidget],
@@ -338,8 +337,8 @@ def deplace_boxes_from_repulsers(
     # elements can be added to the list while iteration !!!
     for to_move_box in to_move_boxes:
         item, irect, rep_box, rep_rect = \
-            to_move_box.item, to_move_box.rect, \
-            to_move_box.rep_box, to_move_box.rep_rect
+            to_move_box.box, to_move_box.rect, \
+            to_move_box.pusher_box, to_move_box.pusher_rect
 
         directions = to_move_box.directions.copy()
         new_direction = _get_direction(rep_rect, irect, directions)
@@ -393,12 +392,12 @@ def deplace_boxes_from_repulsers(
                 mitem = moving_box.widget
 
                 if (mitem in repulsers
-                        or mitem in [b.item for b in to_move_boxes]):
+                        or mitem in [b.box for b in to_move_boxes]):
                     continue
 
                 if _rect_has_to_move_from(
                         new_rect, moving_box.final_rect,
-                        to_move_box.item.get_current_port_mode(),
+                        to_move_box.box.get_current_port_mode(),
                         mitem.get_current_port_mode(),
                         box_spacing, box_spacing_hor):
                     adding_list.append(
@@ -415,14 +414,14 @@ def deplace_boxes_from_repulsers(
                 if not isinstance(widget, BoxWidget):
                     continue
                 if (widget in repulsers
-                        or widget in [b.item for b in to_move_boxes]
+                        or widget in [b.box for b in to_move_boxes]
                         or widget in scene.move_boxes):
                     continue
 
                 mirect = widget.sceneBoundingRect()
                 if _rect_has_to_move_from(
                         new_rect, mirect,
-                        to_move_box.item.get_current_port_mode(),
+                        to_move_box.box.get_current_port_mode(),
                         widget.get_current_port_mode(),
                         box_spacing, box_spacing_hor):
                     adding_list.append(
@@ -431,12 +430,12 @@ def deplace_boxes_from_repulsers(
             for mitem, moving_box in scene.move_boxes.items():
                 if (mitem in repulsers
                         or moving_box.final_rect.isNull()
-                        or mitem in [b.item for b in to_move_boxes]):
+                        or mitem in [b.box for b in to_move_boxes]):
                     continue
 
                 if _rect_has_to_move_from(
                         new_rect, moving_box.final_rect,
-                        to_move_box.item.get_current_port_mode(),
+                        to_move_box.box.get_current_port_mode(),
                         mitem.get_current_port_mode(),
                         box_spacing, box_spacing_hor):
 
