@@ -113,7 +113,6 @@ class HiddenConnWidget(QGraphicsPathItem):
         tha = self._theme_attrs
 
         if self._semi_hidden:
-
             shd = options.semi_hide_opacity
             bgcolor = canvas.theme.scene_background_color
 

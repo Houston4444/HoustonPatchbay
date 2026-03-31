@@ -55,11 +55,11 @@ def move_boxes_animation(scene: 'PatchScene'):
 
     lws = set[GroupedLinesWidget]()
 
-    usefull = False
+    useful = False
 
     for box, moving_box in scene.move_boxes.items():
-        if not usefull:
-            usefull = moving_box.is_usefull()
+        if not useful:
+            useful = moving_box.is_useful()
 
         if moving_box.needs_move:
             x = (moving_box.from_pt.x()
@@ -89,7 +89,7 @@ def move_boxes_animation(scene: 'PatchScene'):
                     lw.animate_hidding(ratio)
                     lws.add(lw)
 
-    if not usefull:
+    if not useful:
         # stop animation now if all moving boxes have no change to make
         ratio = 1.0
 

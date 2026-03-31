@@ -26,7 +26,7 @@ class MovingBox:
         self.hidding_state = BoxHidding.NONE
         self.needs_move = False
 
-    def is_usefull(self) -> bool:
+    def is_useful(self) -> bool:
         if self.needs_move or self.is_wrapping:
             return True
         return self.hidding_state is not BoxHidding.NONE
