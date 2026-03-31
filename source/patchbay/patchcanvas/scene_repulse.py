@@ -416,12 +416,7 @@ def deplace_boxes_from_repulsers(
                         ToMoveBox(directions, moving_box.widget,
                                   moving_box.final_rect, box, pushed_rect))
         else:
-            search_rect = pushed_rect.marginsAdded(
-                QMarginsF(canvas.theme.box_spacing_horizontal,
-                          canvas.theme.box_spacing,
-                          canvas.theme.box_spacing_horizontal,
-                          canvas.theme.box_spacing))
-
+            search_rect = pushed_rect.marginsAdded(normal_margins)
             for candidate_box in scene.items(search_rect):
                 if not isinstance(candidate_box, BoxWidget):
                     continue
