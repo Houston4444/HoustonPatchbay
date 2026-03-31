@@ -14,7 +14,6 @@ from ..utils import (
 
 from .scene_utils import MovingBox
 
-
 if TYPE_CHECKING:
     from . import PatchScene
 
