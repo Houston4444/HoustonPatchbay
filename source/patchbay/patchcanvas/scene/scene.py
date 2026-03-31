@@ -20,7 +20,6 @@
 
 # Imports (Globals)
 import logging
-import time
 from typing import Optional
 
 from qtpy.QtCore import (
@@ -122,12 +121,10 @@ class PatchScene(QGraphicsScene):
         to prevent user to take and move a box.'''
 
         self.move_boxes = dict[BoxWidget, MovingBox]()
-        self._MOVE_DURATION = 0.300 # 300ms
-        self._MOVE_TIMER_INTERVAL = 20 # 20 ms step animation (50 Hz)
         self._move_timer_start_at = 0.0
         self._move_timer_last_time = 0.0
         self._move_box_timer = QTimer()
-        self._move_box_timer.setInterval(self._MOVE_TIMER_INTERVAL)
+        self._move_box_timer.setInterval(scene_anims.MOVE_TIMER_INTERVAL)
         self._move_box_timer.timeout.connect(self.move_boxes_animation)
 
         self.resizing_scene = False
@@ -375,14 +372,6 @@ class PatchScene(QGraphicsScene):
     def list_boxes_at(self, rect: QRectF) -> list[BoxWidget]:
         return [item for item in self.items(rect)
                 if isinstance(item, BoxWidget)]
-
-    def _start_move_timer(self):
-        if self._move_box_timer.isActive():
-            return
-
-        self._move_timer_start_at = time.time()
-        self._move_timer_last_time = self._move_timer_start_at
-        self._move_box_timer.start()
 
     def move_boxes_animation(self):
         scene_anims.move_boxes_animation(self)

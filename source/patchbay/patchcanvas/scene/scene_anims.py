@@ -15,17 +15,29 @@ if TYPE_CHECKING:
     from .scene import PatchScene
 
 
+MOVE_DURATION = 0.300 # 300ms
+MOVE_TIMER_INTERVAL = 20 # 20 ms step animation (50 Hz)
+
+
+def _start_move_timer(scene: 'PatchScene'):
+    if scene._move_box_timer.isActive():
+        return
+
+    scene._move_timer_start_at = time.time()
+    scene._move_timer_last_time = scene._move_timer_start_at
+    scene._move_box_timer.start()
+
 def move_boxes_animation(scene: 'PatchScene'):
     # Animation is nice but not the priority.
     # Do not ensure all steps are played
     # but just move the box where it has to go now.
     move_time = time.time()
     time_since_start = move_time - scene._move_timer_start_at
-    ratio = min(1.0, time_since_start / scene._MOVE_DURATION)
+    ratio = min(1.0, time_since_start / MOVE_DURATION)
 
     if scene._move_timer_last_time == scene._move_timer_start_at:
         # this is the first animation step
-        if time_since_start > 0.33 * scene._MOVE_DURATION:
+        if time_since_start > 0.33 * MOVE_DURATION:
             # this seems to be a big patch,
             # animation won't be pretty anyway,
             # let's finish it now.
@@ -36,7 +48,7 @@ def move_boxes_animation(scene: 'PatchScene'):
         # i.e. >40ms instead of 20ms after the previous step,
         # anti-aliasing is de-activated for a smoother animation.
         if (move_time - scene._move_timer_last_time
-                > 0.002 * scene._MOVE_TIMER_INTERVAL):
+                > 0.002 * MOVE_TIMER_INTERVAL):
             canvas.set_aliasing_reason(AliasingReason.ANIMATION, True)
 
     scene._move_timer_last_time = move_time
@@ -171,7 +183,7 @@ def add_box_to_animation(
     if not scene._move_box_timer.isActive():
         moving_box.start_time = 0.0
 
-    scene._start_move_timer()
+    _start_move_timer(scene)
 
     if canvas.aliasing_reason:
         # if antialiasing is already prevented
@@ -204,7 +216,7 @@ def add_box_to_animation_wrapping(
         final_rect.translated(moving_box.to_pt)
     moving_box.is_wrapping = True
 
-    scene._start_move_timer()
+    _start_move_timer(scene)
 
 def add_box_to_animation_hidding(scene: 'PatchScene', box_widget: BoxWidget):
     moving_box = scene.move_boxes.get(box_widget)
@@ -224,7 +236,7 @@ def add_box_to_animation_hidding(scene: 'PatchScene', box_widget: BoxWidget):
                 box_widget._group_id, port_mode):
             lw.set_mode_hidding(port_mode, BoxHidding.HIDDING)
 
-    scene._start_move_timer()
+    _start_move_timer(scene)
 
 def add_box_to_animation_restore(scene: 'PatchScene', box_widget: BoxWidget):
     moving_box = scene.move_boxes.get(box_widget)
@@ -253,4 +265,4 @@ def add_box_to_animation_restore(scene: 'PatchScene', box_widget: BoxWidget):
                 box_widget._group_id, port_mode):
             lw.set_mode_hidding(port_mode, BoxHidding.RESTORING)
 
-    scene._start_move_timer()
+    _start_move_timer(scene)
