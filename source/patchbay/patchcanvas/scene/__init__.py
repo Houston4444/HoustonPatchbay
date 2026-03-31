@@ -34,7 +34,7 @@ from qtpy.QtWidgets import (
 from patshared import PortMode
 
 
-from .init_values import (
+from ..init_values import (
     AliasingReason,
     BoxHidding,
     CanvasItemType,
@@ -45,16 +45,16 @@ from .init_values import (
     options,
     Zv,
     MAX_PLUGIN_ID_ALLOWED)
-from .box_widget import BoxWidget
-from .box_widget import BoxWidget
-from .connectable_widget import ConnectableWidget
-from .line_widget import LineWidget
-from .grouped_lines_widget import GroupedLinesWidget
-from .grid_widget import GridWidget
+from ..box_widget import BoxWidget
+from ..connectable_widget import ConnectableWidget
+from ..line_widget import LineWidget
+from ..grouped_lines_widget import GroupedLinesWidget
+from ..grid_widget import GridWidget
 from . import scene_repulse
+from ..scene_view import PatchGraphicsView
+from ..utils import boxes_in_dict
+
 from .scene_repulse import MovingBox
-from .scene_view import PatchGraphicsView
-from .utils import boxes_in_dict
 
 _logger = logging.getLogger(__name__)
 

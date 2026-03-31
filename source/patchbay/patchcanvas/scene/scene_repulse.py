@@ -6,14 +6,14 @@ from qtpy.QtCore import QRectF, QPointF, QMarginsF, Qt
 
 from patshared import PortMode
 
-from .box_widget import BoxWidget
-from .init_values import canvas, options, Direction, BoxHidding
-from .utils import (
+from ..box_widget import BoxWidget
+from ..init_values import canvas, options, Direction, BoxHidding
+from ..utils import (
     previous_left_on_grid, next_left_on_grid,
     previous_top_on_grid, next_top_on_grid)
 
 if TYPE_CHECKING:
-    from .scene import PatchScene
+    from . import PatchScene
 
 
 _logger = logging.getLogger(__name__)
