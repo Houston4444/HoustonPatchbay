@@ -50,11 +50,11 @@ from ..connectable_widget import ConnectableWidget
 from ..line_widget import LineWidget
 from ..grouped_lines_widget import GroupedLinesWidget
 from ..grid_widget import GridWidget
-from . import scene_repulse
 from ..scene_view import PatchGraphicsView
 from ..utils import boxes_in_dict
 
-from .scene_repulse import MovingBox
+from . import scene_repulse
+from .scene_utils import MovingBox
 
 _logger = logging.getLogger(__name__)
 
@@ -186,7 +186,7 @@ class PatchScene(QGraphicsScene):
         # reimplement Qt function and fix missing rubberband after clear
         self.move_boxes.clear()
 
-        QGraphicsScene.clear(self)
+        super().clear()
         self._rubberband = RubberbandRect(self)
         self._grid_widget = None
         self.update_theme()
