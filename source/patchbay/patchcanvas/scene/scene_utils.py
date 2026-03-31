@@ -9,7 +9,6 @@ class MovingBox:
     from_pt: QPointF
     to_pt: QPointF
     final_rect: QRectF
-    start_time: float
     is_joining: bool
     is_wrapping: bool
     hidding_state: BoxHidding
@@ -20,7 +19,6 @@ class MovingBox:
         self.from_pt = QPointF(*widget.top_left())
         self.to_pt = QPointF(*widget.top_left())
         self.final_rect = widget.after_wrap_rect().translated(self.to_pt)
-        self.start_time = 0.0
         self.is_joining = False
         self.is_wrapping = False
         self.hidding_state = BoxHidding.NONE

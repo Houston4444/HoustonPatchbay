@@ -121,8 +121,6 @@ class PatchScene(QGraphicsScene):
         to prevent user to take and move a box.'''
 
         self.move_boxes = dict[BoxWidget, MovingBox]()
-        self._move_timer_start_at = 0.0
-        self._move_timer_last_time = 0.0
         self._move_box_timer = QTimer()
         self._move_box_timer.setInterval(scene_anims.MOVE_TIMER_INTERVAL)
         self._move_box_timer.timeout.connect(self.move_boxes_animation)

@@ -19,12 +19,17 @@ MOVE_DURATION = 0.300 # 300ms
 MOVE_TIMER_INTERVAL = 20 # 20 ms step animation (50 Hz)
 
 
+class _MoveTime:
+    started_at = 0.0
+    last_time = 0.0
+
+
 def _start_move_timer(scene: 'PatchScene'):
     if scene._move_box_timer.isActive():
         return
 
-    scene._move_timer_start_at = time.time()
-    scene._move_timer_last_time = scene._move_timer_start_at
+    _MoveTime.started_at = time.time()
+    _MoveTime.last_time = _MoveTime.started_at
     scene._move_box_timer.start()
 
 def move_boxes_animation(scene: 'PatchScene'):
@@ -32,26 +37,24 @@ def move_boxes_animation(scene: 'PatchScene'):
     # Do not ensure all steps are played
     # but just move the box where it has to go now.
     move_time = time.time()
-    time_since_start = move_time - scene._move_timer_start_at
+    time_since_start = move_time - _MoveTime.started_at
     ratio = min(1.0, time_since_start / MOVE_DURATION)
 
-    if scene._move_timer_last_time == scene._move_timer_start_at:
+    if _MoveTime.last_time == _MoveTime.started_at:
         # this is the first animation step
         if time_since_start > 0.33 * MOVE_DURATION:
             # this seems to be a big patch,
             # animation won't be pretty anyway,
             # let's finish it now.
             ratio = 1.0
-    else:
+    elif move_time - _MoveTime.last_time > 0.002 * MOVE_TIMER_INTERVAL:
         # this is not the first animation step.
         # If the timer called this method two times too late,
         # i.e. >40ms instead of 20ms after the previous step,
         # anti-aliasing is de-activated for a smoother animation.
-        if (move_time - scene._move_timer_last_time
-                > 0.002 * MOVE_TIMER_INTERVAL):
-            canvas.set_aliasing_reason(AliasingReason.ANIMATION, True)
+        canvas.set_aliasing_reason(AliasingReason.ANIMATION, True)
 
-    scene._move_timer_last_time = move_time
+    _MoveTime.last_time = move_time
 
     lws = set[GroupedLinesWidget]()
 
@@ -178,11 +181,6 @@ def add_box_to_animation(
             group.gpos.boxes[box_widget._port_mode].pos = (to_x, to_y)
         canvas.cb.group_pos_modified(group.group_id)
 
-    moving_box.start_time = time.time() - scene._move_timer_start_at
-
-    if not scene._move_box_timer.isActive():
-        moving_box.start_time = 0.0
-
     _start_move_timer(scene)
 
     if canvas.aliasing_reason:
@@ -208,8 +206,6 @@ def add_box_to_animation_wrapping(
         moving_box = MovingBox(box_widget)
         scene.move_boxes[box_widget] = moving_box
 
-    moving_box.start_time = time.time() - scene._move_timer_start_at
-
     aft_wrap_rect = box_widget.after_wrap_rect()
     final_rect = QRectF(0.0, 0.0, aft_wrap_rect.width(), aft_wrap_rect.height())
     moving_box.final_rect = \
@@ -224,7 +220,6 @@ def add_box_to_animation_hidding(scene: 'PatchScene', box_widget: BoxWidget):
         moving_box = MovingBox(box_widget)
         scene.move_boxes[box_widget] = moving_box
 
-    moving_box.start_time = time.time() - scene._move_timer_start_at
     moving_box.final_rect = QRectF()
     moving_box.hidding_state = BoxHidding.HIDDING
 
@@ -244,7 +239,6 @@ def add_box_to_animation_restore(scene: 'PatchScene', box_widget: BoxWidget):
         moving_box = MovingBox(box_widget)
         scene.move_boxes[box_widget] = moving_box
 
-    moving_box.start_time = time.time() - scene._move_timer_start_at
     moving_box.from_pt = moving_box.to_pt
 
     aft_wrap_rect = box_widget.after_wrap_rect()
