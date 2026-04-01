@@ -80,10 +80,10 @@ class BoxLayout:
         
         if (layout_mode is BoxLayoutMode.LARGE
                 and title_on is TitleOn.SIDE_UNDER_ICON):
-            self.header_width = max(
-                self._icon_size + 10, title_template['title_width'] + 10)
-            self.header_height = \
-                title_template['title_height'] + self._icon_size + 8
+            self.header_width = int(max(
+                self._icon_size + 10, title_template['title_width'] + 10))
+            self.header_height = int(
+                title_template['title_height'] + self._icon_size + 8)
         else:
             self.header_width = title_template['header_width']
             self.header_height = title_template['header_height']

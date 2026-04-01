@@ -34,6 +34,7 @@ from .init_values import (
     CanvasItemType, PortObject, canvas, ZvBox)
 from .connectable_widget import ConnectableWidget
 from .grouped_lines_widget import GroupedLinesWidget
+from .utils import polyline
 
 if TYPE_CHECKING:
     from .box_widget import BoxWidget
@@ -100,8 +101,8 @@ class PortWidget(ConnectableWidget):
         self._port_name = port_name
         self._update_connect_pos()
 
-    def set_port_width(self, port_width):
-        self._port_width = port_width
+    def set_port_width(self, port_width: int | float):
+        self._port_width = int(port_width)
         self._update_connect_pos()
 
     def set_print_name(self, print_name:str, width_limited: int):
@@ -178,7 +179,7 @@ class PortWidget(ConnectableWidget):
         self._connect_pos = QPointF(x_delta, y_delta)
 
     def connect_pos(self) -> QPointF:
-        return self.scenePos() + self._connect_pos
+        return self.scenePos() + self._connect_pos # type:ignore
 
     def set_bounding_rect(self, spacing: float):
         top, bottom = 0.0, 0.0
@@ -473,21 +474,19 @@ class PortWidget(ConnectableWidget):
                 case _ if self._portgrp_id:
                     pass
                 case PortType.MIDI_JACK:
-                    painter.drawPolyline([QPointF(*xy) for xy in points[1:7]])
+                    painter.drawPolyline(polyline(points[1:7]))
                 case PortType.MIDI_ALSA:
-                    painter.drawPolyline([QPointF(*xy) for xy in points[1:3]])
+                    painter.drawPolyline(polyline(points[1:3]))
                 case PortType.VIDEO:
-                    painter.drawPolyline([QPointF(*xy) for xy in points[0:3]])
-                    painter.drawPolyline([QPointF(*xy) for xy in points[3:5]])
-                    painter.drawPolyline([QPointF(*xy) for xy in points[5:8]])
+                    painter.drawPolyline(polyline(points[0:3]))
+                    painter.drawPolyline(polyline(points[3:5]))
+                    painter.drawPolyline(polyline(points[5:8]))
                 case _:
                     if is_cv_port:
-                        painter.drawPolyline(
-                            [QPointF(*xy) for xy in points[1:3]])
+                        painter.drawPolyline(polyline(points[1:3]))
                     else:
                         # should be audio
-                        painter.drawPolyline(
-                            [QPointF(*xy) for xy in points[1:4]])
+                        painter.drawPolyline(polyline(points[1:4]))
 
         else:
             painter.setPen(poly_pen)
@@ -495,13 +494,12 @@ class PortWidget(ConnectableWidget):
 
         if not self._portgrp_id:
             if self._port_subtype is PortSubType.CV:
-                divid = (y_bottom - y_top) / 12 
-                painter.drawPolyline([
-                    QPointF(x_arrowbase, y_top + divid * 5),
-                    QPointF(x_arrowhead, y_top + divid * 5),
-                    QPointF(x_arrowhead, y_top + divid * 7),
-                    QPointF(x_arrowbase, y_top + divid * 7)
-                ])
+                divid = (y_bottom - y_top) / 12
+                painter.drawPolyline(polyline(
+                    [(x_arrowbase, y_top + divid * 5),
+                     (x_arrowhead, y_top + divid * 5),
+                     (x_arrowhead, y_top + divid * 7),
+                     (x_arrowbase, y_top + divid * 7)]))
 
             elif (self._port_subtype is PortSubType.A2J
                     or self._port_type is PortType.MIDI_ALSA):

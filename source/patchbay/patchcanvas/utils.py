@@ -22,7 +22,7 @@ import logging
 from typing import TYPE_CHECKING
 
 from qtpy.QtCore import QPointF, QFile, QRectF
-from qtpy.QtGui import QIcon, QPalette
+from qtpy.QtGui import QIcon, QPalette, QPolygonF
 from qtpy.QtWidgets import QWidget
 
 from patshared import PortMode, BoxType
@@ -52,6 +52,11 @@ def easy_log(func):
         _logger.debug(_logging_str)
         return func(*args, **kwargs)
     return wrapper
+
+def polyline(points: list[tuple[float, float]]) -> QPolygonF:
+    '''painter.drawPolyline allows a list[QPointF] as argument
+    but the linter don't know this and raise an error.'''
+    return [QPointF(*xy) for xy in points] # type:ignore
 
 def get_new_group_positions() -> dict[PortMode, tuple[int, int]]:
     def get_middle_empty_positions(scene_rect: QRectF) -> tuple[int, int]:

@@ -22,15 +22,16 @@ import logging
 from typing import TYPE_CHECKING
 
 from qtpy.QtCore import QPointF, QRectF, Qt
-from qtpy.QtGui import (QFontMetrics, QPainter, QBrush,
-                         QPolygonF, QLinearGradient, QPen,
-                         QColor, QScreen)
+from qtpy.QtGui import (
+    QFontMetrics, QPainter, QBrush, QPolygonF,
+    QLinearGradient, QPen, QColor)
 from qtpy.QtWidgets import QApplication, QGraphicsItem
 
 from .connectable_widget import ConnectableWidget
 from patshared import PortMode, PortType, PortSubType
 from .init_values import (
     CanvasItemType, PortgrpObject, ZvBox, canvas)
+from .utils import polyline
 
 if TYPE_CHECKING:
     from .box_widget import BoxWidget
@@ -361,7 +362,7 @@ class PortgroupWidget(ConnectableWidget):
             elif self._port_type is PortType.VIDEO:
                 pass
             else:
-                painter.drawPolyline([QPointF(*xy) for xy in points[1:5]])
+                painter.drawPolyline(polyline(points[1:5]))
         else:
             painter.setPen(poly_pen)
             painter.drawPolygon(polygon)
