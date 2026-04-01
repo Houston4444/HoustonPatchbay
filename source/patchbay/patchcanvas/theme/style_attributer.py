@@ -307,10 +307,6 @@ class StyleAttributer:
         return margin
 
     @cached_property
-    def margin_empty(self) -> Margin:
-        return Margin()
-
-    @cached_property
     def padding(self) -> Margin:
         padding = Margin()
         padding.top = self.get_value_of('padding-top') # type:ignore

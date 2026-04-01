@@ -17,6 +17,7 @@ if TYPE_CHECKING:
 
 MOVE_DURATION = 0.300 # 300ms
 MOVE_TIMER_INTERVAL = 20 # 20 ms step animation (50 Hz)
+MOVE_N_STEPS = (MOVE_DURATION * 1000) / MOVE_TIMER_INTERVAL
 
 
 class _MoveTime:
@@ -49,31 +50,48 @@ def move_boxes_animation(scene: 'PatchScene'):
             ratio = 1.0
     elif move_time - _MoveTime.last_time > 0.002 * MOVE_TIMER_INTERVAL:
         # this is not the first animation step.
-        # If the timer called this method two times too late,
+        # The timer called this method two times too late,
         # i.e. >40ms instead of 20ms after the previous step,
         # anti-aliasing is de-activated for a smoother animation.
+        # It will be re-activated at animation end.
         canvas.set_aliasing_reason(AliasingReason.ANIMATION, True)
 
     _MoveTime.last_time = move_time
 
     lws = set[GroupedLinesWidget]()
-
+    zoom_ratio = scene.zoom_ratio
     useful = False
-
+    
     for box, moving_box in scene.move_boxes.items():
         if not useful:
-            useful = moving_box.is_useful()
+            useful = moving_box.is_useful
 
         if moving_box.needs_move:
-            x = (moving_box.from_pt.x()
-                    + ((moving_box.to_pt.x() - moving_box.from_pt.x())
-                    * (ratio ** 0.6)))
+            max_range = moving_box.max_distance * zoom_ratio
+            if ratio >= 1.0 or max_range == 0:
+                box.set_top_left((moving_box.to_pt.x(), moving_box.to_pt.y()))
+            else:
+                if max_range < MOVE_N_STEPS:
+                    tmp_ratio = min(1.0, ratio * MOVE_N_STEPS / max_range)
+                else:
+                    tmp_ratio = ratio
+                
+                x = (moving_box.from_pt.x()
+                     + ((moving_box.to_pt.x() - moving_box.from_pt.x())
+                        * (tmp_ratio ** 0.6)))
 
-            y = (moving_box.from_pt.y()
-                    + ((moving_box.to_pt.y() - moving_box.from_pt.y())
-                    * (ratio ** 0.6)))
-
-            box.set_top_left((x, y))
+                y = (moving_box.from_pt.y()
+                     + ((moving_box.to_pt.y() - moving_box.from_pt.y())
+                        * (tmp_ratio ** 0.6)))
+                
+                if tmp_ratio >= 1.0:
+                    box.set_top_left(
+                        (moving_box.to_pt.x(), moving_box.to_pt.y()))
+                    moving_box.needs_move = False
+                else:
+                    box.set_top_left(
+                        (round(x) * zoom_ratio / zoom_ratio,
+                         round(y) * zoom_ratio / zoom_ratio))
             box.repaint_lines(fast_move=True)
 
         if moving_box.is_wrapping:
@@ -105,17 +123,21 @@ def move_boxes_animation(scene: 'PatchScene'):
         scene.prevent_box_user_move = False
         GroupedLinesWidget.animation_finished()
 
-        # box update positions is forbidden while widget is in self.move_boxes,
+        # box update positions is forbidden while widget 
+        # is in self.move_boxes,
         # so we copy the list before to clear it,
         # then we can ask update_positions on widgets
-        boxes = [b for b, mb in scene.move_boxes.items()
-                    if not (mb.is_joining or mb.hidding_state is BoxHidding.HIDDING)]
+        boxes = [
+            b for b, mb in scene.move_boxes.items()
+            if not (mb.is_joining or mb.hidding_state is BoxHidding.HIDDING)]
 
         scene.move_boxes.clear()
 
         for box in boxes:
             if box.update_positions_pending:
                 box.update_positions()
+            else:
+                box.update_ports()
 
         canvas.qobject.move_boxes_finished.emit()
 

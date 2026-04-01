@@ -1075,7 +1075,7 @@ class PatchbayManager:
         patchcanvas.set_prevent_overlap(bool(yesno))
 
     def set_zoom(self, zoom: float):
-        patchcanvas.canvas.scene.zoom_ratio(zoom)
+        patchcanvas.canvas.scene.set_zoom_ratio(zoom)
 
     def zoom_reset(self):
         patchcanvas.zoom_reset()

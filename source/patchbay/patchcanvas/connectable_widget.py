@@ -17,13 +17,12 @@ from .grouped_lines_widget import GroupedLinesWidget, GroupOutInsDict
 
 if TYPE_CHECKING:
     from .box_widget import BoxWidget
-    from .theme import Theme
-    from .scene import PatchScene
+
 
 class ConnectableWidget(QGraphicsItem):
-    """ This class is the mother class for port and portgroups
-        widgets because the way to manage the connection process
-        is the same for both. """
+    """This class is the mother class for port and portgroups
+    widgets because the way to manage the connection process
+    is the same for both."""
 
     if TYPE_CHECKING:
         _hover_item: Optional['ConnectableWidget']
@@ -98,9 +97,9 @@ class ConnectableWidget(QGraphicsItem):
             if self._port_mode == other.get_port_mode():
                 return False
 
-        if self._port_type == PortType.AUDIO_JACK:
-            if other.get_port_mode() == self._port_mode:
-                return bool(self._port_subtype == other.get_port_subtype())
+        if self._port_type is PortType.AUDIO_JACK:
+            if other.get_port_mode() is self._port_mode:
+                return bool(self._port_subtype is other.get_port_subtype())
             # absolutely forbidden to connect an output CV port
             # to an input audio port.
             # It could destroy material.

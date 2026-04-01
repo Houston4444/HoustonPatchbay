@@ -329,7 +329,7 @@ def _get_ports_min_sizes(
         last_port_mode
     )
 
-def _split_title(box: 'BoxWidget', n_lines: int) -> tuple[TitleLine]:
+def _split_title(box: 'BoxWidget', n_lines: int) -> tuple[TitleLine, ...]:
     title, slash, subtitle = box._group_name.partition('/')
 
     if (not subtitle
@@ -1235,16 +1235,7 @@ def update_positions(
     # when a renamed port does not change the box geometry,
     # port and portgroups widgets aren't updated,
     # they will be if we click on it for exemple.
-    for portgrp in box._portgrp_list:
-        if portgrp.widget is not None:
-            portgrp.widget.update()
-
-    for port in box._port_list:
-        if port.widget is not None:
-            port.widget.update()
-            if port.hidden_conn_widget is not None:
-                port.hidden_conn_widget.update_line_pos()
-                port.hidden_conn_widget.update()
+    box.update_ports()
 
 def get_dummy_rect(box: 'BoxWidget') -> QRectF:
     '''Used only for dummy box, to know its size
@@ -1289,11 +1280,15 @@ def get_layout(box: 'BoxWidget',
     if layout_mode is BoxLayoutMode.LARGE:
         if box._current_layout_mode is BoxLayoutMode.LARGE:
             return box._layout
+        if box._alter_layout is None:
+            raise Exception('get_layout, ._alter_layout is required !')
         return box._alter_layout
 
     if layout_mode is BoxLayoutMode.HIGH:
         if box._current_layout_mode is BoxLayoutMode.HIGH:
             return box._layout
+        if box._alter_layout is None:
+            raise Exception('get_layout, ._alter_layout is required !')
         return box._alter_layout
 
     return box._layout

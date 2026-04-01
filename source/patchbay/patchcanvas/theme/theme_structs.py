@@ -19,7 +19,7 @@ class Margin:
     top_side = 0
     'The top (or the bottom) margin in a box with title on side'
     
-    def __add__(self, other: 'Margin | int') -> 'Margin':
+    def __add__(self, other: 'Margin | int | float') -> 'Margin':
         new = Margin()
         if isinstance(other, Margin):
             new.top = self.top + other.top
@@ -29,12 +29,12 @@ class Margin:
             new.free_side = self.free_side + other.free_side
             new.top_side = self.top_side + other.top_side
         else:
-            new.top = self.top + other
-            new.bottom = self.bottom + other
-            new.sides = self.sides + other
-            new.ports_side = self.ports_side + other
-            new.free_side = self.free_side + other
-            new.top_side = self.top_side + other
+            new.top = self.top + int(other)
+            new.bottom = self.bottom + int(other)
+            new.sides = self.sides + int(other)
+            new.ports_side = self.ports_side + int(other)
+            new.free_side = self.free_side + int(other)
+            new.top_side = self.top_side + int(other)
         return new
 
     @property

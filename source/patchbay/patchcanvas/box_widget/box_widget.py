@@ -101,9 +101,11 @@ class BoxWidget(QGraphicsItem):
 
         self._icon_name = group.icon_name
 
-        self._title_lines = list[TitleLine]()
-        self._header_line_left = None
-        self._header_line_right = None
+        self._title_lines = tuple[TitleLine, ...]()
+        self._header_line_left: \
+            tuple[float, float, float, float] | None = None
+        self._header_line_right: \
+            tuple[float, float, float, float] | None = None
 
         if group.gpos.boxes[port_mode].is_wrapped():
             self._wrapping_state = WrappingState.WRAPPED
@@ -187,7 +189,7 @@ class BoxWidget(QGraphicsItem):
         self._ex_height = self._height
 
         self._ex_scene_pos = self.scenePos()
-        self._ex_ports_y_segments_dict = dict[str, list[list[int]]]()
+        self._ex_ports_y_segments_dict = dict[str, list[list[float]]]()
 
     def __repr__(self) -> str:
         return f"BoxWidget({self._group_name}, {self._port_mode.name})"
@@ -467,6 +469,18 @@ class BoxWidget(QGraphicsItem):
         else:
             canvas.scene.deplace_boxes_from_repulsers(
                 [self], wanted_direction=Direction.DOWN)
+
+    def update_ports(self):
+        for portgrp in self._portgrp_list:
+            if portgrp.widget is not None:
+                portgrp.widget.update()
+
+        for port in self._port_list:
+            if port.widget is not None:
+                port.widget.update()
+                if port.hidden_conn_widget is not None:
+                    port.hidden_conn_widget.update_line_pos()
+                    port.hidden_conn_widget.update()
 
     def update_positions(self, even_animated=False, without_connections=False,
                          scene_checks=True, theme_change=False,

@@ -550,7 +550,7 @@ class PatchScene(QGraphicsScene):
 
         self._view.viewport().unsetCursor()
 
-    def zoom_ratio(self, percent: float, force=False):
+    def set_zoom_ratio(self, percent: float, force=False):
         ratio = percent / 100.0
         transform = self._view.transform()
 
@@ -566,6 +566,10 @@ class PatchScene(QGraphicsScene):
                 box.top_icon.update_zoom(ratio)
 
         self.scale_changed.emit(transform.m11())
+
+    @property
+    def zoom_ratio(self) -> float:
+        return self._view.transform().m11()
 
     def zoom_fit(self):
         if self._view is None:

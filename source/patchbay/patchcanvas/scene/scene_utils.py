@@ -24,7 +24,13 @@ class MovingBox:
         self.hidding_state = BoxHidding.NONE
         self.needs_move = False
 
+    @property
     def is_useful(self) -> bool:
         if self.needs_move or self.is_wrapping:
             return True
         return self.hidding_state is not BoxHidding.NONE
+    
+    @property
+    def max_distance(self) -> float:
+        return max(abs(self.to_pt.x() - self.from_pt.x()),
+                   abs(self.to_pt.y() - self.from_pt.y()))
