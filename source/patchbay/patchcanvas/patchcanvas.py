@@ -54,10 +54,7 @@ from .init_values import (
     Zv
 )
 
-from .utils import (
-    nearest_on_grid,
-    previous_left_on_grid,
-    previous_top_on_grid)
+from . import grid
 from .box_widget import BoxWidget
 from .port_widget import PortWidget
 from .grouped_lines_widget import GroupedLinesWidget
@@ -281,16 +278,16 @@ def add_group(group_id: int, group_name: str, split: bool,
 
     if split:
         out_box = BoxWidget(group, PortMode.OUTPUT)
-        out_box.set_top_left(nearest_on_grid(gpos.boxes[PortMode.OUTPUT].pos))
+        out_box.set_top_left(grid.nearest(gpos.boxes[PortMode.OUTPUT].pos))
         group.widgets.append(out_box)
 
         in_box = BoxWidget(group, PortMode.INPUT)
-        in_box.set_top_left(nearest_on_grid(gpos.boxes[PortMode.INPUT].pos))
+        in_box.set_top_left(grid.nearest(gpos.boxes[PortMode.INPUT].pos))
         group.widgets.append(in_box)
 
     else:
         box = BoxWidget(group, PortMode.BOTH)
-        box.set_top_left(nearest_on_grid(gpos.boxes[PortMode.BOTH].pos))
+        box.set_top_left(grid.nearest(gpos.boxes[PortMode.BOTH].pos))
         group.widgets.append(box)
 
     canvas.add_group(group)
@@ -410,17 +407,17 @@ def split_group(group_id: int, on_place=False, redraw=True):
         for box in group.widgets:
             if box.get_current_port_mode() is PortMode.OUTPUT:
                 group.gpos.boxes[PortMode.OUTPUT].pos = (
-                    previous_left_on_grid(
+                    grid.previous_left(
                         int(ex_rect.right() + (full_width - ex_rect.width()) / 2
                             - box.boundingRect().width())),
-                    previous_top_on_grid(
+                    grid.previous_top(
                         int(ex_rect.y()))
                 )
             else:
                 group.gpos.boxes[PortMode.INPUT].pos = (
-                    previous_left_on_grid(
+                    grid.previous_left(
                         int(ex_rect.left() - (full_width - ex_rect.width()) / 2)),
-                    previous_top_on_grid(int(ex_rect.y()))
+                    grid.previous_top(int(ex_rect.y()))
                 )
 
         move_group_boxes(group_id, group.gpos)
@@ -672,7 +669,7 @@ def move_group_boxes(
                         (orig_rect.right() - box.boundingRect().width(),
                          orig_rect.top()))
 
-            xy = nearest_on_grid(box_pos.pos)
+            xy = grid.nearest(box_pos.pos)
 
             if box_pos.is_hidden():
                 if box.isVisible():
@@ -682,7 +679,7 @@ def move_group_boxes(
                 if join:
                     canvas.scene.add_box_to_animation_restore(box)
 
-                    both_pos = nearest_on_grid(gpos.boxes[PortMode.BOTH].pos)
+                    both_pos = grid.nearest(gpos.boxes[PortMode.BOTH].pos)
 
                     if port_mode is PortMode.OUTPUT:
                         canvas.qobject.add_group_to_join(group.group_id)
@@ -710,7 +707,7 @@ def move_group_boxes(
                     box.hidder_widget = None
 
                 if join:
-                    both_pos = nearest_on_grid(gpos.boxes[PortMode.BOTH].pos)
+                    both_pos = grid.nearest(gpos.boxes[PortMode.BOTH].pos)
 
                     if port_mode is PortMode.OUTPUT:
                         canvas.qobject.add_group_to_join(group.group_id)

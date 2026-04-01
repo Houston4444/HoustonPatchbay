@@ -6,7 +6,7 @@ from qtpy.QtCore import QRectF
 
 from patshared import BoxLayoutMode, PortMode, BoxType, GroupPos
 from .init_values import GroupObject, canvas
-from .utils import nearest_on_grid, next_left_on_grid, next_top_on_grid
+from . import grid
 from .box_widget import BoxWidget
 from .patchcanvas import (
     move_group_boxes, repulse_all_boxes, split_group)
@@ -409,7 +409,7 @@ class CanvasArranger:
         column_widths = dict[int, float]()
         columns_pos = dict[int, float]()
         columns_bottoms = dict[int, float]()
-        last_col_pos = next_left_on_grid(0)
+        last_col_pos = grid.next_left(0)
 
         for column in range(1, number_of_columns + 1):
             columns_bottoms[column] = 0.0
@@ -529,7 +529,7 @@ class CanvasArranger:
 
         for column in range(1, number_of_columns + 1):
             columns_pos[column] = last_col_pos
-            last_col_pos = next_left_on_grid(
+            last_col_pos = grid.next_left(
                 last_col_pos + int(column_widths[column]) + 80)
 
         for column, bottom in columns_bottoms.items():
@@ -558,7 +558,7 @@ class CanvasArranger:
                 x_pos = columns_pos[ba.column]
 
             xy = (int(x_pos), int(ba.y_pos - ba.box_rect.top() + y_offset))
-            grid_xy = nearest_on_grid(xy)
+            grid_xy = grid.nearest(xy)
 
             group = canvas.get_group(ba.group_id)
             if group is not None:
@@ -621,10 +621,10 @@ def arrange_face_to_face():
                     max_out_width = max(
                         max_out_width, layout.full_width)
 
-    out_most_left = next_left_on_grid(0)
+    out_most_left = grid.next_left(0)
     out_right = out_most_left + max_out_width
-    in_left = next_left_on_grid(out_right + X_SPACING)
-    last_out_y = next_top_on_grid(0)
+    in_left = grid.next_left(out_right + X_SPACING)
+    last_out_y = grid.next_top(0)
     last_in_y = last_out_y
 
     group_ids = list[int]()
@@ -655,12 +655,12 @@ def arrange_face_to_face():
 
             if box.get_port_mode() is PortMode.OUTPUT:
                 to_x = int(out_right - width)
-                to_y = next_top_on_grid(last_out_y)
+                to_y = grid.next_top(last_out_y)
                 last_out_y += height + canvas.theme.box_spacing
 
             else:
                 to_x = in_left
-                to_y = next_top_on_grid(last_in_y)
+                to_y = grid.next_top(last_in_y)
                 last_in_y += height + canvas.theme.box_spacing
 
             box_pos.pos = (to_x, to_y)

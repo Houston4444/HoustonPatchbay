@@ -392,8 +392,10 @@ class Canvas:
         self._ports_dict = dict[int, dict[int, PortObject]]()
         self._portgrps_dict = dict[int, dict[int, PortgrpObject]]()
         self._conns_dict = dict[int, ConnectionObject]()
-        self._conns_outin_dict = dict[int, dict[int, dict[int, ConnectionObject]]]()
-        self._conns_inout_dict = dict[int, dict[int, dict[int, ConnectionObject]]]()
+        self._conns_outin_dict = \
+            dict[int, dict[int, dict[int, ConnectionObject]]]()
+        self._conns_inout_dict = \
+            dict[int, dict[int, dict[int, ConnectionObject]]]()
 
         self.groups_to_redraw_in = set[int]()
         self.groups_to_redraw_out = set[int]()

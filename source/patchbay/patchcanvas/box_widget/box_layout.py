@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 from patshared import PortMode, BoxLayoutMode
 
 from ..init_values import canvas, options
-from ..utils import next_width_on_grid, next_height_on_grid
+from .. import grid
 
 from .box_utils import BoxStyler
 
@@ -148,9 +148,9 @@ class BoxLayout:
                     + self._pen_width * 2)
                 
         self.full_width = \
-            next_width_on_grid(self._hwr * 2 + self.needed_width)
+            grid.next_width(self._hwr * 2 + self.needed_width)
         self.full_height = \
-            next_height_on_grid(self._hwr * 2 + self.needed_height)
+            grid.next_height(self._hwr * 2 + self.needed_height)
 
         # n_cells is used to sort layouts, to use the littlest area
         self._n_cells = (
@@ -187,12 +187,12 @@ class BoxLayout:
                 and self.layout_mode is BoxLayoutMode.LARGE):
             needed_width = 2 * self._pen_width + self.header_width
             self.full_wrapped_width = \
-                next_width_on_grid(self._hwr * 2 + needed_width)
+                grid.next_width(self._hwr * 2 + needed_width)
             self.wrapped_width = self.full_wrapped_width - 2 * self._hwr
 
             needed_height = (2 * self._pen_width + self.header_height)
             self.full_wrapped_height = \
-                next_height_on_grid(self._hwr * 2 + needed_height)
+                grid.next_height(self._hwr * 2 + needed_height)
             self.wrapped_height = self.full_wrapped_height - 2 * self._hwr
         else:
             self.wrapped_width = self.width
@@ -207,7 +207,7 @@ class BoxLayout:
                                  + max(12, self._pen_width))
 
             self.full_wrapped_height = \
-                next_height_on_grid(self._hwr * 2 + needed_height)
+                grid.next_height(self._hwr * 2 + needed_height)
             self.wrapped_height = self.full_wrapped_height - 2 * self._hwr
 
         self.exceeding_y_ins = 0.0

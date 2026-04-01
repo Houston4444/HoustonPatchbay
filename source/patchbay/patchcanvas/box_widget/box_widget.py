@@ -37,8 +37,8 @@ from ..init_values import (
     options,
     Direction,
     Zv)
+from .. import grid
 from ..utils import (
-    nearest_on_grid, nearest_on_grid_check_others,
     get_portgroup_name_from_ports_names)
 from ..port_widget import PortWidget
 from ..portgroup_widget import PortgroupWidget
@@ -730,14 +730,14 @@ class BoxWidget(QGraphicsItem):
             # callback the state of positions
             arg_list = list[tuple[int, PortMode, int, int]]()
             if len(selected_boxes) == 1:
-                xy = nearest_on_grid_check_others(self.top_left(), self)
+                xy = grid.nearest_check_others(self.top_left(), self)
                 arg_list.append(
                     (self._group_id, self._port_mode, *xy))
             else:
                 # many selected boxes, do not auto-adapt the position
                 # to other existing boxes (no check_others)
                 for box in selected_boxes:
-                    xy = nearest_on_grid(box.top_left())
+                    xy = grid.nearest(box.top_left())
                     arg_list.append((box._group_id, box._port_mode, *xy))
 
             canvas.cb.boxes_moved(*arg_list)
@@ -760,9 +760,9 @@ class BoxWidget(QGraphicsItem):
         xy = self.top_left()
 
         if check_others:
-            new_xy = nearest_on_grid_check_others(xy, self)
+            new_xy = grid.nearest_check_others(xy, self)
         else:
-            new_xy = nearest_on_grid(xy)
+            new_xy = grid.nearest(xy)
 
         if xy == new_xy:
             self.set_top_left(xy)

@@ -8,9 +8,7 @@ from patshared import PortMode
 
 from ..box_widget import BoxWidget
 from ..init_values import canvas, options, Direction, BoxHidding
-from ..utils import (
-    previous_left_on_grid, next_left_on_grid,
-    previous_top_on_grid, next_top_on_grid)
+from .. import grid
 
 from .scene_utils import MovingBox
 
@@ -108,17 +106,17 @@ def _repulse(
             if direction is Direction.LEFT:
                 if (pusher_port_mode & PortMode.INPUT
                         or pushed_port_mode & PortMode.OUTPUT):
-                    x = previous_left_on_grid(
+                    x = grid.previous_left(
                         pusher_rect.left() - rect.width() - spacing_hor)
                 else:
-                    x = previous_left_on_grid(
+                    x = grid.previous_left(
                         pusher_rect.left() - rect.width() - spacing)
             else:
                 if (pusher_port_mode & PortMode.OUTPUT
                         or pushed_port_mode & PortMode.INPUT):
-                    x = next_left_on_grid(pusher_rect.right() + spacing_hor)
+                    x = grid.next_left(pusher_rect.right() + spacing_hor)
                 else:
-                    x = next_left_on_grid(pusher_rect.right() + spacing)
+                    x = grid.next_left(pusher_rect.right() + spacing)
 
             top_diff = abs(pusher_rect.top() - rect.top())
             bottom_diff = abs(pusher_rect.bottom() - rect.bottom())
@@ -130,10 +128,10 @@ def _repulse(
 
         case Direction.UP | Direction.DOWN:
             if direction is Direction.UP:
-                y = previous_top_on_grid(
+                y = grid.previous_top(
                     pusher_rect.top() - rect.height() - spacing)
             else:
-                y = next_top_on_grid(pusher_rect.bottom() + spacing)
+                y = grid.next_top(pusher_rect.bottom() + spacing)
 
             left_diff = abs(pusher_rect.left() - rect.left())
             right_diff = abs(pusher_rect.right() - rect.right())
