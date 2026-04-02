@@ -13,7 +13,7 @@ from patshared import PortMode
 
 from ..init_values import InlineDisplay, options, MAX_PLUGIN_ID_ALLOWED
 from ..patchcanvas import canvas
-from ..theme import StyleAttributer
+from ..theme import StyleAttributer, BorderMode
 from ..utils import polyline, qpolyline
 
 from .box_utils import BoxStyler, PaintElement, UnwrapButton, WrappingState
@@ -143,7 +143,7 @@ def _paint_hardware_rack(box: 'BoxWidget', painter: QPainter):
         for xy in points:
             hardware_poly += QPointF(*xy)
 
-        if theme.border_mode == 'minimal':
+        if theme.border_mode is BorderMode.MINIMAL:
             painter.drawPolyline(polyline(points[2:6]))
             painter.drawPolyline(polyline(points[10:14]))
             painter.setPen(Qt.PenStyle.NoPen)
@@ -189,7 +189,7 @@ def _paint_hardware_rack(box: 'BoxWidget', painter: QPainter):
         for xy in bottom_points:
             hw_poly_bottom += QPointF(*xy)
 
-        if theme.border_mode == 'minimal':
+        if theme.border_mode is BorderMode.MINIMAL:
             painter.drawPolyline(polyline(top_points[2:6]))
             painter.drawPolyline(polyline(top_points[6:10]))
             painter.drawPolyline(polyline(bottom_points[2:6]))
@@ -296,14 +296,14 @@ def _paint_gui_button(box: 'BoxWidget', painter: QPainter, border: int):
     painter.setPen(gui_theme.fill_pen)
     
     match gui_theme.border_mode:            
-        case 'minimal':
+        case BorderMode.MINIMAL:
             painter.drawPolyline(qpolyline(
                 gui_rect.bottomLeft(),
                 gui_rect.topLeft(),
                 gui_rect.topRight(),
                 gui_rect.bottomRight()))
             painter.setPen(Qt.PenStyle.NoPen)
-        case 'sides':
+        case BorderMode.SIDES:
             painter.drawPolyline(qpolyline(
                 gui_rect.bottomLeft(), gui_rect.topLeft()))
             painter.drawPolyline(qpolyline(
@@ -378,7 +378,7 @@ def _paint_monitor_deco(box: 'BoxWidget', painter: QPainter, pen_width: int):
     for xy in mon_points:
         mon_poly += QPointF(*xy)
     
-    if mon_theme.border_mode == 'minimal':
+    if mon_theme.border_mode is BorderMode.MINIMAL:
         painter.setPen(Qt.PenStyle.NoPen)
         painter.drawPolygon(mon_poly)
         painter.setPen(mon_theme.fill_pen)
@@ -483,7 +483,7 @@ def _paint_wrappers(
                     triangle += QPointF(xpos + 2 * side, ypos)
                     triangle += QPointF(xpos + side, ypos + side)
 
-                if wtheme.border_mode == 'minimal':
+                if wtheme.border_mode is BorderMode.MINIMAL:
                     painter.drawPolyline(qpolyline(
                         triangle[0], triangle[2], triangle[1]))
                     painter.setPen(Qt.PenStyle.NoPen)
@@ -498,7 +498,7 @@ def _paint_wrappers(
             triangle += QPointF(xpos + 2 * side, ypos)
             triangle += QPointF(xpos + side, ypos -side)
 
-            if wtheme.border_mode == 'minimal':
+            if wtheme.border_mode is BorderMode.MINIMAL:
                 painter.drawPolyline(qpolyline(
                     triangle[0], triangle[2], triangle[1]))
                 painter.setPen(Qt.PenStyle.NoPen)
@@ -514,7 +514,7 @@ def _paint_wrappers(
             triangle += QPointF(xpos + 2 * side, ypos)
             triangle += QPointF(xpos + side, ypos - side)
             
-            if wtheme.border_mode == 'minimal':
+            if wtheme.border_mode is BorderMode.MINIMAL:
                 painter.drawPolyline(qpolyline(
                     triangle[0], triangle[2], triangle[1]))
                 painter.setPen(Qt.PenStyle.NoPen)
@@ -531,7 +531,7 @@ def _paint_wrappers(
             triangle += QPointF(xpos + 2 * side, ypos)
             triangle += QPointF(xpos + side, ypos -side)
             
-            if wtheme.border_mode == 'minimal':
+            if wtheme.border_mode is BorderMode.MINIMAL:
                 painter.drawPolyline(qpolyline(
                     triangle[0], triangle[2], triangle[1]))
                 painter.setPen(Qt.PenStyle.NoPen)

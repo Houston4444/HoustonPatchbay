@@ -8,6 +8,7 @@ from qtpy.QtGui import QColor, QFont, QImage, QFontDatabase
 
 from . import theme_cache
 from .theme_utils import to_qcolor, ThemeFile
+from .theme_structs import BorderMode, Align
 from .style_attributer import StyleAttributer
 from .style_attributers import (
     BoxStyleAttributer, PortStyleAttributer, LineStyleAttributer,
@@ -23,7 +24,7 @@ _DEFAULT_STYLE_ATTRS = {
     'background2': QColor(),
     'background-image': QImage(),
     'border-color': QColor('white'),
-    'border-mode': 'default',
+    'border-mode': BorderMode.DEFAULT,
     'border-radius': 0,
     'border-style': Qt.PenStyle.SolidLine,
     'border-width': 1,
@@ -45,7 +46,7 @@ _DEFAULT_STYLE_ATTRS = {
     'padding-sides': 3,
     'padding-top': 3,
     'padding-top-side': 3,
-    'output-align': 'left',
+    'output-align': Align.LEFT,
     'port-in-offset': 0,
     'port-in-offset-mode': 'bore',
     'port-out-offset': 0,

@@ -1,4 +1,4 @@
-
+from enum import Enum, auto
 
 class Margin:
     top = 0
@@ -79,3 +79,13 @@ class SuperMargin(Margin):
     def sided_width(self) -> int:
         return self._sided_width
 
+
+class BorderMode(Enum):
+    DEFAULT = auto()
+    MINIMAL = auto()
+    SIDES = auto()
+    
+
+class Align(Enum):
+    LEFT = auto()
+    RIGHT = auto()

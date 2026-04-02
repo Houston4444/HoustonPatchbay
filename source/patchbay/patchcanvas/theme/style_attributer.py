@@ -9,7 +9,7 @@ from qtpy.QtGui import (
 
 from . import theme_cache
 from .theme_utils import to_qcolor, rail_float, rail_int, ThemeFile
-from .theme_structs import Margin
+from .theme_structs import Margin, BorderMode, Align
 
 if TYPE_CHECKING:
     from .style_attributers import UslStyleAttributer
@@ -212,8 +212,30 @@ class StyleAttributer:
 
                 else:
                     err = True
-                    
-            case 'border-mode'|'output-align'|'port-offset-mode'|\
+            
+            case 'border-mode':
+                if isinstance(value, str):
+                    match value.lower():
+                        case 'minimal':
+                            self._attrs[attribute] = BorderMode.MINIMAL
+                        case 'sides':
+                            self._attrs[attribute] = BorderMode.SIDES
+                        case _:
+                            self._attrs[attribute] = BorderMode.DEFAULT
+                else:
+                    err = True
+            
+            case 'output-align':
+                if isinstance(value, str):
+                    match value.lower():
+                        case 'right':
+                            self._attrs[attribute] = Align.RIGHT
+                        case _:
+                            self._attrs[attribute] = Align.LEFT
+                else:
+                    err = True
+            
+            case 'port-offset-mode'|\
                     'port-in-offset-mode'|'port-out-offset-mode':
                 if isinstance(value, str):
                     self._attrs[attribute] = value
@@ -355,7 +377,7 @@ class StyleAttributer:
         return font
 
     @cached_property
-    def border_mode(self) -> str:
+    def border_mode(self) -> BorderMode:
         return self.get_value_of('border-mode') # type:ignore
 
     @cached_property
@@ -367,7 +389,7 @@ class StyleAttributer:
         return self.get_value_of('border-width') # type:ignore
 
     @cached_property
-    def output_align(self) -> str:
+    def output_align(self) -> Align:
         return self.get_value_of('output-align') # type:ignore
 
     @cached_property

@@ -32,7 +32,7 @@ from patshared import PortMode, PortType, PortSubType
 from .init_values import (
     CanvasItemType, PortgrpObject, ZvBox, canvas)
 from .utils import polyline
-from .theme import UslStyleAttributer
+from .theme import UslStyleAttributer, BorderMode, Align
 
 if TYPE_CHECKING:
     from .box_widget import BoxWidget
@@ -255,7 +255,7 @@ class PortgroupWidget(ConnectableWidget):
             x_arrowhead = self._portgrp_width - 2 * line_hinting
 
         elif self._port_mode is PortMode.OUTPUT:
-            if theme.output_align == 'right':
+            if theme.output_align is Align.RIGHT:
                 text_pos = QPointF(
                     self._portgrp_width - self.get_text_width()
                     - self._ports_width - 3.0,
@@ -337,7 +337,7 @@ class PortgroupWidget(ConnectableWidget):
         else:
             painter.setBrush(color_main)
 
-        if theme.border_mode == 'minimal':
+        if theme.border_mode is BorderMode.MINIMAL:
             painter.setPen(Qt.PenStyle.NoPen)
             painter.drawPolygon(polygon)
             painter.setPen(poly_pen)
