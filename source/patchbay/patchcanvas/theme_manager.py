@@ -13,7 +13,8 @@ from .theme import Theme
 from .init_values import canvas
 from .xdg import xdg_data_dirs, xdg_data_home
 
-_logger = logging.Logger(__name__)
+
+_logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -90,6 +91,7 @@ class ThemeManager:
         self._last_modified = os.path.getmtime(self.current_theme_file)
 
         del canvas._theme
+
         _logger.info(f'update theme from {self.current_theme_file}')
         canvas._theme = Theme()
         canvas._theme.read_theme(theme_dict, self.current_theme_file)
