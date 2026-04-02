@@ -123,7 +123,6 @@ class Theme(StyleAttributer):
                     |'hardware-rack-width':
                 if not isinstance(body_value, int):
                     return
-                body_key: str
                 self.__setattr__(body_key.replace('-', '_'), body_value)
 
             case 'box-spacing':
@@ -297,4 +296,5 @@ class Theme(StyleAttributer):
                     this.inherit(mother)
 
             sub_attributer = self.child(begin)
-            sub_attributer.set_style_dict(end, value)
+            if sub_attributer is not None:
+                sub_attributer.set_style_dict(end, value)
