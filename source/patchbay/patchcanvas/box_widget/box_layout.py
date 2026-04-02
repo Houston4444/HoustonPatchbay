@@ -37,6 +37,11 @@ class PortsMinSizes:
 
 
 class BoxLayout:
+    '''A container that auto-calculates the needed widths and heights
+    for a box. For optimisation, init_from_box() is needed if you are
+    not sure that the previous BoxLayout has been calculated from datas
+    of the same box.'''
+    
     @classmethod
     def init_from_box(
             cls, box: 'BoxWidget',

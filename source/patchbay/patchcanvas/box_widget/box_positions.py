@@ -933,6 +933,7 @@ def _set_title_positions(box: 'BoxWidget'):
     else:
         gui_margin = canvas.theme.margin_empty
     
+    # get the rect where the title is placed (top, bottom, left, right)
     if box._has_side_title():
         if box._current_port_mode is PortMode.INPUT:
             left = box._width - pen_width - box._header_width + mg.ports_side
@@ -949,7 +950,6 @@ def _set_title_positions(box: 'BoxWidget'):
         top = pen_width + mg.top
         bottom = pen_width + box._header_height - mg.bottom
 
-
     # set title lines Y position
     if box._title_under_icon:
         title_y_start = top + icon_size + font_spacing + 3
@@ -964,35 +964,42 @@ def _set_title_positions(box: 'BoxWidget'):
             top + (bottom - top - font_size * 0.6) * 0.5 + font_size * 0.6)
 
     if box._has_side_title():
-        y_correction = 0
-
         # In case the title is near to be vertically centered in the box
         # It's prettier to center it correctly
-        # TODO
         if (box._title_lines
                 and not box._title_under_icon
                 and not box._can_handle_gui
                 and box._title_lines[-1].y + int(font_size * 1.4) > box._height):
             y_correction = (box._height - box._title_lines[-1].y - 2) / 2 - 2
+        else:
+            y_correction = 0
 
-        # set title lines pos
-        for title_line in box._title_lines:
-            if box._current_port_mode is PortMode.INPUT:
-                title_line.x = left + 4
+        # set title lines and icon pos
+        match box._current_port_mode:
+            case PortMode.INPUT:
+                for title_line in box._title_lines:
+                    title_line.x = left + 4
+                    title_line.y += y_correction
 
                 box.set_top_icon_pos(
                     right - int(icon_size) - 3,
                     int(top + 3))
 
-            elif box._current_port_mode is PortMode.OUTPUT:
+            case PortMode.OUTPUT:
                 if box.has_top_icon() and not box._title_under_icon:
-                    title_line.x = left + 3 + icon_size + 3
+                    for title_line in box._title_lines:
+                        if title_line.y >= top + icon_size + 6:
+                            title_line.x = left + 4
+                        else:
+                            title_line.x = left + 3 + icon_size + 3
+                        title_line.y += y_correction
                 else:
-                    title_line.x = left + 4
+                    for title_line in box._title_lines:
+                        title_line.x = left + 4
+                        title_line.y += y_correction
 
                 box.set_top_icon_pos(left + 3, top + 3)
-
-            title_line.y += y_correction
+        
         return
 
     # Now we are sure title is on top
