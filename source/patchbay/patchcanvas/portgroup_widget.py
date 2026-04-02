@@ -32,7 +32,7 @@ from patshared import PortMode, PortType, PortSubType
 from .init_values import (
     CanvasItemType, PortgrpObject, ZvBox, canvas)
 from .utils import polyline
-from .theme import UnselectedStyleAttributer
+from .theme import UslStyleAttributer
 
 if TYPE_CHECKING:
     from .box_widget import BoxWidget
@@ -67,7 +67,7 @@ class PortgroupWidget(ConnectableWidget):
 
         self.setZValue(ZvBox.PORTGRP.value)
 
-    def get_theme(self) -> UnselectedStyleAttributer:
+    def get_theme(self) -> UslStyleAttributer:
         theme = canvas.theme.portgroup
         match self._port_type:
             case PortType.AUDIO_JACK:

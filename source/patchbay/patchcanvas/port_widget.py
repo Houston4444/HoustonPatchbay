@@ -34,7 +34,7 @@ from .init_values import (
     CanvasItemType, PortObject, canvas, ZvBox)
 from .connectable_widget import ConnectableWidget
 from .grouped_lines_widget import GroupedLinesWidget
-from .theme import UnselectedStyleAttributer
+from .theme import UslStyleAttributer
 from .utils import polyline
 
 if TYPE_CHECKING:
@@ -74,7 +74,7 @@ class PortWidget(ConnectableWidget):
         
         self._bounding_rect = QRectF()
 
-    def get_theme(self) -> UnselectedStyleAttributer:
+    def get_theme(self) -> UslStyleAttributer:
         theme = canvas.theme.port
         match self._port_type:
             case PortType.AUDIO_JACK:

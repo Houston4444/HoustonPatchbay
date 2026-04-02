@@ -3,40 +3,40 @@ from pathlib import Path
 from .style_attributer import StyleAttributer
 
 
-class UnselectedStyleAttributer(StyleAttributer):
+class UslStyleAttributer(StyleAttributer):
     def __init__(self, path: str, parent=None):
         super().__init__(path, parent=parent)
         self.selected = StyleAttributer(path + '.selected', self)
         self.subs.append('selected')
 
 
-class BoxStyleAttributer(UnselectedStyleAttributer):
+class BoxStyleAttributer(UslStyleAttributer):
     def __init__(self, path: str, parent):
         super().__init__(path, parent)
-        self.hardware = UnselectedStyleAttributer(path + '.hardware', self)
-        self.client = UnselectedStyleAttributer(path + '.client', self)
-        self.monitor = UnselectedStyleAttributer(path + '.monitor', self)
+        self.hardware = UslStyleAttributer(path + '.hardware', self)
+        self.client = UslStyleAttributer(path + '.client', self)
+        self.monitor = UslStyleAttributer(path + '.monitor', self)
         self.subs += ['hardware', 'client', 'monitor']
 
 
-class PortStyleAttributer(UnselectedStyleAttributer):
+class PortStyleAttributer(UslStyleAttributer):
     def __init__(self, path: str, parent):
         super().__init__(path, parent)
-        self.audio = UnselectedStyleAttributer(path + '.audio', self)
-        self.midi = UnselectedStyleAttributer(path + '.midi', self)
-        self.cv = UnselectedStyleAttributer(path + '.cv', self)
-        self.alsa = UnselectedStyleAttributer(path + '.alsa', self)
-        self.video = UnselectedStyleAttributer(path + '.video', self)
+        self.audio = UslStyleAttributer(path + '.audio', self)
+        self.midi = UslStyleAttributer(path + '.midi', self)
+        self.cv = UslStyleAttributer(path + '.cv', self)
+        self.alsa = UslStyleAttributer(path + '.alsa', self)
+        self.video = UslStyleAttributer(path + '.video', self)
         self.subs += ['audio', 'midi', 'cv', 'video', 'alsa']
 
 
-class LineStyleAttributer(UnselectedStyleAttributer):
+class LineStyleAttributer(UslStyleAttributer):
     def __init__(self, path: str, parent):
         super().__init__(path, parent)
-        self.audio = UnselectedStyleAttributer(path + '.audio', self)
-        self.midi = UnselectedStyleAttributer(path + '.midi', self)
-        self.alsa = UnselectedStyleAttributer(path + '.alsa', self)
-        self.video = UnselectedStyleAttributer(path + '.video', self)
+        self.audio = UslStyleAttributer(path + '.audio', self)
+        self.midi = UslStyleAttributer(path + '.midi', self)
+        self.alsa = UslStyleAttributer(path + '.alsa', self)
+        self.video = UslStyleAttributer(path + '.video', self)
         self.disconnecting = StyleAttributer(path + '.disconnecting', self)
         self.subs += ['audio', 'midi', 'alsa', 'video', 'disconnecting']
 

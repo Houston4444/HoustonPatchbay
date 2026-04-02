@@ -43,7 +43,7 @@ from ..utils import (
 from ..port_widget import PortWidget
 from ..portgroup_widget import PortgroupWidget
 from ..grouped_lines_widget import GroupedLinesWidget
-from ..theme import UnselectedStyleAttributer
+from ..theme import UslStyleAttributer
 
 from . import box_painters, box_positions
 from .box_hidder import BoxHidder
@@ -886,7 +886,7 @@ class BoxWidget(QGraphicsItem):
                           self._height + 2 * hws)
         return QRectF(0, 0, self._width, self._height)
 
-    def get_theme(self, styler=BoxStyler.BOX) -> UnselectedStyleAttributer:
+    def get_theme(self, styler=BoxStyler.BOX) -> UslStyleAttributer:
         match styler:
             case BoxStyler.BOX:
                 theme = canvas.theme.box

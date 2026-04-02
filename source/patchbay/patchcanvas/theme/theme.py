@@ -11,7 +11,7 @@ from .theme_utils import to_qcolor, ThemeFile
 from .style_attributer import StyleAttributer
 from .style_attributers import (
     BoxStyleAttributer, PortStyleAttributer, LineStyleAttributer,
-    UnselectedStyleAttributer, GuiButtonStyleAttributer,
+    UslStyleAttributer, GuiButtonStyleAttributer,
     GridStyleAttributer, IconTheme)
 
 
@@ -92,8 +92,8 @@ class Theme(StyleAttributer):
         self.port = PortStyleAttributer('.port', self)
         self.line = LineStyleAttributer('.line', self)
         self.rubberband = StyleAttributer('.rubberband', self)
-        self.hardware_rack = UnselectedStyleAttributer('.hardware_rack', self)
-        self.monitor_decoration = UnselectedStyleAttributer(
+        self.hardware_rack = UslStyleAttributer('.hardware_rack', self)
+        self.monitor_decoration = UslStyleAttributer(
             '.monitor_decoration', self)
         self.gui_button = GuiButtonStyleAttributer('.gui_button', self)
         self.grid = GridStyleAttributer('.grid', self)

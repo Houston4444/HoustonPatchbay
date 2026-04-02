@@ -12,7 +12,7 @@ from .theme_utils import to_qcolor, rail_float, rail_int, ThemeFile
 from .theme_structs import Margin
 
 if TYPE_CHECKING:
-    from .style_attributers import UnselectedStyleAttributer
+    from .style_attributers import UslStyleAttributer
 
 
 _logger = logging.getLogger(__name__)
@@ -269,7 +269,7 @@ class StyleAttributer:
 
         for path_end in ('selected',):
             if TYPE_CHECKING:
-                assert isinstance(self, UnselectedStyleAttributer)
+                assert isinstance(self, UslStyleAttributer)
 
             if (orig_path.endswith('.' + path_end)
                     and path_end in self.subs
