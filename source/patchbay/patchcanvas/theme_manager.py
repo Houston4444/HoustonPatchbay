@@ -90,6 +90,7 @@ class ThemeManager:
         self._last_modified = os.path.getmtime(self.current_theme_file)
 
         del canvas._theme
+        _logger.info(f'update theme from {self.current_theme_file}')
         canvas._theme = Theme()
         canvas._theme.read_theme(theme_dict, self.current_theme_file)
         canvas.scene.update_theme()

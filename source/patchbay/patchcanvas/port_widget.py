@@ -34,6 +34,7 @@ from .init_values import (
     CanvasItemType, PortObject, canvas, ZvBox)
 from .connectable_widget import ConnectableWidget
 from .grouped_lines_widget import GroupedLinesWidget
+from .theme import UnselectedStyleAttributer
 from .utils import polyline
 
 if TYPE_CHECKING:
@@ -64,18 +65,6 @@ class PortWidget(ConnectableWidget):
         # Base Variables
         self._port_width = 15
 
-        theme = canvas.theme.port
-        if self._port_type == PortType.AUDIO_JACK:
-            if self._port_subtype is PortSubType.CV:
-                theme = theme.cv
-            else:
-                theme = theme.audio
-        elif self._port_type == PortType.MIDI_JACK:
-            theme = theme.midi
-
-        self._theme = theme
-        self._port_font = theme.font
-
         self._portgrp_widget = None
         self._loop_select_done = False
 
@@ -84,6 +73,23 @@ class PortWidget(ConnectableWidget):
         self.setZValue(ZvBox.PORT.value)
         
         self._bounding_rect = QRectF()
+
+    def get_theme(self) -> UnselectedStyleAttributer:
+        theme = canvas.theme.port
+        match self._port_type:
+            case PortType.AUDIO_JACK:
+                if self._port_subtype is PortSubType.CV:
+                    return theme.cv
+                return theme.audio
+            case PortType.MIDI_JACK:
+                return theme.midi
+            case PortType.MIDI_ALSA:
+                return theme.alsa
+            case PortType.VIDEO:
+                return theme.video
+
+        # should not happen
+        return theme
 
     def get_connection_distance(self) -> float:
         return self._port_width
@@ -105,12 +111,14 @@ class PortWidget(ConnectableWidget):
         self._port_width = int(port_width)
         self._update_connect_pos()
 
-    def set_print_name(self, print_name:str, width_limited: int):
+    def set_print_name(self, print_name: str, width_limited: int):
         self._print_name = print_name
         self._name_truncked = False
 
+        theme = self.get_theme()
+
         if width_limited:
-            long_size = self._theme.get_text_width(self._print_name)
+            long_size = theme.get_text_width(self._print_name)
 
             if long_size > width_limited:
                 name_len = len(self._print_name)
@@ -118,17 +126,17 @@ class PortWidget(ConnectableWidget):
                 left_text = self._print_name[:middle]
                 middle_text = self._trunck_sep
                 right_text = self._print_name[middle + 1:]
-                left_size = self._theme.get_text_width(left_text)
-                middle_size = self._theme.get_text_width(middle_text)
-                right_size = self._theme.get_text_width(right_text)
+                left_size = theme.get_text_width(left_text)
+                middle_size = theme.get_text_width(middle_text)
+                right_size = theme.get_text_width(right_text)
 
                 while left_size + middle_size + right_size > width_limited:
                     if left_size > right_size:
                         left_text = left_text[:-1]
-                        left_size = self._theme.get_text_width(left_text)
+                        left_size = theme.get_text_width(left_text)
                     else:
                         right_text = right_text[1:]
-                        right_size = self._theme.get_text_width(right_text)
+                        right_size = theme.get_text_width(right_text)
 
                     if not (left_text or right_text):
                         break
@@ -139,12 +147,14 @@ class PortWidget(ConnectableWidget):
         self._update_connect_pos()
 
     def get_text_width(self) -> float:
+        theme = self.get_theme()
+        
         if self._name_truncked:
-            return (self._theme.get_text_width(self._print_name)
-                    + self._theme.get_text_width(self._trunck_sep)
-                    + self._theme.get_text_width(self._print_name_right))
+            return (theme.get_text_width(self._print_name)
+                    + theme.get_text_width(self._trunck_sep)
+                    + theme.get_text_width(self._print_name_right))
 
-        return self._theme.get_text_width(self._print_name)
+        return theme.get_text_width(self._print_name)
 
     def set_as_stereo(self, port_id: int):
         canvas.cb.portgroup_add(
@@ -312,21 +322,7 @@ class PortWidget(ConnectableWidget):
         painter.save()
         painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
 
-        theme = canvas.theme.port
-
-        match self._port_type:
-            case PortType.AUDIO_JACK:
-                if self._port_subtype is PortSubType.CV:
-                    theme = theme.cv
-                else:
-                    theme = theme.audio
-            case PortType.MIDI_JACK:
-                theme = theme.midi
-            case PortType.MIDI_ALSA:
-                theme = theme.alsa
-            case PortType.VIDEO:
-                theme = theme.video
-
+        theme = self.get_theme()
         if self.isSelected():
             theme = theme.selected
 
@@ -335,6 +331,7 @@ class PortWidget(ConnectableWidget):
         poly_color_alter = theme.background2_color
         poly_pen = theme.fill_pen
         text_pen = QPen(theme.text_color)
+        font = theme.font
 
         # To prevent quality worsening
         poly_pen = QPen(poly_pen)
@@ -343,8 +340,8 @@ class PortWidget(ConnectableWidget):
         line_hinting = poly_pen.widthF() / 2
         p_height = canvas.theme.port_height
 
-        text_y_pos = ((p_height - 0.667 * self._port_font.pixelSize()) / 2
-                      + self._port_font.pixelSize() * 0.667)
+        text_y_pos = ((p_height - 0.667 * font.pixelSize()) / 2
+                      + font.pixelSize() * 0.667)
 
         middle_width = p_height * 0.5
         is_cv_port = bool(self._port_subtype is PortSubType.CV)
@@ -532,9 +529,9 @@ class PortWidget(ConnectableWidget):
                     QPointF(x_arrowmid, p_height / 2.0), radius, radius)
 
         painter.setPen(text_pen)
-        painter.setFont(self._port_font)
+        painter.setFont(font)
 
-        sizer = QFontMetrics(self._port_font)
+        sizer = QFontMetrics(font)
         sep_width = sizer.horizontalAdvance(self._trunck_sep)
 
         if self._portgrp_id:

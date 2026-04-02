@@ -29,7 +29,7 @@ _DEFAULT_STYLE_ATTRS = {
     'border-width': 1,
     'font-name': "Deja Vu Sans",
     'font-size': 11,
-    'font-width': QFont.Weight.Normal,
+    'font-weight': QFont.Weight.Normal,
     'grid-min-width': 100,
     'grid-min-height': 100,
     'icon-size': 24,

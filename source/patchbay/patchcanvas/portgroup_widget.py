@@ -32,6 +32,7 @@ from patshared import PortMode, PortType, PortSubType
 from .init_values import (
     CanvasItemType, PortgrpObject, ZvBox, canvas)
 from .utils import polyline
+from .theme import UnselectedStyleAttributer
 
 if TYPE_CHECKING:
     from .box_widget import BoxWidget
@@ -50,22 +51,6 @@ class PortgroupWidget(ConnectableWidget):
         self._portgrp_width = 15
         self._portgrp_height = canvas.theme.port_height
 
-        theme = canvas.theme.portgroup
-        if self._port_type is PortType.AUDIO_JACK:
-            if self._port_subtype is PortSubType.CV:
-                theme = theme.cv
-            else:
-                theme = theme.audio
-        elif self._port_type is PortType.MIDI_JACK:
-            theme = theme.midi
-        elif self._port_type is PortType.MIDI_ALSA:
-            theme = theme.alsa
-        elif self._port_type is PortType.VIDEO:
-            theme = theme.video
-
-        self._theme = theme
-        self._portgrp_font = theme.font
-
         self._ports_width = canvas.theme.port_grouped_width
         self._print_name = ''
         self._normal_print_name = '' # same as _print_name but not reduced
@@ -82,6 +67,23 @@ class PortgroupWidget(ConnectableWidget):
 
         self.setZValue(ZvBox.PORTGRP.value)
 
+    def get_theme(self) -> UnselectedStyleAttributer:
+        theme = canvas.theme.portgroup
+        match self._port_type:
+            case PortType.AUDIO_JACK:
+                if self._port_subtype is PortSubType.CV:
+                    return theme.cv
+                return theme.audio
+            case PortType.MIDI_JACK:
+                return theme.midi
+            case PortType.MIDI_ALSA:
+                return theme.alsa
+            case PortType.VIDEO:
+                return theme.video
+
+        # should not happen
+        return theme
+
     def get_connection_distance(self) -> float:
         return self._portgrp_width
 
@@ -94,31 +96,15 @@ class PortgroupWidget(ConnectableWidget):
     def set_ports_width(self, ports_width: int):
         self._ports_width = ports_width
 
-    def update_theme(self):
-        theme = canvas.theme.portgroup
-        match self._port_type:
-            case PortType.AUDIO_JACK:
-                if self._port_subtype is PortSubType.CV:
-                    theme = theme.cv
-                else:
-                    theme = theme.audio
-            case PortType.MIDI_JACK:
-                theme = theme.midi
-            case PortType.MIDI_ALSA:
-                theme = theme.alsa
-            case PortType.VIDEO:
-                theme = theme.video
-
-        self._theme = theme
-        self._portgrp_font = theme.font
-
     def set_print_name(self, print_name:str, width_limited: int):
         self._print_name = print_name.rstrip()
         self._normal_print_name = print_name
         self._name_truncked = False
 
+        theme = self.get_theme()
+
         if width_limited:
-            long_size = self._theme.get_text_width(self._print_name)
+            long_size = theme.get_text_width(self._print_name)
 
             if long_size > width_limited:
                 name_len = len(self._print_name)
@@ -126,17 +112,17 @@ class PortgroupWidget(ConnectableWidget):
                 left_text = self._print_name[:middle]
                 middle_text = self._trunck_sep
                 right_text = self._print_name[middle + 1:]
-                left_size = self._theme.get_text_width(left_text)
-                middle_size = self._theme.get_text_width(middle_text)
-                right_size = self._theme.get_text_width(right_text)
+                left_size = theme.get_text_width(left_text)
+                middle_size = theme.get_text_width(middle_text)
+                right_size = theme.get_text_width(right_text)
 
                 while left_size + middle_size + right_size > width_limited:
                     if left_size > right_size:
                         left_text = left_text[:-1]
-                        left_size = self._theme.get_text_width(left_text)
+                        left_size = theme.get_text_width(left_text)
                     else:
                         right_text = right_text[1:]
-                        right_size = self._theme.get_text_width(right_text)
+                        right_size = theme.get_text_width(right_text)
 
                     if not (left_text or right_text):
                         break
@@ -149,12 +135,14 @@ class PortgroupWidget(ConnectableWidget):
         self.set_print_name(self._normal_print_name, width_limited)
 
     def get_text_width(self) -> float:
+        theme = self.get_theme()
+        
         if self._name_truncked:
-            return (self._theme.get_text_width(self._print_name)
-                    + self._theme.get_text_width(self._trunck_sep)
-                    + self._theme.get_text_width(self._print_name_right))
+            return (theme.get_text_width(self._print_name)
+                    + theme.get_text_width(self._trunck_sep)
+                    + theme.get_text_width(self._print_name_right))
 
-        return self._theme.get_text_width(self._print_name)
+        return theme.get_text_width(self._print_name)
 
     def ensure_selection_with_ports(self):
         for port_widget in self._ports_widgets:
@@ -199,11 +187,12 @@ class PortgroupWidget(ConnectableWidget):
             QApplication.keyboardModifiers()
             & Qt.KeyboardModifier.ControlModifier)
 
-        self.parentItem().setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsMovable, False)
+        self.parentItem().setFlag(
+            QGraphicsItem.GraphicsItemFlag.ItemIsMovable, False)
         start_point = canvas.scene.screen_position(
-            self.scenePos() + QPointF(0.0, self.boundingRect().bottom())) # type:ignore
+            self.scenePos()
+            + QPointF(0.0, self.boundingRect().bottom())) # type:ignore
         bottom_screen = QApplication.primaryScreen().geometry().bottom()
-        # bottom_screen = QApplication.desktop().screenGeometry().bottom()
         more = 12 if self._port_mode is PortMode.OUTPUT else 0
 
         if start_point.y() + 250 > bottom_screen:
@@ -237,7 +226,7 @@ class PortgroupWidget(ConnectableWidget):
         painter.save()
         painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
 
-        theme = self._theme
+        theme = self.get_theme()
         if self.isSelected():
             theme = theme.selected
 
@@ -246,16 +235,16 @@ class PortgroupWidget(ConnectableWidget):
         color_main = theme.background_color
         color_alter = theme.background2_color
         text_pen = QPen(theme.text_color)
+        font = theme.font
 
         line_hinting = poly_pen.widthF() / 2.0
         p_height = canvas.theme.port_height
         middle_width = p_height * 0.5
 
-        text_main_height = self._portgrp_font.pixelSize() * 0.667
+        text_main_height = font.pixelSize() * 0.667
         text_y_pos = (
             (p_height * len(self._port_ids) - text_main_height) / 2
-            + text_main_height
-        )
+            + text_main_height)
 
         if self._port_mode is PortMode.INPUT:
             text_pos = QPointF(self._ports_width + 3, text_y_pos)
@@ -410,10 +399,10 @@ class PortgroupWidget(ConnectableWidget):
                 radius, radius)
 
         painter.setPen(text_pen)
-        painter.setFont(self._portgrp_font)
+        painter.setFont(font)
         painter.drawText(text_pos, self._print_name)
         if self._name_truncked:
-            sizer = QFontMetrics(self._portgrp_font)
+            sizer = QFontMetrics(font)
             sep_x = text_pos.x() + sizer.horizontalAdvance(self._print_name)
             sep_width = sizer.horizontalAdvance(self._trunck_sep)
 

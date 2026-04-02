@@ -2,6 +2,7 @@ from functools import cached_property
 import logging
 from typing import Iterator, TYPE_CHECKING
 
+from qtpy import QT5
 from qtpy.QtCore import Qt
 from qtpy.QtGui import (
     QBrush, QImage, QFontDatabase, QFont, QPen, QColor, QFontMetricsF)
@@ -177,18 +178,38 @@ class StyleAttributer:
                             break
                 else:
                     err = True
-            
-            case 'font-width':
-                if isinstance(value, (int, float)):
-                    self._attrs[attribute] = rail_int(value, 0, 99)
-                elif isinstance(value, str):
-                    value = value.lower()
-                    if value == 'normal':
-                        self._attrs[attribute] = QFont.Weight.Normal
-                    elif value == 'bold':
-                        self._attrs[attribute] = QFont.Weight.Bold
+                    
+            case 'font-weight':
+                if isinstance(value, str):
+                    match value.lower():
+                        case 'thin':
+                            self._attrs[attribute] = QFont.Weight.Thin
+                        case 'extralight'|'extra-light'|'extra_light':
+                            self._attrs[attribute] = QFont.Weight.ExtraLight
+                        case 'light':
+                            self._attrs[attribute] = QFont.Weight.Light
+                        case 'normal':
+                            self._attrs[attribute] = QFont.Weight.Normal
+                        case 'medium':
+                            self._attrs[attribute] = QFont.Weight.Medium
+                        case 'demibold'|'demi-bold'|'demi_bold':
+                            self._attrs[attribute] = QFont.Weight.DemiBold
+                        case 'bold':
+                            self._attrs[attribute] = QFont.Weight.Bold
+                        case 'extrabold'|'extra-bold'|'extra_bold':
+                            self._attrs[attribute] = QFont.Weight.ExtraBold
+                        case 'black':
+                            self._attrs[attribute] = QFont.Weight.Black
+                        case _:
+                            err = True
+
+                elif isinstance(value, (int, float)):
+                    weight = rail_int(value, 1, 1000)
+                    if QT5:
+                        self._attrs[attribute] = (weight - 1)  // 10
                     else:
-                        err = True
+                        self._attrs[attribute] = weight
+
                 else:
                     err = True
                     
@@ -330,7 +351,7 @@ class StyleAttributer:
     def font(self) -> QFont:
         font = QFont(self.get_value_of('font-name'))
         font.setPixelSize(int(self.get_value_of('font-size'))) # type:ignore
-        font.setWeight(int(self.get_value_of('font-width'))) # type:ignore
+        font.setWeight(int(self.get_value_of('font-weight'))) # type:ignore
         return font
 
     @cached_property
@@ -397,7 +418,7 @@ class StyleAttributer:
     def _titles_templates_cache(self) -> theme_cache.TitleCache:
         font_name = str(self.get_value_of('font-name'))
         font_size = str(self.get_value_of('font-size'))
-        font_width = str(self.get_value_of('font-width'))
+        font_width = str(self.get_value_of('font-weight'))
 
         return theme_cache.get_title_templates_cache(
             font_name, font_size, font_width)
@@ -406,7 +427,7 @@ class StyleAttributer:
     def _font_metrics_cache(self) -> dict[str, float]:
         font_name = str(self.get_value_of('font-name'))
         font_size = str(self.get_value_of('font-size'))
-        font_width = str(self.get_value_of('font-width'))
+        font_width = str(self.get_value_of('font-weight'))
 
         return theme_cache.get_font_metrics_cache(
             font_name, font_size, font_width)

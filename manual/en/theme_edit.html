@@ -101,7 +101,6 @@ table {
 <li><a href="#body">[body]</a></li>
 <li><a href="#_specific_blocks">specific blocks</a>
 <ul class="sectlevel2">
-<li><a href="#_box_specific_attributes">box specific attributes</a></li>
 <li><a href="#_margins">margins</a></li>
 <li><a href="#_all_specific_blocks">All specific blocks</a></li>
 <li><a href="#_box">[Box]</a></li>
@@ -355,7 +354,38 @@ Note that aliases <em>audio</em>, <em>midi</em>, <em>cv</em>, <em>alsa</em> and 
 <p><strong>font-size</strong> : <a href="#number">number</a> between 1 and 200</p>
 </li>
 <li>
-<p><strong>font-width</strong> : <a href="#number">number</a> between 0 (very light) and 99 (very bold). alternatively, it can also be <em>normal</em> or <em>bold</em>.</p>
+<p><strong>font-weight</strong> : <a href="#number">number</a> between 1 (very light) and 1000 (very bold). Or, with a large preference, it can also be:</p>
+<div class="ulist">
+<ul>
+<li>
+<p><em>thin</em> : = 100</p>
+</li>
+<li>
+<p><em>extralight</em> : = 200</p>
+</li>
+<li>
+<p><em>light</em> : = 300</p>
+</li>
+<li>
+<p><em>normal</em> : = 400</p>
+</li>
+<li>
+<p><em>medium</em> : = 500</p>
+</li>
+<li>
+<p><em>demibold</em> : = 600</p>
+</li>
+<li>
+<p><em>bold</em> : = 700</p>
+</li>
+<li>
+<p><em>extrabold</em> : = 800</p>
+</li>
+<li>
+<p><em>black</em> : = 900</p>
+</li>
+</ul>
+</div>
 </li>
 <li>
 <p><strong>text-color</strong> : <a href="#color">color</a></p>
@@ -367,74 +397,60 @@ Note that aliases <em>audio</em>, <em>midi</em>, <em>cv</em>, <em>alsa</em> and 
 <p><strong>drilled</strong> : <a href="#boolean">boolean</a>. Few blocks support this. If <em>True</em>, the parent widget is drilled. Useful only if background-color has transparency.</p>
 </li>
 <li>
-<p><strong>inherits</strong> : only for <strong>portgroup</strong> block, can be <em>port</em> to inherit all <strong>port</strong> settings.</p>
-</li>
-</ul>
-</div>
-<div class="sect2">
-<h3 id="_box_specific_attributes">box specific attributes</h3>
-<div class="paragraph">
-<p>The following settings are available only for <strong>box</strong> and childs blocks.</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p><strong>output-align</strong>: <em>left</em> or <em>right</em>, determines if the output ports names should be aligned on left or on right</p>
-</li>
-<li>
-<p><strong>icon-size</strong> : <a href="#number">number</a>, default is 24</p>
-</li>
-<li>
-<p><strong>port-in-offset</strong>: <a href="#number">number</a>, offset the input ports X coordinate</p>
-</li>
-<li>
-<p><strong>port-out-offset</strong>: <a href="#number">number</a>, offset the output ports X coordinate</p>
-</li>
-<li>
-<p><strong>port-offset</strong>: <a href="#number">number</a>, offset the ports X coordinate</p>
-</li>
-<li>
-<p><strong>port-in-offset-mode</strong> : <a href="#number">number</a>, <em>bore</em> or <em>none</em>, determinates if the box should be bored with port-offset (for input ports)</p>
-</li>
-<li>
-<p><strong>port-out-offset-mode</strong> : <a href="#number">number</a>, <em>bore</em> or <em>none</em>, determinates if the box should be bored with port-offset (for output ports)</p>
-</li>
-<li>
-<p><strong>port-offset-mode</strong> : <a href="#number">number</a>, set <strong>port-in-offset-mode</strong> and <strong>port-out-offset-mode</strong></p>
-</li>
-<li>
-<p><strong>port-spacing</strong> : <a href="#number">number</a>, height of spacing between ports</p>
-</li>
-<li>
-<p><strong>port-type-spacing</strong>: <a href="#number">number</a>, height of spacing between ports of different types</p>
-</li>
-<li>
 <p><strong>grid-min-width</strong> : <a href="#number">number</a>, in <strong>grid</strong> block only</p>
 </li>
 <li>
 <p><strong>grid-min-height</strong> : <a href="#number">number</a>, in <strong>grid</strong> block only</p>
 </li>
+<li>
+<p><strong>inherits</strong> : only for <strong>portgroup</strong> block, can be <em>port</em> to inherit all <strong>port</strong> settings.</p>
+</li>
 </ul>
-</div>
 </div>
 <div class="sect2">
 <h3 id="_margins">margins</h3>
 <div class="paragraph">
 <p><strong>header</strong> and <strong>gui_button</strong> can also interpret some margin values:
-If the box has title on top:
-* <strong>margin-bottom</strong> : <a href="#number">number</a> margin on bottom
-* <strong>margin-top</strong> : <a href="#number">number</a> margin on top
-* <strong>margin-sides</strong>: <a href="#number">number</a> margin on left and on right</p>
+If the box has title on top:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>margin-bottom</strong> : <a href="#number">number</a> margin on bottom</p>
+</li>
+<li>
+<p><strong>margin-top</strong> : <a href="#number">number</a> margin on top</p>
+</li>
+<li>
+<p><strong>margin-sides</strong>: <a href="#number">number</a> margin on left and on right</p>
+</li>
+</ul>
 </div>
 <div class="paragraph">
-<p>If the box has title on side:
-* <strong>margin-top-side</strong> : <a href="#number">number</a> margin on top and bottom
-* <strong>margin-ports-side</strong>: <a href="#number">number</a> margin on the side which contains the ports
-* <strong>margin-free-side</strong> : <a href="#number">number</a> margin on the opposite side of the ports</p>
+<p>If the box has title on side:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>margin-top-side</strong> : <a href="#number">number</a> margin on top and bottom</p>
+</li>
+<li>
+<p><strong>margin-ports-side</strong>: <a href="#number">number</a> margin on the side which contains the ports</p>
+</li>
+<li>
+<p><strong>margin-free-side</strong> : <a href="#number">number</a> margin on the opposite side of the ports</p>
+</li>
+</ul>
 </div>
 <div class="paragraph">
-<p>You can also apply in all cases
-* <strong>margin</strong> : <a href="#number">number</a>. Set all <strong>margin-&#8230;&#8203;</strong> attributes to value</p>
+<p>You can also apply in all cases</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>margin</strong> : <a href="#number">number</a>. Set all <strong>margin-&#8230;&#8203;</strong> attributes to value</p>
+</li>
+</ul>
 </div>
 </div>
 <div class="sect2">
@@ -568,16 +584,34 @@ port</code></pre>
 <div class="ulist">
 <ul>
 <li>
-<p><strong>port_in_offset</strong> : the horizontal offset of the input ports from the border of the box</p>
+<p><strong>output-align</strong>: <em>left</em> or <em>right</em>, determines if the output ports names should be aligned on left or on right</p>
 </li>
 <li>
-<p><strong>port_out_offset</strong> : the horizontal offset of the output ports from the border of the box</p>
+<p><strong>icon-size</strong> : <a href="#number">number</a>, default is 24</p>
 </li>
 <li>
-<p><strong>port_spacing</strong> : vertical spacing between ports (if they are not in the same portgroup)</p>
+<p><strong>port-in-offset</strong>: <a href="#number">number</a>, the horizontal offset of the input ports from the border of the box</p>
 </li>
 <li>
-<p><strong>port_type_spacing</strong> : vertical spacing between ports of different type, in addition to <strong>port_spacing</strong></p>
+<p><strong>port-out-offset</strong>: <a href="#number">number</a>, the horizontal offset of the output ports from the border of the box</p>
+</li>
+<li>
+<p><strong>port-offset</strong>: <a href="#number">number</a>, set <strong>port-in-offset</strong> and <strong>port-out-offset</strong></p>
+</li>
+<li>
+<p><strong>port-in-offset-mode</strong> : <a href="#number">number</a>, <em>bore</em> or <em>none</em>, determinates if the box should be bored with port-offset (for input ports)</p>
+</li>
+<li>
+<p><strong>port-out-offset-mode</strong> : <a href="#number">number</a>, <em>bore</em> or <em>none</em>, determinates if the box should be bored with port-offset (for output ports)</p>
+</li>
+<li>
+<p><strong>port-offset-mode</strong> : <a href="#number">number</a>, set <strong>port-in-offset-mode</strong> and <strong>port-out-offset-mode</strong></p>
+</li>
+<li>
+<p><strong>port-spacing</strong> : <a href="#number">number</a>, vertical spacing between ports (if they are not in the same portgroup)</p>
+</li>
+<li>
+<p><strong>port-type-spacing</strong>: <a href="#number">number</a>, vertical spacing between ports of different type, in addition to <strong>port_spacing</strong></p>
 </li>
 </ul>
 </div>
@@ -894,7 +928,7 @@ First, image is drawn, then background color is drawn above. This allows to adju
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2026-04-02 12:11:43 +0200
+Last updated 2026-04-02 21:09:45 +0200
 </div>
 </div>
 </body>

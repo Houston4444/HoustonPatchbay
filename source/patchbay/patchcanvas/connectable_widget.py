@@ -6,6 +6,7 @@ from qtpy.QtGui import QCursor
 from qtpy.QtWidgets import QGraphicsItem
 
 from patshared import PortMode, PortType, PortSubType
+
 from .init_values import (
     AliasingReason,
     ConnectableObject,

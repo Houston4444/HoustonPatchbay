@@ -1135,10 +1135,6 @@ def update_positions(
         
         box.set_icon()
 
-        for portgrp in box._portgrp_list:
-            if portgrp.widget is not None:
-                portgrp.widget.update_theme()
-
         for port in box._port_list:
             if port.hidden_conn_widget is not None:
                 port.hidden_conn_widget.update_theme()
