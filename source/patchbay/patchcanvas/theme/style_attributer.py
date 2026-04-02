@@ -97,7 +97,7 @@ class StyleAttributer:
 
             case 'border-width'|'border-radius'|'font-size'| \
                     'port-offset'|'port-in-offset'|'port-out-offset'| \
-                    'port-spacing'|'port-type-spacing'|'box-footer' | \
+                    'port-spacing'|'port-type-spacing'| \
                     'icon-size'|'grid-min-width'|'grid-min-height'| \
                     'margin'|'margin-top'|'margin-bottom'|'margin-sides'|\
                     'margin-ports-side'|'margin-free-side'|'margin-top-side':
@@ -105,7 +105,7 @@ class StyleAttributer:
                     match attribute:
                         case 'border-width':
                             min_, max_ = 0, 20
-                        case 'border-radius'|'box-footer':
+                        case 'border-radius':
                             min_, max_ = 0, 50
                         case 'margin'|'margin-top'|'margin-bottom'|\
                                 'margin-sides'|'margin-ports-side'|\

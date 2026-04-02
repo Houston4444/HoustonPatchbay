@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="generator" content="Asciidoctor 2.0.12">
+<meta name="generator" content="Asciidoctor 2.0.18">
 <title>Write custom themes for HoustonPatchbay</title>
 <style>
 /* Asciidoctor default stylesheet | MIT License | https://asciidoctor.org */
@@ -101,6 +101,8 @@ table {
 <li><a href="#body">[body]</a></li>
 <li><a href="#_specific_blocks">specific blocks</a>
 <ul class="sectlevel2">
+<li><a href="#_box_specific_attributes">box specific attributes</a></li>
+<li><a href="#_margins">margins</a></li>
 <li><a href="#_box">[Box]</a></li>
 <li><a href="#_wrapper">[wrapper]</a></li>
 <li><a href="#_header_line">[header_line]</a></li>
@@ -116,6 +118,7 @@ table {
 <li><a href="#_glossary">Glossary</a>
 <ul class="sectlevel2">
 <li><a href="#color">color</a></li>
+<li><a href="#boolean">boolean</a></li>
 <li><a href="#number">number</a></li>
 <li><a href="#image">image</a></li>
 <li><a href="#font">font</a></li>
@@ -246,7 +249,8 @@ to know the font family name inside the file.</p>
 <div class="sectionbody">
 <div class="paragraph">
 <p>You can define in <strong>[aliases]</strong> block colors or numbers for faster general changes in other sections.
-For example, define <em>midi</em> to a color, and re-use <em>midi</em> for midi ports and midi lines.</p>
+For example, define <em>midi</em> to a color, and re-use <em>midi</em> for midi ports and midi lines.
+Note that aliases <em>audio</em>, <em>midi</em>, <em>cv</em>, <em>alsa</em> and <em>video</em> are now required for the view selector frame. Please affect them a color.</p>
 </div>
 </div>
 </div>
@@ -269,9 +273,6 @@ For example, define <em>midi</em> to a color, and re-use <em>midi</em> for midi 
 </li>
 <li>
 <p><strong>box-spacing-horizontal</strong> : <a href="#number">number</a>, horizontal spacing between boxes when they are moved around, if one of the boxes has ports on this side</p>
-</li>
-<li>
-<p><strong>magnet</strong> : <a href="#number">number</a>, if the distance between borders of glued boxes is lower or equal to this value, boxes will be aligned</p>
 </li>
 <li>
 <p><strong>hardware-rack-width</strong> : <a href="#number">number</a>, size of the flycase decoration of hardware boxes</p>
@@ -310,22 +311,10 @@ For example, define <em>midi</em> to a color, and re-use <em>midi</em> for midi 
 <p><strong>background-image</strong> : <a href="#image">image</a></p>
 </li>
 <li>
-<p><strong>text-color</strong> : <a href="#color">color</a></p>
-</li>
-<li>
-<p><strong>font-name</strong> : string</p>
-</li>
-<li>
-<p><strong>font-size</strong> : <a href="#number">number</a> between 1 and 200</p>
-</li>
-<li>
-<p><strong>font-width</strong> : <a href="#number">number</a> between 0 (very light) and 99 (very bold). alternatively, it can also be <em>normal</em> or <em>bold</em>.</p>
-</li>
-<li>
 <p><strong>border-color</strong> : <a href="#color">color</a></p>
 </li>
 <li>
-<p><strong>border-width</strong> : <a href="#number">number</a> between 0 and 20</p>
+<p><strong>border-mode</strong>: <em>default</em> or <em>minimal</em> can draw only few borders, as in <strong>Terminal</strong> theme</p>
 </li>
 <li>
 <p><strong>border-radius</strong> : <a href="#number">number</a> between 0 and 50</p>
@@ -351,6 +340,99 @@ For example, define <em>midi</em> to a color, and re-use <em>midi</em> for midi 
 </li>
 </ul>
 </div>
+</li>
+<li>
+<p><strong>border-width</strong> : <a href="#number">number</a> between 0 and 20</p>
+</li>
+<li>
+<p><strong>font-name</strong> : string</p>
+</li>
+<li>
+<p><strong>font-size</strong> : <a href="#number">number</a> between 1 and 200</p>
+</li>
+<li>
+<p><strong>font-width</strong> : <a href="#number">number</a> between 0 (very light) and 99 (very bold). alternatively, it can also be <em>normal</em> or <em>bold</em>.</p>
+</li>
+<li>
+<p><strong>text-color</strong> : <a href="#color">color</a></p>
+</li>
+<li>
+<p><strong>visible</strong> : <a href="#boolean">boolean</a>. Few blocks support this.</p>
+</li>
+<li>
+<p><strong>drilled</strong> : <a href="#boolean">boolean</a>. Few blocks support this. If <em>True</em>, the parent widget is drilled. Useful only if background-color has transparency.</p>
+</li>
+<li>
+<p><strong>inherits</strong> : only for <strong>portgroup</strong> block, can be <em>port</em> to inherit all <strong>port</strong> settings.</p>
+</li>
+</ul>
+</div>
+<div class="sect2">
+<h3 id="_box_specific_attributes">box specific attributes</h3>
+<div class="paragraph">
+<p>The following settings are available only for <strong>box</strong> and childs blocks.</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>output-align</strong>: <em>left</em> or <em>right</em>, determines if the output ports names should be aligned on left or on right</p>
+</li>
+<li>
+<p><strong>icon-size</strong> : <a href="#number">number</a>, default is 24</p>
+</li>
+<li>
+<p><strong>port-in-offset</strong>: <a href="#number">number</a>, offset the input ports X coordinate</p>
+</li>
+<li>
+<p><strong>port-out-offset</strong>: <a href="#number">number</a>, offset the output ports X coordinate</p>
+</li>
+<li>
+<p><strong>port-offset</strong>: <a href="#number">number</a>, offset the ports X coordinate</p>
+</li>
+<li>
+<p><strong>port-in-offset-mode</strong> : <a href="#number">number</a>, <em>bore</em> or <em>none</em>, determinates if the box should be bored with port-offset (for input ports)</p>
+</li>
+<li>
+<p><strong>port-out-offset-mode</strong> : <a href="#number">number</a>, <em>bore</em> or <em>none</em>, determinates if the box should be bored with port-offset (for output ports)</p>
+</li>
+<li>
+<p><strong>port-offset-mode</strong> : <a href="#number">number</a>, set <strong>port-in-offset-mode</strong> and <strong>port-out-offset-mode</strong></p>
+</li>
+<li>
+<p><strong>port-spacing</strong> : <a href="#number">number</a>, height of spacing between ports</p>
+</li>
+<li>
+<p><strong>port-type-spacing</strong>: <a href="#number">number</a>, height of spacing between ports of different types</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_margins">margins</h3>
+<div class="paragraph">
+<p><strong>header</strong> and <strong>gui_button</strong> can also interpret some margin values:
+If the box has title on top:
+* <strong>margin-bottom</strong> : <a href="#number">number</a> margin on bottom
+* <strong>margin-top</strong> : <a href="#number">number</a> margin on top
+* <strong>margin-sides</strong>: <a href="#number">number</a> margin on left and on right</p>
+</div>
+<div class="paragraph">
+<p>If the box has title on side:
+* <strong>margin-top-side</strong> : <a href="#number">number</a> margin on top and bottom
+* <strong>margin-ports-side</strong>: <a href="#number">number</a> margin on the side which contains the ports
+* <strong>margin-free-side</strong> : <a href="#number">number</a> margin on the opposite side of the ports</p>
+</div>
+<div class="paragraph">
+<p>You can also apply in all cases
+* <strong>margin</strong> : <a href="#number">number</a>. Set all <strong>margin-&#8230;&#8203;</strong> attributes to value</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>grid-min-width</strong> : <a href="#number">number</a></p>
+</li>
+<li>
+<p><strong>grid-min-height</strong> : <a href="#number">number</a></p>
 </li>
 </ul>
 </div>
@@ -446,7 +528,7 @@ port</code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p>Note that if the this audio port is selected, it will check if "selected" block of the parent block exists and search inside before. The order of search will be:</p>
+<p>Note that if the audio port is selected, it will check if "selected" block of the parent block exists and search inside before. The order of search will be:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -454,6 +536,7 @@ port</code></pre>
 port.audio
 port.selected
 port</code></pre>
+</div>
 </div>
 </div>
 <div class="sect2">
@@ -731,6 +814,12 @@ for example:</p>
 </div>
 </div>
 <div class="sect2">
+<h3 id="boolean">boolean</h3>
+<div class="paragraph">
+<p><em>boolean</em> is <em>True</em> or <em>False</em>.</p>
+</div>
+</div>
+<div class="sect2">
 <h3 id="number">number</h3>
 <div class="paragraph">
 <p><em>number</em> defines an integer or a float.</p>
@@ -784,7 +873,7 @@ First, image is drawn, then background color is drawn above. This allows to adju
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2022-12-08 11:14:49 +0100
+Last updated 2026-04-02 11:23:23 +0200
 </div>
 </div>
 </body>

@@ -89,7 +89,6 @@ Available parameters are:
 * *port-height* : <<number>>
 * *box-spacing*: <<number>>, spacing between boxes when they are moved around
 * *box-spacing-horizontal* : <<number>>, horizontal spacing between boxes when they are moved around, if one of the boxes has ports on this side
-* *magnet* : <<number>>, if the distance between borders of glued boxes is lower or equal to this value, boxes will be aligned
 * *hardware-rack-width* : <<number>>, size of the flycase decoration of hardware boxes
 * *monitor_color*: <<color>>, color of the word _Monitor_ in monitor boxes
 * *background* : <<color>>, color of the scene background
@@ -105,12 +104,8 @@ In each specific block, you can define the following settings:
 * *background* : <<color>>
 * *background2* : <<color>> (optional, used to make a gradient from *background* to *background2*, may be unused with some widgets)
 * *background-image* : <<image>>
-* *text-color* : <<color>>
-* *font-name* : string
-* *font-size* : <<number>> between 1 and 200
-* *font-width* : <<number>> between 0 (very light) and 99 (very bold). alternatively, it can also be _normal_ or _bold_.
 * *border-color* : <<color>>
-* *border-width* : <<number>> between 0 and 20
+* *border-mode*: _default_ or _minimal_ can draw only few borders, as in *Terminal* theme
 * *border-radius* : <<number>> between 0 and 50
 * *border-style* :
 
@@ -119,6 +114,53 @@ In each specific block, you can define the following settings:
 ** _dash_ : dashed line
 ** _dashdot_ : more dashed line
 ** _dashdotdot_ : more more dashed line
+
+* *border-width* : <<number>> between 0 and 20
+* *font-name* : string
+* *font-size* : <<number>> between 1 and 200
+* *font-width* : <<number>> between 0 (very light) and 99 (very bold). alternatively, it can also be _normal_ or _bold_.
+* *text-color* : <<color>>
+* *visible* : <<boolean>>. Few blocks support this.
+* *drilled* : <<boolean>>. Few blocks support this. If _True_, the parent widget is drilled. Useful only if background-color has transparency.
+* *inherits* : only for *portgroup* block, can be _port_ to inherit all *port* settings.
+
+=== box specific attributes
+The following settings are available only for *box* and childs blocks.
+
+* *output-align*: _left_ or _right_, determines if the output ports names should be aligned on left or on right
+* *icon-size* : <<number>>, default is 24
+* *port-in-offset*: <<number>>, offset the input ports X coordinate
+* *port-out-offset*: <<number>>, offset the output ports X coordinate
+* *port-offset*: <<number>>, offset the ports X coordinate
+* *port-in-offset-mode* : <<number>>, _bore_ or _none_, determinates if the box should be bored with port-offset (for input ports)
+* *port-out-offset-mode* : <<number>>, _bore_ or _none_, determinates if the box should be bored with port-offset (for output ports)
+* *port-offset-mode* : <<number>>, set *port-in-offset-mode* and *port-out-offset-mode*
+* *port-spacing* : <<number>>, height of spacing between ports
+* *port-type-spacing*: <<number>>, height of spacing between ports of different types
+
+
+=== margins
+
+*header* and *gui_button* can also interpret some margin values:
+If the box has title on top:
+* *margin-bottom* : <<number>> margin on bottom
+* *margin-top* : <<number>> margin on top
+* *margin-sides*: <<number>> margin on left and on right
+
+If the box has title on side:
+* *margin-top-side* : <<number>> margin on top and bottom
+* *margin-ports-side*: <<number>> margin on the side which contains the ports
+* *margin-free-side* : <<number>> margin on the opposite side of the ports
+
+You can also apply in all cases
+* *margin* : <<number>>. Set all *margin-...* attributes to value
+
+
+* *grid-min-width* : <<number>>
+* *grid-min-height* : <<number>>
+
+
+
 
 The interpretable specific blocks are the following ones:
 
@@ -207,7 +249,7 @@ port.audio
 port
 ```
 
-Note that if the this audio port is selected, it will check if "selected" block of the parent block exists and search inside before. The order of search will be:
+Note that if the audio port is selected, it will check if "selected" block of the parent block exists and search inside before. The order of search will be:
 
 ```
 port.audio.selected
@@ -395,6 +437,10 @@ for example:
 * `background=#AFD755 * 1.2 ** 0.4`
 
 spaces between color and number are required, number MUST be after color.
+
+[#boolean]
+=== boolean
+_boolean_ is _True_ or _False_.
 
 [#number]
 === number
