@@ -87,6 +87,7 @@ in *[body]* block, define general colors and sizes for the scene.
 Available parameters are:
 
 * *port-height* : <<number>>
+* *port-grouped-width*: <<number>>, minimum width of grouped ports
 * *box-spacing*: <<number>>, spacing between boxes when they are moved around
 * *box-spacing-horizontal* : <<number>>, horizontal spacing between boxes when they are moved around, if one of the boxes has ports on this side
 * *hardware-rack-width* : <<number>>, size of the flycase decoration of hardware boxes
@@ -137,7 +138,8 @@ The following settings are available only for *box* and childs blocks.
 * *port-offset-mode* : <<number>>, set *port-in-offset-mode* and *port-out-offset-mode*
 * *port-spacing* : <<number>>, height of spacing between ports
 * *port-type-spacing*: <<number>>, height of spacing between ports of different types
-
+* *grid-min-width* : <<number>>, in *grid* block only
+* *grid-min-height* : <<number>>, in *grid* block only
 
 === margins
 
@@ -155,12 +157,7 @@ If the box has title on side:
 You can also apply in all cases
 * *margin* : <<number>>. Set all *margin-...* attributes to value
 
-
-* *grid-min-width* : <<number>>
-* *grid-min-height* : <<number>>
-
-
-
+=== All specific blocks
 
 The interpretable specific blocks are the following ones:
 
@@ -183,6 +180,15 @@ box_wrapper.monitor.selected
 box_wrapper.client
 box_wrapper.client.selected
 
+box_header
+box_header.selected
+box_header.hardware
+box_header.hardware.selected
+box_header.monitor
+box_header.monitor.selected
+box_header.client
+box_header.client.selected
+
 box_header_line
 box_header_line.selected
 box_header_line.hardware
@@ -200,6 +206,15 @@ box_shadow.monitor
 box_shadow.monitor.selected
 box_shadow.client
 box_shadow.client.selected
+
+box_ports_border
+box_ports_border.selected
+box_ports_border.hardware
+box_ports_border.hardware.selected
+box_ports_border.monitor
+box_ports_border.monitor.selected
+box_ports_border.client
+box_ports_border.client.selected
 
 port
 port.selected

@@ -27,7 +27,6 @@ _DEFAULT_STYLE_ATTRS = {
     'border-radius': 0,
     'border-style': Qt.PenStyle.SolidLine,
     'border-width': 1,
-    'box-footer': 0,
     'font-name': "Deja Vu Sans",
     'font-size': 11,
     'font-width': QFont.Weight.Normal,
@@ -120,7 +119,7 @@ class Theme(StyleAttributer):
     def _read_body_attr(self, body_key: str, body_value):
         match body_key:
             case 'port-height'|'box-spacing-horizontal' \
-                    |'hardware-rack-width':
+                    |'hardware-rack-width' | 'port-grouped-width':
                 if not isinstance(body_value, int):
                     return
                 self.__setattr__(body_key.replace('-', '_'), body_value)

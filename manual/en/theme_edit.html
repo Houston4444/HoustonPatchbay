@@ -103,6 +103,7 @@ table {
 <ul class="sectlevel2">
 <li><a href="#_box_specific_attributes">box specific attributes</a></li>
 <li><a href="#_margins">margins</a></li>
+<li><a href="#_all_specific_blocks">All specific blocks</a></li>
 <li><a href="#_box">[Box]</a></li>
 <li><a href="#_wrapper">[wrapper]</a></li>
 <li><a href="#_header_line">[header_line]</a></li>
@@ -269,6 +270,9 @@ Note that aliases <em>audio</em>, <em>midi</em>, <em>cv</em>, <em>alsa</em> and 
 <p><strong>port-height</strong> : <a href="#number">number</a></p>
 </li>
 <li>
+<p><strong>port-grouped-width</strong>: <a href="#number">number</a>, minimum width of grouped ports</p>
+</li>
+<li>
 <p><strong>box-spacing</strong>: <a href="#number">number</a>, spacing between boxes when they are moved around</p>
 </li>
 <li>
@@ -404,6 +408,12 @@ Note that aliases <em>audio</em>, <em>midi</em>, <em>cv</em>, <em>alsa</em> and 
 <li>
 <p><strong>port-type-spacing</strong>: <a href="#number">number</a>, height of spacing between ports of different types</p>
 </li>
+<li>
+<p><strong>grid-min-width</strong> : <a href="#number">number</a>, in <strong>grid</strong> block only</p>
+</li>
+<li>
+<p><strong>grid-min-height</strong> : <a href="#number">number</a>, in <strong>grid</strong> block only</p>
+</li>
 </ul>
 </div>
 </div>
@@ -426,16 +436,9 @@ If the box has title on top:
 <p>You can also apply in all cases
 * <strong>margin</strong> : <a href="#number">number</a>. Set all <strong>margin-&#8230;&#8203;</strong> attributes to value</p>
 </div>
-<div class="ulist">
-<ul>
-<li>
-<p><strong>grid-min-width</strong> : <a href="#number">number</a></p>
-</li>
-<li>
-<p><strong>grid-min-height</strong> : <a href="#number">number</a></p>
-</li>
-</ul>
 </div>
+<div class="sect2">
+<h3 id="_all_specific_blocks">All specific blocks</h3>
 <div class="paragraph">
 <p>The interpretable specific blocks are the following ones:</p>
 </div>
@@ -459,6 +462,15 @@ box_wrapper.monitor.selected
 box_wrapper.client
 box_wrapper.client.selected
 
+box_header
+box_header.selected
+box_header.hardware
+box_header.hardware.selected
+box_header.monitor
+box_header.monitor.selected
+box_header.client
+box_header.client.selected
+
 box_header_line
 box_header_line.selected
 box_header_line.hardware
@@ -476,6 +488,15 @@ box_shadow.monitor
 box_shadow.monitor.selected
 box_shadow.client
 box_shadow.client.selected
+
+box_ports_border
+box_ports_border.selected
+box_ports_border.hardware
+box_ports_border.hardware.selected
+box_ports_border.monitor
+box_ports_border.monitor.selected
+box_ports_border.client
+box_ports_border.client.selected
 
 port
 port.selected
@@ -873,7 +894,7 @@ First, image is drawn, then background color is drawn above. This allows to adju
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2026-04-02 11:23:23 +0200
+Last updated 2026-04-02 12:11:43 +0200
 </div>
 </div>
 </body>
