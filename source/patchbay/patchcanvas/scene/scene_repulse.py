@@ -99,7 +99,6 @@ def _repulse(
 
     spacing = canvas.theme.box_spacing
     spacing_hor = canvas.theme.box_spacing_horizontal
-    magnet = canvas.theme.magnet
 
     match direction:
         case Direction.LEFT | Direction.RIGHT:
@@ -118,28 +117,12 @@ def _repulse(
                 else:
                     x = grid.next_left(pusher_rect.right() + spacing)
 
-            top_diff = abs(pusher_rect.top() - rect.top())
-            bottom_diff = abs(pusher_rect.bottom() - rect.bottom())
-
-            if bottom_diff > top_diff and top_diff <= magnet:
-                y = pusher_rect.top()
-            elif bottom_diff <= magnet:
-                y = pusher_rect.bottom() - rect.height()
-
         case Direction.UP | Direction.DOWN:
             if direction is Direction.UP:
                 y = grid.previous_top(
                     pusher_rect.top() - rect.height() - spacing)
             else:
                 y = grid.next_top(pusher_rect.bottom() + spacing)
-
-            left_diff = abs(pusher_rect.left() - rect.left())
-            right_diff = abs(pusher_rect.right() - rect.right())
-
-            if right_diff > left_diff and left_diff <= magnet:
-                x = pusher_rect.left()
-            elif right_diff <= magnet:
-                x = pusher_rect.right() - rect.width()
 
     return QRectF(float(x), float(y), rect.width(), rect.height())
 

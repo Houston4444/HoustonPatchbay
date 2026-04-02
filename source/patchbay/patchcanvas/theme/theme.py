@@ -76,7 +76,6 @@ class Theme(StyleAttributer):
         self.port_grouped_width = 19
         self.box_spacing = 4
         self.box_spacing_horizontal = 24
-        self.magnet = 12
         self.hardware_rack_width = 5
         self.port_type_colors = dict[str, QColor]()
 
@@ -121,7 +120,7 @@ class Theme(StyleAttributer):
     def _read_body_attr(self, body_key: str, body_value):
         match body_key:
             case 'port-height'|'box-spacing-horizontal' \
-                    |'magnet'|'hardware-rack-width':
+                    |'hardware-rack-width':
                 if not isinstance(body_value, int):
                     return
                 body_key: str
