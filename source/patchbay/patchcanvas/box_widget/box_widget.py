@@ -21,7 +21,7 @@ import logging
 from typing import Optional
 
 from qtpy.QtCore import Qt, QPointF, QRectF, QTimer, QMarginsF
-from qtpy.QtGui import QCursor, QPainterPath
+from qtpy.QtGui import QCursor, QPainterPath, QImage
 from qtpy.QtWidgets import QGraphicsItem, QApplication
 
 from patshared import PortMode, BoxLayoutMode, BoxType
@@ -95,8 +95,8 @@ class BoxWidget(QGraphicsItem):
 
         self._cursor_moving = False
         self._mouse_down = False
-        self._inline_data = None
-        self._inline_image = None
+        self._inline_data: bytes | None = None
+        self._inline_image: QImage | None = None
         self._inline_scaling = 1.0
 
         self._icon_name = group.icon_name

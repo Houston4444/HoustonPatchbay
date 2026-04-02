@@ -14,6 +14,7 @@ from patshared import PortMode
 from ..init_values import InlineDisplay, options, MAX_PLUGIN_ID_ALLOWED
 from ..patchcanvas import canvas
 from ..theme import StyleAttributer
+from ..utils import polyline, qpolyline
 
 from .box_utils import BoxStyler, PaintElement, UnwrapButton, WrappingState
 
@@ -143,8 +144,8 @@ def _paint_hardware_rack(box: 'BoxWidget', painter: QPainter):
             hardware_poly += QPointF(*xy)
 
         if theme.border_mode == 'minimal':
-            painter.drawPolyline([QPointF(*xy) for xy in points[2:6]])
-            painter.drawPolyline([QPointF(*xy) for xy in points[10:14]])
+            painter.drawPolyline(polyline(points[2:6]))
+            painter.drawPolyline(polyline(points[10:14]))
             painter.setPen(Qt.PenStyle.NoPen)
             painter.drawPolygon(hardware_poly)
         else:
@@ -189,10 +190,10 @@ def _paint_hardware_rack(box: 'BoxWidget', painter: QPainter):
             hw_poly_bottom += QPointF(*xy)
 
         if theme.border_mode == 'minimal':
-            painter.drawPolyline([QPointF(*xy) for xy in top_points[2:6]])
-            painter.drawPolyline([QPointF(*xy) for xy in top_points[6:10]])
-            painter.drawPolyline([QPointF(*xy) for xy in bottom_points[2:6]])
-            painter.drawPolyline([QPointF(*xy) for xy in bottom_points[6:10]])
+            painter.drawPolyline(polyline(top_points[2:6]))
+            painter.drawPolyline(polyline(top_points[6:10]))
+            painter.drawPolyline(polyline(bottom_points[2:6]))
+            painter.drawPolyline(polyline(bottom_points[6:10]))
             painter.setPen(Qt.PenStyle.NoPen)
             painter.drawPolygon(hw_poly_top)
             painter.drawPolygon(hw_poly_bottom)
@@ -296,24 +297,24 @@ def _paint_gui_button(box: 'BoxWidget', painter: QPainter, border: int):
     
     match gui_theme.border_mode:            
         case 'minimal':
-            painter.drawPolyline(
-                [gui_rect.bottomLeft(),
+            painter.drawPolyline(qpolyline(
+                gui_rect.bottomLeft(),
                 gui_rect.topLeft(),
                 gui_rect.topRight(),
-                gui_rect.bottomRight()]
-            )
+                gui_rect.bottomRight()))
             painter.setPen(Qt.PenStyle.NoPen)
         case 'sides':
-            painter.drawPolyline(
-                [gui_rect.bottomLeft(), gui_rect.topLeft()])
-            painter.drawPolyline(
-                [gui_rect.topRight(), gui_rect.bottomRight()]
-            )
+            painter.drawPolyline(qpolyline(
+                gui_rect.bottomLeft(), gui_rect.topLeft()))
+            painter.drawPolyline(qpolyline(
+                gui_rect.topRight(), gui_rect.bottomRight()))
             painter.setPen(Qt.PenStyle.NoPen)
 
-    gui_path = box._painter_paths.get(selected).get(PaintElement.GUI_BUTTON)
-    if gui_path is not None:
-        painter.drawPath(gui_path)
+    sel_paths = box._painter_paths.get(selected)
+    if sel_paths is not None:
+        gui_path = sel_paths.get(PaintElement.GUI_BUTTON)
+        if gui_path is not None:
+            painter.drawPath(gui_path)
 
 def _paint_monitor_deco(box: 'BoxWidget', painter: QPainter, pen_width: int):
     if box._current_port_mode is PortMode.OUTPUT:
@@ -365,13 +366,14 @@ def _paint_monitor_deco(box: 'BoxWidget', painter: QPainter, pen_width: int):
         xtop = box._width - xtop
         xbot = box._width - xbot
 
-    mon_points = [(xside, pen_width),
-                    (xtop, pen_width),
-                    (xband, pen_width + tms_top),
-                    (xband, box._height - tms_bot - pen_width),
-                    (xbot, box._height - pen_width),
-                    (xside, box._height - pen_width)]
-    
+    mon_points = [
+        (xside, pen_width),
+        (xtop, pen_width),
+        (xband, pen_width + tms_top),
+        (xband, box._height - tms_bot - pen_width),
+        (xbot, box._height - pen_width),
+        (xside, box._height - pen_width)]
+
     mon_poly = QPolygonF()
     for xy in mon_points:
         mon_poly += QPointF(*xy)
@@ -380,7 +382,7 @@ def _paint_monitor_deco(box: 'BoxWidget', painter: QPainter, pen_width: int):
         painter.setPen(Qt.PenStyle.NoPen)
         painter.drawPolygon(mon_poly)
         painter.setPen(mon_theme.fill_pen)
-        painter.drawPolyline([QPointF(*xy) for xy in mon_points[1:5]])
+        painter.drawPolyline(polyline(mon_points[1:5]))
     else:
         painter.setPen(mon_theme.fill_pen)
         painter.drawPolygon(mon_poly)
@@ -482,8 +484,8 @@ def _paint_wrappers(
                     triangle += QPointF(xpos + side, ypos + side)
 
                 if wtheme.border_mode == 'minimal':
-                    painter.drawPolyline(
-                        [triangle[0], triangle[2], triangle[1]])
+                    painter.drawPolyline(qpolyline(
+                        triangle[0], triangle[2], triangle[1]))
                     painter.setPen(Qt.PenStyle.NoPen)
                 painter.drawPolygon(triangle)
 
@@ -497,8 +499,8 @@ def _paint_wrappers(
             triangle += QPointF(xpos + side, ypos -side)
 
             if wtheme.border_mode == 'minimal':
-                painter.drawPolyline(
-                    [triangle[0], triangle[2], triangle[1]])
+                painter.drawPolyline(qpolyline(
+                    triangle[0], triangle[2], triangle[1]))
                 painter.setPen(Qt.PenStyle.NoPen)
             painter.drawPolygon(triangle)
 
@@ -513,16 +515,15 @@ def _paint_wrappers(
             triangle += QPointF(xpos + side, ypos - side)
             
             if wtheme.border_mode == 'minimal':
-                painter.drawPolyline(
-                    [triangle[0], triangle[2], triangle[1]])
+                painter.drawPolyline(qpolyline(
+                    triangle[0], triangle[2], triangle[1]))
                 painter.setPen(Qt.PenStyle.NoPen)
             painter.drawPolygon(triangle)
 
         case UnwrapButton.CENTER:
             side = 7
-            xpos = (box._width
-                    + box._layout._pms.ins_width
-                    - box._layout._pms.outs_width) / 2 - side
+            pms = box.get_layout()._pms
+            xpos = (box._width + pms.ins_width - pms.outs_width) / 2 - side
 
             ypos = box._height - pen_width / 2.0
             triangle = QPolygonF()
@@ -531,8 +532,8 @@ def _paint_wrappers(
             triangle += QPointF(xpos + side, ypos -side)
             
             if wtheme.border_mode == 'minimal':
-                painter.drawPolyline(
-                    [triangle[0], triangle[2], triangle[1]])
+                painter.drawPolyline(qpolyline(
+                    triangle[0], triangle[2], triangle[1]))
                 painter.setPen(Qt.PenStyle.NoPen)
             painter.drawPolygon(triangle)
 
@@ -572,7 +573,7 @@ def paint(box: 'BoxWidget', painter: QPainter, option, widget):
     htheme = box.get_theme(BoxStyler.HEADER)
     hltheme = box.get_theme(BoxStyler.HEADER_LINE)
 
-    border_unselected = theme.border_width
+    border_unselected = int(theme.border_width)
     selected = box.isSelected()
     
     if selected:
@@ -633,7 +634,8 @@ def paint(box: 'BoxWidget', painter: QPainter, option, widget):
 
     painter.setPen(pen)        
     painter.setBrush(Qt.BrushStyle.NoBrush)
-    painter.drawPath(main_ppath)
+    if main_ppath is not None:
+        painter.drawPath(main_ppath)
 
     # draw hardware box decoration (flyrack like)
     _paint_hardware_rack(box, painter)
@@ -647,7 +649,7 @@ def paint(box: 'BoxWidget', painter: QPainter, option, widget):
 
     # draw Pipewire Monitor (or PulseAudio bridges) decorations
     elif box.is_monitor and box._current_port_mode is not PortMode.BOTH:
-        _paint_monitor_deco(box, painter, pen_width)
+        _paint_monitor_deco(box, painter, int(pen_width))
 
     # may draw horizontal lines around title (header lines)
     if (box._header_line_left is not None

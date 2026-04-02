@@ -7,7 +7,7 @@ from qtpy.QtGui import QPainterPath
 from patshared import PortMode
 
 from ..patchcanvas import canvas
-from ..theme import BoxStyleAttributer
+from ..theme import StyleAttributer
 
 from .box_utils import BoxStyler, PaintElement, WrappingState
 
@@ -158,7 +158,7 @@ def _build_main_path(
     return painter_path
 
 def _build_header_path(
-        box: 'BoxWidget', header_theme: BoxStyleAttributer,
+        box: 'BoxWidget', header_theme: StyleAttributer,
         usl_border: float, line_hinting: float) -> QPainterPath:
     mg = header_theme.margin
     header_lh = header_theme.border_width * 0.5
@@ -199,7 +199,7 @@ def _build_header_path(
     return header_path
 
 def _build_gui_button_path(
-        box: 'BoxWidget', header_theme: BoxStyleAttributer,
+        box: 'BoxWidget', header_theme: StyleAttributer,
         usl_border: float) -> QPainterPath:
     gui_theme = canvas.theme.gui_button
     gui_path = QPainterPath()

@@ -11,7 +11,7 @@ from .theme_utils import to_qcolor, rail_float, rail_int, ThemeFile
 from .theme_structs import Margin
 
 if TYPE_CHECKING:
-    from .style_attributer import UnselectedStyleAttributer
+    from .style_attributers import UnselectedStyleAttributer
 
 
 _logger = logging.getLogger(__name__)
@@ -62,7 +62,7 @@ class StyleAttributer:
 
         for sub_ in self.subs:
             if sub_ in other.subs:
-                self.child(sub_).inherit(other.child(sub_))
+                self.child(sub_).inherit(other.child(sub_)) # type:ignore
 
     @property
     def log_path(self):
@@ -72,9 +72,10 @@ class StyleAttributer:
         err = False
         match attribute:
             case 'inherits':
-                ...
+                pass
             case 'border-color'|'text-color'|'background'|'background2':
-                self._attrs[attribute] = to_qcolor(value)
+                if isinstance(value, str):
+                    self._attrs[attribute] = to_qcolor(value)
                 if self._attrs.get(attribute) is None:
                     err = True
         
@@ -230,7 +231,7 @@ class StyleAttributer:
                 _logger.error(f"{self._path}: invalid ignored key: {begin}")
                 return
             
-            self.child(begin).set_style_dict(end, style_dict)
+            self.child(begin).set_style_dict(end, style_dict) # type:ignore
             return
 
         for key, value in style_dict.items():

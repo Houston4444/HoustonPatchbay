@@ -53,10 +53,14 @@ def easy_log(func):
         return func(*args, **kwargs)
     return wrapper
 
-def polyline(points: list[tuple[float, float]]) -> QPolygonF:
+def polyline(points: list[tuple[float, float]] | list[tuple[int, int]]) \
+        -> QPolygonF:
     '''painter.drawPolyline allows a list[QPointF] as argument
     but the linter don't know this and raise an error.'''
     return [QPointF(*xy) for xy in points] # type:ignore
+
+def qpolyline(*points: QPointF) -> QPolygonF:
+    return [p for p in points] # type:ignore
 
 def get_new_group_positions() -> dict[PortMode, tuple[int, int]]:
     def get_middle_empty_positions(scene_rect: QRectF) -> tuple[int, int]:
