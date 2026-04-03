@@ -187,11 +187,7 @@ def _get_ports_min_sizes(
         box: 'BoxWidget', align_port_types: bool) -> PortsMinSizes:
     max_in_width = max_out_width = 0.0
 
-    box_theme = box.get_theme()
-    port_spacing = box_theme.port_spacing
-    port_in_offset = box_theme.port_in_offset
-    port_out_offset = box_theme.port_out_offset
-    port_type_spacing = box_theme.port_type_spacing
+    thm = box.get_theme()
     last_in_pos = last_out_pos = 0.0
     final_last_in_pos = final_last_out_pos = last_in_pos
     last_in_type_and_sub = (PortType.NULL, PortSubType.REGULAR)
@@ -211,9 +207,9 @@ def _get_ports_min_sizes(
             max_pwidth = options.max_port_width
 
             if port.port_mode is PortMode.INPUT:
-                port_offset = port_in_offset
+                port_offset = thm.port_in_offset
             else:
-                port_offset = port_out_offset
+                port_offset = thm.port_out_offset
 
             if port.portgrp_id:
                 portgrp = canvas.get_portgroup(box._group_id, port.portgrp_id)
@@ -258,13 +254,13 @@ def _get_ports_min_sizes(
                 if type_and_sub != last_in_type_and_sub:
                     if (last_in_type_and_sub
                             != (PortType.NULL, PortSubType.REGULAR)):
-                        last_in_pos += port_type_spacing
+                        last_in_pos += thm.port_type_spacing
                     last_in_type_and_sub = type_and_sub
                     n_in_type_and_subs += 1
 
                 last_in_pos += canvas.theme.port_height
                 if last_of_portgrp:
-                    last_in_pos += port_spacing
+                    last_in_pos += thm.port_spacing
 
             elif port.port_mode is PortMode.OUTPUT:
                 max_out_width = max(max_out_width, size)
@@ -272,13 +268,13 @@ def _get_ports_min_sizes(
                 if type_and_sub != last_out_type_and_sub:
                     if (last_out_type_and_sub !=
                             (PortType.NULL, PortSubType.REGULAR)):
-                        last_out_pos += port_type_spacing
+                        last_out_pos += thm.port_type_spacing
                     last_out_type_and_sub = type_and_sub
                     n_out_type_and_subs += 1
 
                 last_out_pos += canvas.theme.port_height
                 if last_of_portgrp:
-                    last_out_pos += port_spacing
+                    last_out_pos += thm.port_spacing
 
             final_last_in_pos = last_in_pos
             final_last_out_pos = last_out_pos
@@ -305,7 +301,7 @@ def _get_ports_min_sizes(
 
                 if (port.port_type, port.port_subtype) != last_type_and_sub:
                     if last_type_and_sub != (PortType.NULL, PortSubType.REGULAR):
-                        last_inout_pos += port_type_spacing
+                        last_inout_pos += thm.port_type_spacing
                     last_type_and_sub = (port.port_type, port.port_subtype)
                     n_inout_types_and_sub += 1
 
@@ -313,7 +309,7 @@ def _get_ports_min_sizes(
                     continue
 
                 last_inout_pos += port.pg_len * canvas.theme.port_height
-                last_inout_pos += port_spacing
+                last_inout_pos += thm.port_spacing
 
                 last_port_mode = port.port_mode
 
