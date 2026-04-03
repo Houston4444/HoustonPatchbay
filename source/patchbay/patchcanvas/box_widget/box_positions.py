@@ -1083,7 +1083,8 @@ def update_positions(
         box: 'BoxWidget', even_animated=False, without_connections=False,
         scene_checks=True, theme_change=False, wrap_anim=False):
     '''Redraw the box, may take some time (~ 10ms for a 30 ports box).
-    It checks the present ports and portgroups, and choose the box size.
+    It checks the present ports and portgroups, choose the box size and
+    set title and ports positions.
 
     even_animated : if we need to update the box even
     if the box is in animation.

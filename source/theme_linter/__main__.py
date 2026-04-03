@@ -171,11 +171,11 @@ def read_theme(theme_path: Path):
     #                 print(f'    = {alias_} * {ratio_str}')            
 
     for thchild in th.all_childs():
-        for attr in theme._DEFAULT_STYLE_ATTRS.keys():
+        for attr in theme.theme._DEFAULT_STYLE_ATTRS.keys():
             value = thchild._attrs.get(attr)
             if value is None:
                 continue
-            if thchild._parent.get_value_of(attr) == value:
+            if thchild._parent.get_value_of(attr) == value: # type:ignore
                 _logger.warning(f'[{thchild._path}]{attr} already defined')
 
     return thdn
@@ -205,4 +205,4 @@ if __name__ == '__main__':
     theme_path = Path(__file__).parents[2] / 'themes' / theme_name / 'theme.conf'
     
     thd = read_theme(theme_path)
-    write_theme(thd, theme_path)
+    write_theme(thd, theme_path) # type:ignore
