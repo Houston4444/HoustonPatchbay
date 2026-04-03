@@ -69,7 +69,7 @@ class Theme(StyleAttributer):
         self._attrs = _DEFAULT_STYLE_ATTRS
 
         self.scene_background_color = QColor('black')
-        self.scene_background_image = QImage()
+        self.scene_background_image: QImage | None = None
         self.monitor_color = QColor(190, 158, 0)
         self.port_height = 16
 
@@ -298,3 +298,9 @@ class Theme(StyleAttributer):
             sub_attributer = self.child(begin)
             if sub_attributer is not None:
                 sub_attributer.set_style_dict(end, value)
+        
+        if self.scene_background_image is not None:
+            if self.scene_background_color.alphaF() == 1.0:
+                _logger.warning(
+                    '[body]background-image will be ignored because '
+                    '[body]background-color has no transparency')
