@@ -72,7 +72,7 @@ class ExistingConns(IntFlag):
 class PortCheckBox(QCheckBox):
     def __init__(self, p_object:  Union[Port, Portgroup],
                  parent: 'CheckFrame', pg_pos=0, pg_len=1):
-        QCheckBox.__init__(self, "", parent)
+        super().__init__("", parent)
         self.setTristate(True)
 
         port_height = int(
@@ -98,15 +98,16 @@ class PortCheckBox(QCheckBox):
         if isinstance(po, Portgroup):
             theme = full_theme.portgroup
 
-        if po.full_type[0] is PortType.AUDIO_JACK:
-            theme = theme.audio
-            line_theme = line_theme.audio
-        elif po.full_type[0] is PortType.MIDI_JACK:
-            theme = theme.midi
-            line_theme = line_theme.midi
-        elif po.full_type[0] is PortType.MIDI_ALSA:
-            theme = theme.alsa
-            line_theme = line_theme.alsa
+        match po.full_type[0]:
+            case PortType.AUDIO_JACK:
+                theme = theme.audio
+                line_theme = line_theme.audio
+            case PortType.MIDI_JACK:
+                theme = theme.midi
+                line_theme = line_theme.midi
+            case PortType.MIDI_ALSA:
+                theme = theme.alsa
+                line_theme = line_theme.alsa
 
         self._theme = theme
         self._line_theme = line_theme
@@ -141,6 +142,7 @@ class PortCheckBox(QCheckBox):
                        f"border-radius: 3px; {radius_text};}}"
             f"QCheckBox:hover{{background-color: none;color: {h_text_color}}}"
         )
+
         # # this stylesheet code is commented because the checkbox was not clear
         # # with some Qt theme (fusion, kvantum).
         # # seems impossible to have a coherent and readable style
@@ -185,12 +187,13 @@ class PortCheckBox(QCheckBox):
         painter.setPen(QPen(Qt.PenStyle.NoPen))
         circle_rect = rect.adjusted(3, 3, -3, -3)
 
-        if self.checkState() == 2:
-            circle_rect = rect.adjusted(3, 3, -3, -3)
-            painter.drawEllipse(circle_rect)
-        elif self.checkState() == 1:
-            moon_rect = rect.adjusted(2, 2, -2, -2)
-            painter.drawPie(moon_rect, 70*16, 220*16)
+        match self.checkState():
+            case Qt.CheckState.Checked:
+                circle_rect = rect.adjusted(3, 3, -3, -3)
+                painter.drawEllipse(circle_rect)
+            case Qt.CheckState.PartiallyChecked:
+                moon_rect = rect.adjusted(2, 2, -2, -2)
+                painter.drawPie(moon_rect, 70*16, 220*16)
 
         painter.end()
 
@@ -199,10 +202,12 @@ class CheckFrame(QFrame):
     def __init__(self, p_object: Union[Port, Portgroup],
                  port_name: str, port_name_end: str,
                  parent: 'AbstractConnectionsMenu', pg_pos=0, pg_len=1):
-        QFrame.__init__(self, parent)
-        port_height = int(canvas.theme.port_height * options.default_zoom / 100.0) + 2
+        super().__init__(parent)
+        port_height = int(
+            canvas.theme.port_height * options.default_zoom / 100.0) + 2
         self.setMinimumHeight(port_height)
-        self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+        self.setSizePolicy(
+            QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
 
         self._p_object = p_object
         self._parent = parent
@@ -213,10 +218,12 @@ class CheckFrame(QFrame):
         self._layout.setSpacing(0)
         self._layout.setContentsMargins(0, 0, 0, 0)
         self._layout.addWidget(self._check_box)
-        spacer1 = QSpacerItem(2, 2, QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
+        spacer1 = QSpacerItem(
+            2, 2, QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
         self._layout.addSpacerItem(spacer1)
         self._layout.addWidget(self._label_left)
-        spacer = QSpacerItem(2, 2, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+        spacer = QSpacerItem(
+            2, 2, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
         self._layout.addSpacerItem(spacer)
         self._label_right = None
         if port_name_end:
@@ -236,14 +243,18 @@ class CheckFrame(QFrame):
         if isinstance(po, Portgroup):
             theme = full_theme.portgroup
 
-        if po.full_type[0] is PortType.AUDIO_JACK:
-            theme = theme.cv if po.full_type[1] is PortSubType.CV else theme.audio
+        match po.full_type[0]:
+            case PortType.AUDIO_JACK:
+                if po.full_type[1] is PortSubType.CV:
+                    theme = theme.cv
+                else:
+                    theme = theme.audio
 
-        elif po.full_type[0] is PortType.MIDI_JACK:
-            theme = theme.midi
+            case PortType.MIDI_JACK:
+                theme = theme.midi
 
-        elif po.full_type[0] is PortType.MIDI_ALSA:
-            theme = theme.alsa
+            case PortType.MIDI_ALSA:
+                theme = theme.alsa
 
         self._theme = theme
 
@@ -295,7 +306,8 @@ class CheckFrame(QFrame):
 
             self._label_right.setFont(port_theme.font)
             self._label_right.setStyleSheet(
-                f"QLabel{{margin-left: 3px; margin-right: 0px; padding: 0px; {theme_css(port_theme)}}} "
+                f"QLabel{{margin-left: 3px; margin-right: 0px; padding: 0px; "
+                f"{theme_css(port_theme)}}} "
                 f"QLabel:focus{{{theme_css(port_theme.selected)}}}")
 
     def set_check_state(self, check_state: ConnState):
