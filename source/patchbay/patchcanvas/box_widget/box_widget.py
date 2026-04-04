@@ -38,8 +38,6 @@ from ..init_values import (
     Direction,
     Zv)
 from .. import grid
-from ..utils import (
-    get_portgroup_name_from_ports_names)
 from ..port_widget import PortWidget
 from ..portgroup_widget import PortgroupWidget
 from ..grouped_lines_widget import GroupedLinesWidget
@@ -203,12 +201,8 @@ class BoxWidget(QGraphicsItem):
     def is_monitor(self):
         return self._box_type is BoxType.MONITOR
 
-    def _get_portgroup_name(self, portgrp_id: int):
-        return get_portgroup_name_from_ports_names(
-            [p.port_name for p in self._port_list
-             if p.portgrp_id == portgrp_id])
-
-    def get_port_mode(self):
+    @property
+    def port_mode(self):
         return self._port_mode
 
     def set_port_mode(self, port_mode: PortMode):
@@ -222,13 +216,15 @@ class BoxWidget(QGraphicsItem):
         self._port_mode = port_mode
         self._layout_mode = group.gpos.boxes[port_mode].layout_mode
 
-    def get_current_port_mode(self):
+    @property
+    def current_port_mode(self):
         return self._current_port_mode
 
     def set_layout_mode(self, layout_mode: BoxLayoutMode):
         self._layout_mode = layout_mode
 
-    def get_current_layout_mode(self) -> BoxLayoutMode:
+    @property
+    def current_layout_mode(self) -> BoxLayoutMode:
         if self._layout is None:
             return BoxLayoutMode.AUTO
         return self._layout.layout_mode
@@ -257,7 +253,6 @@ class BoxWidget(QGraphicsItem):
         self._plugin_inline = (
             InlineDisplay.ENABLED if has_inline_display
             else InlineDisplay.DISABLED)
-        self.update()
 
     def set_icon(self):
         self.remove_icon_from_scene()
@@ -275,6 +270,7 @@ class BoxWidget(QGraphicsItem):
         else:
             self.top_icon = IconPixmapWidget(box_type, icon_name, self)
 
+    @property
     def has_top_icon(self) -> bool:
         if self.top_icon is None:
             return False
@@ -291,7 +287,6 @@ class BoxWidget(QGraphicsItem):
     def set_optional_gui_state(self, visible: bool):
         self._can_handle_gui = True
         self._gui_visible = visible
-        self.update()
 
     def set_shadow_opacity(self, opacity):
         if self.shadow:
@@ -417,13 +412,13 @@ class BoxWidget(QGraphicsItem):
     def ports_are_visible(self) -> bool:
         return self._wrapping_state is WrappingState.NORMAL
 
+    @property
     def is_wrapped(self) -> bool:
-        return bool(
-            self._wrapping_state in (
-                WrappingState.WRAPPED, WrappingState.WRAPPING))
+        return self._wrapping_state in (
+            WrappingState.WRAPPED, WrappingState.WRAPPING)
 
     def set_wrapped(self, yesno: bool, animate=True, prevent_overlap=True):
-        if yesno == bool(self._wrapping_state
+        if yesno is bool(self._wrapping_state
                          in (WrappingState.WRAPPED, WrappingState.WRAPPING)):
             return
 
@@ -448,7 +443,7 @@ class BoxWidget(QGraphicsItem):
         if not prevent_overlap:
             return
 
-        if self._has_side_title() and self._current_port_mode is PortMode.OUTPUT:
+        if self.has_side_title and self.current_port_mode is PortMode.OUTPUT:
             # keep ports at same right pos in this case.
             x, y = self.top_left()
 
@@ -534,10 +529,10 @@ class BoxWidget(QGraphicsItem):
                 port.hidden_conn_widget.update_line_gradient()
                 port.hidden_conn_widget.update()
 
-    def _has_side_title(self):
-        return bool(
-            self._current_port_mode is not PortMode.BOTH
-            and self._current_layout_mode is BoxLayoutMode.LARGE)
+    @property
+    def has_side_title(self) -> bool:
+        return (self._current_port_mode is not PortMode.BOTH
+                and self._current_layout_mode is BoxLayoutMode.LARGE)
 
     def wrap_unwrap_at_point(self, scene_pos: QPointF) -> bool:
         '''order a wrap or unwrap on the box if scene_pos is on the
@@ -795,7 +790,7 @@ class BoxWidget(QGraphicsItem):
 
         box_pos = group.gpos.boxes[self._port_mode]
         box_pos.pos = self.top_left()
-        box_pos.set_wrapped(self.is_wrapped())
+        box_pos.set_wrapped(self.is_wrapped)
         box_pos.layout_mode = self._layout_mode
 
         canvas.cb.group_box_pos_changed(

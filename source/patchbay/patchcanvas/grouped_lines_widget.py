@@ -116,13 +116,13 @@ class GroupedLinesWidget(QGraphicsPathItem):
             return
 
         for box_out in group_out.widgets:
-            if PortMode.OUTPUT in box_out.get_port_mode():
+            if PortMode.OUTPUT in box_out.port_mode:
                 break
         else:
             return
 
         for box_in in group_in.widgets:
-            if PortMode.INPUT in box_in.get_port_mode():
+            if PortMode.INPUT in box_in.port_mode:
                 break
         else:
             return

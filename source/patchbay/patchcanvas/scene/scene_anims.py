@@ -246,7 +246,7 @@ def add_box_to_animation_hidding(scene: 'PatchScene', box_widget: BoxWidget):
     moving_box.hidding_state = BoxHidding.HIDDING
 
     for port_mode in PortMode.OUTPUT, PortMode.INPUT:
-        if port_mode not in box_widget.get_port_mode():
+        if port_mode not in box_widget.port_mode:
             continue
 
         for lw in GroupedLinesWidget.widgets_for_box(

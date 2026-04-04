@@ -36,7 +36,7 @@ def _paint_ports_border_lines(box: 'BoxWidget', painter: QPainter):
     lh = theme.border_width / 2
 
     for port_mode in (PortMode.OUTPUT, PortMode.INPUT):
-        if not box._current_port_mode & port_mode:
+        if not box.current_port_mode & port_mode:
             continue
 
         if port_mode is PortMode.INPUT:
@@ -44,7 +44,7 @@ def _paint_ports_border_lines(box: 'BoxWidget', painter: QPainter):
         else:
             x = box._width - border_width - lh
         
-        if box._has_side_title():
+        if box.has_side_title:
             painter.drawLine(
                 QPointF(x, border_width + lh),
                 QPointF(x, box._height - border_width -lh))
@@ -94,8 +94,8 @@ def _paint_hardware_rack(box: 'BoxWidget', painter: QPainter):
     ports_bottom_in = box._layout.ports_bottom_in
     ports_bottom_out = box._layout.ports_bottom_out
 
-    if box._current_port_mode is not PortMode.BOTH:
-        if box._current_port_mode is PortMode.INPUT:
+    if box.current_port_mode is not PortMode.BOTH:
+        if box.current_port_mode is PortMode.INPUT:
             points = [
                 (- lh, - lh),
                 (- lh, ports_top_in - lh),
@@ -268,8 +268,8 @@ def _paint_gui_button(box: 'BoxWidget', painter: QPainter, border: int):
     mg = hmg + gmg
     gui_lh = gui_theme.border_width / 2
     
-    if box._has_side_title():
-        if box._current_port_mode is PortMode.INPUT:
+    if box.has_side_title:
+        if box.current_port_mode is PortMode.INPUT:
             gui_rect = QRectF(
                 box._width - box._header_width - border + mg.ports_side + gui_lh,
                 mg.top_side + border + gui_lh,
@@ -317,7 +317,7 @@ def _paint_gui_button(box: 'BoxWidget', painter: QPainter, border: int):
             painter.drawPath(gui_path)
 
 def _paint_monitor_deco(box: 'BoxWidget', painter: QPainter, pen_width: int):
-    if box._current_port_mode is PortMode.OUTPUT:
+    if box.current_port_mode is PortMode.OUTPUT:
         bor_gradient = QLinearGradient(0, 0, box._height, box._height)
     else:
         bor_gradient = QLinearGradient(
@@ -360,7 +360,7 @@ def _paint_monitor_deco(box: 'BoxWidget', painter: QPainter, pen_width: int):
     xtop = pen_width + bmw + tms_top
     xbot = pen_width + bmw + tms_bot
 
-    if box._current_port_mode is PortMode.INPUT:
+    if box.current_port_mode is PortMode.INPUT:
         xside = box._width - xside
         xband = box._width - xband
         xtop = box._width - xtop
@@ -449,12 +449,12 @@ def _paint_wrappers(
         case _ if box._wrapping_state in(
                 WrappingState.WRAPPED, WrappingState.UNWRAPPING):
             for port_mode in PortMode.INPUT, PortMode.OUTPUT:
-                if not box._current_port_mode & port_mode:
+                if not box.current_port_mode & port_mode:
                     continue
                 
                 painter.setPen(wtheme.fill_pen)
                 
-                if box._has_side_title():
+                if box.has_side_title:
                     side = 8.5
                     ypos = box._height - pen_width - 2.0
 
@@ -648,7 +648,7 @@ def paint(box: 'BoxWidget', painter: QPainter, option, widget):
         _paint_gui_button(box, painter, border_unselected)
 
     # draw Pipewire Monitor (or PulseAudio bridges) decorations
-    elif box.is_monitor and box._current_port_mode is not PortMode.BOTH:
+    elif box.is_monitor and box.current_port_mode is not PortMode.BOTH:
         _paint_monitor_deco(box, painter, int(pen_width))
 
     # may draw horizontal lines around title (header lines)

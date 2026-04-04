@@ -58,11 +58,12 @@ class CanvasSceneMissing(Exception):
     def __init__(self, message='canvas.scene is needed here'):
         super().__init__(message)
 
-# inline display is not usable in RaySession or Patchance
-# but this patchcanvas module has been forked from Carla
-# and all about inline_display has been kept (we never know)
-# but never tested.
+
 class InlineDisplay(IntEnum):
+    '''inline display is not usable in RaySession or Patchance
+    but this patchcanvas module has been forked from Carla
+    and all about inline_display has been kept (we never know)
+    but never tested.'''
     DISABLED = 0
     ENABLED = 1
     CACHED = 2
@@ -70,7 +71,6 @@ class InlineDisplay(IntEnum):
 
 class BoxHidding(Enum):
     'Enum used for animations where there are hidding or restoring boxes'
-
     NONE = auto()
     HIDDING = auto()
     RESTORING = auto()
@@ -223,7 +223,6 @@ class CanvasOptionsObject:
                     f'Failed to save value {value} for key {key}')
 
 
-# Canvas features
 class CanvasFeaturesObject:
     group_info = False
     group_rename = False
@@ -232,9 +231,6 @@ class CanvasFeaturesObject:
     handle_group_pos = False
 
 
-# ------------------------
-
-# object lists
 class GroupObject:
     group_id: int
     group_name: str
@@ -251,12 +247,6 @@ class GroupObject:
         widgets: list[BoxWidget]
     else:
         widgets: list
-
-    def current_port_mode(self) -> PortMode:
-        port_mode = PortMode.NULL
-        for box in self.widgets:
-            port_mode |= box._current_port_mode
-        return port_mode
 
 
 class ConnectableObject:

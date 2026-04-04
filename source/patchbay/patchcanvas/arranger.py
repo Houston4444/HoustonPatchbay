@@ -598,7 +598,7 @@ def arrange_face_to_face():
                 gpos.set_splitted(True)
                 gp_gposes[group.group_id] = gpos
 
-            box_pos = gpos.boxes[box.get_port_mode()]
+            box_pos = gpos.boxes[box.port_mode]
             layout_mode = BoxLayoutMode.LARGE
             wrapped = False
 
@@ -612,7 +612,7 @@ def arrange_face_to_face():
             box_pos.set_wrapped(wrapped)
             box_pos.layout_mode = layout_mode
 
-            if box.get_port_mode() is PortMode.OUTPUT:
+            if box.port_mode is PortMode.OUTPUT:
                 layout = box.get_layout(layout_mode=layout_mode)
                 if wrapped:
                     max_out_width = max(
@@ -641,7 +641,7 @@ def arrange_face_to_face():
             if not box.isVisible():
                 continue
 
-            box_pos = group.gpos.boxes.get(box.get_port_mode())
+            box_pos = group.gpos.boxes.get(box.port_mode)
             if box_pos is None:
                 continue
 
@@ -653,7 +653,7 @@ def arrange_face_to_face():
                 width = layout.full_width
                 height = layout.full_height
 
-            if box.get_port_mode() is PortMode.OUTPUT:
+            if box.port_mode is PortMode.OUTPUT:
                 to_x = int(out_right - width)
                 to_y = grid.next_top(last_out_y)
                 last_out_y += height + canvas.theme.box_spacing

@@ -45,7 +45,7 @@ class BoxHidder(QGraphicsItem):
         th_left = right - square_side * ratio
         th_right = left + square_side * ratio
 
-        if self.parentItem().get_port_mode() & PortMode.OUTPUT:
+        if self.parentItem().port_mode & PortMode.OUTPUT:
             points = [(right, bottom),
                       (right, max(th_top, top))]
 

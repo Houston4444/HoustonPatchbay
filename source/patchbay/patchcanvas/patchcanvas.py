@@ -220,7 +220,7 @@ def set_loading_items(yesno: bool, auto_redraw=False, prevent_overlap=True):
                 continue
 
             for box in group.widgets:
-                port_mode = box.get_port_mode()
+                port_mode = box.port_mode
                 if port_mode & PortMode.OUTPUT:
                     box.update_positions(scene_checks=False)
                     if box.isVisible():
@@ -238,7 +238,7 @@ def set_loading_items(yesno: bool, auto_redraw=False, prevent_overlap=True):
                 continue
 
             for box in group.widgets:
-                port_mode = box.get_port_mode()
+                port_mode = box.port_mode
                 if port_mode & PortMode.INPUT:
                     box.update_positions(scene_checks=False)
                     if box.isVisible():
@@ -370,7 +370,7 @@ def split_group(group_id: int, on_place=False, redraw=True):
         return
 
     box = group.widgets[0]
-    wrap = box.is_wrapped()
+    wrap = box.is_wrapped
     ex_rect = QRectF(box.sceneBoundingRect())
     new_box = BoxWidget(group, PortMode.INPUT)
     new_box.setPos(box.pos())
@@ -405,7 +405,7 @@ def split_group(group_id: int, on_place=False, redraw=True):
 
     if on_place:
         for box in group.widgets:
-            if box.get_current_port_mode() is PortMode.OUTPUT:
+            if box.current_port_mode is PortMode.OUTPUT:
                 group.gpos.boxes[PortMode.OUTPUT].pos = (
                     grid.previous_left(
                         int(ex_rect.right() + (full_width - ex_rect.width()) / 2
@@ -440,17 +440,17 @@ def join_group(group_id: int):
 
     wrap = True
     for box in group.widgets:
-        wrap = wrap and box.is_wrapped()
+        wrap = wrap and box.is_wrapped
 
     eater, eaten = group.widgets
 
     for portgroup in canvas.list_portgroups(group_id=group_id):
-        if (portgroup.port_mode is eaten.get_port_mode()
+        if (portgroup.port_mode is eaten.port_mode
                 and portgroup.widget is not None):
             portgroup.widget.setParentItem(eater)
 
     for port in canvas.list_ports(group_id=group_id):
-        if (port.port_mode is eaten.get_port_mode()
+        if (port.port_mode is eaten.port_mode
                 and port.widget is not None):
             port.widget.setParentItem(eater)
 
@@ -487,7 +487,7 @@ def repulse_from_group(group_id: int, port_mode: PortMode):
     canvas.ensure_init()
 
     for box in group.widgets:
-        if (box.get_port_mode() & port_mode
+        if (box.port_mode & port_mode
                 and (box.isVisible()
                      or (box in canvas.scene.move_boxes
                          and canvas.scene.move_boxes[box].hidding_state
@@ -630,7 +630,7 @@ def move_group_boxes(
 
     for port_mode, box_pos, in gpos.boxes.items():
         for box in group.widgets:
-            if box.get_port_mode() is not port_mode:
+            if box.port_mode is not port_mode:
                 continue
 
             if box._layout_mode is not box_pos.layout_mode:
@@ -645,7 +645,7 @@ def move_group_boxes(
             else:
                 wanted_wrap = box_pos.is_wrapped()
 
-            if box.is_wrapped() is not wanted_wrap:
+            if box.is_wrapped is not wanted_wrap:
                 # we need to update the box now, because the port_list
                 # of the box is not re-evaluted when we update positions
                 # during the wrap/unwrap animation.
@@ -736,7 +736,7 @@ def wrap_group_box(group_id: int, port_mode: PortMode, yesno: bool):
         return
 
     for box in group.widgets:
-        if box.get_port_mode() is port_mode:
+        if box.port_mode is port_mode:
             box.set_wrapped(yesno, animate=True,
                             prevent_overlap=True)
 
@@ -756,7 +756,7 @@ def set_group_layout_mode(group_id: int, port_mode: PortMode,
         return
 
     for box in group.widgets:
-        if (box.get_port_mode() is port_mode
+        if (box.port_mode is port_mode
                 and box._layout_mode is not layout_mode):
             box.set_layout_mode(layout_mode)
             box.update_positions(scene_checks=prevent_overlap)
@@ -765,8 +765,6 @@ def set_group_layout_mode(group_id: int, port_mode: PortMode,
 def clear_selection():
     canvas.ensure_init()
     canvas.scene.clear_selection()
-
-# ------------------------------------------------------------------------
 
 @patchbay_api
 def set_group_icon(group_id: int, box_type: BoxType, icon_name: str):
@@ -806,8 +804,6 @@ def set_group_as_plugin(group_id: int, plugin_id: int,
 
     canvas.group_plugin_map[plugin_id] = group
 
-# ---------------------------------------------
-
 @patchbay_api
 def add_port(group_id: int, port_id: int, port_name: str,
              port_mode: PortMode, port_type: PortType,
@@ -822,7 +818,7 @@ def add_port(group_id: int, port_id: int, port_name: str,
         return
 
     for box in group.widgets:
-        if port_mode in box.get_port_mode():
+        if port_mode in box.port_mode:
             break
     else:
         _logger.error(f"{_logging_str} - Unable to find a box for port")
@@ -1001,7 +997,7 @@ def add_portgroup(group_id: int, portgrp_id: int, port_mode: PortMode,
         return
 
     for box in group.widgets:
-        if box.get_port_mode() & port_mode:
+        if box.port_mode & port_mode:
             portgrp.widget = box.add_portgroup_from_group(portgrp)
 
             if not canvas.loading_items:
@@ -1120,8 +1116,6 @@ def animate_before_hide_box(group_id: int, port_mode: PortMode):
         if port_mode & box._port_mode:
             canvas.scene.add_box_to_animation_hidding(box)
 
-# ----------------------------------------------------------------------------
-
 @patchbay_api
 def start_aliasing_check(aliasing_reason: AliasingReason):
     canvas.ensure_init()
@@ -1159,7 +1153,6 @@ def copy_and_load_current_theme(new_theme_name: str) -> int:
         raise CanvasNeverInit
     return canvas.theme_manager.copy_and_load_current_theme(new_theme_name)
 
-# ----------------------------------------------------------------------------
 @patchbay_api
 def redraw_plugin_group(plugin_id: int):
     group = canvas.group_plugin_map.get(plugin_id, None)
@@ -1283,7 +1276,7 @@ def select_port(group_id: int, port_id: int):
     box = port.widget.parentItem()
     canvas.scene.clearSelection()
 
-    if box.is_wrapped():
+    if box.is_wrapped:
         canvas.scene.center_view_on(box)
         box.setSelected(True)
     else:
@@ -1317,8 +1310,8 @@ def get_box_true_layout(group_id: int, port_mode: PortMode) -> BoxLayoutMode:
         return BoxLayoutMode.AUTO
 
     for box in group.widgets:
-        if box.get_port_mode() is port_mode:
-            return box.get_current_layout_mode()
+        if box.port_mode is port_mode:
+            return box.current_layout_mode
 
     return BoxLayoutMode.AUTO
 

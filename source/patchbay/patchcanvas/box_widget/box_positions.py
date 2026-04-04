@@ -9,6 +9,7 @@ from patshared import (
     BoxLayoutMode, PortMode, PortType, PortSubType, BoxType)
 
 from ..init_values import canvas, options, InlineDisplay
+from ..utils import get_portgroup_name_from_ports_names
 
 from .box_layout import PortsMinSizes, TitleOn, BoxLayout
 from .box_utils import BoxStyler, TitleLine, UnwrapButton, WrappingState
@@ -146,10 +147,14 @@ def split_in_two(string: str, n_lines: int) -> list[str]:
     return_list.append(string[last_index:])
     return polished_list(return_list)
 
+def _get_portgroup_name(box: 'BoxWidget', portgrp_id: int):
+    return get_portgroup_name_from_ports_names(
+        [p.port_name for p in box._port_list if p.portgrp_id == portgrp_id])
+
 def _should_align_port_types(box: 'BoxWidget') -> bool:
     '''check if we can align port types
     eg, align first midi input to first midi output'''
-    if box._current_port_mode is not PortMode.BOTH:
+    if box.current_port_mode is not PortMode.BOTH:
         return False
 
     port_types_aligner = list[tuple[int, int]]()
@@ -214,7 +219,7 @@ def _get_ports_min_sizes(
             if port.portgrp_id:
                 portgrp = canvas.get_portgroup(box._group_id, port.portgrp_id)
                 if port.pg_pos == 0:
-                    portgrp_name = box._get_portgroup_name(port.portgrp_id)
+                    portgrp_name = _get_portgroup_name(box, port.portgrp_id)
 
                     if portgrp is not None and portgrp.widget is not None:
                         portgrp.widget.set_print_name(
@@ -223,8 +228,8 @@ def _get_ports_min_sizes(
 
                 port.widget.set_print_name(
                     port.port_name.replace(
-                        box._get_portgroup_name(port.portgrp_id), '', 1),
-                    int(max_pwidth/2))
+                        _get_portgroup_name(box, port.portgrp_id), '', 1),
+                    int(max_pwidth / 2))
 
                 if portgrp is None or portgrp.widget is None:
                     _logger.warning('_get_ports_min_sizes, '
@@ -292,7 +297,7 @@ def _get_ports_min_sizes(
     last_type_and_sub = (PortType.NULL, PortSubType.REGULAR)
     n_inout_types_and_sub = 0
 
-    if box._current_port_mode is PortMode.BOTH:
+    if box.current_port_mode is PortMode.BOTH:
         for port_type, port_subtype in list_port_types_and_subs():
             for port in box._port_list:
                 if (port.port_type is not port_type
@@ -423,7 +428,7 @@ def _choose_box_layout(
     box_theme = box.get_theme()
     font_size = box_theme.font.pixelSize()
 
-    if box.has_top_icon():
+    if box.has_top_icon:
         icon_size = int(box_theme.icon_size)
     else:
         icon_size = 0
@@ -450,7 +455,7 @@ def _choose_box_layout(
         title_line_y_start = 1 + font_size
         title_height = title_line_y_start + 3
 
-        if box.has_top_icon():
+        if box.has_top_icon:
             header_height = 3 + icon_size + 3
         else:
             header_height = title_height
@@ -469,7 +474,7 @@ def _choose_box_layout(
                 max_title_width = int(max(max_title_width, title_line.size))
                 header_width = title_line.size + 10
 
-                if (box.has_top_icon()
+                if (box.has_top_icon
                         and title_line.y <= icon_size + 6 + font_size):
                     # text line is at right of the icon
                     header_width += icon_size + 4
@@ -496,7 +501,7 @@ def _choose_box_layout(
             last_lines_count = len(title_lines)
 
         lines_choice_max = i
-        if box.has_top_icon():
+        if box.has_top_icon:
             icon_size = int(box_theme.icon_size)
         else:
             icon_size = 0
@@ -512,13 +517,13 @@ def _choose_box_layout(
     BoxLayout.init_from_box(box, ports_min_sizes)
     box_layouts = list[BoxLayout]()
 
-    if box._current_port_mode in (PortMode.INPUT, PortMode.OUTPUT):
+    if box.current_port_mode in (PortMode.INPUT, PortMode.OUTPUT):
         for i in range(1, lines_choice_max + 1):
             box_layouts.append(
                 BoxLayout(i, BoxLayoutMode.LARGE,
                             TitleOn.SIDE, all_title_templates[i]))
 
-        if box.has_top_icon():
+        if box.has_top_icon:
             for i in range(1, lines_choice_max + 1):
                 box_layouts.append(
                     BoxLayout(i, BoxLayoutMode.LARGE,
@@ -603,7 +608,7 @@ def _set_ports_y_positions(
     port_type_spacing_in = port_type_spacing_out = port_type_spacing
     one_column = box._layout.one_column
 
-    if box._has_side_title():
+    if box.has_side_title:
         start_pos = pen_width + port_spacing
     else:
         start_pos = pen_width + box._header_height
@@ -650,7 +655,7 @@ def _set_ports_y_positions(
             last_in_pos += exceeding / 2
             last_out_pos += exceeding / 2
 
-    elif box._current_port_mode is PortMode.BOTH:
+    elif box.current_port_mode is PortMode.BOTH:
         if exc_out < exc_in:
             new_pts_out = exc_out / (1 + n_types_out)
             more_out = 0.0
@@ -930,8 +935,8 @@ def _set_title_positions(box: 'BoxWidget'):
         gui_margin = canvas.theme.margin_empty
     
     # get the rect where the title is placed (top, bottom, left, right)
-    if box._has_side_title():
-        if box._current_port_mode is PortMode.INPUT:
+    if box.has_side_title:
+        if box.current_port_mode is PortMode.INPUT:
             left = box._width - pen_width - box._header_width + mg.ports_side
             right = box._width - pen_width - mg.free_side
         else:
@@ -959,7 +964,7 @@ def _set_title_positions(box: 'BoxWidget'):
         box._title_lines[0].y = int(
             top + (bottom - top - font_size * 0.6) * 0.5 + font_size * 0.6)
 
-    if box._has_side_title():
+    if box.has_side_title:
         # In case the title is near to be vertically centered in the box
         # It's prettier to center it correctly
         if (box._title_lines
@@ -971,7 +976,7 @@ def _set_title_positions(box: 'BoxWidget'):
             y_correction = 0
 
         # set title lines and icon pos
-        match box._current_port_mode:
+        match box.current_port_mode:
             case PortMode.INPUT:
                 for title_line in box._title_lines:
                     title_line.x = left + 4
@@ -982,7 +987,7 @@ def _set_title_positions(box: 'BoxWidget'):
                     int(top + 3))
 
             case PortMode.OUTPUT:
-                if box.has_top_icon() and not box._title_under_icon:
+                if box.has_top_icon and not box._title_under_icon:
                     for title_line in box._title_lines:
                         if title_line.y >= top + icon_size + 6:
                             title_line.x = left + 4
@@ -1006,7 +1011,7 @@ def _set_title_positions(box: 'BoxWidget'):
 
     for title_line in box._title_lines:
         title_size = title_line.size
-        if (box.has_top_icon()
+        if (box.has_top_icon
                 and title_line.y <= top + icon_size + 6 + font_size):
             # title line is beside icon
             title_size += icon_size + 4
@@ -1015,7 +1020,7 @@ def _set_title_positions(box: 'BoxWidget'):
 
     # set title lines X position
     for title_line in box._title_lines:
-        if (box.has_top_icon()
+        if (box.has_top_icon
                 and title_line.y <= top + icon_size + 6 + font_size):
             # title line is beside the icon
             title_line.x = (left
@@ -1038,9 +1043,9 @@ def _set_title_positions(box: 'BoxWidget'):
                                     box._width - 5.0, y)
 
 def _get_wrap_triangle_pos(box: 'BoxWidget') -> UnwrapButton:
-    if box._has_side_title():
+    if box.has_side_title:
         if box._height - box._header_height >= 15.0:
-            if box._current_port_mode is PortMode.OUTPUT:
+            if box.current_port_mode is PortMode.OUTPUT:
                 return UnwrapButton.LEFT
             else:
                 return UnwrapButton.RIGHT
@@ -1052,17 +1057,17 @@ def _get_wrap_triangle_pos(box: 'BoxWidget') -> UnwrapButton:
     last_out_pos = box._layout.ports_bottom_out
 
     if box._height - box._header_height >= 64.0:
-        if (box._current_port_mode is PortMode.BOTH
+        if (box.current_port_mode is PortMode.BOTH
                 and box._current_layout_mode is BoxLayoutMode.HIGH):
             if last_in_pos > last_out_pos:
                 return UnwrapButton.RIGHT
             else:
                 return UnwrapButton.LEFT
 
-        elif box._current_port_mode is PortMode.INPUT:
+        elif box.current_port_mode is PortMode.INPUT:
             return UnwrapButton.RIGHT
 
-        elif box._current_port_mode is PortMode.OUTPUT:
+        elif box.current_port_mode is PortMode.OUTPUT:
             return UnwrapButton.LEFT
 
         y_side_space = last_in_pos - last_out_pos
@@ -1262,7 +1267,7 @@ def get_dummy_rect(box: 'BoxWidget') -> QRectF:
     else:
         hwr = 0.0
 
-    if box.is_wrapped():
+    if box.is_wrapped:
         return QRectF(-hwr, -hwr, box_layout.full_wrapped_width,
                         box_layout.full_wrapped_height)
 

@@ -126,7 +126,7 @@ def _build_main_path(
             painter_path = painter_path.united(top_right_path)
 
     if box.is_monitor and border_radius:
-        if box._current_port_mode is PortMode.OUTPUT:
+        if box.current_port_mode is PortMode.OUTPUT:
             left_path = QPainterPath()
             left_path.addRect(QRectF(
                 0.0 + line_hinting - EPSY,
@@ -140,7 +140,7 @@ def _build_main_path(
                 border_radius + EPSD, border_radius - line_hinting + EPSD))
             painter_path = painter_path.united(top_left_path)
 
-        elif box._current_port_mode is PortMode.INPUT:
+        elif box.current_port_mode is PortMode.INPUT:
             right_path = QPainterPath()
             right_path.addRect(QRectF(
                 box._width - line_hinting - EPSY - border_radius,
@@ -168,8 +168,8 @@ def _build_header_path(
     else:
         border = line_hinting * 2.0
     
-    if box._has_side_title():
-        if box._current_port_mode is PortMode.OUTPUT:
+    if box.has_side_title:
+        if box.current_port_mode is PortMode.OUTPUT:
             header_rect = QRectF(
                 border + header_lh + mg.free_side - EPSY,
                 border + header_lh - EPSY,
@@ -208,8 +208,8 @@ def _build_gui_button_path(
     mg = hmg + gmg
     gui_lh = gui_theme.border_width / 2
     
-    if box._has_side_title():
-        if box._current_port_mode is PortMode.OUTPUT:
+    if box.has_side_title:
+        if box.current_port_mode is PortMode.OUTPUT:
             gui_rect = QRectF(
                 usl_border + mg.free_side + gui_lh,
                 usl_border + mg.top_side + gui_lh,

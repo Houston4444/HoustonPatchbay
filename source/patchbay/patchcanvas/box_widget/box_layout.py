@@ -57,7 +57,7 @@ class BoxLayout:
         cls._pen_width = theme.border_width
         cls._port_spacing = theme.port_spacing
         cls._hwr = canvas.theme.hardware_rack_width if box.is_hardware else 0
-        cls._port_mode = box._current_port_mode
+        cls._port_mode = box.current_port_mode
         cls._can_handle_gui = box._can_handle_gui
         cls._icon_size = theme.icon_size
 

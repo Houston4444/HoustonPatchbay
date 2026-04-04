@@ -197,8 +197,8 @@ def _get_to_move_boxes_from_repulse_boxes(
 
             if _rect_has_to_move_from(
                     pusher_rect, pushed_rect,
-                    pusher_box._current_port_mode,
-                    candidate_box._current_port_mode):
+                    pusher_box.current_port_mode,
+                    candidate_box.current_port_mode):
                 pusheds[candidate_box] = pushed_rect
 
         # search intersections in moving boxes
@@ -212,8 +212,8 @@ def _get_to_move_boxes_from_repulse_boxes(
 
             if _rect_has_to_move_from(
                     pusher_rect, pushed_rect,
-                    pusher_box._current_port_mode,
-                    candidate_box._current_port_mode):
+                    pusher_box.current_port_mode,
+                    candidate_box.current_port_mode):
                 pusheds[candidate_box] = pushed_rect
                 
         for pushed_box, pushed_rect in pusheds.items():
@@ -255,8 +255,8 @@ def _get_to_move_boxes_in_full_repulse(
 
         if _rect_has_to_move_from(
                 pusher_rect, moving_box.final_rect,
-                pusher_box._current_port_mode,
-                moving_box.widget._current_port_mode):
+                pusher_box.current_port_mode,
+                moving_box.widget.current_port_mode):
             pusheds[moving_box.widget] = moving_box.final_rect
 
     for pushed_box, pushed_rect in pusheds.items():
@@ -307,7 +307,7 @@ def deplace_boxes_from_repulsers(
         # calculate the new position of the box repulsed by its repulser
         pushed_rect = _repulse(
             new_direction, pusher_rect, rect,
-            pusher_box._current_port_mode, box._current_port_mode)
+            pusher_box.current_port_mode, box.current_port_mode)
 
         active_pusher_boxes = set[BoxWidget]()
 
@@ -323,8 +323,8 @@ def deplace_boxes_from_repulsers(
                 
                 if _rect_has_to_move_from(
                         pusher_rect, pushed_rect,
-                        pusher_box._current_port_mode,
-                        box._current_port_mode):
+                        pusher_box.current_port_mode,
+                        box.current_port_mode):
 
                     if pusher_box in active_pusher_boxes:
                         continue
@@ -335,8 +335,8 @@ def deplace_boxes_from_repulsers(
                     pushed_rect = _repulse(
                         directions[-1], pusher_rect, pushed_rect,
                         # new_direction, pusher_rect, pushed_rect,
-                        pusher_box._current_port_mode,
-                        box._current_port_mode)
+                        pusher_box.current_port_mode,
+                        box.current_port_mode)
                     directions.append(new_direction)
                     break
             else:
@@ -365,8 +365,8 @@ def deplace_boxes_from_repulsers(
 
                 if _rect_has_to_move_from(
                         pushed_rect, moving_box.final_rect,
-                        to_move_box.box._current_port_mode,
-                        mv_box._current_port_mode):
+                        to_move_box.box.current_port_mode,
+                        mv_box.current_port_mode):
                     adding_list.append(
                         ToMoveBox(directions, moving_box.widget,
                                   moving_box.final_rect, box, pushed_rect))
@@ -383,8 +383,8 @@ def deplace_boxes_from_repulsers(
                 candidate_rect = candidate_box.sceneBoundingRect()
                 if _rect_has_to_move_from(
                         pushed_rect, candidate_rect,
-                        to_move_box.box._current_port_mode,
-                        candidate_box._current_port_mode):
+                        to_move_box.box.current_port_mode,
+                        candidate_box.current_port_mode):
                     adding_list.append(
                         ToMoveBox(directions, candidate_box, candidate_rect,
                                   box, pushed_rect))
@@ -397,8 +397,8 @@ def deplace_boxes_from_repulsers(
 
                 if _rect_has_to_move_from(
                         pushed_rect, moving_box.final_rect,
-                        to_move_box.box._current_port_mode,
-                        mv_box._current_port_mode):
+                        to_move_box.box.current_port_mode,
+                        mv_box.current_port_mode):
                     adding_list.append(
                         ToMoveBox(directions, moving_box.widget,
                                   moving_box.final_rect, box, pushed_rect))
