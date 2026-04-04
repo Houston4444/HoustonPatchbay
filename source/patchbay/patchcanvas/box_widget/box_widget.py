@@ -133,30 +133,6 @@ class BoxWidget(QGraphicsItem):
                     self.top_icon = None
                     del top_icon
 
-        # Shadow
-        shadow_theme = self.get_theme(BoxStyler.SHADOW)
-        self.shadow = None
-        # FIXME FX on top of graphic items make them lose high-dpi
-        # See https://bugreports.qt.io/browse/QTBUG-65035
-        if (options.show_shadows
-                and canvas.scene.get_device_pixel_ratio_f() == 1.0):
-            self.shadow = BoxWidgetShadow(self.toGraphicsObject())
-            self.shadow.set_fake_parent(self)
-            self.shadow.set_theme(shadow_theme)
-            self.setGraphicsEffect(self.shadow)
-
-            if port_mode is PortMode.INPUT:
-                self.shadow.setOffset(4, 2)
-            elif port_mode is PortMode.OUTPUT:
-                self.shadow.setOffset(-4, 2)
-            elif port_mode is PortMode.BOTH:
-                self.shadow.setOffset(0, 2)
-
-        # Final touches
-        self.setFlags(QGraphicsItem.GraphicsItemFlag.ItemIsFocusable
-                      | QGraphicsItem.GraphicsItemFlag.ItemIsMovable
-                      | QGraphicsItem.GraphicsItemFlag.ItemIsSelectable)
-
         # Wait for at least 1 port
         if options.auto_hide_groups:
             self.setVisible(False)
@@ -182,14 +158,39 @@ class BoxWidget(QGraphicsItem):
 
         self.update_positions_pending = False
 
-        canvas.scene.addItem(self)
-        self.setZValue(Zv.NEW_BOX.value)
-        
         self._ex_width = self._width
         self._ex_height = self._height
 
         self._ex_scene_pos = self.scenePos()
         self._ex_ports_y_segments_dict = dict[str, list[list[float]]]()
+
+        # Shadow
+        shadow_theme = self.get_theme(BoxStyler.SHADOW)
+        self.shadow = None
+        # FIXME FX on top of graphic items make them lose high-dpi
+        # See https://bugreports.qt.io/browse/QTBUG-65035
+        if (options.show_shadows
+                and canvas.scene.get_device_pixel_ratio_f() == 1.0):
+            self.shadow = BoxWidgetShadow(self.toGraphicsObject())
+            self.shadow.set_fake_parent(self)
+            self.shadow.set_theme(shadow_theme)
+            self.setGraphicsEffect(self.shadow)
+
+            match port_mode:
+                case PortMode.INPUT:
+                    self.shadow.setOffset(4, 2)
+                case PortMode.OUTPUT:
+                    self.shadow.setOffset(-4, 2)
+                case PortMode.BOTH:
+                    self.shadow.setOffset(0, 2)
+
+        # Final touches
+        self.setFlags(QGraphicsItem.GraphicsItemFlag.ItemIsFocusable
+                      | QGraphicsItem.GraphicsItemFlag.ItemIsMovable
+                      | QGraphicsItem.GraphicsItemFlag.ItemIsSelectable)
+
+        canvas.scene.addItem(self)
+        self.setZValue(Zv.NEW_BOX.value)
 
     def __repr__(self) -> str:
         return f"BoxWidget({self._group_name}, {self._port_mode.name})"
@@ -909,6 +910,8 @@ class BoxWidget(QGraphicsItem):
             case BoxType.MONITOR:
                 return theme.monitor
             case BoxType.CLIENT:
+                if self._can_handle_gui:
+                    return theme.client.with_gui
                 return theme.client
 
         return theme

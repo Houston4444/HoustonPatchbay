@@ -10,11 +10,18 @@ class UslStyleAttributer(StyleAttributer):
         self.subs.append('selected')
 
 
+class ClientBoxStyleAttributer(UslStyleAttributer):
+    def __init__(self, path: str, parent=None):
+        super().__init__(path, parent)
+        self.with_gui = UslStyleAttributer(path + '.with_gui', self)
+        self.subs.append('with_gui')
+
+
 class BoxStyleAttributer(UslStyleAttributer):
     def __init__(self, path: str, parent):
         super().__init__(path, parent)
         self.hardware = UslStyleAttributer(path + '.hardware', self)
-        self.client = UslStyleAttributer(path + '.client', self)
+        self.client = ClientBoxStyleAttributer(path + '.client', self)
         self.monitor = UslStyleAttributer(path + '.monitor', self)
         self.subs += ['hardware', 'client', 'monitor']
 
