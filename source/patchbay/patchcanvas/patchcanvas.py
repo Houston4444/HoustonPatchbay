@@ -71,7 +71,6 @@ _logging_str = ''
 and arguments, easily usable by logger'''
 
 
-# decorator
 def patchbay_api(func: Callable):
     '''decorator for API callable functions.
     It makes debug logs and also a global logging string
