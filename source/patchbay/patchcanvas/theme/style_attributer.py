@@ -296,11 +296,15 @@ class StyleAttributer:
             if (orig_path.endswith('.' + path_end)
                     and path_end in self.subs
                     and self._path + '.' + path_end != orig_path):
-                return self.selected.get_value_of(
-                    attribute, self._path, needed_attribute)
+                sel_attr = self.selected._attrs.get(attribute)
+                if sel_attr is None:
+                    if needed_attribute:
+                        if self.selected._attrs.get(needed_attribute) is None:
+                            return None
+                    continue
+                return sel_attr                        
 
         if self._attrs.get(attribute) is None:
-        # if self.__getattribute__(attribute) is None:
             if (needed_attribute
                     and self._attrs.get(needed_attribute) is not None):
                 return None
