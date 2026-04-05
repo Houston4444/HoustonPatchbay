@@ -20,10 +20,10 @@
 import logging
 from pathlib import Path
 import time
-from typing import Callable
+from typing import TypeVar
 
 from qtpy.QtCore import (
-    Slot, Signal, QObject, QPointF, QRectF,#type:ignore
+   Slot, Signal, QObject, QPointF, QRectF,
     QSettings, QTimer)
 
 from patshared import (
@@ -70,8 +70,9 @@ _logging_str = ''
 '''used by patchbay_api decorator to get function_name
 and arguments, easily usable by logger'''
 
+T = TypeVar('T')
 
-def patchbay_api(func: Callable):
+def patchbay_api(func: T) -> T:
     '''decorator for API callable functions.
     It makes debug logs and also a global logging string
     usable directly in the functions'''
@@ -81,10 +82,10 @@ def patchbay_api(func: Callable):
         args_strs += [f"{k}={v}" for k, v in kwargs.items()]
 
         global _logging_str
-        _logging_str = f"{func.__name__}({', '.join(args_strs)})"
+        _logging_str = f"{func.__name__}({', '.join(args_strs)})" # type:ignore
         _logger.debug(_logging_str)
-        return func(*args, **kwargs)
-    return wrapper
+        return func(*args, **kwargs) # type:ignore
+    return wrapper # type:ignore
 
 
 class CanvasObject(QObject):

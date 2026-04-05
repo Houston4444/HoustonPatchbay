@@ -1,6 +1,6 @@
 from functools import cached_property
 import logging
-from typing import Iterator, TYPE_CHECKING
+from typing import Iterator, TYPE_CHECKING, Any
 
 from qtpy import QT5
 from qtpy.QtCore import Qt
@@ -23,7 +23,7 @@ class StyleAttributer:
                  parent: 'StyleAttributer | None' =None):
         self.subs = list[str]()
 
-        self._attrs = {}
+        self._attrs: dict[str, Any] = {}
  
         self._path = path
         self._parent = parent
@@ -34,7 +34,7 @@ class StyleAttributer:
     def child(self, path: str) -> 'StyleAttributer | None':
         begin, _, end = path.partition('.')
         if begin not in self.subs:
-            return
+            return None
         
         child_: StyleAttributer = self.__getattribute__(begin)
         if not end:
@@ -142,6 +142,8 @@ class StyleAttributer:
             case 'border-style':
                 if isinstance(value, str):
                     value = value.lower()
+                    border_style: Qt.PenStyle | None
+
                     match value:
                         case 'solid'|'normal':
                             border_style = Qt.PenStyle.SolidLine

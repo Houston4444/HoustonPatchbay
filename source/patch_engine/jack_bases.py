@@ -1,12 +1,13 @@
 from enum import Enum, auto
 from queue import Queue
 import time
-from typing import Iterator, TypeAlias, Optional
+from typing import Iterator, TypeAlias, Optional, Any
 
 from .port_data import PortData
 
 
-PatchEventArg: TypeAlias = str | PortData | tuple[str, str] | tuple[int, str, str]
+PatchEventArg: TypeAlias = \
+    str | PortData | tuple[str, str] | tuple[int, str, str]
 
 
 class PatchEngineOuterMissing(Exception):
@@ -30,10 +31,10 @@ class PatchEvent(Enum):
     SAMPLERATE_CHANGED = auto()
 
 
-class PatchEventQueue(Queue[tuple[PatchEvent, PatchEventArg]]):
+class PatchEventQueue(Queue[tuple[PatchEvent, PatchEventArg | None]]):
     def __init__(self, maxsize: int = 0):
         super().__init__(maxsize)
-        self.oldies_queue = Queue()
+        self.oldies_queue: Queue[tuple[Any, Any, float]] = Queue()
 
     def add(self, *args):
         nargs = len(args)
@@ -46,10 +47,10 @@ class PatchEventQueue(Queue[tuple[PatchEvent, PatchEventArg]]):
             rest = None
         else:
             raise TypeError
-        self.put((event, rest))
+        self.put((event, rest)) # type:ignore
         self.oldies_queue.put((event, rest, time.time()))
 
-    def __iter__(self) -> Iterator[tuple[PatchEvent, PatchEventArg]]:
+    def __iter__(self) -> Iterator[tuple[PatchEvent, PatchEventArg | None]]:
         while self.qsize():
             event, event_arg = self.get()
             yield (event, event_arg)

@@ -3,7 +3,7 @@ from enum import IntFlag, IntEnum, auto, Flag
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from patchbay_manager import PatchbayManager
+    from ..patchbay_manager import PatchbayManager
 
 
 class JackPortFlag(IntFlag):
@@ -57,6 +57,9 @@ class ToolDisplayed(IntFlag):
 
         for flag in ToolDisplayed:
             if flag is ToolDisplayed.ALL:
+                continue
+            
+            if flag.name is None:
                 continue
 
             if self & flag:
@@ -116,7 +119,7 @@ class CanvasOptimizeIt:
             mng.optimize_operation(True)
 
     def __enter__(self):
-        ...
+        pass
 
     def __exit__(self, *args, **kwargs):
         self.mng.canvas_optimize = self._previous_optim

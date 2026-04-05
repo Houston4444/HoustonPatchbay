@@ -30,7 +30,6 @@ class HiddenConnWidget(QGraphicsPathItem):
         self._theme_attrs = _ThemeAttributes()
 
         self.setBrush(QColor(0, 0, 0, 0))
-        self.setGraphicsEffect(None) # type:ignore or #TODO what should be sent ?
         self.update_theme()
         self.update_line_pos()
         self.update_line_gradient()

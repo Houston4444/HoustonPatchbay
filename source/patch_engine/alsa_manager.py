@@ -293,9 +293,9 @@ class AlsaManager:
             _, alsa_key, dest_client_id, dest_port_id, *rest = \
                 port_in_name.split(':')
             src_client_id, src_port_id \
-                = int(src_client_id), int(src_port_id)
+                = int(src_client_id), int(src_port_id) # type:ignore
             dest_client_id, dest_port_id \
-                = int(dest_client_id), int(dest_port_id)
+                = int(dest_client_id), int(dest_port_id) # type:ignore
 
         except BaseException as e:
             if disconnect:
@@ -309,6 +309,12 @@ class AlsaManager:
             return False
 
         try:
+            if TYPE_CHECKING:
+                assert isinstance(src_client_id, int)
+                assert isinstance(src_port_id, int)
+                assert isinstance(dest_client_id, int)
+                assert isinstance(dest_port_id, int)
+
             if disconnect:
                 self.seq.disconnect_ports(
                     (src_client_id, src_port_id),
@@ -380,7 +386,7 @@ class AlsaManager:
                 return
 
             client.add_port(port_id)
-            port = client.ports.get(port_id)
+            port = client.ports.get(port_id) # type:ignore
             if port is None:
                 return
 
@@ -392,7 +398,7 @@ class AlsaManager:
             if client is None:
                 return
 
-            port = client.ports.get(port_id)
+            port = client.ports.get(port_id) # type:ignore
             if port is None:
                 return
 

@@ -640,10 +640,10 @@ class Group:
         else:
             self.remove_from_canvas()
 
-    def stereo_detection(self, port: Port) -> Union[Port, None]:
+    def stereo_detection(self, port: Port) -> Port | None:
         if (port.type is not PortType.AUDIO_JACK
                 or port.subtype is not PortSubType.REGULAR):
-            return
+            return None
 
         # find the last port with same type and mode in the group
         for other_port in reversed(self.ports):
@@ -660,10 +660,10 @@ class Group:
                     if other_port.short_name in pg_mem.port_names:
                         # other_port (left) is in a remembered portgroup
                         # prevent stereo detection
-                        return
+                        return None
                 break
         else:
-            return
+            return None
 
         may_match_set = set[str]()
 
@@ -739,6 +739,7 @@ class Group:
 
         if other_port_name in may_match_set:
             return other_port
+        return None
 
     def check_for_portgroup_on_last_port(self):
         if not self.ports:

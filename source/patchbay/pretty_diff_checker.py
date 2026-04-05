@@ -3,8 +3,7 @@ from typing import TYPE_CHECKING
 from patshared import PrettyDiff
 
 if TYPE_CHECKING:
-    from patchbay_manager import PatchbayManager
-# from port_data import PortDataList
+    from .patchbay_manager import PatchbayManager
 
 
 class PrettyDiffChecker:

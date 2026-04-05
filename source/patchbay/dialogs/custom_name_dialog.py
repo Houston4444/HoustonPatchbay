@@ -1,10 +1,10 @@
-from typing import Union
 
 from qtpy.QtCore import Slot # type:ignore
 from qtpy.QtGui import QIcon
 from qtpy.QtWidgets import QDialog, QDialogButtonBox, QApplication
 
 from patshared import Naming
+
 from ..patchcanvas.utils import portgroup_name_splitted
 from ..bases.group import Group
 from ..bases.port import Port
@@ -17,7 +17,7 @@ _translate = QApplication.translate
 
 
 class CustomNameDialog(QDialog):
-    def __init__(self, element: Union[Group, Port, Portgroup]):
+    def __init__(self, element: Group | Port | Portgroup):
         super().__init__(element.manager.main_win)
 
         self.ui = Ui_RenameGroupDialog()
