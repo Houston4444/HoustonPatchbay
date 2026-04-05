@@ -391,6 +391,7 @@ class BoxWidget(QGraphicsItem):
             self.hidder_widget.set_hide_ratio(1.0 - ratio)
             self.setZValue(Zv.HIDDING_BOX.value)
 
+    @property
     def is_hidding_or_restore(self) -> bool:
         return self.hidder_widget is not None
 
@@ -481,6 +482,23 @@ class BoxWidget(QGraphicsItem):
     def update_positions(self, even_animated=False, without_connections=False,
                          scene_checks=True, theme_change=False,
                          wrap_anim=False):
+        '''Redraw the box, may take some time (~ 10ms for a 30 ports box).
+        It checks the present ports and portgroups, choose the box size and
+        set title and ports positions.
+
+        even_animated : if we need to update the box even
+        if the box is in animation.
+
+        without_connections : optimization, if we redraw all groups, we can
+        redraw connections after having redrawn all boxes (2 times faster).
+
+        scene_checks : if we redraw multiple boxes, we can resize the scene
+        and check box overlapping after having redrawn all boxes.
+
+        theme_change : only when we change theme.
+
+        wrap_anim : only while wrapping/unwrapping, does not check the
+        present ports, size is based on saved sizes.'''
         box_positions.update_positions(
             self,
             even_animated=even_animated,
