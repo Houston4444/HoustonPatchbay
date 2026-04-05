@@ -20,10 +20,9 @@
 import logging
 from pathlib import Path
 import time
-from typing import TypeVar
 
 from qtpy.QtCore import (
-   Slot, Signal, QObject, QPointF, QRectF,
+   Slot, Signal, QObject, QPointF, QRectF, # type:ignore
     QSettings, QTimer)
 
 from patshared import (
@@ -54,6 +53,7 @@ from .init_values import (
     Zv
 )
 
+from .api_log import patchbay_api, LogStr
 from . import grid
 from .box_widget import BoxWidget
 from .port_widget import PortWidget
@@ -66,26 +66,6 @@ from .proto_callbacker import ProtoCallbacker
 
 
 _logger = logging.getLogger(__name__)
-_logging_str = ''
-'''used by patchbay_api decorator to get function_name
-and arguments, easily usable by logger'''
-
-T = TypeVar('T')
-
-def patchbay_api(func: T) -> T:
-    '''decorator for API callable functions.
-    It makes debug logs and also a global logging string
-    usable directly in the functions'''
-
-    def wrapper(*args, **kwargs):
-        args_strs = [str(arg) for arg in args]
-        args_strs += [f"{k}={v}" for k, v in kwargs.items()]
-
-        global _logging_str
-        _logging_str = f"{func.__name__}({', '.join(args_strs)})" # type:ignore
-        _logger.debug(_logging_str)
-        return func(*args, **kwargs) # type:ignore
-    return wrapper # type:ignore
 
 
 class CanvasObject(QObject):
@@ -259,7 +239,7 @@ def set_loading_items(yesno: bool, auto_redraw=False, prevent_overlap=True):
 def add_group(group_id: int, group_name: str, split: bool,
               box_type: BoxType, icon_name: str, gpos: GroupPos):
     if canvas.get_group(group_id) is not None:
-        _logger.error(f"{_logging_str} - group already exists.")
+        _logger.error(f"{LogStr.func_args} - group already exists.")
         return
 
     group = GroupObject()
@@ -305,7 +285,7 @@ def remove_group(group_id: int, save_positions=True):
     canvas.ensure_init()
     group = canvas.get_group(group_id)
     if group is None:
-        _logger.error(f"{_logging_str} - unable to find group to remove")
+        _logger.error(f"{LogStr.func_args} - unable to find group to remove")
         return
 
     for box in group.widgets:
@@ -327,7 +307,7 @@ def remove_group(group_id: int, save_positions=True):
 def rename_group(group_id: int, new_group_name: str):
     group = canvas.get_group(group_id)
     if group is None:
-        _logger.critical(f"{_logging_str} - unable to find group to rename")
+        _logger.critical(f"{LogStr.func_args} - unable to find group to rename")
         return
 
     group.group_name = new_group_name
@@ -356,17 +336,17 @@ def split_group(group_id: int, on_place=False, redraw=True):
 
     group = canvas.get_group(group_id)
     if group is None:
-        _logger.error(f"{_logging_str} - unable to find group to split")
+        _logger.error(f"{LogStr.func_args} - unable to find group to split")
         return
 
     if group.splitted:
         _logger.error(
-            f"{_logging_str} - group is already splitted")
+            f"{LogStr.func_args} - group is already splitted")
         return
 
     if not group.widgets:
         _logger.error(
-            f"{_logging_str} - group has no box widget to split")
+            f"{LogStr.func_args} - group has no box widget to split")
         return
 
     box = group.widgets[0]
@@ -431,11 +411,11 @@ def join_group(group_id: int):
     canvas.ensure_init()
     group = canvas.get_group(group_id)
     if group is None:
-        _logger.error(f"{_logging_str} - unable to find groups to join")
+        _logger.error(f"{LogStr.func_args} - unable to find groups to join")
         return
 
     if not group.splitted:
-        _logger.error(f"{_logging_str} - group is not splitted")
+        _logger.error(f"{LogStr.func_args} - group is not splitted")
         return
 
     wrap = True
@@ -538,7 +518,7 @@ def redraw_group(group_id: int, ensure_visible=False, prevent_overlap=True):
 
     group = canvas.get_group(group_id)
     if group is None:
-        _logger.error(f"{_logging_str}, no group to redraw")
+        _logger.error(f"{LogStr.func_args}, no group to redraw")
         return
 
     canvas.ensure_init()
@@ -771,7 +751,7 @@ def set_group_icon(group_id: int, box_type: BoxType, icon_name: str):
     canvas.ensure_init()
     group = canvas.get_group(group_id)
     if group is None:
-        _logger.critical(f"{_logging_str} - unable to find group to change icon")
+        _logger.critical(f"{LogStr.func_args} - unable to find group to change icon")
         return
 
     group.box_type = box_type
@@ -792,7 +772,7 @@ def set_group_as_plugin(group_id: int, plugin_id: int,
                         has_ui: bool, has_inline_display: bool):
     group = canvas.get_group(group_id)
     if group is None:
-        _logger.critical(f"{_logging_str} - unable to find group to set as plugin")
+        _logger.critical(f"{LogStr.func_args} - unable to find group to set as plugin")
         return
 
     group.plugin_id = plugin_id
@@ -810,18 +790,18 @@ def add_port(group_id: int, port_id: int, port_name: str,
              port_subtype: PortSubType):
     canvas.ensure_init()
     if canvas.get_port(group_id, port_id) is not None:
-        _logger.critical(f"{_logging_str} - port already exists")
+        _logger.critical(f"{LogStr.func_args} - port already exists")
 
     group = canvas.get_group(group_id)
     if group is None:
-        _logger.critical(f"{_logging_str} - Unable to find parent group")
+        _logger.critical(f"{LogStr.func_args} - Unable to find parent group")
         return
 
     for box in group.widgets:
         if port_mode in box.port_mode:
             break
     else:
-        _logger.error(f"{_logging_str} - Unable to find a box for port")
+        _logger.error(f"{LogStr.func_args} - Unable to find a box for port")
         return
 
     port = PortObject()
@@ -854,11 +834,11 @@ def remove_port(group_id: int, port_id: int):
     canvas.ensure_init()
     port = canvas.get_port(group_id, port_id)
     if port is None:
-        _logger.critical(f"{_logging_str} - Unable to find port to remove")
+        _logger.critical(f"{LogStr.func_args} - Unable to find port to remove")
         return
 
     if port.portgrp_id:
-        _logger.critical(f"{_logging_str} - Port is in portgroup "
+        _logger.critical(f"{LogStr.func_args} - Port is in portgroup "
                             f"{port.portgrp_id}, remove it before !")
         return
 
@@ -894,7 +874,7 @@ def rename_port(group_id: int, port_id: int, new_port_name: str):
     canvas.ensure_init()
     port = canvas.get_port(group_id, port_id)
     if port is None:
-        _logger.critical(f"{_logging_str} - Unable to find port to rename")
+        _logger.critical(f"{LogStr.func_args} - Unable to find port to rename")
         return
 
     if new_port_name != port.port_name:
@@ -917,7 +897,7 @@ def port_has_hidden_connection(group_id: int, port_id: int, yesno: bool):
     port = canvas.get_port(group_id, port_id)
     if port is None:
         _logger.critical(
-            f"{_logging_str} - Unable to find port to set hidden connection")
+            f"{LogStr.func_args} - Unable to find port to set hidden connection")
         return
 
     if bool(port.hidden_conn_widget is None) == bool(not yesno):
@@ -945,7 +925,7 @@ def add_portgroup(group_id: int, portgrp_id: int, port_mode: PortMode,
                   port_type: PortType, port_subtype: PortSubType,
                   port_id_list: list[int]):
     if canvas.get_portgroup(group_id, portgrp_id) is not None:
-        _logger.critical(f"{_logging_str} - portgroup already exists")
+        _logger.critical(f"{LogStr.func_args} - portgroup already exists")
         return
 
     portgrp = PortgrpObject()
@@ -965,7 +945,7 @@ def add_portgroup(group_id: int, portgrp_id: int, port_mode: PortMode,
             if port.port_id == port_id_list[i]:
                 if port.portgrp_id:
                     _logger.error(
-                        f"{_logging_str} - "
+                        f"{LogStr.func_args} - "
                         f"port id {port.port_id} is already "
                         f"in portgroup {port.portgrp_id}")
                     return
@@ -977,10 +957,10 @@ def add_portgroup(group_id: int, portgrp_id: int, port_mode: PortMode,
                     break
 
             elif i > 0:
-                _logger.error(f"{_logging_str} - port ids are not consecutive")
+                _logger.error(f"{LogStr.func_args} - port ids are not consecutive")
                 return
     else:
-        _logger.error(f"{_logging_str} - not enought ports with port_id_list")
+        _logger.error(f"{LogStr.func_args} - not enought ports with port_id_list")
         return
 
     # modify ports impacted by portgroup
@@ -1023,7 +1003,7 @@ def remove_portgroup(group_id: int, portgrp_id: int):
                 portgrp.widget = None
             break
     else:
-        _logger.error(f"{_logging_str} - Unable to find portgrp to remove")
+        _logger.error(f"{LogStr.func_args} - Unable to find portgrp to remove")
         return
 
     canvas.remove_portgroup(portgrp)
@@ -1049,7 +1029,7 @@ def connect_ports(connection_id: int, group_out_id: int, port_out_id: int,
     in_port = canvas.get_port(group_in_id, port_in_id)
 
     if out_port is None or in_port is None:
-        _logger.critical(f"{_logging_str} - unable to find ports to connect")
+        _logger.critical(f"{LogStr.func_args} - unable to find ports to connect")
         return
 
     connection = ConnectionObject()
@@ -1077,7 +1057,7 @@ def disconnect_ports(connection_id: int):
     connection = canvas.get_connection(connection_id)
     if connection is None:
         _logger.critical(
-            f"{_logging_str} - unable to find connection ports")
+            f"{LogStr.func_args} - unable to find connection ports")
         return
 
     tmp_conn = connection.copy()
@@ -1092,11 +1072,11 @@ def disconnect_ports(connection_id: int):
     in_port = canvas.get_port(tmp_conn.group_in_id, tmp_conn.port_in_id)
 
     if out_port is None or in_port is None:
-        _logger.info(f"{_logging_str} - connection cleaned after its ports")
+        _logger.info(f"{LogStr.func_args} - connection cleaned after its ports")
         return
 
     if out_port.widget is None or in_port.widget is None:
-        _logger.error(f"{_logging_str} - port has no widget")
+        _logger.error(f"{LogStr.func_args} - port has no widget")
         return
 
     if canvas.loading_items:
@@ -1109,7 +1089,7 @@ def animate_before_hide_box(group_id: int, port_mode: PortMode):
     canvas.ensure_init()
     group = canvas.get_group(group_id)
     if group is None:
-        _logger.info(f"{_logging_str} - failed to find group")
+        _logger.info(f"{LogStr.func_args} - failed to find group")
         return
 
     for box in group.widgets:
@@ -1158,7 +1138,7 @@ def redraw_plugin_group(plugin_id: int):
     group = canvas.group_plugin_map.get(plugin_id, None)
 
     if group is None:
-        _logger.critical(f"{_logging_str} - unable to find group")
+        _logger.critical(f"{LogStr.func_args} - unable to find group")
         return
 
     assert isinstance(group, GroupObject)
