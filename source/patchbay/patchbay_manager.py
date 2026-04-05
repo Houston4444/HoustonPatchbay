@@ -1,7 +1,7 @@
 import logging
 from pathlib import Path
 from dataclasses import dataclass
-from typing import Callable, Iterator, Optional, Union
+from typing import Callable, Iterator
 from queue import Queue
 
 from qtpy.QtGui import QCursor, QGuiApplication, QKeyEvent
@@ -130,12 +130,12 @@ class PatchbayManager:
         self.cancel_mng = CancelMng(self)
         self._settings = settings
 
-        self.main_win: Optional[QMainWindow] = None
-        self._tools_widget: Optional[PatchbayToolsWidget] = None
-        self.options_dialog: Optional[CanvasOptionsDialog] = None
-        self.filter_frame: Optional[FilterFrame] = None
+        self.main_win: QMainWindow | None = None
+        self._tools_widget: PatchbayToolsWidget | None = None
+        self.options_dialog: CanvasOptionsDialog | None = None
+        self.filter_frame: FilterFrame | None = None
 
-        self._manual_path: Optional[Path] = None
+        self._manual_path: Path | None = None
 
         self.connections_clipboard = ConnClipboard(self)
 
@@ -193,10 +193,10 @@ class PatchbayManager:
     def app_init(self,
                  view: PatchGraphicsView,
                  theme_paths: tuple[Path, ...],
-                 manual_path: Optional[Path] = None,
-                 callbacker: Optional[Callbacker] = None,
-                 options: Optional[CanvasOptionsObject] = None,
-                 features: Optional[CanvasFeaturesObject] = None,
+                 manual_path: Path | None = None,
+                 callbacker: Callbacker | None = None,
+                 options: CanvasOptionsObject | None = None,
+                 features: CanvasFeaturesObject | None = None,
                  default_theme_name='Black Gold'):
         if callbacker is None:
             self.callbacker = Callbacker(self)
@@ -222,7 +222,8 @@ class PatchbayManager:
         patchcanvas.set_features(features)
         patchcanvas.init(
             view, self.callbacker, theme_paths, default_theme_name)
-        patchcanvas.canvas.scene.scale_changed.connect(self._scene_scale_changed)
+        patchcanvas.canvas.scene.scale_changed.connect(
+            self._scene_scale_changed)
 
         # just to have the zoom slider updated with the default zoom
         patchcanvas.canvas.scene.zoom_reset()
@@ -427,7 +428,7 @@ class PatchbayManager:
         self.sg.hidden_boxes_changed.emit()
 
     def restore_group_hidden_sides(
-            self, group_id: int, scene_pos: Optional[tuple[int, int]]=None):
+            self, group_id: int, scene_pos: tuple[int, int] | None =None):
         group = self.get_group_from_id(group_id)
         if group is None:
             return
@@ -524,19 +525,19 @@ class PatchbayManager:
                     is not PortMode.NULL):
                 yield group
 
-    def get_group_from_name(self, group_name: str) -> Union[Group, None]:
+    def get_group_from_name(self, group_name: str) -> Group | None:
         return self._groups_by_name.get(group_name)
 
-    def get_group_from_id(self, group_id: int) -> Union[Group, None]:
+    def get_group_from_id(self, group_id: int) -> Group | None:
         return self._groups_by_id.get(group_id)
 
-    def get_port_from_name(self, port_name: str) -> Optional[Port]:
+    def get_port_from_name(self, port_name: str) -> Port | None:
         return self._ports_by_name.get(port_name)
 
-    def get_port_from_uuid(self, uuid:int) -> Optional[Port]:
+    def get_port_from_uuid(self, uuid:int) -> Port | None:
         return self._ports_by_uuid.get(uuid)
 
-    def get_port_from_id(self, group_id: int, port_id: int) -> Optional[Port]:
+    def get_port_from_id(self, group_id: int, port_id: int) -> Port | None:
         group = self.get_group_from_id(group_id)
         if group is not None:
             for port in group.ports:
@@ -823,8 +824,8 @@ class PatchbayManager:
         '''emit the `view_changed` signal. Can be Inherited to do other tasks'''
         self.sg.views_changed.emit()
 
-    def new_view(self, view_number: Optional[int]=None,
-                 exclusive_with: Optional[dict[int, PortMode]]=None):
+    def new_view(self, view_number: int | None =None,
+                 exclusive_with: dict[int, PortMode] | None =None):
         '''create a new view and switch directly to this view.
 
         If `view_number` is not set, it will choose the first available
@@ -936,8 +937,8 @@ class PatchbayManager:
         self.sg.views_changed.emit()
 
     def write_view_data(
-            self, view_number: int, name: Optional[str]=None,
-            port_types: Optional[PortTypesViewFlag]=None,
+            self, view_number: int, name: str | None =None,
+            port_types: PortTypesViewFlag | None =None,
             white_list_view=False):
         view_data = self.views.get(view_number)
         if view_data is None:
@@ -1226,7 +1227,7 @@ class PatchbayManager:
         return group.group_id
 
     @later_by_batch(draw_group=True)
-    def rename_port(self, name: str, new_name: str, uuid=0) -> Union[int, None]:
+    def rename_port(self, name: str, new_name: str, uuid=0) -> int | None:
         if uuid:
             port = self.get_port_from_uuid(uuid)
         else:
@@ -1285,7 +1286,7 @@ class PatchbayManager:
 
     @later_by_batch(metadata_change=True)
     def metadata_update(
-            self, uuid: int, key: str, value: str) -> Optional[int]:
+            self, uuid: int, key: str, value: str) -> int | None:
         '''remember metadata and return the group_id'''
 
         # first store metadata
