@@ -175,29 +175,29 @@ class ConnectableWidget(QGraphicsItem):
         if self._hover_item.get_port_mode() is self._port_mode:
             # Copy connections from this widget to the other one (hover)
 
-            for i in range(len(self._port_ids)):
-                for connection in canvas.list_connections(self._po):
-                    if connection.concerns(
-                            self._group_id, set([self._port_ids[i]])):
-                        canvas.cb.ports_disconnect(
-                            connection.connection_id)
+            for i, port_id in enumerate(self._port_ids):
+                for connection in [
+                        c for c in canvas.list_connections(self._po)
+                        if c.concerns(self._group_id, set([port_id]))]:
+                    canvas.cb.ports_disconnect(
+                        connection.connection_id)
 
-                        for j in range(len(hover_port_ids)):
-                            if len(hover_port_ids) >= len(self._port_ids):
-                                if j % len(self._port_ids) != i:
-                                    continue
-                            else:
-                                if i % len(hover_port_ids) != j:
-                                    continue
+                    for j, hover_port_id in enumerate(hover_port_ids):
+                        if len(hover_port_ids) >= len(self._port_ids):
+                            if j % len(self._port_ids) != i:
+                                continue
+                        else:
+                            if i % len(hover_port_ids) != j:
+                                continue
 
-                            if self._port_mode is PortMode.OUTPUT:
-                                canvas.cb.ports_connect(
-                                    hover_group_id, hover_port_ids[j],
-                                    connection.group_in_id, connection.port_in_id)
-                            else:
-                                canvas.cb.ports_connect(
-                                    connection.group_out_id, connection.port_out_id,
-                                    hover_group_id, hover_port_ids[j])
+                        if self._port_mode is PortMode.OUTPUT:
+                            canvas.cb.ports_connect(
+                                hover_group_id, hover_port_id,
+                                connection.group_in_id, connection.port_in_id)
+                        else:
+                            canvas.cb.ports_connect(
+                                connection.group_out_id, connection.port_out_id,
+                                hover_group_id, hover_port_id)
             return
 
         for i, port_id in enumerate(self._port_ids):
