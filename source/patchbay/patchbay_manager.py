@@ -1,6 +1,5 @@
 import logging
 from pathlib import Path
-from dataclasses import dataclass
 from typing import Callable, Iterator
 from queue import Queue
 
@@ -14,27 +13,27 @@ from patshared import (
     PortTypesViewFlag, GroupPos, Naming, TransportPosition,
     ViewsDictEnsureOne, ViewData, PortgroupsDict, PortgroupMem, CustomNames)
 
+from . import patchbay_batches
+from .bases.connection import Connection
+from .bases.elements import ToolDisplayed, CanvasOptimizeIt, CanvasOptimize
+from .bases.group import Group
+from .bases.port import Port
+from .bases.portgroup import Portgroup
+from .calbacker import Callbacker
+from .cancel_mng import CancelMng, CancelOp, CancellableAction
+from .conns_clipboard import ConnClipboard
+from .dialogs.options_dialog import CanvasOptionsDialog
+from .menus.canvas_menu import CanvasMenu
+from .patchbay_batches import DelayedOrder, later_by_batch
+from .patchbay_signals import SignalsObject
 from .patchcanvas import patchcanvas
 from .patchcanvas.utils import get_new_group_positions
 from .patchcanvas.scene_view import PatchGraphicsView
 from .patchcanvas.init_values import (
     AliasingReason, CanvasFeaturesObject, CanvasOptionsObject)
-
-from .cancel_mng import CancelMng, CancelOp, CancellableAction
-from .patchbay_signals import SignalsObject
-from .tools_widgets import PatchbayToolsWidget
-from .menus.canvas_menu import CanvasMenu
-from .dialogs.options_dialog import CanvasOptionsDialog
-from .widgets.filter_frame import FilterFrame
-from .bases.elements import (
-    JackPortFlag, ToolDisplayed, CanvasOptimizeIt, CanvasOptimize)
-from .bases.group import Group
-from .bases.connection import Connection
-from .bases.port import Port
-from .bases.portgroup import Portgroup
-from .conns_clipboard import ConnClipboard
-from .calbacker import Callbacker
 from .patchichi_export import export_to_patchichi_json
+from .tools_widgets import PatchbayToolsWidget
+from .widgets.filter_frame import FilterFrame
 
 
 _translate = QGuiApplication.translate
@@ -45,46 +44,6 @@ def enum_to_flag(enum_int: int) -> int:
     if enum_int <= 0:
         return 0
     return 2 ** (enum_int - 1)
-
-
-@dataclass
-class DelayedOrder:
-    func: Callable
-    args: tuple
-    kwargs: dict
-    draw_group: bool
-    sort_group: bool
-    clear_conns: bool
-    metadata_change: bool
-
-
-def later_by_batch(draw_group=False, sort_group=False,
-                   clear_conns=False, metadata_change=False):
-    '''This decorator indicates that the decorated method will be executed
-    later by batch in the main thread when `_delayed_orders_timer` will
-    call it.'''
-
-    def decorator(func: Callable):
-        def wrapper(*args, **kwargs):
-            mng: PatchbayManager = args[0]
-            if mng.very_fast_operation:
-                return func(*args, **kwargs)
-
-            mng.delayed_orders.put(
-                DelayedOrder(func, args, kwargs,
-                             draw_group or sort_group,
-                             sort_group,
-                             clear_conns,
-                             metadata_change))
-
-            if QThread.currentThread() is QGuiApplication.instance().thread():
-                mng._delayed_orders_timer.start()
-            else:
-                mng.sg.out_thread_order.emit()
-            return
-        return wrapper
-    return decorator
-
 
 def in_main_thread():
     '''This decorator indicates that the decorated method will be executed
@@ -1088,315 +1047,36 @@ class PatchbayManager:
 
     @later_by_batch()
     def set_group_uuid_from_name(self, client_name: str, uuid: int):
-        self.client_uuids[client_name] = uuid
-
-        group = self.get_group_from_name(client_name)
-        if group is not None:
-            group.uuid = uuid
+        patchbay_batches.set_group_uuid_from_name(self, client_name, uuid)
 
     @later_by_batch(draw_group=True)
     def add_port(self, name: str, port_type: PortType,
                  flags: int, uuid: int) -> int:
         '''adds port and returns the group_id'''
-        exst_port = self.get_port_from_name(name)
-        if exst_port is not None:
-            _logger.warning(
-                f'add port "{name}", '
-                f'it already exists, remove it first !')
-
-            if name in self._ports_by_name:
-                self._ports_by_name.pop(name)
-            if uuid in self._ports_by_uuid:
-                self._ports_by_uuid.pop(uuid)
-
-            if exst_port.type.is_jack and exst_port.uuid:
-                self.jack_metadatas.remove_uuid(exst_port.uuid)
-
-            group = self.get_group_from_id(exst_port.group_id)
-            if group is not None:
-                # remove portgroup first if port is in a portgroup
-                if exst_port.portgroup_id:
-                    for portgroup in group.portgroups:
-                        if portgroup.portgroup_id == exst_port.portgroup_id:
-                            group.portgroups.remove(portgroup)
-                            portgroup.remove_from_canvas()
-                            break
-
-                exst_port.remove_from_canvas()
-                group.remove_port(exst_port)
-
-        port = Port(self, self._next_port_id, name, port_type, flags, uuid)
-        self._next_port_id += 1
-
-        full_port_name = name
-        group_name, colon, port_name = full_port_name.partition(':')
-
-        is_a2j_group = False
-        group_is_new = False
-
-        if (port_type is PortType.MIDI_ALSA
-                and full_port_name.startswith((':ALSA_OUT:', ':ALSA_IN:'))):
-            _, _alsa_key, alsa_gp_id, alsa_p_id, group_name, *rest = \
-                full_port_name.split(':')
-            port_name = ':'.join(rest)
-
-            if port.flags & JackPortFlag.IS_PHYSICAL:
-                is_a2j_group = True
-
-        elif (full_port_name.startswith(('a2j:', 'Midi-Bridge:'))
-                and (not self.group_a2j_hw
-                     or not port.flags & JackPortFlag.IS_PHYSICAL)):
-            group_name, colon, port_name = port_name.partition(':')
-            if full_port_name.startswith('a2j:'):
-                if ' [' in group_name:
-                    group_name = group_name.rpartition(' [')[0]
-                else:
-                    if ' (capture)' in group_name:
-                        group_name = group_name.partition(' (capture)')[0]
-                    else:
-                        group_name = group_name.partition(' (playback)')[0]
-
-                # fix a2j wrongly substitute '.' with space
-                group_name = self.get_corrected_a2j_group_name(group_name)
-
-            if port.flags & JackPortFlag.IS_PHYSICAL:
-                is_a2j_group = True
-
-        group = self.get_group_from_name(group_name)
-        if group is None:
-            # port is in an non existing group, create the group
-            gpos = self.get_group_position(group_name)
-            group = Group(self, self._next_group_id, group_name, gpos)
-
-            group.a2j_group = is_a2j_group
-            self.set_group_as_nsm_client(group)
-
-            self._next_group_id += 1
-            self._add_group(group)
-
-            group_is_new = True
-
-        group.add_port(port)
-        group.graceful_port(port)
-
-        group.add_to_canvas()
-        port.add_to_canvas()
-        group.check_for_portgroup_on_last_port()
-        group.check_for_display_name_on_last_port()
-
-        if group_is_new:
-            self.sg.group_added.emit(group.group_id)
-
-        return group.group_id
+        return patchbay_batches.add_port(self, name, port_type, flags, uuid)
 
     @later_by_batch(draw_group=True, clear_conns=True)
     def remove_port(self, name: str) -> int | None:
         '''remove a port from name and return its group_id'''
-        port = self.get_port_from_name(name)
-        if port is None:
-            return None
-
-        if name in self._ports_by_name:
-            self._ports_by_name.pop(name)
-        if port.uuid in self._ports_by_uuid:
-            self._ports_by_uuid.pop(port.uuid)
-        if port.type.is_jack and port.uuid:
-            self.jack_metadatas.remove_uuid(port.uuid)
-
-        group = self.get_group_from_id(port.group_id)
-        if group is None:
-            return None
-
-        # remove portgroup first if port is in a portgroup
-        if port.portgroup_id:
-            for portgroup in group.portgroups:
-                if portgroup.portgroup_id == port.portgroup_id:
-                    group.portgroups.remove(portgroup)
-                    portgroup.remove_from_canvas()
-                    break
-
-        port.remove_from_canvas()
-        group.remove_port(port)
-
-        if not group.ports:
-            group.remove_from_canvas()
-            self._remove_group(group)
-            self.sg.group_removed.emit(group.group_id)
-            return None
-
-        return group.group_id
+        return patchbay_batches.remove_port(self, name)
 
     @later_by_batch(draw_group=True)
     def rename_port(self, name: str, new_name: str, uuid=0) -> int | None:
-        if uuid:
-            port = self.get_port_from_uuid(uuid)
-        else:
-            port = self.get_port_from_name(name)
-
-        if port is None:
-            if uuid:
-                _logger.warning(
-                    f"rename_port to {new_name}, no port with uuid {uuid}")
-            else:
-                _logger.warning(
-                    f"rename_port to '{new_name}', no port named '{name}'")
-            return
-
-        # change port key in self._ports_by_name dict
-        if name in self._ports_by_name:
-            self._ports_by_name.pop(name)
-        self._ports_by_name[new_name] = port
-
-        group_name = name.partition(':')[0]
-        new_group_name = new_name.partition(':')[0]
-
-        # In case a port rename implies another group for the port
-        if group_name != new_group_name:
-            group = self.get_group_from_name(group_name)
-            if group is not None:
-                group.remove_port(port)
-                if not group.ports:
-                    self._remove_group(group)
-
-            port.remove_from_canvas()
-            port.full_name = new_name
-
-            group = self.get_group_from_name(new_group_name)
-            if group is None:
-                # copy the group_position to not move the group
-                # because group has been renamed
-                orig_gpos = self.get_group_position(group_name)
-                gpos = orig_gpos.copy()
-                gpos.group_name = new_group_name
-
-                group = Group(self, self._next_group_id, new_group_name, gpos)
-                self._next_group_id += 1
-                group.add_port(port)
-                group.add_to_canvas()
-            else:
-                group.add_port(port)
-
-            port.add_to_canvas()
-            return group.group_id
-
-        port.full_name = new_name
-        port.group.graceful_port(port)
-        port.rename_in_canvas()
-        return port.group.group_id
+        return patchbay_batches.rename_port(self, name, new_name, uuid=uuid)
 
     @later_by_batch(metadata_change=True)
     def metadata_update(
             self, uuid: int, key: str, value: str) -> int | None:
         '''remember metadata and return the group_id'''
-
-        # first store metadata
-        self.jack_metadatas.add(uuid, key, value)
-
-        if not uuid:
-            # all JACK metadatas removed
-            self.pretty_diff_checker.full_update()
-            self.remove_and_add_all()
-            return
-
-        match key:
-            case '':
-                # all metadatas removed for an item (client or port)
-                port = self.get_port_from_uuid(uuid)
-                if port is not None:
-                    port.rename_in_canvas()
-                    return port.group_id
-
-                for group in self.groups:
-                    if group.uuid == uuid:
-                        return group.group_id
-
-            case JackMetadata.ORDER:
-                port = self.get_port_from_uuid(uuid)
-                if port is None:
-                    return
-
-                try:
-                    port_order = int(value)
-                except:
-                    _logger.warning(
-                        f"JACK_METADATA_ORDER for UUID {uuid} "
-                        f"value '{value}' is not an int")
-                    return
-                else:
-                    port.order = port_order
-                    return port.group_id
-
-            case JackMetadata.PRETTY_NAME:
-                self.pretty_diff_checker.uuid_change(uuid)
-                port = self.get_port_from_uuid(uuid)
-                if port is not None:
-                    port.rename_in_canvas()
-                    return port.group_id
-
-                for group in self.groups:
-                    if group.uuid == uuid:
-                        group.rename_in_canvas()
-                        return group.group_id
-
-            case JackMetadata.PORT_GROUP:
-                port = self.get_port_from_uuid(uuid)
-                if port is None:
-                    return
-
-                return port.group_id
-
-            case JackMetadata.ICON_NAME:
-                for group in self.groups:
-                    if group.uuid == uuid:
-                        group.set_client_icon(value, from_metadata=True)
-                        return group.group_id
-
-            case JackMetadata.SIGNAL_TYPE:
-                port = self.get_port_from_uuid(uuid)
-                if port is None:
-                    return
-
-                if port.type is PortType.AUDIO_JACK:
-                    if value == 'CV':
-                        port.subtype = PortSubType.CV
-                    elif value == 'AUDIO':
-                        port.subtype = PortSubType.REGULAR
-
-                return port.group_id
+        return patchbay_batches.metadata_update(self, uuid, key, value)
 
     @later_by_batch()
     def add_connection(self, port_out_name: str, port_in_name: str):
-        port_out = self.get_port_from_name(port_out_name)
-        port_in = self.get_port_from_name(port_in_name)
-
-        if port_out is None or port_in is None:
-            return
-
-        for connection in self.connections:
-            if (connection.port_out is port_out
-                    and connection.port_in is port_in):
-                return
-
-        connection = Connection(self, self._next_connection_id, port_out, port_in)
-        self._next_connection_id += 1
-        self.connections.append(connection)
-
-        connection.add_to_canvas()
+        patchbay_batches.add_connection(self, port_out_name, port_in_name)
 
     @later_by_batch()
     def remove_connection(self, port_out_name: str, port_in_name: str):
-        port_out = self.get_port_from_name(port_out_name)
-        port_in = self.get_port_from_name(port_in_name)
-        if port_out is None or port_in is None:
-            return
-
-        for connection in self.connections:
-            if (connection.port_out == port_out
-                    and connection.port_in == port_in):
-                self.connections.remove(connection)
-                self.sg.connection_removed.emit(connection.connection_id)
-                connection.remove_from_canvas()
-                break
+        patchbay_batches.remove_connection(self, port_out_name, port_in_name)
 
     def disannounce(self):
         self.clear_all()

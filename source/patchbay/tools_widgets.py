@@ -197,9 +197,11 @@ class PatchbayToolsWidget(QObject):
             # evaluate main bar widths (with and without text beside icons)
             main_bar = self.tbars[TBar.MAIN]
             tool_button_style = main_bar.toolButtonStyle()
-            main_bar.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonIconOnly)
+            main_bar.setToolButtonStyle(
+                Qt.ToolButtonStyle.ToolButtonIconOnly)
             self._main_bar_little_width = main_bar.sizeHint().width()
-            main_bar.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
+            main_bar.setToolButtonStyle(
+                Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
             self._main_bar_large_width = main_bar.sizeHint().width()
             main_bar.setToolButtonStyle(tool_button_style)
 
@@ -222,10 +224,12 @@ class PatchbayToolsWidget(QObject):
 
         main_bar = self.tbars[TBar.MAIN]
 
-        main_bar.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonIconOnly)
+        main_bar.setToolButtonStyle(
+            Qt.ToolButtonStyle.ToolButtonIconOnly)
         self._main_bar_little_width = main_bar.sizeHint().width()
 
-        main_bar.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
+        main_bar.setToolButtonStyle(
+            Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
         self._main_bar_large_width = main_bar.sizeHint().width()
 
         self._resize_later()
