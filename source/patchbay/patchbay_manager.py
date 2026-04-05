@@ -14,7 +14,7 @@ from patshared import (
     PortTypesViewFlag, GroupPos, Naming, TransportPosition,
     ViewsDictEnsureOne, ViewData, PortgroupsDict, PortgroupMem, CustomNames)
 
-from .patchcanvas import arranger, patchcanvas
+from .patchcanvas import patchcanvas
 from .patchcanvas.utils import get_new_group_positions
 from .patchcanvas.scene_view import PatchGraphicsView
 from .patchcanvas.init_values import (
@@ -962,7 +962,7 @@ class PatchbayManager:
         with CancellableAction(self, CancelOp.VIEW) as a:
             a.name = _translate(
                 'arrange', 'Arrange: follow the signal chain')
-            arranger.arrange_follow_signal()
+            patchcanvas.arrange_follow_signal()
 
             # boxes will be at a completely different place after arrange
             # it takes no sense to keep positions of absent boxes
@@ -972,7 +972,7 @@ class PatchbayManager:
         with CancellableAction(self, CancelOp.VIEW) as a:
             a.name = _translate(
                 'arrange', 'Arrange: Two columns facing each other')
-            arranger.arrange_face_to_face()
+            patchcanvas.arrange_face_to_face()
 
             # boxes will be at a completely different place after arrange
             # it takes no sense to keep positions of absent boxes

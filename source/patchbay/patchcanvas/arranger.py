@@ -8,8 +8,8 @@ from patshared import BoxLayoutMode, PortMode, BoxType, GroupPos
 from .init_values import GroupObject, canvas
 from . import grid
 from .box_widget import BoxWidget
-from .patchcanvas import (
-    move_group_boxes, repulse_all_boxes, split_group)
+from .canvas_helpers import move_group_boxes, split_group, repulse_all_boxes
+
 
 _logger = logging.getLogger(__name__)
 
