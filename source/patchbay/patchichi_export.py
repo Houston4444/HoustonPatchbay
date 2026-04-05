@@ -81,15 +81,16 @@ def _export_port_list_to_patchichi(mng: 'PatchbayManager') -> str:
                 physical = False
 
             if last_type_and_mode != (port.type, port.mode):
-                if port.type is PortType.AUDIO_JACK:
-                    if port.flags & JackPortFlag.IS_CONTROL_VOLTAGE:
-                        contents += ':CV'
-                    else:
-                        contents += ':AUDIO'
-                elif port.type is PortType.MIDI_JACK:
-                    contents += ':MIDI'
-                elif port.type is PortType.MIDI_ALSA:
-                    contents += ':ALSA'
+                match port.type:
+                    case PortType.AUDIO_JACK:
+                        if port.flags & JackPortFlag.IS_CONTROL_VOLTAGE:
+                            contents += ':CV'
+                        else:
+                            contents += ':AUDIO'
+                    case PortType.MIDI_JACK:
+                        contents += ':MIDI'
+                    case PortType.MIDI_ALSA:
+                        contents += ':ALSA'
 
                 contents += f':{port.mode.name}\n'
                 last_type_and_mode = (port.type, port.mode)
@@ -119,7 +120,8 @@ def _export_port_list_to_patchichi(mng: 'PatchbayManager') -> str:
             if port.mdata_pretty_name or port.order:
                 port_attrs = list[str]()
                 if port.mdata_pretty_name:
-                    port_attrs.append(f'PRETTY_NAME={slcol(port.mdata_pretty_name)}')
+                    port_attrs.append(
+                        f'PRETTY_NAME={slcol(port.mdata_pretty_name)}')
                 if port.order:
                     port_attrs.append(f'ORDER={port.order}')
                 contents += ':'

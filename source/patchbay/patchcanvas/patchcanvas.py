@@ -441,7 +441,8 @@ def set_group_icon(group_id: int, box_type: BoxType, icon_name: str):
     canvas.ensure_init()
     group = canvas.get_group(group_id)
     if group is None:
-        _logger.critical(f"{LogStr.func_args} - unable to find group to change icon")
+        _logger.critical(f"{LogStr.func_args} - "
+                         "unable to find group to change icon")
         return
 
     group.box_type = box_type
@@ -462,7 +463,8 @@ def set_group_as_plugin(group_id: int, plugin_id: int,
                         has_ui: bool, has_inline_display: bool):
     group = canvas.get_group(group_id)
     if group is None:
-        _logger.critical(f"{LogStr.func_args} - unable to find group to set as plugin")
+        _logger.critical(f"{LogStr.func_args} - "
+                         "unable to find group to set as plugin")
         return
 
     group.plugin_id = plugin_id
@@ -564,7 +566,8 @@ def rename_port(group_id: int, port_id: int, new_port_name: str):
     canvas.ensure_init()
     port = canvas.get_port(group_id, port_id)
     if port is None:
-        _logger.critical(f"{LogStr.func_args} - Unable to find port to rename")
+        _logger.critical(
+            f"{LogStr.func_args} - Unable to find port to rename")
         return
 
     if new_port_name != port.port_name:
@@ -587,7 +590,8 @@ def port_has_hidden_connection(group_id: int, port_id: int, yesno: bool):
     port = canvas.get_port(group_id, port_id)
     if port is None:
         _logger.critical(
-            f"{LogStr.func_args} - Unable to find port to set hidden connection")
+            f"{LogStr.func_args} - "
+            "Unable to find port to set hidden connection")
         return
 
     if bool(port.hidden_conn_widget is None) == bool(not yesno):
@@ -647,17 +651,20 @@ def add_portgroup(group_id: int, portgrp_id: int, port_mode: PortMode,
                     break
 
             elif i > 0:
-                _logger.error(f"{LogStr.func_args} - port ids are not consecutive")
+                _logger.error(
+                    f"{LogStr.func_args} - port ids are not consecutive")
                 return
     else:
-        _logger.error(f"{LogStr.func_args} - not enought ports with port_id_list")
+        _logger.error(
+            f"{LogStr.func_args} - not enought ports with port_id_list")
         return
 
     # modify ports impacted by portgroup
     for port in canvas.list_ports(group_id=group_id):
         if (port.port_id in port_id_list):
             port.set_portgroup_id(
-                portgrp_id, port_id_list.index(port.port_id), len(port_id_list))
+                portgrp_id, port_id_list.index(port.port_id),
+                len(port_id_list))
 
     canvas.add_portgroup(portgrp)
 

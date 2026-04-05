@@ -1,5 +1,4 @@
 
-from enum import IntEnum
 from qtpy.QtCore import QObject, Signal # type:ignore
 
 # we need a QObject for Signal

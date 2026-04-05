@@ -36,6 +36,7 @@ from .conns_clipboard import ConnClipboard
 from .calbacker import Callbacker
 from .patchichi_export import export_to_patchichi_json
 
+
 _translate = QGuiApplication.translate
 _logger = logging.getLogger(__name__)
 
@@ -315,26 +316,24 @@ class PatchbayManager:
             self, full_port_type: tuple[PortType, PortSubType]) -> bool:
         port_type, sub_type = full_port_type
 
-        if port_type is PortType.MIDI_JACK:
-            return bool(self.port_types_view & PortTypesViewFlag.MIDI)
-
-        if port_type is PortType.AUDIO_JACK:
-            if sub_type is PortSubType.REGULAR:
-                return bool(self.port_types_view & PortTypesViewFlag.AUDIO)
-            elif sub_type is PortSubType.CV:
-                return bool(self.port_types_view & PortTypesViewFlag.CV)
-            elif sub_type is (PortSubType.REGULAR | PortSubType.CV):
-                return bool(
-                    self.port_types_view & (PortTypesViewFlag.AUDIO
-                                            | PortTypesViewFlag.CV)
-                    == PortTypesViewFlag.AUDIO | PortTypesViewFlag.CV)
-
-        if port_type is PortType.MIDI_ALSA:
-            return bool(self.alsa_midi_enabled
-                        and self.port_types_view & PortTypesViewFlag.ALSA)
-
-        if port_type is PortType.VIDEO:
-            return bool(self.port_types_view & PortTypesViewFlag.VIDEO)
+        match port_type:
+            case PortType.MIDI_JACK:
+                return PortTypesViewFlag.MIDI in self.port_types_view
+            case PortType.AUDIO_JACK:
+                match sub_type:
+                    case PortSubType.REGULAR:
+                        return PortTypesViewFlag.AUDIO in self.port_types_view
+                    case PortSubType.CV:
+                        return PortTypesViewFlag.CV in self.port_types_view
+                    case (PortSubType.REGULAR | PortSubType.CV):
+                        return (
+                            (PortTypesViewFlag.AUDIO | PortTypesViewFlag.CV)
+                            in self.port_types_view)
+            case PortType.MIDI_ALSA:
+                return (self.alsa_midi_enabled
+                        and PortTypesViewFlag.ALSA in self.port_types_view)
+            case PortType.VIDEO:
+                return PortTypesViewFlag.VIDEO in self.port_types_view
 
         return False
 
@@ -546,11 +545,11 @@ class PatchbayManager:
 
     def save_group_position(self, gpos: GroupPos):
         # reimplement this to save a group position elsewhere
-        ...
+        pass
 
     def save_portgroup_memory(self, portgrp_mem: PortgroupMem):
         # reimplement this to save a portgroup memory elsewhere
-        ...
+        pass
 
     def get_corrected_a2j_group_name(self, group_name: str) -> str:
         # a2j replace points with spaces in the group name
@@ -649,7 +648,7 @@ class PatchbayManager:
         self.sg.all_groups_removed.emit()
 
     def save_view_and_port_types_view(self):
-        ...
+        pass
 
     def change_port_types_view(
             self, port_types_view: PortTypesViewFlag, force=False):
@@ -1030,10 +1029,10 @@ class PatchbayManager:
         self.jack_export_naming = naming
 
     def export_custom_names_to_jack(self):
-        ...
+        pass
 
     def import_pretty_names_from_jack(self):
-        ...
+        pass
 
     def change_theme(self, theme_name: str):
         if not theme_name:
@@ -1436,7 +1435,8 @@ class PatchbayManager:
             ret = QMessageBox.critical(
                 self.main_win,
                 _translate('patchbay', "JACK server lose"),
-                _translate('patchbay', "JACK server seems to be totally busy... ;("))
+                _translate('patchbay', "JACK server seems to be "
+                           "totally busy... ;("))
 
     @in_main_thread()
     def set_dsp_load(self, dsp_load: int):
@@ -1454,16 +1454,16 @@ class PatchbayManager:
             self._tools_widget.refresh_transport(transport_position)
 
     def change_buffersize(self, buffer_size: int):
-        ...
+        '''Inherit this'''
 
     def transport_play_pause(self, play: bool):
-        ...
+        '''Inherit this'''
 
     def transport_stop(self):
-        ...
+        '''Inherit this'''
 
     def transport_relocate(self, frame: int):
-        ...
+        '''Inherit this'''
 
     def change_tools_displayed(self, tools_displayed: ToolDisplayed):
         if self._tools_widget is not None:
