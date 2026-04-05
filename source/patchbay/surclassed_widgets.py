@@ -379,7 +379,7 @@ class ViewsComboBox(QComboBox):
                     # avoid black to stay black with lighter() 
                     # and make an infinite loop
                     pcols[i] = QColor(1, 1, 1)
-                
+
                 while pcols[i].lightnessF() - bg_ligthness < 0.25:
                     pcols[i] = pcols[i].lighter()
 

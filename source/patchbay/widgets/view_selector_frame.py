@@ -105,6 +105,7 @@ class ItemmDeleg(QAbstractItemDelegate):
                     pcols[i] = QColor(1, 1, 1)
 
                 while pcols[i].lightnessF() - bg_ligthness < 0.25:
+
                     pcols[i] = pcols[i].lighter()
                     if pcols[i].lightnessF() == 1.0:
                         break
