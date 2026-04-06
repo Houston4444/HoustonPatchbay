@@ -73,7 +73,7 @@ def set_group_uuid_from_name(
 
 @later_by_batch(draw_group=True)
 def add_port(mng: 'PatchbayManager', name: str, port_type: PortType,
-                flags: int, uuid: int) -> int:
+             flags: int, uuid: int) -> int:
     '''adds port and returns the group_id'''
     exst_port = mng.get_port_from_name(name)
     if exst_port is not None:
