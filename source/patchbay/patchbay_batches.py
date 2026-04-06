@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 import logging
+from queue import Queue
 from typing import TYPE_CHECKING, Callable
 
 from qtpy.QtCore import QThread
@@ -8,9 +9,10 @@ from qtpy.QtGui import QGuiApplication
 from patshared import PortType, PortSubType, JackMetadata
 
 from .bases.connection import Connection
-from .bases.elements import JackPortFlag
+from .bases.elements import JackPortFlag, CanvasOptimizeIt
 from .bases.group import Group
 from .bases.port import Port
+from .patchcanvas import patchcanvas
 
 if TYPE_CHECKING:
     from .patchbay_manager import PatchbayManager
@@ -30,6 +32,9 @@ class DelayedOrder:
     metadata_change: bool
 
 
+_delayed_orders = Queue[DelayedOrder]()
+
+
 def later_by_batch(draw_group=False, sort_group=False,
                    clear_conns=False, metadata_change=False):
     '''This decorator indicates that the decorated method will be executed
@@ -42,7 +47,7 @@ def later_by_batch(draw_group=False, sort_group=False,
             if mng.very_fast_operation:
                 return func(*args, **kwargs)
 
-            mng.delayed_orders.put(
+            _delayed_orders.put(
                 DelayedOrder(func, args, kwargs,
                              draw_group or sort_group,
                              sort_group,
@@ -57,7 +62,7 @@ def later_by_batch(draw_group=False, sort_group=False,
         return wrapper
     return decorator
 
-# @later_by_batch()
+@later_by_batch()
 def set_group_uuid_from_name(
         mng: 'PatchbayManager', client_name: str, uuid: int):
     mng.client_uuids[client_name] = uuid
@@ -66,7 +71,7 @@ def set_group_uuid_from_name(
     if group is not None:
         group.uuid = uuid
 
-# @later_by_batch(draw_group=True)
+@later_by_batch(draw_group=True)
 def add_port(mng: 'PatchbayManager', name: str, port_type: PortType,
                 flags: int, uuid: int) -> int:
     '''adds port and returns the group_id'''
@@ -161,7 +166,7 @@ def add_port(mng: 'PatchbayManager', name: str, port_type: PortType,
 
     return group.group_id
 
-# @later_by_batch(draw_group=True, clear_conns=True)
+@later_by_batch(draw_group=True, clear_conns=True)
 def remove_port(mng: 'PatchbayManager', name: str) -> int | None:
     '''remove a port from name and return its group_id'''
     port = mng.get_port_from_name(name)
@@ -198,7 +203,7 @@ def remove_port(mng: 'PatchbayManager', name: str) -> int | None:
 
     return group.group_id
 
-# @later_by_batch(draw_group=True)
+@later_by_batch(draw_group=True)
 def rename_port(
         mng: 'PatchbayManager', name: str, new_name: str,
         uuid=0) -> int | None:
@@ -258,7 +263,7 @@ def rename_port(
     port.rename_in_canvas()
     return port.group.group_id
 
-# @later_by_batch(metadata_change=True)
+@later_by_batch(metadata_change=True)
 def metadata_update(
         mng: 'PatchbayManager', uuid: int,
         key: str, value: str) -> int | None:
@@ -339,7 +344,7 @@ def metadata_update(
 
             return port.group_id
 
-# @later_by_batch()
+@later_by_batch()
 def add_connection(
         mng: 'PatchbayManager', port_out_name: str, port_in_name: str):
     port_out = mng.get_port_from_name(port_out_name)
@@ -359,7 +364,7 @@ def add_connection(
 
     connection.add_to_canvas()
 
-# @later_by_batch()
+@later_by_batch()
 def remove_connection(
         mng: 'PatchbayManager', port_out_name: str, port_in_name: str):
     port_out = mng.get_port_from_name(port_out_name)
@@ -374,3 +379,65 @@ def remove_connection(
             mng.sg.connection_removed.emit(connection.connection_id)
             connection.remove_from_canvas()
             break
+
+
+def delayed_orders_timeout(mng: 'PatchbayManager'):
+    '''This method is called by the QTimer self._delayed_orders_timer
+    when no graph event happens during 50ms.
+    It executes in the main thread all methods called since last time,
+    then, it updates the canvas with new contents.'''
+    _logger.debug('patchbay delayed order')
+
+    group_ids_to_sort = set()
+    some_groups_removed = False
+    clear_conns = False
+
+    with CanvasOptimizeIt(mng, auto_redraw=True):
+        while _delayed_orders.qsize():
+            oq = _delayed_orders.get()
+
+            _logger.debug(f'  execute {oq.func.__name__}, {oq.args[1:]}')
+
+            # execute the function, and get concerned group_id
+            group_id = oq.func(*oq.args, **oq.kwargs)
+
+            if oq.metadata_change and group_id is not None:
+                key = oq.args[2]
+                if key in (JackMetadata.ORDER, ''):
+                    group_ids_to_sort.add(group_id)
+
+            if oq.draw_group:
+                if group_id is None:
+                    some_groups_removed = True
+            if oq.clear_conns:
+                clear_conns = True
+
+        for group in mng.groups:
+            if group.group_id in group_ids_to_sort:
+                group.sort_ports_in_canvas()
+
+        if clear_conns:
+            # sometimes connections are still in canvas without ports
+            # probably because the message for their destruction
+            # has not been received.
+            # here we can assume to clear all of them
+            conns_to_clean = list[Connection]()
+
+            for conn in mng.connections:
+                for port in (conn.port_out, conn.port_in):
+                    fport = mng.get_port_from_name(port.full_name)
+                    if fport is None:
+                        conn.remove_from_canvas()
+                        conns_to_clean.append(conn)
+                        break
+
+                    if not fport.in_canvas:
+                        conn.remove_from_canvas()
+
+            for conn in conns_to_clean:
+                mng.connections.remove(conn)
+
+    if some_groups_removed:
+        patchcanvas.canvas.scene.resize_the_scene()
+
+    mng.sg.patch_may_have_changed.emit()

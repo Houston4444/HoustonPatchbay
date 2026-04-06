@@ -1,7 +1,6 @@
 import logging
 from pathlib import Path
 from typing import Callable, Iterator
-from queue import Queue
 
 from qtpy.QtGui import QCursor, QGuiApplication, QKeyEvent
 from qtpy.QtWidgets import QMainWindow, QMessageBox, QWidget
@@ -9,7 +8,7 @@ from qtpy.QtCore import QTimer, QSettings, QThread, Qt
 from patchbay.pretty_diff_checker import PrettyDiffChecker
 
 from patshared import (
-    PortType, PortSubType, PortMode, JackMetadata, JackMetadatas,
+    PortType, PortSubType, PortMode, JackMetadatas,
     PortTypesViewFlag, GroupPos, Naming, TransportPosition,
     ViewsDictEnsureOne, ViewData, PortgroupsDict, PortgroupMem, CustomNames)
 
@@ -24,7 +23,6 @@ from .cancel_mng import CancelMng, CancelOp, CancellableAction
 from .conns_clipboard import ConnClipboard
 from .dialogs.options_dialog import CanvasOptionsDialog
 from .menus.canvas_menu import CanvasMenu
-from .patchbay_batches import DelayedOrder, later_by_batch
 from .patchbay_signals import SignalsObject
 from .patchcanvas import patchcanvas
 from .patchcanvas.utils import get_new_group_positions
@@ -79,8 +77,6 @@ class PatchbayManager:
 
     portgroups_memory = PortgroupsDict()
     custom_names = CustomNames()
-
-    delayed_orders = Queue[DelayedOrder]()
 
     jack_metadatas = JackMetadatas()
 
@@ -1045,37 +1041,34 @@ class PatchbayManager:
     def refresh(self):
         self.clear_all()
 
-    @later_by_batch()
     def set_group_uuid_from_name(self, client_name: str, uuid: int):
         patchbay_batches.set_group_uuid_from_name(self, client_name, uuid)
 
-    @later_by_batch(draw_group=True)
-    def add_port(self, name: str, port_type: PortType,
-                 flags: int, uuid: int) -> int:
-        '''adds port and returns the group_id'''
-        return patchbay_batches.add_port(self, name, port_type, flags, uuid)
+    def add_port(self, name: str, port_type: PortType, flags: int, uuid: int):
+        'add port to the global patch, it will be applied later by batches'
+        patchbay_batches.add_port(self, name, port_type, flags, uuid)
 
-    @later_by_batch(draw_group=True, clear_conns=True)
-    def remove_port(self, name: str) -> int | None:
-        '''remove a port from name and return its group_id'''
-        return patchbay_batches.remove_port(self, name)
+    def remove_port(self, name: str):
+        'remove port from the global patch, will be applied later by batches'
+        patchbay_batches.remove_port(self, name)
 
-    @later_by_batch(draw_group=True)
-    def rename_port(self, name: str, new_name: str, uuid=0) -> int | None:
-        return patchbay_batches.rename_port(self, name, new_name, uuid=uuid)
+    def rename_port(self, name: str, new_name: str, uuid=0):
+        'rename port in the global patch, will be applied later by batches'
+        patchbay_batches.rename_port(self, name, new_name, uuid=uuid)
 
-    @later_by_batch(metadata_change=True)
     def metadata_update(
-            self, uuid: int, key: str, value: str) -> int | None:
-        '''remember metadata and return the group_id'''
+            self, uuid: int, key: str, value: str):
+        '''remember metadata, will be applied later by batches'''
         return patchbay_batches.metadata_update(self, uuid, key, value)
 
-    @later_by_batch()
     def add_connection(self, port_out_name: str, port_in_name: str):
+        '''add connection to the global patch,
+        will be applied later by batches'''
         patchbay_batches.add_connection(self, port_out_name, port_in_name)
 
-    @later_by_batch()
     def remove_connection(self, port_out_name: str, port_in_name: str):
+        '''remove connection from the global patch,
+        will be applied later by batches'''
         patchbay_batches.remove_connection(self, port_out_name, port_in_name)
 
     def disannounce(self):
@@ -1198,67 +1191,12 @@ class PatchbayManager:
         if self._tools_widget is not None:
             self._tools_widget.set_samplerate(samplerate)
 
-    # @Slot()
     def _delayed_orders_timeout(self):
         '''This method is called by the QTimer self._delayed_orders_timer
         when no graph event happens during 50ms.
         It executes in the main thread all methods called since last time,
         then, it updates the canvas with new contents.'''
-        _logger.debug('patchbay delayed order')
-
-        group_ids_to_sort = set()
-        some_groups_removed = False
-        clear_conns = False
-
-        with CanvasOptimizeIt(self, auto_redraw=True):
-            while self.delayed_orders.qsize():
-                oq = self.delayed_orders.get()
-
-                _logger.debug(f'  execute {oq.func.__name__}, {oq.args[1:]}')
-
-                # execute the function, and get concerned group_id
-                group_id = oq.func(*oq.args, **oq.kwargs)
-
-                if oq.metadata_change and group_id is not None:
-                    key = oq.args[2]
-                    if key in (JackMetadata.ORDER, ''):
-                        group_ids_to_sort.add(group_id)
-
-                if oq.draw_group:
-                    if group_id is None:
-                        some_groups_removed = True
-                if oq.clear_conns:
-                    clear_conns = True
-
-            for group in self.groups:
-                if group.group_id in group_ids_to_sort:
-                    group.sort_ports_in_canvas()
-
-            if clear_conns:
-                # sometimes connections are still in canvas without ports
-                # probably because the message for their destruction
-                # has not been received.
-                # here we can assume to clear all of them
-                conns_to_clean = list[Connection]()
-
-                for conn in self.connections:
-                    for port in (conn.port_out, conn.port_in):
-                        fport = self.get_port_from_name(port.full_name)
-                        if fport is None:
-                            conn.remove_from_canvas()
-                            conns_to_clean.append(conn)
-                            break
-
-                        if not fport.in_canvas:
-                            conn.remove_from_canvas()
-
-                for conn in conns_to_clean:
-                    self.connections.remove(conn)
-
-        if some_groups_removed:
-            patchcanvas.canvas.scene.resize_the_scene()
-
-        self.sg.patch_may_have_changed.emit()
+        patchbay_batches.delayed_orders_timeout(self)
 
     def apply_delayed_changes_now(self):
         self._delayed_orders_timer.stop()
