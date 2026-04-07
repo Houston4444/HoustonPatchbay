@@ -13,7 +13,6 @@ if TYPE_CHECKING:
 class Port:
     graceful_name = ''
     group: 'Group'
-    group_id = -1
     portgroup_id = 0
     prevent_stereo = False
     last_digit_to_add = ''
@@ -21,6 +20,7 @@ class Port:
     order: Optional[int] = None
     uuid = 0
     'contains the real JACK uuid'
+    track_id = -1
 
     def __init__(self, manager: 'PatchbayManager', port_id: int, name: str,
                  port_type: PortType, flags: int, uuid: int):
@@ -45,6 +45,18 @@ class Port:
 
     def __repr__(self) -> str:
         return f"Port({self.full_name})"
+
+    @property
+    def group_id(self) -> int:
+        return self.group.group_id
+
+    @property
+    def cnv_group_id(self) -> int:
+        '''the port group_id or the track_id if port is in a track
+        useful for connections in canvas.'''
+        if self.track_id >= 0:
+            return self.track_id
+        return self.group_id
 
     @property
     def mode(self) -> PortMode:
@@ -170,7 +182,7 @@ class Port:
                 return
 
         patchcanvas.add_port(
-            self.group_id, self.port_id, self.cnv_name,
+            self.cnv_group_id, self.port_id, self.cnv_name,
             self.mode, self.type, self.subtype)
 
         self.in_canvas = True

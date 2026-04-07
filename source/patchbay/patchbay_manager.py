@@ -245,6 +245,7 @@ class PatchbayManager:
     def optimize_operation(
             self, yesno: bool, auto_redraw=False, prevent_overlap=True):
         if patchcanvas.canvas is not None:
+            print('optimize_operation', yesno, f'{auto_redraw=} {prevent_overlap=}')
             patchcanvas.set_loading_items(
                 yesno,
                 auto_redraw=auto_redraw,

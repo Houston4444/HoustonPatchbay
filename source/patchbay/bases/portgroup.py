@@ -16,6 +16,7 @@ class Portgroup:
         self.portgroup_id = portgroup_id
         self.port_mode = port_mode
         self.ports = tuple(ports)
+        self.track_id = -1
 
         self.mdata_portgroup = ''
         self.above_metadatas = False
@@ -65,10 +66,16 @@ class Portgroup:
             if not port.in_canvas:
                 return
 
+        if self.track_id >= 0:
+            print('hopuuppee', self.track_id, self.group_id)
+            group_id = self.track_id
+        else:
+            group_id = self.group_id
+
         self.in_canvas = True
 
         patchcanvas.add_portgroup(
-            self.group_id, self.portgroup_id,
+            group_id, self.portgroup_id,
             self.port_mode, self.ports[0].type, self.ports[0].subtype,
             [port.port_id for port in self.ports])
 

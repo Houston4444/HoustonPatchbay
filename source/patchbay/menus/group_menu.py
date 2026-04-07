@@ -3,6 +3,7 @@ from typing import TYPE_CHECKING
 from qtpy.QtWidgets import QMenu, QApplication
 from qtpy.QtCore import Slot # type:ignore
 from qtpy.QtGui import QIcon, QPixmap
+from patchbay.bases.elements import CanvasOptimizeIt
 
 from patshared import PortMode, BoxLayoutMode
 
@@ -162,6 +163,19 @@ class GroupMenu(QMenu):
             if current_port_mode is not PortMode.BOTH:
                 split_act.setEnabled(False)
 
+        if self._group.tracks:
+            print('ben ten a toi', self._group.tracks)
+            if self._group.tracks_are_splitted:
+                join_tracks_act = self.addAction(
+                    _translate('patchbay', 'Join tracks'))
+                join_tracks_act.setIcon(QIcon.fromTheme('join'))
+                join_tracks_act.triggered.connect(self._join_tracks)
+            else:
+                split_tracks_act = self.addAction(
+                    _translate('patchbay', 'Split tracks'))
+                split_tracks_act.setIcon(QIcon.fromTheme('split'))
+                split_tracks_act.triggered.connect(self._split_tracks)
+
         box_pos = self._group.current_position.boxes[self._port_mode]
         self._is_wrapped = box_pos.is_wrapped()
 
@@ -241,6 +255,22 @@ class GroupMenu(QMenu):
         with CancellableAction(self._mng, CancelOp.VIEW) as a:
             a.name = _translate('undo', 'Split "%s"') % self._group.cnv_name
             patchcanvas.split_group(self._group.group_id, on_place=True)
+
+    @Slot()
+    def _split_tracks(self):
+        with CancellableAction(self._mng, CancelOp.VIEW) as a:
+            a.name = _translate('undo', 'Split tracks for "%s"') \
+                %  self._group.cnv_name
+            with CanvasOptimizeIt(self._mng, auto_redraw=True):
+                self._group.split_tracks(True)
+
+    @Slot()
+    def _join_tracks(self):
+        with CancellableAction(self._mng, CancelOp.VIEW) as a:
+            a.name = _translate('undo', 'Join tracks for "%s"') \
+                %  self._group.cnv_name
+            with CanvasOptimizeIt(self._mng, auto_redraw=True):
+                self._group.split_tracks(False)
 
     @Slot()
     def _wrap(self):

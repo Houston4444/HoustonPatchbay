@@ -34,8 +34,8 @@ class Connection:
 
         patchcanvas.connect_ports(
             self.connection_id,
-            self.port_out.group_id, self.port_out.port_id,
-            self.port_in.group_id, self.port_in.port_id)
+            self.port_out.cnv_group_id, self.port_out.port_id,
+            self.port_in.cnv_group_id, self.port_in.port_id)
 
         self.in_canvas = True
 

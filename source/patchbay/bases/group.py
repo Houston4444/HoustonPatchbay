@@ -1,3 +1,4 @@
+from functools import cached_property
 from typing import TYPE_CHECKING, Optional, Union
 
 from patshared import (
@@ -46,9 +47,17 @@ class Group:
 
         self.outs_ptv = PortTypesViewFlag.NONE
         'PortTypesViewFlag containing present output port types'
-
         self.ins_ptv = PortTypesViewFlag.NONE
         'PortTypesViewFlag containing present input port types'
+        
+        self.track_group: Group | None = None
+        'The parent group if this group is a track, else None'
+        self.tracks = dict[str, Group]()
+        'dict where track_name is the key and track Group is the value'
+        self.track_ids = dict[str, int]()
+        '''dict where track_name is the key and track_id 
+        (used as group_id in patchcanvas) is the value'''
+        self.tracks_are_splitted = False
 
     def __repr__(self) -> str:
         return f"Group({self.name})"
@@ -243,7 +252,6 @@ class Group:
         self.ports.clear()
 
     def add_port(self, port: Port):
-        port.group_id = self.group_id
         port.group = self
         port_full_name = port.full_name
 
@@ -270,27 +278,47 @@ class Group:
         self.ports.append(port)
 
         port_type, port_sub_type = port.full_type
-        if port_type is PortType.AUDIO_JACK:
-            if port_sub_type is PortSubType.CV:
-                ptv_flag = PortTypesViewFlag.CV
-            else:
-                ptv_flag = PortTypesViewFlag.AUDIO
-        elif port_type is PortType.MIDI_JACK:
-            ptv_flag = PortTypesViewFlag.MIDI
-        elif port_type is PortType.MIDI_ALSA:
-            ptv_flag = PortTypesViewFlag.ALSA
-        elif port_type is PortType.VIDEO:
-            ptv_flag = PortTypesViewFlag.VIDEO
-        else:
-            ptv_flag = PortTypesViewFlag.NONE
+        match port_type:
+            case PortType.AUDIO_JACK:
+                if port_sub_type is PortSubType.CV:
+                    ptv_flag = PortTypesViewFlag.CV
+                else:
+                    ptv_flag = PortTypesViewFlag.AUDIO
+            case PortType.MIDI_JACK:
+                ptv_flag = PortTypesViewFlag.MIDI
+            case PortType.MIDI_ALSA:
+                ptv_flag = PortTypesViewFlag.ALSA
+            case PortType.VIDEO:
+                ptv_flag = PortTypesViewFlag.VIDEO
+            case _:
+                ptv_flag = PortTypesViewFlag.NONE
 
         if port.mode is PortMode.OUTPUT:
             self.outs_ptv |= ptv_flag
-        else:
+        elif port.mode is PortMode.INPUT:
             self.ins_ptv |= ptv_flag
 
         self.manager._ports_by_name[port.full_name] = port
         self.manager._ports_by_uuid[port.uuid] = port
+        
+        # prepare track if possible
+        track_name = ''
+        match self.program_name:
+            case 'ardour'|'Ardour':
+                if '/' in port.short_name:
+                    track_name = port.short_name.partition('/')[0]
+        
+        if track_name:
+            track = self.tracks.get(track_name)
+            if track is None:
+                track = self.tracks[track_name] = Group(
+                    self.manager, self.manager._next_group_id,
+                    track_name, GroupPos())
+                self.manager._groups_by_id[self.manager._next_group_id] = \
+                    track
+                self.manager._next_group_id += 1
+                track.track_group = self
+            track.ports.append(port)
 
     def remove_port(self, port: Port):
         if port in self.ports:
@@ -395,7 +423,43 @@ class Group:
             patchcanvas.set_group_icon(
                 self.group_id, box_type, icon_name)
 
-    def get_pretty_client(self) -> str:
+    def split_tracks(self, yesno: bool):
+        conns = list[Connection]()
+        for conn in self.manager.connections:
+            if conn.port_out.group is self or conn.port_in.group is self:
+                conns.append(conn)
+                conn.remove_from_canvas()
+
+        self.remove_all_ports_from_canvas()
+
+        if yesno:
+            for track_name, track in self.tracks.items():
+                track.add_to_canvas()
+                for port in track.ports:
+                    port.track_id = track.group_id
+                for portgroup in self.portgroups:
+                    for port_ in portgroup.ports:
+                        if port_.track_id != track.group_id:
+                            break
+                    else:
+                        portgroup.track_id = track.group_id
+        else:
+            for track_name, track in self.tracks.items():
+                track.remove_all_ports_from_canvas()
+                track.remove_from_canvas()
+                for port in track.ports:
+                    port.track_id = -1
+            for portgroup in self.portgroups:
+                portgroup.track_id = -1
+
+        self.add_all_ports_to_canvas()
+        for conn in conns:
+            conn.add_to_canvas()
+        
+        self.tracks_are_splitted = yesno
+
+    @cached_property
+    def program_name(self) -> str:
         for client_name in (
                 'firewire_pcm', 'a2j',
                 'Hydrogen', 'ardour', 'Ardour', 'Mixbus', 'mixbus',
@@ -445,164 +509,168 @@ class Group:
                     return name.rsplit(end)[0]
             return name
 
-        client_name = self.get_pretty_client()
+        program_name = self.program_name
 
-        if (not client_name
+        if (not program_name
                 and ((port.type is PortType.MIDI_JACK
                         and port.full_name.startswith(
                             ('a2j:', 'Midi-Bridge:')))
                      or port.type is PortType.MIDI_ALSA)
                 and port.flags & JackPortFlag.IS_PHYSICAL):
-            client_name = 'a2j'
+            program_name = 'a2j'
 
         display_name = port.short_name
         s_display_name = display_name
 
-        if client_name == 'firewire_pcm':
-            if '(' in display_name and ')' in display_name:
-                after_para = display_name.partition('(')[2]
-                display_name = after_para.rpartition(')')[0]
-                display_name, num = split_end_digits(display_name)
+        match program_name:
+            case 'firewire_pcm':
+                if '(' in display_name and ')' in display_name:
+                    after_para = display_name.partition('(')[2]
+                    display_name = after_para.rpartition(')')[0]
+                    display_name, num = split_end_digits(display_name)
 
+                    if num:
+                        if display_name.endswith(':'):
+                            display_name = display_name[:-1]
+                        display_name += ' ' + num
+                else:
+                    display_name = display_name.partition('_')[2]
+                    display_name = cut_end(display_name, '_in', '_out')
+                    display_name = display_name.replace(':', ' ')
+                    display_name, num = split_end_digits(display_name)
+                    display_name = display_name + num
+
+            case 'Hydrogen':
+                if display_name.startswith('Track_'):
+                    display_name = display_name.replace('Track_', '', 1)
+
+                    num, udsc, name = display_name.partition('_')
+                    if num.isdigit():
+                        display_name = num + ' ' + name
+
+                if display_name.endswith('_Main_L'):
+                    display_name = display_name.replace('_Main_L', ' L', 1)
+                elif display_name.endswith('_Main_R'):
+                    display_name = display_name.replace('_Main_R', ' R', 1)
+
+            case 'a2j':
+                display_name, num = split_end_digits(display_name)
                 if num:
-                    if display_name.endswith(':'):
-                        display_name = display_name[:-1]
-                    display_name += ' ' + num
-            else:
-                display_name = display_name.partition('_')[2]
-                display_name = cut_end(display_name, '_in', '_out')
-                display_name = display_name.replace(':', ' ')
-                display_name, num = split_end_digits(display_name)
-                display_name = display_name + num
+                    if display_name.endswith(' MIDI '):
+                        display_name = cut_end(display_name, ' MIDI ')
 
-        elif client_name == 'Hydrogen':
-            if display_name.startswith('Track_'):
-                display_name = display_name.replace('Track_', '', 1)
+                        if num == '1':
+                            port.last_digit_to_add = '1'
+                        else:
+                            display_name += ' ' + num
 
-                num, udsc, name = display_name.partition('_')
-                if num.isdigit():
-                    display_name = num + ' ' + name
+                    elif display_name.endswith(' Port-'):
+                        display_name = cut_end(display_name, ' Port-')
 
-            if display_name.endswith('_Main_L'):
-                display_name = display_name.replace('_Main_L', ' L', 1)
-            elif display_name.endswith('_Main_R'):
-                display_name = display_name.replace('_Main_R', ' R', 1)
+                        if num == '0':
+                            port.last_digit_to_add = '0'
+                        else:
+                            display_name += ' ' + num
 
-        elif client_name == 'a2j':
-            display_name, num = split_end_digits(display_name)
-            if num:
-                if display_name.endswith(' MIDI '):
-                    display_name = cut_end(display_name, ' MIDI ')
+            case 'ardour'|'Ardour'|'Mixbus'|'mixbus':
+                if '/TriggerBox/' in display_name:
+                    display_name = \
+                        '▸ ' + display_name.replace('/TriggerBox/', '/', 1)
 
-                    if num == '1':
-                        port.last_digit_to_add = '1'
-                    else:
-                        display_name += ' ' + num
+                for pt in ('audio', 'midi'):
+                    if display_name == f"physical_{pt}_input_monitor_enable":
+                        display_name = "physical monitor"
+                        break
+                else:
+                    display_name, num = split_end_digits(display_name)
+                    if num:
+                        display_name = cut_end(display_name,
+                                            '/audio_out ', '/audio_in ',
+                                            '/midi_out ', '/midi_in ')
+                        if num == '1':
+                            port.last_digit_to_add = '1'
+                        else:
+                            display_name += ' ' + num
 
-                elif display_name.endswith(' Port-'):
-                    display_name = cut_end(display_name, ' Port-')
-
-                    if num == '0':
-                        port.last_digit_to_add = '0'
-                    else:
-                        display_name += ' ' + num
-
-        elif client_name in ('ardour', 'Ardour', 'Mixbus', 'mixbus'):
-            if '/TriggerBox/' in display_name:
-                display_name = '▸ ' + display_name.replace('/TriggerBox/', '/', 1)
-
-            for pt in ('audio', 'midi'):
-                if display_name == f"physical_{pt}_input_monitor_enable":
-                    display_name = "physical monitor"
-                    break
-            else:
+            case 'Qtractor':
                 display_name, num = split_end_digits(display_name)
                 if num:
                     display_name = cut_end(display_name,
-                                        '/audio_out ', '/audio_in ',
-                                        '/midi_out ', '/midi_in ')
+                                        '/in_', '/out_')
                     if num == '1':
                         port.last_digit_to_add = '1'
                     else:
                         display_name += ' ' + num
 
-        elif client_name == 'Qtractor':
-            display_name, num = split_end_digits(display_name)
-            if num:
-                display_name = cut_end(display_name,
-                                       '/in_', '/out_')
-                if num == '1':
-                    port.last_digit_to_add = '1'
-                else:
-                    display_name += ' ' + num
+            case 'Non-Mixer'|'Non-Mixer-XT':
+                display_name, num = split_end_digits(display_name)
+                if num:
+                    display_name = cut_end(display_name, '/in-', '/out-')
 
-        elif client_name in ('Non-Mixer', 'Non-Mixer-XT'):
-            display_name, num = split_end_digits(display_name)
-            if num:
-                display_name = cut_end(display_name, '/in-', '/out-')
+                    if num == '1':
+                        port.last_digit_to_add = '1'
+                    else:
+                        display_name += ' ' + num
 
-                if num == '1':
-                    port.last_digit_to_add = '1'
-                else:
-                    display_name += ' ' + num
+            case 'jack_mixer':
+                prefix, out, side = display_name.rpartition(' Out')
+                if out and side in (' L', ' R', ''):
+                    display_name = prefix + side
 
-        elif client_name == 'jack_mixer':
-            prefix, out, side = display_name.rpartition(' Out')
-            if out and side in (' L', ' R', ''):
-                display_name = prefix + side
+            case 'SooperLooper'|'sooperlooper':
+                display_name, num = split_end_digits(display_name)
+                if num:
+                    display_name = cut_end(display_name,
+                                        '_in_', '_out_')
+                    if num == '1':
+                        port.last_digit_to_add = '1'
+                    else:
+                        display_name += ' ' + num
 
-        elif client_name in ('SooperLooper', 'sooperlooper'):
-            display_name, num = split_end_digits(display_name)
-            if num:
-                display_name = cut_end(display_name,
-                                       '_in_', '_out_')
-                if num == '1':
-                    port.last_digit_to_add = '1'
-                else:
-                    display_name += ' ' + num
+            case 'Luppp':
+                if display_name.endswith('\n'):
+                    display_name = display_name[:-1]
 
-        elif client_name == 'Luppp':
-            if display_name.endswith('\n'):
-                display_name = display_name[:-1]
+                display_name = display_name.replace('_', ' ')
 
-            display_name = display_name.replace('_', ' ')
+            case 'seq64':
+                display_name = display_name.replace('seq64 midi ', '', 1)
 
-        elif client_name == 'seq64':
-            display_name = display_name.replace('seq64 midi ', '', 1)
+            case 'seq192':
+                display_name = display_name.replace('seq192 ', '', 1)
 
-        elif client_name == 'seq192':
-            display_name = display_name.replace('seq192 ', '', 1)
+            case 'calfjackhost':
+                display_name, num = split_end_digits(display_name)
+                if num:
+                    display_name = cut_end(display_name,
+                                        ' Out #', ' In #')
 
-        elif client_name == 'calfjackhost':
-            display_name, num = split_end_digits(display_name)
-            if num:
-                display_name = cut_end(display_name,
-                                       ' Out #', ' In #')
+                    display_name += " " + num
 
-                display_name += " " + num
+            case 'rakarrack-plus':
+                if display_name.startswith(
+                        ('rakarrack-plus ', 'rakarrack-plus.')):
+                    display_name = display_name[15:]
+                display_name = display_name.replace('_', ' ')
 
-        elif client_name == 'rakarrack-plus':
-            if display_name.startswith(('rakarrack-plus ', 'rakarrack-plus.')):
-                display_name = display_name[15:]
-            display_name = display_name.replace('_', ' ')
+            case _:
+                display_name = display_name.replace('_', ' ')
+                match display_name.lower():
+                    case s if s.endswith(('-left', ' left')):
+                        display_name = display_name[:-5] + ' L'
+                    case s if s.endswith(('-right', ' right')):
+                        display_name = display_name[:-6] + ' R'
+                    case 'left in':
+                        display_name = 'In L'
+                    case 'right in':
+                        display_name = 'In R'
+                    case 'left out':
+                        display_name = 'Out L'
+                    case 'right out':
+                        display_name = 'Out R'
 
-        elif not client_name:
-            display_name = display_name.replace('_', ' ')
-            if display_name.lower().endswith(('-left', ' left')):
-                display_name = display_name[:-5] + ' L'
-            elif display_name.lower().endswith(('-right', ' right')):
-                display_name = display_name[:-6] + ' R'
-            elif display_name.lower() == 'left in':
-                display_name = 'In L'
-            elif display_name.lower() == 'right in':
-                display_name = 'In R'
-            elif display_name.lower() == 'left out':
-                display_name = 'Out L'
-            elif display_name.lower() == 'right out':
-                display_name = 'Out R'
-
-            if display_name.startswith('Audio'):
-                display_name = display_name.replace('Audio ', '')
+                if display_name.startswith('Audio'):
+                    display_name = display_name.replace('Audio ', '')
 
         # reduce graceful name for pipewire Midi-Bridge with
         # option jack.filter_name = true
