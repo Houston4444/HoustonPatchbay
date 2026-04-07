@@ -213,7 +213,7 @@ class Port:
         if not self.in_canvas:
             return
 
-        patchcanvas.remove_port(self.group_id, self.port_id)
+        patchcanvas.remove_port(self.cnv_group_id, self.port_id)
         self.in_canvas = False
 
         if self.conns_hidden_in_canvas:

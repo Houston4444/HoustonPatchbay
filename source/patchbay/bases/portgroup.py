@@ -67,7 +67,6 @@ class Portgroup:
                 return
 
         if self.track_id >= 0:
-            print('hopuuppee', self.track_id, self.group_id)
             group_id = self.track_id
         else:
             group_id = self.group_id
@@ -86,5 +85,10 @@ class Portgroup:
         if not self.in_canvas:
             return
 
-        patchcanvas.remove_portgroup(self.group_id, self.portgroup_id)
+        if self.track_id >= 0:
+            group_id = self.track_id
+        else:
+            group_id = self.group_id
+
+        patchcanvas.remove_portgroup(group_id, self.portgroup_id)
         self.in_canvas = False

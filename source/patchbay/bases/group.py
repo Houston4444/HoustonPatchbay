@@ -445,7 +445,6 @@ class Group:
                         portgroup.track_id = track.group_id
         else:
             for track_name, track in self.tracks.items():
-                track.remove_all_ports_from_canvas()
                 track.remove_from_canvas()
                 for port in track.ports:
                     port.track_id = -1
