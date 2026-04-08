@@ -1,8 +1,8 @@
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 from qtpy.QtWidgets import QMenu, QApplication
 from qtpy.QtCore import Slot # type:ignore
-from qtpy.QtGui import QIcon, QPixmap
+from qtpy.QtGui import QIcon, QPixmap, QAction
 from patchbay.bases.elements import CanvasOptimizeIt
 
 from patshared import PortMode, BoxLayoutMode
@@ -164,17 +164,35 @@ class GroupMenu(QMenu):
                 split_act.setEnabled(False)
 
         if self._group.tracks:
-            print('ben ten a toi', self._group.tracks)
+            self.tracks_menu = QMenu()
+            self.tracks_menu.setIcon(QIcon.fromTheme('split'))
+            self.tracks_menu.setTitle(
+                _translate('patchbay', 'Separate tracks'))
             if self._group.tracks_are_splitted:
-                join_tracks_act = self.addAction(
-                    _translate('patchbay', 'Join tracks'))
+                join_tracks_act = self.tracks_menu.addAction(
+                    _translate('patchbay', 'Join all tracks'))
                 join_tracks_act.setIcon(QIcon.fromTheme('join'))
                 join_tracks_act.triggered.connect(self._join_tracks)
             else:
-                split_tracks_act = self.addAction(
-                    _translate('patchbay', 'Split tracks'))
+                split_tracks_act = self.tracks_menu.addAction(
+                    _translate('patchbay', 'Separate all tracks'))
                 split_tracks_act.setIcon(QIcon.fromTheme('split'))
                 split_tracks_act.triggered.connect(self._split_tracks)
+            
+            for track_name, track in self._group.tracks.items():
+                sep_track_act = self.tracks_menu.addAction(track_name)
+                sep_track_act.setCheckable(True)
+                sep_track_act.setChecked(track.is_active_track)
+                sep_track_act.setData(track_name)
+                sep_track_act.triggered.connect(self._separate_track)
+            
+            self.addMenu(self.tracks_menu)
+        
+        elif self._group.is_active_track:
+            repatriate_act = self.addAction(
+                _translate('patchbay', 'Repatriate'))
+            repatriate_act.setIcon(QIcon.fromTheme('join'))
+            repatriate_act.triggered.connect(self._repatriate_track)
 
         box_pos = self._group.current_position.boxes[self._port_mode]
         self._is_wrapped = box_pos.is_wrapped()
@@ -262,7 +280,7 @@ class GroupMenu(QMenu):
             a.name = _translate('undo', 'Split tracks for "%s"') \
                 %  self._group.cnv_name
             with CanvasOptimizeIt(self._mng, auto_redraw=True):
-                self._group.split_tracks(True)
+                self._group.separate_tracks(True)
 
     @Slot()
     def _join_tracks(self):
@@ -270,7 +288,26 @@ class GroupMenu(QMenu):
             a.name = _translate('undo', 'Join tracks for "%s"') \
                 %  self._group.cnv_name
             with CanvasOptimizeIt(self._mng, auto_redraw=True):
-                self._group.split_tracks(False)
+                self._group.separate_tracks(False)
+
+    @Slot()
+    def _separate_track(self):
+        sep_track_act = self.sender()
+        if not isinstance(sep_track_act, QAction):
+            return
+
+        track_name = cast(str, sep_track_act.data())
+        with CanvasOptimizeIt(self._mng, auto_redraw=True):
+            self._group.separate_track(track_name, sep_track_act.isChecked())
+
+    @Slot()
+    def _repatriate_track(self):
+        repatriate_act = self.sender()
+        if not isinstance(repatriate_act, QAction):
+            return
+        
+        with CanvasOptimizeIt(self._mng, auto_redraw=True):
+            self._group.repatriate_track()
 
     @Slot()
     def _wrap(self):

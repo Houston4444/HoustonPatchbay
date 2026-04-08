@@ -7,6 +7,7 @@ from ..patchcanvas import patchcanvas
 if TYPE_CHECKING:
     from ..patchbay_manager import PatchbayManager
 
+
 class Portgroup:
     '''Portgroup is a group of ports, in most cases a stereo pair'''
     def __init__(self, manager: 'PatchbayManager', group_id: int,
@@ -66,7 +67,11 @@ class Portgroup:
             if not port.in_canvas:
                 return
 
-        if self.track_id >= 0:
+        if self.track_id == -2:
+            # portgroup can't be added to canvas because it has portgroups
+            # on different tracks (rare)
+            return
+        elif self.track_id >= 0:
             group_id = self.track_id
         else:
             group_id = self.group_id

@@ -1,5 +1,6 @@
 from functools import cached_property
-from typing import TYPE_CHECKING, Optional, Union
+import logging
+from typing import TYPE_CHECKING, Optional
 
 from patshared import (
     BoxType,
@@ -21,6 +22,9 @@ from ..patchcanvas import patchcanvas
 
 if TYPE_CHECKING:
     from ..patchbay_manager import PatchbayManager
+
+
+_logger = logging.getLogger(__name__)
 
 
 class Group:
@@ -58,6 +62,7 @@ class Group:
         '''dict where track_name is the key and track_id 
         (used as group_id in patchcanvas) is the value'''
         self.tracks_are_splitted = False
+        self.is_active_track = False
 
     def __repr__(self) -> str:
         return f"Group({self.name})"
@@ -251,6 +256,10 @@ class Group:
         self.portgroups.clear()
         self.ports.clear()
 
+        for track_name, track in self.tracks.items():
+            track.portgroups.clear()
+            track.ports.clear()
+
     def add_port(self, port: Port):
         port.group = self
         port_full_name = port.full_name
@@ -303,10 +312,12 @@ class Group:
         
         # prepare track if possible
         track_name = ''
+        port_track_name = ''
         match self.program_name:
             case 'ardour'|'Ardour':
                 if '/' in port.short_name:
-                    track_name = port.short_name.partition('/')[0]
+                    track_name, _, port_track_name = \
+                        port.short_name.partition('/')
         
         if track_name:
             track = self.tracks.get(track_name)
@@ -318,12 +329,18 @@ class Group:
                     track
                 self.manager._next_group_id += 1
                 track.track_group = self
+            port.name_for_track = port_track_name
             track.ports.append(port)
 
     def remove_port(self, port: Port):
         if port in self.ports:
             port.remove_from_canvas()
             self.ports.remove(port)
+        
+        rm_keys = [k for k, v in self.tracks.items() if not v.ports]
+        for rm_key in rm_keys:
+            self.tracks[rm_key].remove_from_canvas()
+            self.tracks.pop(rm_key)
 
     def remove_portgroup(self, portgroup: Portgroup):
         if portgroup in self.portgroups:
@@ -423,7 +440,47 @@ class Group:
             patchcanvas.set_group_icon(
                 self.group_id, box_type, icon_name)
 
-    def split_tracks(self, yesno: bool):
+    def separate_track(self, track_name: str, yesno: bool):
+        track = self.tracks.get(track_name)
+        if track is None:
+            _logger.warning(f'No track named "{track_name}" to separate')
+            return
+        
+        conns = list[Connection]()
+        for conn in self.manager.connections:
+            if conn.port_out.group is self or conn.port_in.group is self:
+                conns.append(conn)
+                conn.remove_from_canvas()
+                
+        self.remove_all_ports_from_canvas()
+        
+        if yesno:
+            track.is_active_track = True
+            track.current_position = self.current_position.copy()
+            track.add_to_canvas()
+            for port in track.ports:
+                port.track_id = track.group_id
+            for portgroup in self.portgroups:
+                for port_ in portgroup.ports:
+                    if port_.track_id != track.group_id:
+                        break
+                else:
+                    portgroup.track_id = track.group_id
+        else:
+            track.is_active_track = False
+            track.remove_from_canvas()
+            for port in track.ports:
+                port.track_id = -1
+            for portgroup in [p for p in self.portgroups
+                              if p.track_id == track.group_id]:
+                portgroup.track_id = -1
+            
+        self.add_all_ports_to_canvas()
+        
+        for conn in conns:
+            conn.add_to_canvas()
+
+    def separate_tracks(self, yesno: bool):
         conns = list[Connection]()
         for conn in self.manager.connections:
             if conn.port_out.group is self or conn.port_in.group is self:
@@ -434,6 +491,8 @@ class Group:
 
         if yesno:
             for track_name, track in self.tracks.items():
+                track.is_active_track = True
+                track.current_position = self.current_position.copy()
                 track.add_to_canvas()
                 for port in track.ports:
                     port.track_id = track.group_id
@@ -445,6 +504,7 @@ class Group:
                         portgroup.track_id = track.group_id
         else:
             for track_name, track in self.tracks.items():
+                track.is_active_track = False
                 track.remove_from_canvas()
                 for port in track.ports:
                     port.track_id = -1
@@ -456,6 +516,18 @@ class Group:
             conn.add_to_canvas()
         
         self.tracks_are_splitted = yesno
+
+    def repatriate_track(self):
+        group = self.track_group
+        if group is None:
+            _logger.error(
+                f'track has no parent to be rapatriated {self}'
+                f' {self.track_group}')
+            return
+        
+        for track_name, track in group.tracks.items():
+            if track is self:
+                group.separate_track(track_name, False)
 
     @cached_property
     def program_name(self) -> str:
