@@ -13,7 +13,7 @@ from patshared import (
     PortgroupMem,
     Naming
 )
-from .elements import JackPortFlag, CanvasOptimizeIt
+from .elements import JackPortFlag, CanvasOptimizeIt, Tracks
 from .port import Port
 from .portgroup import Portgroup
 from .connection import Connection
@@ -56,7 +56,8 @@ class Group:
         
         self.track_group: Group | None = None
         'The parent group if this group is a track, else None'
-        self.tracks = dict[str, Group]()
+        # self.tracks = dict[str, Group]()
+        self.tracks = Tracks()
         'dict where track_name is the key and track Group is the value'
         self.track_names_from_id = dict[int, str]()
         '''dict where track_id (used as group_id in patchcanvas)
@@ -71,14 +72,6 @@ class Group:
         return (
             f"Track({self.track_group.track_names_from_id.get(self.group_id)}) "
             f"from {self.track_group}")
-
-    def _track_from_id(self, track_id: int) -> 'Group | None':
-        if track_id < 0:
-            return None
-        track_name = self.track_names_from_id.get(track_id)
-        if track_name is None:
-            return None
-        return self.tracks.get(track_name)
 
     def port_pg_pos(self, port_id: int) -> tuple[int, int]:
         '''return the port portgroup position index and portgroup len'''
@@ -269,7 +262,7 @@ class Group:
         self.portgroups.clear()
         self.ports.clear()
 
-        for track_name, track in self.tracks.items():
+        for track in self.tracks:
             track.portgroups.clear()
             track.ports.clear()
 
@@ -333,24 +326,27 @@ class Group:
                         port.short_name.partition('/')
         
         if track_name:
-            track = self.tracks.get(track_name)
+            track = self.tracks.from_name(track_name)
             if track is None:
-                track = self.tracks[track_name] = Group(
+                track = Group(
                     self.manager, self.manager._next_group_id,
                     track_name, GroupPos())
                 self.manager._groups_by_id[self.manager._next_group_id] = \
                     track
-                self.manager._next_group_id += 1
                 track.track_group = self
+                self.tracks.add(
+                    track, track_name, self.manager._next_group_id)
+                self.manager._next_group_id += 1
             
             if track.is_active_track:
                 port.track_id = track.group_id
             track.ports.append(port)
 
     def remove_port(self, port: Port):
-        track = self._track_from_id(port.track_id)
-        if track is not None and port in track.ports:
-            track.ports.remove(port)
+        for track in self.tracks:
+            if port in track.ports:
+                track.ports.remove(port)
+                break
 
         if port in self.ports:
             port.remove_from_canvas()
@@ -358,10 +354,10 @@ class Group:
 
     def remove_portgroup(self, portgroup: Portgroup):
         # remove portgroup from track if any
-        track = self._track_from_id(portgroup.track_id)
-        if track is not None:
+        for track in self.tracks:
             if portgroup in track.portgroups:
                 track.portgroups.remove(portgroup)
+                break
         
         if portgroup in self.portgroups:
             portgroup.remove_from_canvas()
@@ -461,7 +457,7 @@ class Group:
                 self.group_id, box_type, icon_name)
 
     def separate_track(self, track_name: str, yesno: bool):
-        track = self.tracks.get(track_name)
+        track = self.tracks.from_name(track_name)
         if track is None:
             _logger.warning(f'No track named "{track_name}" to separate')
             return
@@ -508,7 +504,7 @@ class Group:
 
     def separate_tracks(self, yesno: bool):
         if not yesno:
-            for track_name, track in self.tracks.items():
+            for track_name, track_id, track in self.tracks.full_iter():
                 track.set_group_position(
                     self.current_position.copy(),
                     PortMode.NULL, PortMode.NULL)
@@ -524,7 +520,7 @@ class Group:
         self.remove_all_ports_from_canvas()
 
         if yesno:
-            for track_name, track in self.tracks.items():
+            for track in self.tracks:
                 track.is_active_track = True
                 track.current_position = self.current_position.copy()
                 track.add_to_canvas()
@@ -537,7 +533,7 @@ class Group:
                     else:
                         portgroup.track_id = track.group_id
         else:
-            for track_name, track in self.tracks.items():
+            for track in self.tracks:
                 track.is_active_track = False
                 track.remove_from_canvas()
                 for port in track.ports:
@@ -564,10 +560,10 @@ class Group:
 
         self.remove_all_ports_from_canvas()
         
-        for track_name, track in self.tracks.items():
+        for track_name, track_id, track in self.tracks.full_iter():
             if track_name not in self.joining_tracks:
                 continue
-            
+
             track.is_active_track = False
             track.remove_from_canvas()
             for port in track.ports:
@@ -589,7 +585,7 @@ class Group:
                 f' {self.track_group}')
             return
         
-        for track_name, track in group.tracks.items():
+        for track_name, track_id, track in group.tracks.full_iter():
             if track is self:
                 group.separate_track(track_name, False)
 
@@ -816,7 +812,7 @@ class Group:
         port.graceful_name = display_name if display_name else s_display_name
 
     def add_portgroup(self, portgroup: Portgroup):
-        for track_name, track in self.tracks.items():
+        for track in self.tracks:
             if (len([p for p in portgroup.ports if p in track.ports])
                     == len(portgroup.ports)):
                 track.portgroups.append(portgroup)

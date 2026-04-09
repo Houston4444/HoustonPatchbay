@@ -95,7 +95,7 @@ def add_port(mng: 'PatchbayManager', name: str, port_type: PortType,
             if exst_port.portgroup_id:
                 for portgroup in group.portgroups:
                     if portgroup.portgroup_id == exst_port.portgroup_id:
-                        group.portgroups.remove(portgroup)
+                        group.remove_portgroup(portgroup)
                         portgroup.remove_from_canvas()
                         break
 
@@ -188,7 +188,7 @@ def remove_port(mng: 'PatchbayManager', name: str) -> int | None:
     if port.portgroup_id:
         for portgroup in group.portgroups:
             if portgroup.portgroup_id == port.portgroup_id:
-                group.portgroups.remove(portgroup)
+                group.remove_portgroup(portgroup)
                 portgroup.remove_from_canvas()
                 break
 

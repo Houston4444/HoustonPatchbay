@@ -181,7 +181,7 @@ class GroupMenu(QMenu):
             
             has_splitted, has_joined = False, False
             
-            for track_name, track in self._group.tracks.items():
+            for track_name, track_id, track in self._group.tracks.full_iter():
                 if track.is_active_track:
                     has_splitted = True
                 else:

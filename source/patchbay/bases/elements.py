@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from enum import IntFlag, IntEnum, auto, Flag
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Iterator
 
 if TYPE_CHECKING:
     from ..patchbay_manager import PatchbayManager
@@ -160,6 +160,11 @@ class Tracks(list['Group']):
         self._from_names.pop(name)
         super().remove(group)
 
-    
+    def full_iter(self) -> 'Iterator[tuple[str, int, Group]]':
+        for group in self:
+            name_id = self._names_ids.get(group)
+            if name_id is None:
+                continue
+            yield *name_id, group
      
         
