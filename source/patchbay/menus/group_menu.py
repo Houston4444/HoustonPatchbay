@@ -8,7 +8,7 @@ from patchbay.bases.elements import CanvasOptimizeIt
 from patshared import PortMode, BoxLayoutMode
 
 from ..cancel_mng import CancelOp, CancellableAction
-from ..bases.group import Group
+from ..bases.group import Group, Track
 from ..patchcanvas import canvas, patchcanvas, utils
 from ..dialogs.custom_name_dialog import CustomNameDialog
 from ..dialogs.group_info_dialog import GroupInfoDialog
@@ -182,13 +182,13 @@ class GroupMenu(QMenu):
             has_splitted, has_joined = False, False
             
             for track_name, track_id, track in self._group.tracks.full_iter():
-                if track.is_active_track:
+                if track.is_active:
                     has_splitted = True
                 else:
                     has_joined = True
                 sep_track_act = self.tracks_menu.addAction(track_name)
                 sep_track_act.setCheckable(True)
-                sep_track_act.setChecked(track.is_active_track)
+                sep_track_act.setChecked(track.is_active)
                 sep_track_act.setData(track_name)
                 sep_track_act.triggered.connect(self._separate_track)
             
@@ -199,7 +199,7 @@ class GroupMenu(QMenu):
             
             self.addMenu(self.tracks_menu)
         
-        elif self._group.is_active_track:
+        elif isinstance(self._group, Track):
             repatriate_act = self.addAction(
                 _translate('patchbay', 'Repatriate'))
             repatriate_act.setIcon(QIcon.fromTheme('join'))
@@ -317,6 +317,9 @@ class GroupMenu(QMenu):
         if not isinstance(repatriate_act, QAction):
             return
         
+        if not isinstance(self._group, Track):
+            return
+
         with CanvasOptimizeIt(self._mng, auto_redraw=True):
             self._group.repatriate_track()
 

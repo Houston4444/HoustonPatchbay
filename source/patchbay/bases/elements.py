@@ -1,10 +1,9 @@
-from dataclasses import dataclass
-from enum import IntFlag, IntEnum, auto, Flag
+from enum import IntFlag, IntEnum, auto
 from typing import TYPE_CHECKING, Iterator
 
 if TYPE_CHECKING:
     from ..patchbay_manager import PatchbayManager
-    from .group import Group
+    from .group import Track
 
 
 class JackPortFlag(IntFlag):
@@ -131,26 +130,26 @@ class CanvasOptimizeIt:
                 prevent_overlap=self._prevent_overlap)
 
 
-class Tracks(list['Group']):
+class Tracks(list['Track']):
     def __init__(self):
         super().__init__()
-        self._from_ids: 'dict[int, Group]' = {}
-        self._from_names: 'dict[str, Group]' = {}
-        self._names_ids: 'dict[Group, tuple[str, int]]' = {}
+        self._from_ids: 'dict[int, Track]' = {}
+        self._from_names: 'dict[str, Track]' = {}
+        self._names_ids: 'dict[Track, tuple[str, int]]' = {}
         
-    def from_id(self, id: int) -> 'Group | None':
+    def from_id(self, id: int) -> 'Track | None':
         return self._from_ids.get(id)
     
-    def from_name(self, name: str) -> 'Group | None':
+    def from_name(self, name: str) -> 'Track | None':
         return self._from_names.get(name)
     
-    def add(self, group: 'Group', name: str, id: int):
+    def add(self, group: 'Track', name: str, id: int):
         super().append(group)
         self._from_names[name] = group
         self._from_ids[id] = group
         self._names_ids[group] = (name, id)
         
-    def remove(self, group: 'Group'):
+    def remove(self, group: 'Track'):
         name_id = self._names_ids.get(group)
         if name_id is None:
             return
@@ -160,7 +159,7 @@ class Tracks(list['Group']):
         self._from_names.pop(name)
         super().remove(group)
 
-    def full_iter(self) -> 'Iterator[tuple[str, int, Group]]':
+    def full_iter(self) -> 'Iterator[tuple[str, int, Track]]':
         for group in self:
             name_id = self._names_ids.get(group)
             if name_id is None:
