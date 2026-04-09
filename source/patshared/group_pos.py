@@ -78,7 +78,9 @@ class GroupPos:
     'If false, it will ask the program to choose the splitted state.'
 
     has_sure_existence: bool = True
-    """If False, this GroupPos may refer to a group with no ports."""
+    'If False, this GroupPos may refer to a group with no ports.'
+
+    tracks: 'dict[str, GroupPos]' = {}
 
     def __init__(self):
         self.boxes = dict[PortMode, BoxPos]()
@@ -218,43 +220,54 @@ class GroupPos:
             gpos.boxes[port_mode] = BoxPos()
 
             for key, value in box_dict.items():
-                if key == 'pos':
-                    if not (isinstance(value, list)
-                            and len(value) == 2
-                            and isinstance(value[0], int)
-                            and isinstance(value[1], int)):
-                        continue
+                match key:
+                    case 'pos':
+                        if not (isinstance(value, list)
+                                and len(value) == 2
+                                and isinstance(value[0], int)
+                                and isinstance(value[1], int)):
+                            continue
 
-                    gpos.boxes[port_mode].pos = tuple(value)
+                        gpos.boxes[port_mode].pos = tuple(value)
 
-                elif key == 'flags':
-                    if not isinstance(value, str):
-                        continue
+                    case 'flags':
+                        if not isinstance(value, str):
+                            continue
 
-                    flags_str_list = [v.upper() for v in value.split('|')]
+                        flags_str_list = [v.upper() for v in value.split('|')]
 
-                    box_flags = BoxFlag.NONE
-                    for box_flag in BoxFlag:
-                        if box_flag.name in flags_str_list:
-                            box_flags |= box_flag
+                        box_flags = BoxFlag.NONE
+                        for box_flag in BoxFlag:
+                            if box_flag.name in flags_str_list:
+                                box_flags |= box_flag
 
-                    gpos.boxes[port_mode].flags = box_flags
+                        gpos.boxes[port_mode].flags = box_flags
 
-                elif key == 'layout_mode':
-                    if not isinstance(value, str):
-                        continue
+                    case 'layout_mode':
+                        if not isinstance(value, str):
+                            continue
 
-                    layout_mode = BoxLayoutMode.AUTO
-                    if value.upper() == 'LARGE':
-                        layout_mode = BoxLayoutMode.LARGE
-                    elif value.upper() == 'HIGH':
-                        layout_mode = BoxLayoutMode.HIGH
+                        layout_mode = BoxLayoutMode.AUTO
+                        if value.upper() == 'LARGE':
+                            layout_mode = BoxLayoutMode.LARGE
+                        elif value.upper() == 'HIGH':
+                            layout_mode = BoxLayoutMode.HIGH
 
-                    gpos.boxes[port_mode].layout_mode = layout_mode
+                        gpos.boxes[port_mode].layout_mode = layout_mode
 
         if not gpos.is_splitted():
             for port_mode in PortMode.INPUT, PortMode.OUTPUT:
                 gpos.boxes[port_mode].flags = gpos.boxes[PortMode.BOTH].flags
+
+        tracks_d = in_dict.get('tracks')
+        if isinstance(tracks_d, dict):
+            for track_name, track_pos_d in tracks_d.items():
+                if not isinstance(track_name, str):
+                    continue
+                if not isinstance(track_pos_d, dict):
+                    continue
+                gpos.tracks[track_name] = GroupPos.from_new_dict(
+                    ptv, group_name, track_pos_d)                
 
         return gpos
 
@@ -295,6 +308,12 @@ class GroupPos:
                 continue
 
             d['|'.join(port_mode_names)] = box_dict
+
+        tracks_d = {}
+        for track_name, track_pos in self.tracks.items():
+            d[track_name] = track_pos.as_new_dict()
+        if tracks_d:
+            d['tracks'] = tracks_d
 
         return d
 
