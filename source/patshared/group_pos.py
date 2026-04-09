@@ -81,6 +81,7 @@ class GroupPos:
     'If False, this GroupPos may refer to a group with no ports.'
 
     tracks: 'dict[str, GroupPos]' = {}
+    'All GroupPos tracks, key is track name'
 
     def __init__(self):
         self.boxes = dict[PortMode, BoxPos]()
@@ -185,6 +186,9 @@ class GroupPos:
         group_pos.boxes = dict[PortMode, BoxPos]()
         for port_mode, box_pos in self.boxes.items():
             group_pos.boxes[port_mode] = box_pos.copy()
+            
+        for track_name, track_pos in self.tracks.items():
+            group_pos.tracks[track_name] = track_pos.copy()
 
         return group_pos
 

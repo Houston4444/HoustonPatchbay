@@ -20,7 +20,7 @@ class ViewData:
         self.is_white_list = False
         self.ptvs = dict[PortTypesViewFlag, dict[str, GroupPos]]()
 
-    def __eq__(self, view_data: 'ViewData') -> bool: # type:ignore
+    def __eq__(self, view_data: 'ViewData') -> bool:
         return (self.name == view_data.name
                 and (self.default_port_types_view
                      is view_data.default_port_types_view)
