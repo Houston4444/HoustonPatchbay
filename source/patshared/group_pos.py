@@ -174,7 +174,7 @@ class GroupPos:
 
         return gpos
 
-    def copy(self) -> 'GroupPos':
+    def copy(self, no_tracks=False) -> 'GroupPos':
         """Return a deep-ish copy of this GroupPos.
 
         The returned object has copied boxes so further mutations do not
@@ -186,9 +186,12 @@ class GroupPos:
         group_pos.boxes = dict[PortMode, BoxPos]()
         for port_mode, box_pos in self.boxes.items():
             group_pos.boxes[port_mode] = box_pos.copy()
-            
-        for track_name, track_pos in self.tracks.items():
-            group_pos.tracks[track_name] = track_pos.copy()
+        
+        if no_tracks:
+            group_pos.tracks = {}
+        else:
+            for track_name, track_pos in self.tracks.items():
+                group_pos.tracks[track_name] = track_pos.copy()
 
         return group_pos
 

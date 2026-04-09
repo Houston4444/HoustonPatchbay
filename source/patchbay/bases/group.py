@@ -187,6 +187,34 @@ class Group:
 
         patchcanvas.rename_group(self.group_id, self.cnv_name)
 
+    def set_track_active(self, yesno: bool):
+        if yesno is self.is_active_track:
+            return
+
+        if self.track_group is None:
+            return
+
+        self.is_active_track = yesno
+
+        self.remove_all_ports_from_canvas()
+
+        if yesno:
+            group_id = self.group_id
+        else:
+            group_id = self.track_group.group_id
+
+        for port in self.ports:
+            port.track_id = group_id
+        for portgroup in self.portgroups:
+            portgroup.track_id = group_id
+
+        if yesno:
+            self.add_to_canvas()
+            self.add_all_ports_to_canvas()
+        else:
+            self.remove_all_ports_from_canvas()
+            self.remove_from_canvas()
+
     def _get_box_type_and_icon(self) -> tuple[BoxType, str]:
         box_type = BoxType.APPLICATION
         icon_name = self.name.partition('.')[0].lower()
@@ -464,10 +492,11 @@ class Group:
         
         if not yesno:
             track.set_group_position(
-                self.current_position.copy(), PortMode.NULL, PortMode.NULL)
+                self.current_position.copy(no_tracks=True),
+                PortMode.NULL, PortMode.NULL)
             self.joining_tracks.add(track_name)
             return
-        
+
         conns = list[Connection]()
         for conn in self.manager.connections:
             if conn.port_out.group is self or conn.port_in.group is self:
@@ -476,27 +505,9 @@ class Group:
                 
         self.remove_all_ports_from_canvas()
         
-        if yesno:
-            track.is_active_track = True
-            track.current_position = self.current_position.copy()
-            track.add_to_canvas()
-            for port in track.ports:
-                port.track_id = track.group_id
-            for portgroup in self.portgroups:
-                for port_ in portgroup.ports:
-                    if port_.track_id != track.group_id:
-                        break
-                else:
-                    portgroup.track_id = track.group_id
-        else:
-            track.is_active_track = False
-            track.remove_from_canvas()
-            for port in track.ports:
-                port.track_id = -1
-            for portgroup in [p for p in self.portgroups
-                              if p.track_id == track.group_id]:
-                portgroup.track_id = -1
-            
+        track.current_position = self.current_position.copy()
+        track.set_track_active(True)
+        
         self.add_all_ports_to_canvas()
         
         for conn in conns:
@@ -519,27 +530,10 @@ class Group:
 
         self.remove_all_ports_from_canvas()
 
-        if yesno:
-            for track in self.tracks:
-                track.is_active_track = True
-                track.current_position = self.current_position.copy()
-                track.add_to_canvas()
-                for port in track.ports:
-                    port.track_id = track.group_id
-                for portgroup in self.portgroups:
-                    for port_ in portgroup.ports:
-                        if port_.track_id != track.group_id:
-                            break
-                    else:
-                        portgroup.track_id = track.group_id
-        else:
-            for track in self.tracks:
-                track.is_active_track = False
-                track.remove_from_canvas()
-                for port in track.ports:
-                    port.track_id = -1
-            for portgroup in self.portgroups:
-                portgroup.track_id = -1
+        for track in self.tracks:
+            track.current_position = self.current_position.copy(
+                no_tracks=True)
+            track.set_track_active(True)
 
         self.add_all_ports_to_canvas()
         for conn in conns:
@@ -563,14 +557,8 @@ class Group:
         for track_name, track_id, track in self.tracks.full_iter():
             if track_name not in self.joining_tracks:
                 continue
-
-            track.is_active_track = False
-            track.remove_from_canvas()
-            for port in track.ports:
-                port.track_id = -1
-            for portgroup in self.portgroups:
-                if portgroup.track_id == track.group_id:
-                    portgroup.track_id = -1
+            
+            track.set_track_active(False)
         
         self.joining_tracks.clear()
         self.add_all_ports_to_canvas()
