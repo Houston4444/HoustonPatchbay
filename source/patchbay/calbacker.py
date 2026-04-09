@@ -210,26 +210,21 @@ class Callbacker(ProtoCallbacker):
             menu = PoMenu(self.mng, port)
         menu.exec(QPoint(x, y))
 
-    def portgroup_menu_call(self, group_id: int, portgrp_id: int, connect_only: bool,
-                             x: int, y: int):
-        for group in self.mng.groups:
-            if group.group_id != group_id:
-                continue
-
-            for portgroup in group.portgroups:
-                if portgroup.portgroup_id == portgrp_id:
-                    break
-            else:
-                continue
-            break
-        else:
+    def portgroup_menu_call(
+            self, group_id: int, portgrp_id: int, connect_only: bool,
+            x: int, y: int):
+        group = self.mng.get_group_from_id(group_id)
+        if group is None:
             return
 
-        if connect_only:
-            menu = ConnectMenu(self.mng, portgroup)
-        else:
-            menu = PoMenu(self.mng, portgroup)
-        menu.exec(QPoint(x, y))
+        for portgroup in group.portgroups:
+            if portgroup.portgroup_id == portgrp_id:
+                if connect_only:
+                    menu = ConnectMenu(self.mng, portgroup)
+                else:
+                    menu = PoMenu(self.mng, portgroup)
+                menu.exec(QPoint(x, y))
+                break
 
     def plugin_clone(self, plugin_id: int):
         ...

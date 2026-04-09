@@ -299,6 +299,7 @@ class PatchbayManager:
         in patchcanvas all boxes that should be hidden now.'''
         with CanvasOptimizeIt(self, auto_redraw=True, prevent_overlap=False):
             for group in self.groups:
+                group.join_tracks()
                 if group.current_position.hidden_port_modes() is PortMode.NULL:
                     continue
 
@@ -333,7 +334,6 @@ class PatchbayManager:
             for conn in self.connections:
                 conn.add_to_canvas()
 
-        # patchcanvas.canvas.scene.resize_the_scene()
         self.sg.hidden_boxes_changed.emit()
         self.sg.animation_finished.emit()
 

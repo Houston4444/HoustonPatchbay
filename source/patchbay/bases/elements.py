@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from ..patchbay_manager import PatchbayManager
+    from .group import Group
 
 
 class JackPortFlag(IntFlag):
@@ -129,3 +130,36 @@ class CanvasOptimizeIt:
                 False, auto_redraw=self._auto_redraw,
                 prevent_overlap=self._prevent_overlap)
 
+
+class Tracks(list['Group']):
+    def __init__(self):
+        super().__init__()
+        self._from_ids: 'dict[int, Group]' = {}
+        self._from_names: 'dict[str, Group]' = {}
+        self._names_ids: 'dict[Group, tuple[str, int]]' = {}
+        
+    def from_id(self, id: int) -> 'Group | None':
+        return self._from_ids.get(id)
+    
+    def from_name(self, name: str) -> 'Group | None':
+        return self._from_names.get(name)
+    
+    def add(self, group: 'Group', name: str, id: int):
+        super().append(group)
+        self._from_names[name] = group
+        self._from_ids[id] = group
+        self._names_ids[group] = (name, id)
+        
+    def remove(self, group: 'Group'):
+        name_id = self._names_ids.get(group)
+        if name_id is None:
+            return
+        name, id = name_id
+        self._names_ids.pop(group)
+        self._from_ids.pop(id)
+        self._from_names.pop(name)
+        super().remove(group)
+
+    
+     
+        

@@ -168,23 +168,34 @@ class GroupMenu(QMenu):
             self.tracks_menu.setIcon(QIcon.fromTheme('split'))
             self.tracks_menu.setTitle(
                 _translate('patchbay', 'Separate tracks'))
-            if self._group.tracks_are_splitted:
-                join_tracks_act = self.tracks_menu.addAction(
-                    _translate('patchbay', 'Join all tracks'))
-                join_tracks_act.setIcon(QIcon.fromTheme('join'))
-                join_tracks_act.triggered.connect(self._join_tracks)
-            else:
-                split_tracks_act = self.tracks_menu.addAction(
-                    _translate('patchbay', 'Separate all tracks'))
-                split_tracks_act.setIcon(QIcon.fromTheme('split'))
-                split_tracks_act.triggered.connect(self._split_tracks)
+
+            join_tracks_act = self.tracks_menu.addAction(
+                _translate('patchbay', 'Join all tracks'))
+            join_tracks_act.setIcon(QIcon.fromTheme('join'))
+            join_tracks_act.triggered.connect(self._join_tracks)
+
+            split_tracks_act = self.tracks_menu.addAction(
+                _translate('patchbay', 'Separate all tracks'))
+            split_tracks_act.setIcon(QIcon.fromTheme('split'))
+            split_tracks_act.triggered.connect(self._split_tracks)
+            
+            has_splitted, has_joined = False, False
             
             for track_name, track in self._group.tracks.items():
+                if track.is_active_track:
+                    has_splitted = True
+                else:
+                    has_joined = True
                 sep_track_act = self.tracks_menu.addAction(track_name)
                 sep_track_act.setCheckable(True)
                 sep_track_act.setChecked(track.is_active_track)
                 sep_track_act.setData(track_name)
                 sep_track_act.triggered.connect(self._separate_track)
+            
+            if not has_splitted:
+                join_tracks_act.setVisible(False)
+            if not has_joined:
+                split_tracks_act.setVisible(False)
             
             self.addMenu(self.tracks_menu)
         

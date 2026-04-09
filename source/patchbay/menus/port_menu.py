@@ -648,6 +648,7 @@ class ConnectMenu(AbstractConnectionsMenu):
         # leaves the menu area
         event.ignore()
 
+
 class DisconnectMenu(AbstractConnectionsMenu):
     def __init__(self, mng: 'PatchbayManager', po: Union[Port, Portgroup],
                  parent: QMenu):
