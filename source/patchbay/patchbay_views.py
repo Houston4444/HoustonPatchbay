@@ -1,11 +1,11 @@
 
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Iterator, cast
 
 from patshared import GroupPos, PortMode, PortTypesViewFlag
 
 from .bases.elements import CanvasOptimizeIt
-from .bases.group import Group
+from .bases.group import Group, Track
 from .patchcanvas import patchcanvas
 
 if TYPE_CHECKING:
@@ -13,6 +13,15 @@ if TYPE_CHECKING:
 
 
 _logger = logging.getLogger(__name__)
+
+
+def groups_and_gpos(mng: 'PatchbayManager') \
+        -> Iterator[tuple[Group, GroupPos] | tuple[Track, GroupPos | None]]:
+    for group in mng.groups:
+        new_gpos = mng.get_group_position(group.name)
+        yield group, new_gpos
+        for track in group.tracks:
+            yield track, new_gpos.tracks.get(track.name)
 
 
 def change_port_types_view(
@@ -76,7 +85,7 @@ def change_port_types_view(
         return
 
     rm_all_before = bool(ex_ptv & mng.port_types_view
-                            is PortTypesViewFlag.NONE)
+                         is PortTypesViewFlag.NONE)
 
     with CanvasOptimizeIt(mng):
         if rm_all_before:
@@ -100,8 +109,21 @@ def change_port_types_view(
 
         groups_and_pos = dict[Group, tuple[GroupPos, PortMode, PortMode]]()
 
-        for group in mng.groups:
-            new_gpos = mng.get_group_position(group.name)
+        pv_group_gpos = None
+        for group, new_gpos in groups_and_gpos(mng):
+            if isinstance(group, Track):
+                if new_gpos is None:
+                    if not group.is_active:
+                        continue
+                    new_gpos = cast(GroupPos, pv_group_gpos)
+                    # in new view, the track will be repatriated
+                    # lets join
+                    group.parent_group.joining_tracks.add(group.name)
+                else:
+                    group.set_active(True)
+            else:
+                pv_group_gpos = new_gpos
+            
             in_outs_ptv = group.ins_ptv | group.outs_ptv
             hidden_modes = group.current_position.hidden_port_modes()
             new_hidden_modes = new_gpos.hidden_port_modes()

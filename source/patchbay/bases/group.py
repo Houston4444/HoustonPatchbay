@@ -1195,8 +1195,7 @@ class Track(Group):
         else:
             self.remove_all_ports_from_canvas()
             self.remove_from_canvas()
-            if self.name in self.parent_group.current_position.tracks:
-                self.parent_group.current_position.tracks.pop(self.name)
+            self.parent_group.current_position.tracks.pop(self.name, None)
     
     def repatriate_track(self):
         self.parent_group.separate_track(self.name, False)
