@@ -291,7 +291,7 @@ class GroupMenu(QMenu):
             a.name = _translate('undo', 'Split tracks for "%s"') \
                 %  self._group.cnv_name
             with CanvasOptimizeIt(self._mng, auto_redraw=True):
-                self._group.separate_tracks(True)
+                self._group.separate_all_tracks(True)
 
     @Slot()
     def _join_tracks(self):
@@ -299,7 +299,7 @@ class GroupMenu(QMenu):
             a.name = _translate('undo', 'Join tracks for "%s"') \
                 %  self._group.cnv_name
             with CanvasOptimizeIt(self._mng, auto_redraw=True):
-                self._group.separate_tracks(False)
+                self._group.separate_all_tracks(False)
 
     @Slot()
     def _separate_track(self):

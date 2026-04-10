@@ -80,7 +80,7 @@ class GroupPos:
     has_sure_existence: bool = True
     'If False, this GroupPos may refer to a group with no ports.'
 
-    tracks: 'dict[str, GroupPos]' = {}
+    tracks: 'dict[str, GroupPos]'
     'All GroupPos tracks, key is track name'
 
     def __init__(self):
@@ -88,6 +88,13 @@ class GroupPos:
 
         for port_mode in PortMode.in_out_both():
             self.boxes[port_mode] = BoxPos()
+        
+        self.tracks = {}
+
+    def __repr__(self):
+        if self.tracks:
+            return f'GroupPos({self.group_name} {hex(id(self))} &tracks)'
+        return f'GroupPos({self.group_name} {hex(id(self))})'
 
     @staticmethod
     def is_point(value: Any) -> bool:
@@ -191,7 +198,7 @@ class GroupPos:
             group_pos.tracks = {}
         else:
             for track_name, track_pos in self.tracks.items():
-                group_pos.tracks[track_name] = track_pos.copy()
+                group_pos.tracks[track_name] = track_pos.copy(no_tracks=True)
 
         return group_pos
 
@@ -278,7 +285,7 @@ class GroupPos:
 
         return gpos
 
-    def as_new_dict(self) -> dict:
+    def as_new_dict(self, no_tracks=False) -> dict:
         """Serialize this GroupPos to the newer JSON-friendly dict format.
 
         Returns a dict suitable for persisting in the session JSON format.
@@ -316,11 +323,12 @@ class GroupPos:
 
             d['|'.join(port_mode_names)] = box_dict
 
-        tracks_d = {}
-        for track_name, track_pos in self.tracks.items():
-            d[track_name] = track_pos.as_new_dict()
-        if tracks_d:
-            d['tracks'] = tracks_d
+        if not no_tracks:
+            tracks_d = {}
+            for track_name, track_pos in self.tracks.items():
+                tracks_d[track_name] = track_pos.as_new_dict(no_tracks=True)
+            if tracks_d:
+                d['tracks'] = tracks_d
 
         return d
 
