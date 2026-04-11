@@ -34,6 +34,7 @@ def change_port_types_view(
     mng.port_types_view = port_types_view
     _logger.info(
         f"Change Port Types View: {ex_ptv.name} -> {port_types_view.name}")
+
     # Prevent visual update at each canvas item creation
     # because we may create/remove a lot of ports here
 
@@ -115,11 +116,15 @@ def change_port_types_view(
                 if new_gpos is None:
                     if not group.is_active:
                         continue
-                    new_gpos = cast(GroupPos, pv_group_gpos)
+                    new_gpos = \
+                        cast(GroupPos, pv_group_gpos).copy(no_tracks=True)
+                    new_gpos.group_name = \
+                        f'{group.parent_group.name}:{group.name}'
                     # in new view, the track will be repatriated
-                    # lets join
+                    # lets add it to join list
                     group.parent_group.joining_tracks.add(group.name)
                 else:
+                    group.parent_group.joining_tracks.discard(group.name)
                     group.set_active(True)
             else:
                 pv_group_gpos = new_gpos

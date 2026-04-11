@@ -376,13 +376,15 @@ class PatchScene(QGraphicsScene):
 
     def add_box_to_animation(
             self, box_widget: BoxWidget, to_x: int, to_y: int,
-            joining=Joining.NO_CHANGE, joined_rect=QRectF()):
+            joining=Joining.NO_CHANGE, joined_rect=QRectF(),
+            destroyed_at_end=False):
         '''add a box to the move animation, to_x and to_y refer
         to the top left of the box at the end of animation.
         if joining is set to Joining.YES, joined_rect must be set'''
         scene_anims.add_box_to_animation(
             self, box_widget, to_x, to_y,
-            joining=joining, joined_rect=joined_rect)
+            joining=joining, joined_rect=joined_rect,
+            destroyed_at_end=destroyed_at_end)
 
     def remove_box_from_animation(self, box_widget: BoxWidget):
         scene_anims.remove_box_from_animation(self, box_widget)

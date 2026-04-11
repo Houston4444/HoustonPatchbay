@@ -1206,12 +1206,17 @@ class Track(Group):
     
     def repatriate_track(self):
         self.parent_group.separate_track(self.name, False)
+        
+    def set_group_position(self, group_position: GroupPos, redraw: PortMode,
+                           restore: PortMode):
+        self.current_position = group_position
 
-    def set_group_position(
-            self, group_position: GroupPos,
-            redraw: PortMode, restore: PortMode):
         if not self.is_active:
             return
-        
-        super().set_group_position(group_position, redraw, restore)
-        # self.parent_group.current_position.tracks[self.name] = group_position
+
+        patchcanvas.move_group_boxes(
+            self.group_id,
+            self.current_position,
+            redraw=redraw,
+            restore=restore,
+            destroyed_at_end=self.name in self.parent_group.joining_tracks)

@@ -7,9 +7,11 @@ from qtpy.QtWidgets import (
 from qtpy.QtGui import (
     QIcon, QKeyEvent, QPen, QFont, QFontMetricsF,
     QResizeEvent, QColor, QPixmap)
-from qtpy.QtCore import Slot, Qt, QSize, QPointF, QRect, QRectF, QModelIndex # type:ignore
+from qtpy.QtCore import (
+    Slot, Qt, QSize, QPointF, QRect, QRectF, QModelIndex) # type:ignore
 
 from patshared import PortTypesViewFlag
+
 from ..patchcanvas import canvas
 from ..cancel_mng import CancelOp, CancellableAction
 

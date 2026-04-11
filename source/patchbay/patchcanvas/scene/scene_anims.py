@@ -143,7 +143,8 @@ def move_boxes_animation(scene: 'PatchScene'):
 
 def add_box_to_animation(
         scene: 'PatchScene', box_widget: BoxWidget, to_x: int, to_y: int,
-        joining=Joining.NO_CHANGE, joined_rect=QRectF()):
+        joining=Joining.NO_CHANGE, joined_rect=QRectF(),
+        destroyed_at_end=False):
     '''add a box to the move animation, to_x and to_y refer
     to the top left of the box at the end of animation.
     if joining is set to Joining.YES, joined_rect must be set'''
@@ -192,6 +193,11 @@ def add_box_to_animation(
 
     if joining is not Joining.NO_CHANGE:
         moving_box.is_joining = True if joining is Joining.YES else False
+
+    if destroyed_at_end:
+        # Used when box is a repatriating track,
+        # to prevent to estimate it at repulsion
+        moving_box.final_rect = QRectF()
 
     # save the group position
     group = canvas.get_group(box_widget._group_id)

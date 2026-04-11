@@ -388,7 +388,8 @@ def change_grid_widget_style(style: GridStyle):
 @patchbay_api
 def move_group_boxes(
         group_id: int, gpos: GroupPos,
-        redraw=PortMode.NULL, restore=PortMode.NULL):
+        redraw=PortMode.NULL, restore=PortMode.NULL,
+        destroyed_at_end=False):
     '''Highly optimized function used at view change.
     Only things that need to be redrawn are redrawn.
     Any change in this function can easily create unwanted bugs ;)
@@ -397,7 +398,8 @@ def move_group_boxes(
     and this one shown, but without ports
     (e.g. a pure audio group in midi view)'''
     canvas_helpers.move_group_boxes(
-        group_id, gpos, redraw=redraw, restore=restore)
+        group_id, gpos, redraw=redraw, restore=restore,
+        destroyed_at_end=destroyed_at_end)
 
 @patchbay_api
 def wrap_group_box(group_id: int, port_mode: PortMode, yesno: bool):

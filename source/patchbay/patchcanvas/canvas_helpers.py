@@ -96,7 +96,8 @@ def split_group(group_id: int, on_place=False, redraw=True):
 
 def move_group_boxes(
         group_id: int, gpos: GroupPos,
-        redraw=PortMode.NULL, restore=PortMode.NULL):
+        redraw=PortMode.NULL, restore=PortMode.NULL,
+        destroyed_at_end=False):
     '''Highly optimized function used at view change.
     Only things that need to be redrawn are redrawn.
     Any change in this function can easily create unwanted bugs ;)
@@ -191,14 +192,17 @@ def move_group_boxes(
                         canvas.scene.add_box_to_animation(
                             box, *both_pos,
                             joining=Joining.YES,
-                            joined_rect=joined_rect)
+                            joined_rect=joined_rect,
+                            destroyed_at_end=destroyed_at_end)
                     else:
                         canvas.scene.add_box_to_animation(
                             box, *both_pos,
-                            joining=Joining.YES)
+                            joining=Joining.YES,
+                            destroyed_at_end=destroyed_at_end)
                 else:
                     box.set_top_left(xy)
-                    canvas.scene.add_box_to_animation(box, *xy)
+                    canvas.scene.add_box_to_animation(
+                        box, *xy, destroyed_at_end=destroyed_at_end)
                     canvas.scene.add_box_to_animation_restore(box)
 
             else:
@@ -220,14 +224,17 @@ def move_group_boxes(
                         canvas.scene.add_box_to_animation(
                             box, *both_pos,
                             joining=Joining.YES,
-                            joined_rect=joined_rect)
+                            joined_rect=joined_rect,
+                            destroyed_at_end=destroyed_at_end)
                     else:
                         canvas.scene.add_box_to_animation(
                             box, *both_pos,
-                            joining=Joining.YES)
+                            joining=Joining.YES,
+                            destroyed_at_end=destroyed_at_end)
                 else:
                     canvas.scene.add_box_to_animation(
-                        box, *xy, joining=Joining.NO)
+                        box, *xy, joining=Joining.NO,
+                        destroyed_at_end=destroyed_at_end)
 
 def repulse_all_boxes():
     canvas.ensure_init()
