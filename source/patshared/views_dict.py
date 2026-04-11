@@ -402,6 +402,7 @@ class ViewsDictEnsureOne(ViewsDict):
     def copy(self, with_positions=True) -> 'ViewsDictEnsureOne':
         views_dict = ViewsDictEnsureOne()
         for index, view_data in self.items():
+            print(f'ViewsDictEnsureOne.copy {index=}, {view_data=}')
             views_dict[index] = view_data.copy(with_positions=with_positions)
         return views_dict
 

@@ -466,6 +466,7 @@ class Group:
         
         track.current_position = self.current_position.copy(no_tracks=True)
         track.set_active(True)
+        track.update_pos_to_parent()
         
         self.add_all_ports_to_canvas()
         
@@ -493,6 +494,7 @@ class Group:
             track.current_position = self.current_position.copy(
                 no_tracks=True)
             track.set_active(True)
+            track.update_pos_to_parent()
 
         self.add_all_ports_to_canvas()
         for conn in conns:
@@ -518,6 +520,7 @@ class Group:
                 continue
             
             track.set_active(False)
+            track.update_pos_to_parent()
         
         self.joining_tracks.clear()
         self.add_all_ports_to_canvas()
@@ -1167,7 +1170,7 @@ class Track(Group):
         self.is_active = False
 
     def __repr__(self) -> str:
-        return f"Track({self.name} from {self.parent_group})"
+        return f"Track({self.parent_group.name}:{self.name})"
     
     def set_active(self, yesno: bool):
         if yesno is self.is_active:
@@ -1190,11 +1193,15 @@ class Track(Group):
         if yesno:
             self.add_to_canvas()
             self.add_all_ports_to_canvas()
-            self.parent_group.current_position.tracks[self.name] = \
-                self.current_position
         else:
             self.remove_all_ports_from_canvas()
             self.remove_from_canvas()
+    
+    def update_pos_to_parent(self):
+        if self.is_active:
+            self.parent_group.current_position.tracks[self.name] = \
+                self.current_position
+        else:
             self.parent_group.current_position.tracks.pop(self.name, None)
     
     def repatriate_track(self):
@@ -1207,4 +1214,4 @@ class Track(Group):
             return
         
         super().set_group_position(group_position, redraw, restore)
-        self.parent_group.current_position.tracks[self.name] = group_position
+        # self.parent_group.current_position.tracks[self.name] = group_position

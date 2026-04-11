@@ -186,17 +186,18 @@ class GroupPos:
 
         The returned object has copied boxes so further mutations do not
         affect the original.
+        
+        no_tracks: set it True to not copy the tracks related positions
         """
         group_pos = GroupPos()
         group_pos.__dict__ = self.__dict__.copy()
+        group_pos.tracks = {}
 
         group_pos.boxes = dict[PortMode, BoxPos]()
         for port_mode, box_pos in self.boxes.items():
             group_pos.boxes[port_mode] = box_pos.copy()
         
-        if no_tracks:
-            group_pos.tracks = {}
-        else:
+        if not no_tracks:
             for track_name, track_pos in self.tracks.items():
                 group_pos.tracks[track_name] = track_pos.copy(no_tracks=True)
 
@@ -261,11 +262,13 @@ class GroupPos:
                         if not isinstance(value, str):
                             continue
 
-                        layout_mode = BoxLayoutMode.AUTO
-                        if value.upper() == 'LARGE':
-                            layout_mode = BoxLayoutMode.LARGE
-                        elif value.upper() == 'HIGH':
-                            layout_mode = BoxLayoutMode.HIGH
+                        match value.upper():
+                            case 'LARGE':
+                                layout_mode = BoxLayoutMode.LARGE
+                            case 'HIGH':
+                                layout_mode = BoxLayoutMode.HIGH
+                            case _:
+                                layout_mode = BoxLayoutMode.AUTO
 
                         gpos.boxes[port_mode].layout_mode = layout_mode
 
@@ -281,7 +284,7 @@ class GroupPos:
                 if not isinstance(track_pos_d, dict):
                     continue
                 gpos.tracks[track_name] = GroupPos.from_new_dict(
-                    ptv, group_name, track_pos_d)                
+                    ptv, f'{group_name}:{track_name}', track_pos_d)                
 
         return gpos
 

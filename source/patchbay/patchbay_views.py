@@ -87,7 +87,7 @@ def change_port_types_view(
     rm_all_before = bool(ex_ptv & mng.port_types_view
                          is PortTypesViewFlag.NONE)
 
-    with CanvasOptimizeIt(mng):
+    with CanvasOptimizeIt(mng, auto_redraw=True):
         if rm_all_before:
             # there is no common port type between previous and next view,
             # strategy is to remove fastly all contents from the patchcanvas.
@@ -200,6 +200,8 @@ def change_port_types_view(
 
         for group, gpos_redraw in groups_and_pos.items():
             group.set_group_position(*gpos_redraw)
+            # if isinstance(group, Track):
+            #     group.update_pos_to_parent()
 
         patchcanvas.repulse_all_boxes()
 
