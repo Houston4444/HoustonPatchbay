@@ -1169,7 +1169,7 @@ class Track(Group):
         if yesno:
             group_id = self.group_id
         else:
-            group_id = self.parent_group.group_id
+            group_id = -1
 
         for port in self.ports:
             port.track_id = group_id
