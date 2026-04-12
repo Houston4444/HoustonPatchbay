@@ -504,20 +504,19 @@ class Group:
             return
         
         conns = list[Connection]()
-        for conn in self.manager.connections:
-            if conn.port_out.group is self or conn.port_in.group is self:
-                conns.append(conn)
-                conn.remove_from_canvas()
+        for conn in self.manager.connections.with_group(self):
+            conns.append(conn)
+            conn.remove_from_canvas()
 
         self.remove_all_ports_from_canvas()
         
-        for track_name, track_id, track in self.tracks.full_iter():
-            if track_name not in self.joining_tracks:
+        for track in self.tracks:
+            if track.name not in self.joining_tracks:
                 continue
-            
+
             track.set_active(False)
             track.update_pos_to_parent()
-        
+
         self.joining_tracks.clear()
         self.add_all_ports_to_canvas()
         for conn in conns:

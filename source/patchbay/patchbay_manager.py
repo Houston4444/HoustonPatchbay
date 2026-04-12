@@ -12,7 +12,7 @@ from patshared import (
     ViewsDictEnsureOne, ViewData, PortgroupsDict, PortgroupMem, CustomNames)
 
 from . import patchbay_batches, patchbay_hiddens, patchbay_views
-from .bases.connection import Connection
+from .bases.connection import Connections
 from .bases.elements import ToolDisplayed, CanvasOptimizeIt, CanvasOptimize
 from .bases.group import Group, Track
 from .bases.port import Port
@@ -66,7 +66,7 @@ class PatchbayManager:
     canvas_optimize = CanvasOptimize.NORMAL
 
     groups = list[Group]()
-    connections = list[Connection]()
+    connections = Connections()
     _groups_by_name = dict[str, Group]()
     _groups_by_id = dict[int, Group]()
     _ports_by_name = dict[str, Port]()
@@ -317,16 +317,15 @@ class PatchbayManager:
                 hidden_port_mode = troup.current_position.hidden_port_modes()
                 if hidden_port_mode is PortMode.NULL:
                     continue
+                
 
                 if hidden_port_mode & PortMode.OUTPUT:
-                    for conn in self.connections:
-                        if conn.port_out.group is group:
-                            conn.remove_from_canvas()
+                    for conn in self.connections.from_group(group):
+                        conn.remove_from_canvas()
 
                 if hidden_port_mode & PortMode.INPUT:
-                    for conn in self.connections:
-                        if conn.port_in.group is group:
-                            conn.remove_from_canvas()
+                    for conn in self.connections.to_group(group):
+                        conn.remove_from_canvas()
 
                 for portgroup in troup.portgroups:
                     if hidden_port_mode & portgroup.port_mode:

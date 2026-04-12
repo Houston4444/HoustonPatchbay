@@ -167,7 +167,7 @@ class Tracks(list['Track']):
             if name_id is None:
                 continue
             yield *name_id, group
-     
+
 def port_full_type_to_ptv_flag(
         port_type: PortType, port_sub_type: PortSubType) -> PortTypesViewFlag:
     match port_type:
