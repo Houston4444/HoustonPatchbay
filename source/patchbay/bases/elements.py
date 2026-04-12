@@ -1,6 +1,8 @@
 from enum import IntFlag, IntEnum, auto
 from typing import TYPE_CHECKING, Iterator
 
+from patshared import PortSubType, PortType, PortTypesViewFlag
+
 if TYPE_CHECKING:
     from ..patchbay_manager import PatchbayManager
     from .group import Track
@@ -166,4 +168,19 @@ class Tracks(list['Track']):
                 continue
             yield *name_id, group
      
-        
+def port_full_type_to_ptv_flag(
+        port_type: PortType, port_sub_type: PortSubType) -> PortTypesViewFlag:
+    match port_type:
+        case PortType.AUDIO_JACK:
+            if port_sub_type is PortSubType.CV:
+                return PortTypesViewFlag.CV
+            else:
+                return PortTypesViewFlag.AUDIO
+        case PortType.MIDI_JACK:
+            return PortTypesViewFlag.MIDI
+        case PortType.MIDI_ALSA:
+            return PortTypesViewFlag.ALSA
+        case PortType.VIDEO:
+            return PortTypesViewFlag.VIDEO
+        case _:
+            return PortTypesViewFlag.NONE

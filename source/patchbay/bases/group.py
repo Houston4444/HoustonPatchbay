@@ -13,7 +13,8 @@ from patshared import (
     PortgroupMem,
     Naming
 )
-from .elements import JackPortFlag, CanvasOptimizeIt, Tracks
+from .elements import (
+    JackPortFlag, CanvasOptimizeIt, Tracks, port_full_type_to_ptv_flag)
 from .port import Port
 from .portgroup import Portgroup
 from .connection import Connection
@@ -280,22 +281,7 @@ class Group:
 
         self.ports.append(port)
 
-        port_type, port_sub_type = port.full_type
-        match port_type:
-            case PortType.AUDIO_JACK:
-                if port_sub_type is PortSubType.CV:
-                    ptv_flag = PortTypesViewFlag.CV
-                else:
-                    ptv_flag = PortTypesViewFlag.AUDIO
-            case PortType.MIDI_JACK:
-                ptv_flag = PortTypesViewFlag.MIDI
-            case PortType.MIDI_ALSA:
-                ptv_flag = PortTypesViewFlag.ALSA
-            case PortType.VIDEO:
-                ptv_flag = PortTypesViewFlag.VIDEO
-            case _:
-                ptv_flag = PortTypesViewFlag.NONE
-
+        ptv_flag = port_full_type_to_ptv_flag(port.type, port.subtype)
         if port.mode is PortMode.OUTPUT:
             self.outs_ptv |= ptv_flag
         elif port.mode is PortMode.INPUT:
@@ -327,7 +313,7 @@ class Group:
             
             if track.is_active:
                 port.track_id = track.group_id
-            track.ports.append(port)
+            track.add_port(port)
 
     def remove_port(self, port: Port):
         for track in self.tracks:
@@ -1220,3 +1206,11 @@ class Track(Group):
             redraw=redraw,
             restore=restore,
             destroyed_at_end=self.name in self.parent_group.joining_tracks)
+
+    def add_port(self, port: Port):
+        ptv = port_full_type_to_ptv_flag(port.type, port.subtype)
+        if port.mode is PortMode.OUTPUT:
+            self.outs_ptv |= ptv
+        elif port.mode is PortMode.INPUT:
+            self.ins_ptv |= ptv
+        self.ports.append(port)

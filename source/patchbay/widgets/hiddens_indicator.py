@@ -9,7 +9,7 @@ if TYPE_CHECKING:
 from qtpy.QtWidgets import QToolButton, QMenu, QApplication, QAction # type:ignore
 
 from ..cancel_mng import CancelOp, CancellableAction
-from ..bases.group import Group
+from ..bases.group import Group, Track
 from ..patchcanvas import utils
 from patshared import PortMode
 
@@ -278,7 +278,7 @@ class HiddensIndicator(QToolButton):
         self.set_count(0)
         self._stop_blink()
 
-    def _list_hidden_groups(self) -> Iterator[Group]:
+    def _list_hidden_groups(self) -> Iterator[Group | Track]:
         if self.mng is None:
             return
 
@@ -286,7 +286,7 @@ class HiddensIndicator(QToolButton):
         if self._get_filter_text is not None:
             flt = self._get_filter_text()
 
-        for group in self.mng.groups:
+        for group in self.mng.groups_and_tracks():
             hpm = group.current_position.hidden_port_modes()
             if hpm is PortMode.NULL:
                 continue

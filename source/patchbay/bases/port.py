@@ -203,14 +203,19 @@ class Port:
 
             if self.conns_hidden_in_canvas:
                 patchcanvas.port_has_hidden_connection(
-                    self.group_id, self.port_id,
+                    self.cnv_group_id, self.port_id,
                     bool(self.conns_hidden_in_canvas))
 
-    def remove_from_canvas(self):
+    def remove_from_canvas(self, keep_in_track=False):
+        '''keep_in_track is used when the main group is hidden
+        but the track is shown'''
         if self.manager.very_fast_operation:
             return
 
         if not self.in_canvas:
+            return
+
+        if keep_in_track and self.track_id >= 0:
             return
 
         patchcanvas.remove_port(self.cnv_group_id, self.port_id)
@@ -250,7 +255,7 @@ class Port:
             return
 
         patchcanvas.port_has_hidden_connection(
-            self.group_id, self.port_id,
+            self.cnv_group_id, self.port_id,
             bool(self.conns_hidden_in_canvas))
 
     def __lt__(self, other: 'Port') -> bool:

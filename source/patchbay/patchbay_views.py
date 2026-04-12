@@ -118,6 +118,7 @@ def change_port_types_view(
                         continue
                     new_gpos = \
                         cast(GroupPos, pv_group_gpos).copy(no_tracks=True)
+                    new_gpos.set_hidden_port_mode(PortMode.NULL)
                     new_gpos.group_name = \
                         f'{group.parent_group.name}:{group.name}'
                     # in new view, the track will be repatriated

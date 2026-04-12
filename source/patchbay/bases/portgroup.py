@@ -83,7 +83,7 @@ class Portgroup:
             self.port_mode, self.ports[0].type, self.ports[0].subtype,
             [port.port_id for port in self.ports])
 
-    def remove_from_canvas(self):
+    def remove_from_canvas(self, keep_in_track=False):
         if self.manager.very_fast_operation:
             return
 
@@ -91,6 +91,8 @@ class Portgroup:
             return
 
         if self.track_id >= 0:
+            if keep_in_track:
+                return
             group_id = self.track_id
         else:
             group_id = self.group_id
