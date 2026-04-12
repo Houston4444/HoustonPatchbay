@@ -173,7 +173,11 @@ class Port:
             if hidden_sides & self.mode:
                 return
         else:
-            if self.group.current_position.hidden_port_modes() & self.mode:
+            if self.track is not None:
+                if (self.track.current_position.hidden_port_modes()
+                        & self.mode):
+                    return
+            elif self.group.current_position.hidden_port_modes() & self.mode:
                 return
 
         patchcanvas.add_port(
@@ -246,7 +250,7 @@ class Port:
         if not self.in_canvas:
             return
 
-        if had_hidden_conns == bool(self.conns_hidden_in_canvas):
+        if had_hidden_conns is bool(self.conns_hidden_in_canvas):
             return
 
         patchcanvas.port_has_hidden_connection(
