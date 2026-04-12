@@ -129,7 +129,9 @@ def change_port_types_view(
                     group.set_active(True)
             else:
                 pv_group_gpos = new_gpos
-            
+                if TYPE_CHECKING:
+                    new_gpos = cast(GroupPos, new_gpos)
+
             in_outs_ptv = group.ins_ptv | group.outs_ptv
             hidden_modes = group.current_position.hidden_port_modes()
             new_hidden_modes = new_gpos.hidden_port_modes()

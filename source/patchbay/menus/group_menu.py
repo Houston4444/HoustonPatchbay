@@ -38,14 +38,12 @@ class DisconnectMenu(QMenu):
 
         if self._port_mode & PortMode.OUTPUT:
             for conn in self._mng.connections:
-                if (conn.port_out.group_id is self._group.group_id
-                        and conn.in_canvas):
+                if conn.port_out.group is self._group and conn.in_canvas:
                     in_groups.add(conn.port_in.group)
 
         if self._port_mode & PortMode.INPUT:
             for conn in self._mng.connections:
-                if (conn.port_in.group_id is self._group.group_id
-                        and conn.in_canvas):
+                if conn.port_in is self._group and conn.in_canvas:
                     out_groups.add(conn.port_out.group)
 
         if not out_groups and not in_groups:
