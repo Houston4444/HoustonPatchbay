@@ -36,7 +36,7 @@ def set_group_hidden_sides(
                     port.remove_from_canvas()
 
             for conn in mng.connections:
-                if conn.port_out.group_id is group_id:
+                if conn.port_out.group_id == group_id:
                     conn.add_to_canvas()
 
         if port_mode & PortMode.INPUT:

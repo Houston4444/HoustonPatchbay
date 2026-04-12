@@ -1,4 +1,5 @@
 from functools import cached_property
+from inspect import trace
 import logging
 from typing import TYPE_CHECKING
 
@@ -312,7 +313,7 @@ class Group:
                 self.manager._next_group_id += 1
             
             if track.is_active:
-                port.track_id = track.group_id
+                port.track = track
             track.add_port(port)
 
     def remove_port(self, port: Port):
@@ -1167,14 +1168,15 @@ class Track(Group):
         self.remove_all_ports_from_canvas()
 
         if yesno:
-            group_id = self.group_id
+            for port in self.ports:
+                port.track = self
+            for portgroup in self.portgroups:
+                portgroup.track_id = self.group_id
         else:
-            group_id = -1
-
-        for port in self.ports:
-            port.track_id = group_id
-        for portgroup in self.portgroups:
-            portgroup.track_id = group_id
+            for port in self.ports:
+                port.track = None
+            for portgroup in self.portgroups:
+                portgroup.track_id = -1
 
         if yesno:
             self.add_to_canvas()

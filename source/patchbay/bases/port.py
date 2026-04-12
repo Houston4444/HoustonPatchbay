@@ -7,12 +7,13 @@ from .connection import Connection
 
 if TYPE_CHECKING:
     from ..patchbay_manager import PatchbayManager
-    from .group import Group
+    from .group import Group, Track
 
 
 class Port:
     graceful_name = ''
     group: 'Group'
+    track: 'Track | None'
     portgroup_id = 0
     prevent_stereo = False
     last_digit_to_add = ''
@@ -20,7 +21,6 @@ class Port:
     order: Optional[int] = None
     uuid = 0
     'contains the real JACK uuid'
-    track_id = -1
 
     def __init__(self, manager: 'PatchbayManager', port_id: int, name: str,
                  port_type: PortType, flags: int, uuid: int):
@@ -31,6 +31,7 @@ class Port:
         self.flags = flags
         self.uuid = uuid
         self.subtype = PortSubType.REGULAR
+        self.track = None
 
         match port_type:
             case PortType.AUDIO_JACK:
@@ -48,15 +49,9 @@ class Port:
 
     @property
     def group_id(self) -> int:
+        if self.track is not None:
+            return self.track.group_id
         return self.group.group_id
-
-    @property
-    def cnv_group_id(self) -> int:
-        '''the port group_id or the track_id if port is in a track
-        useful for connections in canvas.'''
-        if self.track_id >= 0:
-            return self.track_id
-        return self.group_id
 
     @property
     def mode(self) -> PortMode:
@@ -182,7 +177,7 @@ class Port:
                 return
 
         patchcanvas.add_port(
-            self.cnv_group_id, self.port_id, self.cnv_name,
+            self.group_id, self.port_id, self.cnv_name,
             self.mode, self.type, self.subtype)
 
         self.in_canvas = True
@@ -203,7 +198,7 @@ class Port:
 
             if self.conns_hidden_in_canvas:
                 patchcanvas.port_has_hidden_connection(
-                    self.cnv_group_id, self.port_id,
+                    self.group_id, self.port_id,
                     bool(self.conns_hidden_in_canvas))
 
     def remove_from_canvas(self, keep_in_track=False):
@@ -215,10 +210,10 @@ class Port:
         if not self.in_canvas:
             return
 
-        if keep_in_track and self.track_id >= 0:
+        if keep_in_track and self.track is not None:
             return
 
-        patchcanvas.remove_port(self.cnv_group_id, self.port_id)
+        patchcanvas.remove_port(self.group_id, self.port_id)
         self.in_canvas = False
 
         if self.conns_hidden_in_canvas:
@@ -255,7 +250,7 @@ class Port:
             return
 
         patchcanvas.port_has_hidden_connection(
-            self.cnv_group_id, self.port_id,
+            self.group_id, self.port_id,
             bool(self.conns_hidden_in_canvas))
 
     def __lt__(self, other: 'Port') -> bool:

@@ -314,10 +314,9 @@ class PatchbayManager:
                     troup.join_tracks()
                     keep_in_track = True
 
-                if troup.current_position.hidden_port_modes() is PortMode.NULL:
-                    continue
-
                 hidden_port_mode = troup.current_position.hidden_port_modes()
+                if hidden_port_mode is PortMode.NULL:
+                    continue
 
                 if hidden_port_mode & PortMode.OUTPUT:
                     for conn in self.connections:

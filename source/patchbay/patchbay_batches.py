@@ -89,18 +89,17 @@ def add_port(mng: 'PatchbayManager', name: str, port_type: PortType,
         if exst_port.type.is_jack and exst_port.uuid:
             mng.jack_metadatas.remove_uuid(exst_port.uuid)
 
-        group = mng.get_group_from_id(exst_port.group_id)
-        if group is not None:
-            # remove portgroup first if port is in a portgroup
-            if exst_port.portgroup_id:
-                for portgroup in group.portgroups:
-                    if portgroup.portgroup_id == exst_port.portgroup_id:
-                        group.remove_portgroup(portgroup)
-                        portgroup.remove_from_canvas()
-                        break
+        group = exst_port.group
+        # remove portgroup first if port is in a portgroup
+        if exst_port.portgroup_id:
+            for portgroup in group.portgroups:
+                if portgroup.portgroup_id == exst_port.portgroup_id:
+                    group.remove_portgroup(portgroup)
+                    portgroup.remove_from_canvas()
+                    break
 
-            exst_port.remove_from_canvas()
-            group.remove_port(exst_port)
+        exst_port.remove_from_canvas()
+        group.remove_port(exst_port)
 
     port = Port(mng, mng._next_port_id, name, port_type, flags, uuid)
     mng._next_port_id += 1
@@ -180,9 +179,7 @@ def remove_port(mng: 'PatchbayManager', name: str) -> int | None:
     if port.type.is_jack and port.uuid:
         mng.jack_metadatas.remove_uuid(port.uuid)
 
-    group = mng.get_group_from_id(port.group_id)
-    if group is None:
-        return None
+    group = port.group
 
     # remove portgroup first if port is in a portgroup
     if port.portgroup_id:
