@@ -1,5 +1,4 @@
 from functools import cached_property
-from inspect import trace
 import logging
 from typing import TYPE_CHECKING
 
@@ -303,15 +302,25 @@ class Group:
         if track_name:
             track = self.tracks.from_name(track_name)
             if track is None:
+                set_active = False
+                track_pos = self.current_position.tracks.get(track_name)
+                if track_pos is None:
+                    track_pos = GroupPos()
+                else:
+                    set_active = True
+
                 track = Track(
                     self, self.manager._next_group_id,
-                    track_name, GroupPos())
+                    track_name, track_pos)
                 self.manager._groups_by_id[self.manager._next_group_id] = \
                     track
                 self.tracks.add(
                     track, track_name, self.manager._next_group_id)
                 self.manager._next_group_id += 1
             
+                if set_active:
+                    track.set_active(True)
+                
             if track.is_active:
                 port.track = track
             track.add_port(port)
@@ -947,6 +956,11 @@ class Group:
                         port.add_the_last_digit()
                 break
 
+    def add_tracks_to_canvas(self):
+        for track in self.tracks:
+            if track.is_active:
+                track.add_to_canvas()
+
     def sort_ports_in_canvas(self):
         conn_list = list[Connection]()
 
@@ -1164,8 +1178,8 @@ class Track(Group):
             return
 
         self.is_active = yesno
-
-        self.remove_all_ports_from_canvas()
+        if not self.manager.very_fast_operation:
+            self.remove_all_ports_from_canvas()
 
         if yesno:
             for port in self.ports:
@@ -1178,13 +1192,16 @@ class Track(Group):
             for portgroup in self.portgroups:
                 portgroup.track_id = -1
 
+        if self.manager.very_fast_operation:
+            return
+
         if yesno:
             self.add_to_canvas()
             self.add_all_ports_to_canvas()
         else:
             self.remove_all_ports_from_canvas()
             self.remove_from_canvas()
-    
+
     def update_pos_to_parent(self):
         if self.is_active:
             self.parent_group.current_position.tracks[self.name] = \
@@ -1194,7 +1211,7 @@ class Track(Group):
     
     def repatriate_track(self):
         self.parent_group.separate_track(self.name, False)
-        
+
     def set_group_position(self, group_position: GroupPos, redraw: PortMode,
                            restore: PortMode):
         self.current_position = group_position

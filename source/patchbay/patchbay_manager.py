@@ -629,6 +629,8 @@ class PatchbayManager:
             connection.in_canvas = False
 
         for group in self.groups:
+            for track in group.tracks:
+                track.in_canvas = False
             for portgroup in group.portgroups:
                 portgroup.in_canvas = False
             for port in group.ports:
@@ -641,6 +643,7 @@ class PatchbayManager:
         with CanvasOptimizeIt(self):
             for group in self.groups:
                 group.add_to_canvas()
+                group.add_tracks_to_canvas()
                 for port in group.ports:
                     port.add_to_canvas()
                 for portgroup in group.portgroups:
