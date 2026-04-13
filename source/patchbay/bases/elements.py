@@ -135,38 +135,19 @@ class CanvasOptimizeIt:
 class Tracks(list['Track']):
     def __init__(self):
         super().__init__()
-        self._from_ids: 'dict[int, Track]' = {}
         self._from_names: 'dict[str, Track]' = {}
-        self._names_ids: 'dict[Track, tuple[str, int]]' = {}
-        
-    def from_id(self, id: int) -> 'Track | None':
-        return self._from_ids.get(id)
     
     def from_name(self, name: str) -> 'Track | None':
         return self._from_names.get(name)
     
-    def add(self, group: 'Track', name: str, id: int):
-        super().append(group)
-        self._from_names[name] = group
-        self._from_ids[id] = group
-        self._names_ids[group] = (name, id)
+    def add(self, track: 'Track', name: str, id: int):
+        super().append(track)
+        self._from_names[name] = track
         
-    def remove(self, group: 'Track'):
-        name_id = self._names_ids.get(group)
-        if name_id is None:
-            return
-        name, id = name_id
-        self._names_ids.pop(group)
-        self._from_ids.pop(id)
-        self._from_names.pop(name)
-        super().remove(group)
+    def remove(self, track: 'Track'):
+        self._from_names.pop(track.name)
+        super().remove(track)
 
-    def full_iter(self) -> 'Iterator[tuple[str, int, Track]]':
-        for group in self:
-            name_id = self._names_ids.get(group)
-            if name_id is None:
-                continue
-            yield *name_id, group
 
 def port_full_type_to_ptv_flag(
         port_type: PortType, port_sub_type: PortSubType) -> PortTypesViewFlag:
