@@ -575,7 +575,7 @@ def rename_port(group_id: int, port_id: int, new_port_name: str):
 
     if new_port_name != port.port_name:
         port.port_name = new_port_name
-        port.widget.set_port_name(new_port_name)
+        port.widget.update_connect_pos()
 
     if canvas.loading_items:
         if port.port_mode is PortMode.OUTPUT:

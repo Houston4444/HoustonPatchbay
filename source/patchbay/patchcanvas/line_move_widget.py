@@ -37,7 +37,7 @@ class LineMoveWidget(QGraphicsPathItem):
                  parent: 'ConnectableWidget'):
         canvas.ensure_init()
         QGraphicsPathItem.__init__(self)
-        self._parent_is_portgroup = bool(len(parent.get_port_ids()) > 1)
+        self._parent_is_portgroup = bool(len(parent.port_ids) > 1)
 
         self.ready_to_disc = False
 

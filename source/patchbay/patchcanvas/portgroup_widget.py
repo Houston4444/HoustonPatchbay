@@ -48,7 +48,6 @@ class PortgroupWidget(ConnectableWidget):
 
         # Save Variables, useful for later
         self._portgrp = portgrp
-        self._portgrp_id = portgrp.portgrp_id
 
         # Base Variables
         self._portgrp_width = 15
@@ -61,19 +60,34 @@ class PortgroupWidget(ConnectableWidget):
         self._name_truncked = False
 
         self._ports_widgets = [
-            p.widget for p in canvas.list_ports(group_id=portgrp.group_id)
-            if p.portgrp_id == portgrp.portgrp_id]
+            p.widget for p in canvas.list_ports(group_id=self.group_id)
+            if p.portgrp_id == self.portgrp_id]
 
         for port_widget in self._ports_widgets:
             port_widget.set_portgroup_widget(self)
 
         self.setZValue(ZvBox.PORTGRP.value)
 
+    @property
+    def portgrp_id(self) -> int:
+        return self._portgrp.portgrp_id
+    
+    def recycle(self, portgrp: PortgrpObject):
+        self._portgrp = portgrp
+        self._ports_widgets = [
+            p.widget for p in canvas.list_ports(group_id=self.group_id)
+            if p.portgrp_id == self.portgrp_id]
+
+        for port_widget in self._ports_widgets:
+            port_widget.set_portgroup_widget(self)
+            
+        self.setZValue(ZvBox.PORTGRP.value)
+
     def get_theme(self) -> UslStyleAttributer:
         theme = canvas.theme.portgroup
-        match self._port_type:
+        match self.port_type:
             case PortType.AUDIO_JACK:
-                if self._port_subtype is PortSubType.CV:
+                if self.port_subtype is PortSubType.CV:
                     return theme.cv
                 return theme.audio
             case PortType.MIDI_JACK:
@@ -195,7 +209,7 @@ class PortgroupWidget(ConnectableWidget):
             self.scenePos()
             + QPointF(0.0, self.boundingRect().bottom())) # type:ignore
         bottom_screen = QApplication.primaryScreen().geometry().bottom()
-        more = 12 if self._port_mode is PortMode.OUTPUT else 0
+        more = 12 if self.port_mode is PortMode.OUTPUT else 0
 
         if start_point.y() + 250 > bottom_screen:
             start_point = canvas.scene.screen_position(
@@ -203,23 +217,23 @@ class PortgroupWidget(ConnectableWidget):
                 + QPointF(self._portgrp_width + more, self._portgrp_height))
 
         canvas.cb.portgroup_menu_call(
-            self._group_id, self._portgrp_id,
+            self.group_id, self.portgrp_id,
             is_only_connect, start_point.x(), start_point.y())
 
     def boundingRect(self) -> QRectF:
         middle_width = canvas.theme.port_height / 2.0
         spacing = self.parentItem().get_theme().port_spacing
 
-        if self._port_mode is PortMode.INPUT:
+        if self.port_mode is PortMode.INPUT:
             return QRectF(
                 canvas.theme.port_grouped_width, - spacing * 0.5,
                 self._portgrp_width + middle_width - canvas.theme.port_grouped_width,
-                canvas.theme.port_height * len(self._port_ids) + spacing)
+                canvas.theme.port_height * len(self.port_ids) + spacing)
         else:
             return QRectF(
                 0.0, - spacing * 0.5,
                 self._portgrp_width + middle_width - canvas.theme.port_grouped_width,
-                canvas.theme.port_height * len(self._port_ids) + spacing)
+                canvas.theme.port_height * len(self.port_ids) + spacing)
 
     def paint(self, painter: QPainter, option, widget):
         if canvas.loading_items:
@@ -245,10 +259,10 @@ class PortgroupWidget(ConnectableWidget):
 
         text_main_height = font.pixelSize() * 0.667
         text_y_pos = (
-            (p_height * len(self._port_ids) - text_main_height) / 2
+            (p_height * len(self.port_ids) - text_main_height) / 2
             + text_main_height)
 
-        if self._port_mode is PortMode.INPUT:
+        if self.port_mode is PortMode.INPUT:
             text_pos = QPointF(self._ports_width + 3, text_y_pos)
 
             x_ports_border = self._ports_width - line_hinting
@@ -256,7 +270,7 @@ class PortgroupWidget(ConnectableWidget):
             x_arrowmid = self._portgrp_width - middle_width / 2 - line_hinting
             x_arrowhead = self._portgrp_width - 2 * line_hinting
 
-        elif self._port_mode is PortMode.OUTPUT:
+        elif self.port_mode is PortMode.OUTPUT:
             if theme.output_align is Align.RIGHT:
                 text_pos = QPointF(
                     self._portgrp_width - self.get_text_width()
@@ -272,40 +286,40 @@ class PortgroupWidget(ConnectableWidget):
             x_arrowhead = line_hinting * 2
 
         else:
-            self._logger.critical(f"invalid port mode {str(self._port_mode)}")
+            self._logger.critical(f"invalid port mode {str(self.port_mode)}")
             return
 
         y_top = line_hinting
-        y_bottom = p_height * len(self._port_ids) - line_hinting
+        y_bottom = p_height * len(self.port_ids) - line_hinting
 
-        if self._port_type is PortType.MIDI_JACK:
+        if self.port_type is PortType.MIDI_JACK:
             points = [(x_ports_border, y_top),
                       (x_arrowbase, y_top),
                       (x_arrowbase + (x_arrowmid - x_arrowbase) * 0.62,
                        p_height * 0.15),
                       (x_arrowmid, p_height * 0.40),
-                      (x_arrowmid, p_height * (len(self._port_ids) - 0.40)),
+                      (x_arrowmid, p_height * (len(self.port_ids) - 0.40)),
                       (x_arrowbase + (x_arrowmid - x_arrowbase) * 0.62,
-                       p_height * (len(self._port_ids) - 0.15)),
+                       p_height * (len(self.port_ids) - 0.15)),
                       (x_arrowbase, y_bottom),
                       (x_ports_border, y_bottom),
                       (x_ports_border, y_top)]
 
-        elif self._port_subtype is PortSubType.CV:
+        elif self.port_subtype is PortSubType.CV:
             points = [(x_ports_border, y_top),
                       (x_arrowbase, y_top),
                       (x_arrowbase, y_bottom),
                       (x_ports_border, y_bottom),
                       (x_ports_border, y_top)]
 
-        elif self._port_type is PortType.MIDI_ALSA:
+        elif self.port_type is PortType.MIDI_ALSA:
             points = [(x_ports_border, y_top),
                       (x_arrowmid, y_top),
                       (x_arrowmid, y_bottom),
                       (x_ports_border, y_bottom),
                       (x_ports_border, y_top)]
 
-        elif self._port_type is PortType.VIDEO:
+        elif self.port_type is PortType.VIDEO:
             points = [(x_ports_border, y_top),
                       (x_arrowhead, y_top),
                       (x_arrowhead, y_bottom),
@@ -315,7 +329,7 @@ class PortgroupWidget(ConnectableWidget):
             points = [(x_ports_border, y_top),
                       (x_arrowbase, y_top),
                       (x_arrowhead, p_height * 0.5),
-                      (x_arrowhead, p_height * (len(self._port_ids) - 0.5)),
+                      (x_arrowhead, p_height * (len(self.port_ids) - 0.5)),
                       (x_arrowbase, y_bottom),
                       (x_ports_border, y_bottom),
                       (x_ports_border, y_top)]
@@ -344,13 +358,13 @@ class PortgroupWidget(ConnectableWidget):
             painter.drawPolygon(polygon)
             painter.setPen(poly_pen)
 
-            if self._port_type is PortType.MIDI_JACK:
+            if self.port_type is PortType.MIDI_JACK:
                 pass
-            elif self._port_subtype is PortSubType.CV:
+            elif self.port_subtype is PortSubType.CV:
                 pass
-            elif self._port_type is PortType.MIDI_ALSA:
+            elif self.port_type is PortType.MIDI_ALSA:
                 pass
-            elif self._port_type is PortType.VIDEO:
+            elif self.port_type is PortType.VIDEO:
                 pass
             else:
                 painter.drawPolyline(polyline(points[1:5]))
@@ -358,14 +372,14 @@ class PortgroupWidget(ConnectableWidget):
             painter.setPen(poly_pen)
             painter.drawPolygon(polygon)
 
-        if self._port_subtype is PortSubType.CV:
+        if self.port_subtype is PortSubType.CV:
             cv_line_pen = QPen(poly_pen)
             cv_line_pen.setWidthF(p_height * 0.167)
             llh = cv_line_pen.widthF() * 0.5
             painter.setPen(cv_line_pen)
 
-            y_line_pos = len(self._port_ids) * p_height * 0.5
-            if self._port_mode is PortMode.OUTPUT:
+            y_line_pos = len(self.port_ids) * p_height * 0.5
+            if self.port_mode is PortMode.OUTPUT:
                 painter.drawLine(
                     QPointF(x_arrowhead + llh, y_line_pos),
                     QPointF(x_arrowbase - llh, y_line_pos))
@@ -374,8 +388,8 @@ class PortgroupWidget(ConnectableWidget):
                     QPointF(x_arrowhead - llh, y_line_pos),
                     QPointF(x_arrowbase + llh, y_line_pos))
 
-        if (self._port_type is PortType.MIDI_ALSA
-                or self._port_subtype is PortSubType.A2J):
+        if (self.port_type is PortType.MIDI_ALSA
+                or self.port_subtype is PortSubType.A2J):
             parent = self.parentItem()
             box_theme = parent.get_theme()
             if parent.isSelected():
@@ -397,7 +411,7 @@ class PortgroupWidget(ConnectableWidget):
 
             radius = abs(x_arrowhead - x_arrowmid) * 0.667
             painter.drawEllipse(
-                QPointF(x_arrowmid, p_height * len(self._port_ids) * 0.5),
+                QPointF(x_arrowmid, p_height * len(self.port_ids) * 0.5),
                 radius, radius)
 
         painter.setPen(text_pen)

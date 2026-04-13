@@ -38,11 +38,6 @@ class ConnectableWidget(QGraphicsItem):
             self.setAcceptHoverEvents(True)
 
         self._po = connectable
-        self._group_id = connectable.group_id
-        self._port_ids = connectable.get_port_ids()
-        self._port_mode = connectable.port_mode
-        self._port_type = connectable.port_type
-        self._port_subtype = connectable.port_subtype
 
         # needed for line mov
         self._line_mov_list = list[LineMoveWidget]()
@@ -60,20 +55,25 @@ class ConnectableWidget(QGraphicsItem):
         self.mouse_releasing = False
         self.changing_select_state = False
 
-    def get_group_id(self) -> int:
-        return self._group_id
-
-    def get_port_ids(self) -> tuple[int]:
-        return self._port_ids
-
-    def get_port_mode(self) -> PortMode:
-        return self._port_mode
-
-    def get_port_type(self) -> PortType:
-        return self._port_type
-
-    def get_port_subtype(self) -> PortSubType:
-        return self._port_subtype
+    @property
+    def group_id(self) -> int:
+        return self._po.group_id
+    
+    @property
+    def port_ids(self) -> tuple[int, ...]:
+        return self._po.get_port_ids()
+    
+    @property
+    def port_mode(self) -> PortMode:
+        return self._po.port_mode
+    
+    @property
+    def port_type(self) -> PortType:
+        return self._po.port_type
+    
+    @property
+    def port_subtype(self) -> PortSubType:
+        return self._po.port_subtype
 
     def get_connection_distance(self) -> float:
         # overclassed
@@ -91,33 +91,33 @@ class ConnectableWidget(QGraphicsItem):
 
     def is_connectable_to(self, other: 'ConnectableWidget',
                           accept_same_port_mode=False)->bool:
-        if self._port_type != other.get_port_type():
+        if self.port_type is not other.port_type:
             return False
 
         if not accept_same_port_mode:
-            if self._port_mode == other.get_port_mode():
+            if self.port_mode is other.port_mode:
                 return False
 
-        if self._port_type is PortType.AUDIO_JACK:
-            if other.get_port_mode() is self._port_mode:
-                return bool(self._port_subtype is other.get_port_subtype())
+        if self.port_type is PortType.AUDIO_JACK:
+            if other.port_mode is self.port_mode:
+                return self.port_subtype is other.port_subtype
             # absolutely forbidden to connect an output CV port
             # to an input audio port.
             # It could destroy material.
-            if self._port_mode is PortMode.OUTPUT:
-                if self._port_subtype is PortSubType.CV:
-                    return other.get_port_subtype() is PortSubType.CV
+            if self.port_mode is PortMode.OUTPUT:
+                if self.port_subtype is PortSubType.CV:
+                    return other.port_subtype is PortSubType.CV
                 return True
 
-            if self._port_mode is PortMode.INPUT:
-                if self._port_subtype is PortSubType.CV:
+            if self.port_mode is PortMode.INPUT:
+                if self.port_subtype is PortSubType.CV:
                     return True
-                return not (other._port_subtype is PortSubType.CV)
+                return not (other.port_subtype is PortSubType.CV)
 
         return True
 
     def reset_line_mov_positions(self):
-        self_ports_len = len(self._port_ids)
+        self_ports_len = len(self.port_ids)
 
         for i, line_mov in enumerate(self._line_mov_list):
             if i < self_ports_len:
@@ -129,7 +129,7 @@ class ConnectableWidget(QGraphicsItem):
 
         while len(self._line_mov_list) < self_ports_len:
             line_mov = LineMoveWidget(
-                self._port_mode, self._port_type, len(self._line_mov_list),
+                self.port_mode, self.port_type, len(self._line_mov_list),
                 self_ports_len, self)
 
             self._line_mov_list.append(line_mov)
@@ -162,35 +162,35 @@ class ConnectableWidget(QGraphicsItem):
         if self._hover_item is None:
             return
 
-        hover_port_ids = self._hover_item.get_port_ids()
+        hover_port_ids = self._hover_item.port_ids
         if not hover_port_ids:
             return
 
-        hover_group_id = self._hover_item.get_group_id()
+        hover_group_id = self._hover_item.group_id
         con_list = list[ConnectionObject]()
         ports_connected_list = list[list[int]]()
 
-        maxportgrp = max(len(self._port_ids), len(hover_port_ids))
+        maxportgrp = max(len(self.port_ids), len(hover_port_ids))
 
-        if self._hover_item.get_port_mode() is self._port_mode:
+        if self._hover_item.port_mode is self.port_mode:
             # Copy connections from this widget to the other one (hover)
 
-            for i, port_id in enumerate(self._port_ids):
+            for i, port_id in enumerate(self.port_ids):
                 for connection in [
                         c for c in canvas.list_connections(self._po)
-                        if c.concerns(self._group_id, set([port_id]))]:
+                        if c.concerns(self.group_id, set([port_id]))]:
                     canvas.cb.ports_disconnect(
                         connection.connection_id)
 
                     for j, hover_port_id in enumerate(hover_port_ids):
-                        if len(hover_port_ids) >= len(self._port_ids):
-                            if j % len(self._port_ids) != i:
+                        if len(hover_port_ids) >= len(self.port_ids):
+                            if j % len(self.port_ids) != i:
                                 continue
                         else:
                             if i % len(hover_port_ids) != j:
                                 continue
 
-                        if self._port_mode is PortMode.OUTPUT:
+                        if self.port_mode is PortMode.OUTPUT:
                             canvas.cb.ports_connect(
                                 hover_group_id, hover_port_id,
                                 connection.group_in_id, connection.port_in_id)
@@ -200,12 +200,12 @@ class ConnectableWidget(QGraphicsItem):
                                 hover_group_id, hover_port_id)
             return
 
-        for i, port_id in enumerate(self._port_ids):
+        for i, port_id in enumerate(self.port_ids):
             for j, hover_port_id in enumerate(hover_port_ids):
                 for connection in canvas.list_connections(self._po):
-                    if connection.matches(self._group_id, [port_id],
+                    if connection.matches(self.group_id, [port_id],
                                           hover_group_id, [hover_port_id]):
-                        if i % len(hover_port_ids) == j % len(self._port_ids):
+                        if i % len(hover_port_ids) == j % len(self.port_ids):
                             con_list.append(connection)
                             ports_connected_list.append(
                                 [port_id, hover_port_id])
@@ -218,18 +218,18 @@ class ConnectableWidget(QGraphicsItem):
                 canvas.cb.ports_disconnect(
                     connection.connection_id)
         else:
-            for i, port_id in enumerate(self._port_ids):
+            for i, port_id in enumerate(self.port_ids):
                 for j, hover_port_id in enumerate(hover_port_ids):
-                    if i % len(hover_port_ids) == j % len(self._port_ids):
+                    if i % len(hover_port_ids) == j % len(self.port_ids):
                         if not [port_id, hover_port_id] in ports_connected_list:
-                            if self._port_mode is PortMode.OUTPUT:
+                            if self.port_mode is PortMode.OUTPUT:
                                 canvas.cb.ports_connect(
-                                    self._group_id, port_id,
+                                    self.group_id, port_id,
                                     hover_group_id, hover_port_id)
                             else:
                                 canvas.cb.ports_connect(
                                     hover_group_id, hover_port_id,
-                                    self._group_id, port_id)
+                                    self.group_id, port_id)
 
     def parentItem(self) -> 'BoxWidget':
         # only here to say IDE parent is a BoxWidget
@@ -302,10 +302,10 @@ class ConnectableWidget(QGraphicsItem):
         if not self._line_mov_list:
             self._last_rclick_item = None
 
-            for i in range(len(self._port_ids)):
+            for i in range(len(self.port_ids)):
                 line_mov = LineMoveWidget(
-                    self._port_mode, self._port_type, i,
-                    len(self._port_ids), self)
+                    self.port_mode, self.port_type, i,
+                    len(self.port_ids), self)
 
                 self._line_mov_list.append(line_mov)
 
@@ -319,16 +319,16 @@ class ConnectableWidget(QGraphicsItem):
         # if item has same port mode
         # verify we can use it for cut and paste connections
         if (item is not None
-                and item.get_port_type() is self._port_type
-                and item.get_port_mode() is self._port_mode):
+                and item.port_type is self.port_type
+                and item.port_mode is self.port_mode):
             item_valid = False
 
             if (self._has_connections
-                    and len(item.get_port_ids()) == len(self._port_ids)):
+                    and len(item.port_ids) == len(self.port_ids)):
                 for connection in canvas.list_connections(
-                        group_id=item.get_group_id()):
+                        group_id=item.group_id):
                     if connection.concerns(
-                            item.get_group_id(), set(item.get_port_ids())):
+                            item.group_id, set(item.port_ids)):
                         break
                 else:
                     item_valid = True
@@ -345,7 +345,7 @@ class ConnectableWidget(QGraphicsItem):
 
         elif (item is not None
               and item is not self._hover_item
-              and item.get_port_type() is self._port_type):
+              and item.port_type is self.port_type):
             item.setSelected(True)
 
             if item is self._hover_item:
@@ -354,11 +354,11 @@ class ConnectableWidget(QGraphicsItem):
 
             else:
                 self._hover_item = item
-                hover_len = len(item.get_port_ids())
+                hover_len = len(item.port_ids)
                 self.reset_dot_lines()
                 self.reset_line_mov_positions()
 
-                if item.get_port_mode() is self._port_mode:
+                if item.port_mode is self.port_mode:
                     gp_out_ins = GroupOutInsDict()
 
                     for connection in canvas.list_connections(self._po):
@@ -385,10 +385,10 @@ class ConnectableWidget(QGraphicsItem):
                                 line_mov.set_destination_portgrp_pos(
                                     i, hover_len)
                             else:
-                                port_posinportgrp = i % len(self._port_ids)
+                                port_posinportgrp = i % len(self.port_ids)
                                 line_mov  = LineMoveWidget(
-                                    self._port_mode,
-                                    self._port_type,
+                                    self.port_mode,
+                                    self.port_type,
                                     port_posinportgrp,
                                     hover_len,
                                     self)
@@ -401,18 +401,18 @@ class ConnectableWidget(QGraphicsItem):
                     symetric_con_list = []
                     gp_out_ins = GroupOutInsDict()
 
-                    for portself_id in self._port_ids:
-                        for porthover_id in self._hover_item.get_port_ids():
+                    for portself_id in self.port_ids:
+                        for porthover_id in self._hover_item.port_ids:
                             for connection in canvas.list_connections(
-                                    group_id=self._group_id):
+                                    group_id=self.group_id):
                                 if connection.matches(
-                                        self._group_id, [portself_id],
-                                        self._hover_item.get_group_id(),
+                                        self.group_id, [portself_id],
+                                        self._hover_item.group_id,
                                         [porthover_id]):
-                                    if (self._port_ids.index(portself_id)
+                                    if (self.port_ids.index(portself_id)
                                         % hover_len
-                                            == (self._hover_item.get_port_ids().index(porthover_id)
-                                                % len(self._port_ids))):
+                                            == (self._hover_item.port_ids.index(porthover_id)
+                                                % len(self.port_ids))):
                                         self._dotcon_list.append(connection)
                                         symetric_con_list.append(connection)
                                     else:
@@ -424,8 +424,8 @@ class ConnectableWidget(QGraphicsItem):
 
                     gp_out_ins.send_changes()
 
-                    biggest_list = (self._port_ids if len(self._port_ids) >= hover_len
-                                    else self._hover_item.get_port_ids())
+                    biggest_list = (self.port_ids if len(self.port_ids) >= hover_len
+                                    else self._hover_item.port_ids)
 
                     if len(symetric_con_list) == len(biggest_list):
                         gp_out_ins = GroupOutInsDict()
