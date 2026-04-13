@@ -44,6 +44,8 @@ if TYPE_CHECKING:
 
 _logger = logging.getLogger(__name__)
 
+_TRUNCK_SEP = '⠿'
+
 
 class PortWidget(ConnectableWidget):
     def __init__(self, port: PortObject, parent: 'BoxWidget'):
@@ -62,7 +64,6 @@ class PortWidget(ConnectableWidget):
         self._print_name = port.port_name
         self._print_name_right = ''
         self._name_truncked = False
-        self._trunck_sep = '⠿'
 
         # Base Variables
         self._port_width = 15
@@ -126,7 +127,7 @@ class PortWidget(ConnectableWidget):
                 name_len = len(self._print_name)
                 middle = int(name_len / 2)
                 left_text = self._print_name[:middle]
-                middle_text = self._trunck_sep
+                middle_text = _TRUNCK_SEP
                 right_text = self._print_name[middle + 1:]
                 left_size = theme.get_text_width(left_text)
                 middle_size = theme.get_text_width(middle_text)
@@ -153,7 +154,7 @@ class PortWidget(ConnectableWidget):
         
         if self._name_truncked:
             return (theme.get_text_width(self._print_name)
-                    + theme.get_text_width(self._trunck_sep)
+                    + theme.get_text_width(_TRUNCK_SEP)
                     + theme.get_text_width(self._print_name_right))
 
         return theme.get_text_width(self._print_name)
@@ -533,7 +534,7 @@ class PortWidget(ConnectableWidget):
         painter.setFont(font)
 
         sizer = QFontMetrics(font)
-        sep_width = sizer.horizontalAdvance(self._trunck_sep)
+        sep_width = sizer.horizontalAdvance(_TRUNCK_SEP)
 
         if self._portgrp_id:
             print_name_size = self.get_text_width()
@@ -561,6 +562,6 @@ class PortWidget(ConnectableWidget):
             color.setAlphaF(color.alphaF() * 0.25)
             trunck_pen.setColor(color)
             painter.setPen(trunck_pen)
-            painter.drawText(QPointF(sep_x, text_pos.y() + 1), self._trunck_sep)
+            painter.drawText(QPointF(sep_x, text_pos.y() + 1), _TRUNCK_SEP)
 
         painter.restore()

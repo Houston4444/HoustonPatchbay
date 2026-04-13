@@ -38,6 +38,9 @@ if TYPE_CHECKING:
     from .box_widget import BoxWidget
 
 
+_TRUNCK_SEP = '⠿'
+
+
 class PortgroupWidget(ConnectableWidget):
     def __init__(self, portgrp: PortgrpObject, parent: 'BoxWidget'):
         ConnectableWidget.__init__(self, portgrp, parent)
@@ -56,7 +59,6 @@ class PortgroupWidget(ConnectableWidget):
         self._normal_print_name = '' # same as _print_name but not reduced
         self._print_name_right = ''
         self._name_truncked = False
-        self._trunck_sep = '⠿'
 
         self._ports_widgets = [
             p.widget for p in canvas.list_ports(group_id=portgrp.group_id)
@@ -110,7 +112,7 @@ class PortgroupWidget(ConnectableWidget):
                 name_len = len(self._print_name)
                 middle = int(name_len / 2)
                 left_text = self._print_name[:middle]
-                middle_text = self._trunck_sep
+                middle_text = _TRUNCK_SEP
                 right_text = self._print_name[middle + 1:]
                 left_size = theme.get_text_width(left_text)
                 middle_size = theme.get_text_width(middle_text)
@@ -139,7 +141,7 @@ class PortgroupWidget(ConnectableWidget):
         
         if self._name_truncked:
             return (theme.get_text_width(self._print_name)
-                    + theme.get_text_width(self._trunck_sep)
+                    + theme.get_text_width(_TRUNCK_SEP)
                     + theme.get_text_width(self._print_name_right))
 
         return theme.get_text_width(self._print_name)
@@ -404,7 +406,7 @@ class PortgroupWidget(ConnectableWidget):
         if self._name_truncked:
             sizer = QFontMetrics(font)
             sep_x = text_pos.x() + sizer.horizontalAdvance(self._print_name)
-            sep_width = sizer.horizontalAdvance(self._trunck_sep)
+            sep_width = sizer.horizontalAdvance(_TRUNCK_SEP)
 
             painter.drawText(QPointF(sep_x + sep_width, text_pos.y()),
                              self._print_name_right)
@@ -415,6 +417,6 @@ class PortgroupWidget(ConnectableWidget):
             trunck_pen.setColor(color)
             painter.setPen(trunck_pen)
 
-            painter.drawText(QPointF(sep_x, text_pos.y() + 1), self._trunck_sep)
+            painter.drawText(QPointF(sep_x, text_pos.y() + 1), _TRUNCK_SEP)
 
         painter.restore()
