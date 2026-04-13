@@ -38,8 +38,6 @@ from ..init_values import (
     Direction,
     Zv)
 from .. import grid
-from ..port_widget import PortWidget
-from ..portgroup_widget import PortgroupWidget
 from ..grouped_lines_widget import GroupedLinesWidget
 from ..theme import UslStyleAttributer
 
@@ -291,23 +289,6 @@ class BoxWidget(QGraphicsItem):
     def set_shadow_opacity(self, opacity):
         if self.shadow:
             self.shadow.set_opacity(opacity)
-
-    def add_port_from_group(self, port: PortObject):
-        self.setVisible(True)
-
-        new_widget = PortWidget(port, self)
-        if self._wrapping_state is not WrappingState.NORMAL:
-            new_widget.setVisible(False)
-
-        return new_widget
-
-    def add_portgroup_from_group(self, portgroup: PortgrpObject):
-        new_widget = PortgroupWidget(portgroup, self)
-
-        if self._wrapping_state is not WrappingState.NORMAL:
-            new_widget.setVisible(False)
-
-        return new_widget
 
     def check_item_pos(self):
         if canvas.size_rect.isNull():

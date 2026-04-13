@@ -303,6 +303,9 @@ class PatchbayManager:
         '''Executed after any patchcanvas animation, it cleans
         in patchcanvas all boxes that should be hidden now.'''
         with CanvasOptimizeIt(self, auto_redraw=True, prevent_overlap=False):
+            import time
+            td = dict[str, float]()
+            td['start'] = time.time()
             for troup in self.groups_and_tracks():
                 if isinstance(troup, Track):
                     if not troup.is_active:
@@ -345,6 +348,9 @@ class PatchbayManager:
 
             for conn in self.connections:
                 conn.add_to_canvas()
+                
+            td['finished'] = time.time()
+            print('animation finisshshed', td['finished'] - td['start'])
 
         self.sg.hidden_boxes_changed.emit()
         self.sg.animation_finished.emit()

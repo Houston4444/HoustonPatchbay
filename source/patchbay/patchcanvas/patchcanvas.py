@@ -54,6 +54,7 @@ from . import arranger, grid, canvas_helpers
 from .box_widget import BoxWidget
 from .cnv_qobject import CanvasObject
 from .port_widget import PortWidget
+from .portgroup_widget import PortgroupWidget
 from .grouped_lines_widget import GroupedLinesWidget
 from .hidden_conn_widget import HiddenConnWidget
 from .theme_manager import ThemeData, ThemeManager
@@ -621,18 +622,22 @@ def port_has_hidden_connection(group_id: int, port_id: int, yesno: bool):
 def add_portgroup(group_id: int, portgrp_id: int, port_mode: PortMode,
                   port_type: PortType, port_subtype: PortSubType,
                   port_id_list: list[int]):
+    group = canvas.get_group(group_id)
+    if group is None:
+        _logger.critical(f"{LogStr.func_args} - unable to find parent group")
+        return
+
+    for box in group.widgets:
+        if port_mode in box.port_mode:
+            break
+    else:
+        _logger.error(
+            f'{LogStr.func_args} - Unable to find box with port mode')
+        return
+
     if canvas.get_portgroup(group_id, portgrp_id) is not None:
         _logger.critical(f"{LogStr.func_args} - portgroup already exists")
         return
-
-    portgrp = PortgrpObject()
-    portgrp.group_id = group_id
-    portgrp.portgrp_id = portgrp_id
-    portgrp.port_mode = port_mode
-    portgrp.port_type = port_type
-    portgrp.port_subtype = port_subtype
-    portgrp.port_id_list = list(port_id_list)
-    portgrp.widget = None
 
     i = 0
     # check that port ids are present and groupable in this group
@@ -662,6 +667,14 @@ def add_portgroup(group_id: int, portgrp_id: int, port_mode: PortMode,
             f"{LogStr.func_args} - not enought ports with port_id_list")
         return
 
+    portgrp = PortgrpObject()
+    portgrp.group_id = group_id
+    portgrp.portgrp_id = portgrp_id
+    portgrp.port_mode = port_mode
+    portgrp.port_type = port_type
+    portgrp.port_subtype = port_subtype
+    portgrp.port_id_list = list(port_id_list)
+
     # modify ports impacted by portgroup
     for port in canvas.list_ports(group_id=group_id):
         if (port.port_id in port_id_list):
@@ -669,19 +682,19 @@ def add_portgroup(group_id: int, portgrp_id: int, port_mode: PortMode,
                 portgrp_id, port_id_list.index(port.port_id),
                 len(port_id_list))
 
+    portgrp.widget = PortgroupWidget(portgrp, box)
+    portgrp.widget.setVisible(box.ports_are_visible())
+
     canvas.add_portgroup(portgrp)
 
-    # add portgroup widget and refresh the view
-    group = canvas.get_group(group_id)
-    if group is None:
+    if canvas.loading_items:
+        if port_mode is PortMode.INPUT:
+            canvas.groups_to_redraw_in.add(group_id)
+        elif port_mode is PortMode.OUTPUT:
+            canvas.groups_to_redraw_out.add(group_id)
         return
 
-    for box in group.widgets:
-        if box.port_mode & port_mode:
-            portgrp.widget = box.add_portgroup_from_group(portgrp)
-
-            if not canvas.loading_items:
-                box.update_positions()
+    box.update_positions()
 
 @patchbay_api
 def remove_portgroup(group_id: int, portgrp_id: int):
@@ -703,7 +716,8 @@ def remove_portgroup(group_id: int, portgrp_id: int):
                 portgrp.widget = None
             break
     else:
-        _logger.error(f"{LogStr.func_args} - Unable to find portgrp to remove")
+        _logger.error(
+            f"{LogStr.func_args} - Unable to find portgrp to remove")
         return
 
     canvas.remove_portgroup(portgrp)

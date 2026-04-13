@@ -294,7 +294,7 @@ class PortObject(ConnectableObject):
 class PortgrpObject(ConnectableObject):
     port_id_list: list[int]
     if TYPE_CHECKING:
-        widget: Optional[PortgroupWidget]
+        widget: PortgroupWidget | None
     else:
         widget: object
 
