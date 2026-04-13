@@ -528,7 +528,8 @@ def remove_port(group_id: int, port_id: int):
     canvas.ensure_init()
     port = canvas.get_port(group_id, port_id)
     if port is None:
-        _logger.critical(f"{LogStr.func_args} - Unable to find port to remove")
+        _logger.critical(
+            f"{LogStr.func_args} - Unable to find port to remove")
         return
 
     if port.portgrp_id:

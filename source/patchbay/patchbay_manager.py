@@ -317,7 +317,6 @@ class PatchbayManager:
                 hidden_port_mode = troup.current_position.hidden_port_modes()
                 if hidden_port_mode is PortMode.NULL:
                     continue
-                
 
                 if hidden_port_mode & PortMode.OUTPUT:
                     for conn in self.connections.from_group(group):

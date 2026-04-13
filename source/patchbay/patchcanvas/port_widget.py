@@ -24,7 +24,7 @@ from typing import TYPE_CHECKING
 from qtpy.QtCore import Qt, QPointF, QRectF
 from qtpy.QtGui import (
     QBrush, QFontMetrics, QPainter, QPen, QPolygonF,
-    QLinearGradient, QColor, QPainterPath)
+    QLinearGradient, QColor)
 from qtpy.QtWidgets import QGraphicsItem, QApplication
 
 
@@ -42,10 +42,12 @@ if TYPE_CHECKING:
     from .portgroup_widget import PortgroupWidget
 
 
+_logger = logging.getLogger(__name__)
+
+
 class PortWidget(ConnectableWidget):
     def __init__(self, port: PortObject, parent: 'BoxWidget'):
         ConnectableWidget.__init__(self, port, parent)
-        self._logger = logging.getLogger(__name__)
 
         # Save Variables, useful for later
         self._port = port
@@ -370,8 +372,7 @@ class PortWidget(ConnectableWidget):
             x_arrowhead = line_hinting * 2
 
         else:
-            self._logger.critical(
-                f"invalid port mode {str(self._port_mode)}")
+            _logger.critical(f"invalid port mode {str(self._port_mode)}")
             return
 
         polygon = QPolygonF()

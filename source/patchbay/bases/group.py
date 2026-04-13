@@ -471,11 +471,11 @@ class Group:
 
     def separate_all_tracks(self, yesno: bool):
         if not yesno:
-            for track_name, track_id, track in self.tracks.full_iter():
+            for track in self.tracks:
                 track.set_group_position(
                     self.current_position.copy(),
                     PortMode.NULL, PortMode.NULL)
-                self.joining_tracks.add(track_name)
+                self.joining_tracks.add(track.name)
             return
         
         conns = list[Connection]()
@@ -487,10 +487,11 @@ class Group:
         self.remove_all_ports_from_canvas()
 
         for track in self.tracks:
-            track.current_position = self.current_position.copy(
-                no_tracks=True)
-            track.set_active(True)
-            track.update_pos_to_parent()
+            if not track.is_active:
+                track.current_position = self.current_position.copy(
+                    no_tracks=True)
+                track.set_active(True)
+                track.update_pos_to_parent()
 
         self.add_all_ports_to_canvas()
         for conn in conns:
