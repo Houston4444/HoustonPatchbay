@@ -184,6 +184,15 @@ class GroupMenu(QMenu):
                     has_splitted = True
                 else:
                     has_joined = True
+                
+                # filter visible track action to theses with at least
+                # one port in canvas
+                for port in track.ports:
+                    if port.in_canvas:
+                        break
+                else:
+                    continue
+                
                 sep_track_act = self.tracks_menu.addAction(track.name)
                 sep_track_act.setCheckable(True)
                 sep_track_act.setChecked(track.is_active)
