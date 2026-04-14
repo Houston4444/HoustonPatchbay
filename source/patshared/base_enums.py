@@ -84,6 +84,7 @@ class BoxType(Enum):
     LADISH_ROOM = 6
     CLIENT = 7
     INTERNAL = 8
+    TRACK = 9
 
     def __lt__(self, other: 'BoxType'):
         """Compare BoxType by their integer value."""

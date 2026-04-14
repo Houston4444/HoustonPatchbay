@@ -23,7 +23,8 @@ class BoxStyleAttributer(UslStyleAttributer):
         self.hardware = UslStyleAttributer(path + '.hardware', self)
         self.client = ClientBoxStyleAttributer(path + '.client', self)
         self.monitor = UslStyleAttributer(path + '.monitor', self)
-        self.subs += ['hardware', 'client', 'monitor']
+        self.track = UslStyleAttributer(path + '.track', self)
+        self.subs += ['hardware', 'client', 'monitor', 'track']
 
 
 class PortStyleAttributer(UslStyleAttributer):

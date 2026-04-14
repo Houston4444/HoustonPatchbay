@@ -907,6 +907,8 @@ class BoxWidget(QGraphicsItem):
                 if self._can_handle_gui:
                     return theme.client.with_gui
                 return theme.client
+            case BoxType.TRACK:
+                return theme.track
 
         return theme
 

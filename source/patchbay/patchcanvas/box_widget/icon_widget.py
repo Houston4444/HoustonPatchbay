@@ -76,8 +76,11 @@ class IconPixmapWidget(QGraphicsPixmapItem):
         QGraphicsPixmapItem.__init__(self, parent)
 
         box_theme = canvas.theme.box
-        if box_type is BoxType.CLIENT:
-            box_theme = box_theme.client
+        match box_type:
+            case BoxType.CLIENT:
+                box_theme = box_theme.client
+            case BoxType.TRACK:
+                box_theme = box_theme.track
 
         self._icon_size = box_theme.icon_size
         self.icon = None
