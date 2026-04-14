@@ -649,9 +649,10 @@ class Group:
                 else:
                     display_name, num = split_end_digits(display_name)
                     if num:
-                        display_name = cut_end(display_name,
-                                            '/audio_out ', '/audio_in ',
-                                            '/midi_out ', '/midi_in ')
+                        display_name = cut_end(
+                            display_name,
+                            '/audio_out ', '/audio_in ',
+                            '/midi_out ', '/midi_in ')
                         if num == '1':
                             port.last_digit_to_add = '1'
                         else:
@@ -1233,3 +1234,7 @@ class Track(Group):
         elif port.mode is PortMode.INPUT:
             self.ins_ptv |= ptv
         self.ports.append(port)
+        
+    def _get_box_type_and_icon(self) -> tuple[BoxType, str]:
+        box_type, icon_name = self.parent_group._get_box_type_and_icon()
+        return BoxType.TRACK, icon_name
