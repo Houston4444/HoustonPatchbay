@@ -499,6 +499,9 @@ def add_port(group_id: int, port_id: int, port_name: str,
         _logger.error(f"{LogStr.func_args} - Unable to find a box for port")
         return
 
+    if box._box_type is BoxType.TRACK:
+        port_name = port_name.replace(box._group_name, '', 1)
+
     port = PortObject()
     port.group_id = group_id
     port.port_id = port_id

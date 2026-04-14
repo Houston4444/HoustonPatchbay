@@ -105,9 +105,6 @@ class Port:
                 return custom_name
 
         if self.manager.naming & Naming.GRACEFUL:
-            if self.track is not None:
-                if self.graceful_name.startswith(self.track.name):
-                    return self.graceful_name.replace(self.track.name, '', 1)
             return self.graceful_name
 
         return self.short_name
