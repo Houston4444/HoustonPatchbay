@@ -1174,12 +1174,15 @@ class Track(Group):
     def __repr__(self) -> str:
         return f"Track({self.parent_group.name}:{self.name})"
     
-    def set_active(self, yesno: bool):
+    def set_active(self, yesno: bool, manage_canvas=True):
         if yesno is self.is_active:
             return
 
         self.is_active = yesno
-        if not self.manager.very_fast_operation:
+
+        if self.manager.very_fast_operation:
+            manage_canvas = False
+        if manage_canvas:
             self.remove_all_ports_from_canvas()
 
         if yesno:
@@ -1193,7 +1196,7 @@ class Track(Group):
             for portgroup in self.portgroups:
                 portgroup.track_id = -1
 
-        if self.manager.very_fast_operation:
+        if not manage_canvas:
             return
 
         if yesno:

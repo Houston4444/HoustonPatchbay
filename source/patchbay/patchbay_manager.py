@@ -499,6 +499,19 @@ class PatchbayManager:
 
         self.sg.all_groups_removed.emit()
 
+    def clear_canvas(self):
+        patchcanvas.clear_all()
+        for group in self.groups:
+            group.in_canvas = False
+            for track in group.tracks:
+                track.in_canvas = False
+            for portgroup in group.portgroups:
+                portgroup.in_canvas = False
+            for port in group.ports:
+                port.in_canvas = False
+        for connection in self.connections:
+            connection.in_canvas = False                
+
     def save_view_and_port_types_view(self):
         pass
 

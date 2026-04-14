@@ -22,7 +22,14 @@ def groups_and_gpos(mng: 'PatchbayManager') \
         yield group, new_gpos
         for track in group.tracks:
             yield track, new_gpos.tracks.get(track.name)
-
+            
+def groups_and_gpos_reversed(mng: 'PatchbayManager') \
+        -> Iterator[tuple[Group, GroupPos] | tuple[Track, GroupPos | None]]:
+    for group in mng.groups:
+        new_gpos = mng.get_group_position(group.name)
+        for track in group.tracks:
+            yield track, new_gpos.tracks.get(track.name)
+        yield group, new_gpos
 
 def change_port_types_view(
         mng: 'PatchbayManager', port_types_view: PortTypesViewFlag,
@@ -41,14 +48,26 @@ def change_port_types_view(
     change_counter = 0
 
     if len(mng.groups) > 30:
-        for group in mng.groups:
+        pv_group_gpos = None
+        for group, new_gpos in groups_and_gpos(mng):
+            if isinstance(group, Track):
+                if new_gpos is None:
+                    if group.is_active:
+                        change_counter += 1
+                    continue
+                else:
+                    if not group.is_active:
+                        change_counter += 1
+                        continue
+            else:
+                new_gpos = cast(GroupPos, new_gpos)
+            
             in_outs_ptv = group.ins_ptv | group.outs_ptv
 
             if in_outs_ptv & port_types_view is not in_outs_ptv & ex_ptv:
                 change_counter += 1
                 continue
 
-            new_gpos = mng.get_group_position(group.name)
             if group.current_position.needs_redraw(new_gpos):
                 change_counter += 1
 
@@ -56,21 +75,23 @@ def change_port_types_view(
         # Big changes between the current and the next view
         # Strategy is to remove all from canvas and add all what is needed
         # without animation.
-        for connection in mng.connections:
-            connection.in_canvas = False
-
-        for group in mng.groups:
-            group.in_canvas = False
-            for portgroup in group.portgroups:
-                portgroup.in_canvas = False
-            for port in group.ports:
-                port.in_canvas = False
-
-        patchcanvas.clear_all()
+        mng.clear_canvas()
 
         with CanvasOptimizeIt(mng):
-            for group in mng.groups:
-                group.current_position = mng.get_group_position(group.name)
+            for group, new_gpos in groups_and_gpos_reversed(mng):
+                if isinstance(group, Track):
+                    if new_gpos is None:
+                        if not group.is_active:
+                            continue
+                        group.set_active(False, manage_canvas=False)
+                        continue
+                    else:
+                        group.current_position = new_gpos
+                        group.set_active(True, manage_canvas=False)
+                        group.add_to_canvas()
+                else:
+                    group.current_position = cast(GroupPos, new_gpos)
+                
                 if (group.outs_ptv | group.ins_ptv) & mng.port_types_view:
                     group.add_to_canvas()
                     group.add_all_ports_to_canvas()
@@ -92,18 +113,7 @@ def change_port_types_view(
         if rm_all_before:
             # there is no common port type between previous and next view,
             # strategy is to remove fastly all contents from the patchcanvas.
-            for connection in mng.connections:
-                connection.in_canvas = False
-
-            for group in mng.groups:
-                group.in_canvas = False
-                for portgroup in group.portgroups:
-                    portgroup.in_canvas = False
-                for port in group.ports:
-                    port.in_canvas = False
-
-            patchcanvas.clear_all()
-
+            mng.clear_canvas()
         else:
             for connection in mng.connections:
                 connection.remove_from_canvas()
@@ -208,8 +218,6 @@ def change_port_types_view(
 
         for group, gpos_redraw in groups_and_pos.items():
             group.set_group_position(*gpos_redraw)
-            # if isinstance(group, Track):
-            #     group.update_pos_to_parent()
 
         patchcanvas.repulse_all_boxes()
 
