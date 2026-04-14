@@ -219,15 +219,15 @@ class CanvasMenu(QMenu):
 
     def _port_types_view_changed(self, port_types_view: int):
         self.action_all_types.setChecked(
-            port_types_view == PortTypesViewFlag.ALL)
+            port_types_view is PortTypesViewFlag.ALL)
         self.action_audio.setChecked(
-            port_types_view == PortTypesViewFlag.AUDIO)
+            port_types_view is PortTypesViewFlag.AUDIO)
         self.action_midi.setChecked(
-            port_types_view == PortTypesViewFlag.MIDI)
+            port_types_view is PortTypesViewFlag.MIDI)
         self.action_cv.setChecked(
-            port_types_view == PortTypesViewFlag.CV)
+            port_types_view is PortTypesViewFlag.CV)
         self.action_alsa.setChecked(
-            port_types_view == PortTypesViewFlag.ALSA)
+            port_types_view is PortTypesViewFlag.ALSA)
 
     def _change_ptv(self, ptv: PortTypesViewFlag):
         with CancellableAction(self.mng, CancelOp.PTV_CHOICE) as a:
