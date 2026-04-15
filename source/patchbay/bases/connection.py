@@ -1,6 +1,7 @@
 from typing import TYPE_CHECKING, Iterator
 
 from patshared import PortType
+
 from ..patchcanvas import patchcanvas
 
 if TYPE_CHECKING:

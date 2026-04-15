@@ -578,7 +578,11 @@ def rename_port(group_id: int, port_id: int, new_port_name: str):
         return
 
     if new_port_name != port.port_name:
-        port.port_name = new_port_name
+        box = port.widget.parentItem()
+        if box._box_type is BoxType.TRACK:
+            port.port_name = new_port_name.replace(box._group_name, '', 1)
+        else:
+            port.port_name = new_port_name
         port.widget.update_connect_pos()
 
     if canvas.loading_items:

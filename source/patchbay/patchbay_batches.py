@@ -170,6 +170,7 @@ def remove_port(mng: 'PatchbayManager', name: str) -> int | None:
     '''remove a port from name and return its group_id'''
     port = mng.get_port_from_name(name)
     if port is None:
+        _logger.warning(f'No port "{name} to remove"')
         return None
 
     if name in mng._ports_by_name:
@@ -429,6 +430,10 @@ def delayed_orders_timeout(mng: 'PatchbayManager'):
                         conn.remove_from_canvas()
 
             for conn in conns_to_clean:
+                _logger.warning(
+                    f'Connection between "{conn.port_out.full_name}" '
+                    f'and "{conn.port_in.full_name}" '
+                    f'removed because one of its ports has been removed.')
                 mng.connections.remove(conn)
 
     if some_groups_removed:
