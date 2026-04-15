@@ -154,6 +154,18 @@ class Port:
             return ':'.join(names[0:2] + names[4:])
         return self.full_name
 
+    def set_cv_from_metadata(self, signal_type: str):
+        if self.type is not PortType.AUDIO_JACK:
+            return
+        if signal_type.upper() == 'CV':
+            self.subtype = PortSubType.CV
+        else:
+            self.subtype = PortSubType.REGULAR
+            
+        if self.in_canvas:
+            patchcanvas.change_port_type(
+                self.group_id, self.port_id, self.type, self.subtype)
+
     def add_the_last_digit(self):
         self.graceful_name += ' ' + self.last_digit_to_add
         self.last_digit_to_add = ''

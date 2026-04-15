@@ -334,10 +334,7 @@ def metadata_update(
                 return
 
             if port.type is PortType.AUDIO_JACK:
-                if value == 'CV':
-                    port.subtype = PortSubType.CV
-                elif value == 'AUDIO':
-                    port.subtype = PortSubType.REGULAR
+                port.set_cv_from_metadata(value)
 
             return port.group_id
 

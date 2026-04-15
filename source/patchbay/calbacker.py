@@ -75,8 +75,7 @@ class Callbacker(ProtoCallbacker):
                     continue
 
                 if len(pos_tuples) == 1:
-                    a.name = _translate('undo', 'Move %s') \
-                        % group.cnv_name
+                    a.name = _translate('undo', 'Move %s') % group.cnv_name
 
                 group.current_position.boxes[port_mode].pos = (x, y)
                 group.set_group_position(

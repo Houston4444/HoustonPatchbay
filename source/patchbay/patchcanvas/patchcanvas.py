@@ -593,6 +593,30 @@ def rename_port(group_id: int, port_id: int, new_port_name: str):
     QTimer.singleShot(0, canvas.scene.update)
 
 @patchbay_api
+def change_port_type(
+        group_id: int, port_id: int, port_type: PortType,
+        port_subtype: PortSubType):
+    '''Change the port type, here only because an audio port
+    can become a CV port with metadata change'''
+    port = canvas.get_port(group_id, port_id)
+    if port is None:
+        _logger.error(f'{LogStr.func_args} - Unable to find port')
+        return
+
+    port.port_type = port_type
+    port.port_subtype = port_subtype
+    
+    if canvas.loading_items:
+        if port.port_mode is PortMode.OUTPUT:
+            canvas.groups_to_redraw_out.add(group_id)
+        else:
+            canvas.groups_to_redraw_in.add(group_id)
+        return
+    
+    port.widget.parentItem().update_positions()
+    QTimer.singleShot(0, canvas.scene.update)
+
+@patchbay_api
 def port_has_hidden_connection(group_id: int, port_id: int, yesno: bool):
     port = canvas.get_port(group_id, port_id)
     if port is None:
