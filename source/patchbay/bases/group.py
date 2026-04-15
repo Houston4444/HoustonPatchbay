@@ -452,11 +452,8 @@ class Group:
             self.joining_tracks.add(track_name)
             return
 
-        conns = list[Connection]()
-        for conn in self.manager.connections:
-            if conn.port_out.group is self or conn.port_in.group is self:
-                conns.append(conn)
-                conn.remove_from_canvas()
+        for conn in self.manager.connections.with_group(self):
+            conn.remove_from_canvas()
                 
         self.remove_all_ports_from_canvas()
         
@@ -466,7 +463,7 @@ class Group:
         
         self.add_all_ports_to_canvas()
         
-        for conn in conns:
+        for conn in self.manager.connections.with_group(self):
             conn.add_to_canvas()
 
     def separate_all_tracks(self, yesno: bool):

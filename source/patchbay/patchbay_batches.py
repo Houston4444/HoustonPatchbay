@@ -219,6 +219,13 @@ def rename_port(
                 f"rename_port to '{new_name}', no port named '{name}'")
         return
 
+    exst_port = mng.get_port_from_name(new_name)
+    if exst_port is not None:
+        _logger.warning(
+            f'Impossible to rename port "{name}" to "{new_name}", '
+            f'It already exists.')
+        return
+
     # change port key in self._ports_by_name dict
     if name in mng._ports_by_name:
         mng._ports_by_name.pop(name)
@@ -391,7 +398,7 @@ def delayed_orders_timeout(mng: 'PatchbayManager'):
         while _delayed_orders.qsize():
             oq = _delayed_orders.get()
 
-            _logger.debug(f'  execute {oq.func.__name__}, {oq.args[1:]}')
+            _logger.debug(f'execute {oq.func.__name__}, {oq.args[1:]}')
 
             # execute the function, and get concerned group_id
             group_id = oq.func(*oq.args, **oq.kwargs)
@@ -421,7 +428,7 @@ def delayed_orders_timeout(mng: 'PatchbayManager'):
             for conn in mng.connections:
                 for port in (conn.port_out, conn.port_in):
                     fport = mng.get_port_from_name(port.full_name)
-                    if fport is None:
+                    if fport is None or fport is not port:
                         conn.remove_from_canvas()
                         conns_to_clean.append(conn)
                         break

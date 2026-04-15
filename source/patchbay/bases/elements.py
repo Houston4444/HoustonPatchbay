@@ -107,8 +107,15 @@ class CanvasOptimize(IntEnum):
 
 
 class CanvasOptimizeIt:
-    '''Context for 'with' statment. save the data at begin and at end
-    for undo/redo actions'''
+    '''Context for 'with' statment. Prevent to redraw each widget
+    in canvas at each operation.
+
+    auto_redraw : bool
+        if True, redraw modified boxes when finished
+    
+    prevent_overlap : bool
+        if True, apply boxes repulsion when finished    
+    '''
     def __init__(
             self, mng: 'PatchbayManager', canvas_optimize=CanvasOptimize.FAST,
             auto_redraw=False, prevent_overlap=True):
