@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Any, Union, Optional
+from typing import Any
 
 from .base_enums import (
     BoxLayoutMode, BoxFlag,
@@ -12,7 +12,7 @@ class BoxPos:
     layout_mode: BoxLayoutMode = BoxLayoutMode.AUTO
     flags: BoxFlag = BoxFlag.NONE
 
-    def __init__(self, box_pos: Optional['BoxPos']=None) -> None:
+    def __init__(self, box_pos: 'BoxPos | None' =None) -> None:
         if box_pos:
             self.eat(box_pos)
             return
@@ -340,7 +340,7 @@ class GroupPos:
 
         Layout: ptv_value, group_name, flags, then per-port-mode numbers.
         """
-        arg_list = list[Union[str, int]]()
+        arg_list = list[str | int]()
 
         arg_list.append(self.port_types_view.value)
         arg_list.append(self.group_name)
@@ -390,7 +390,7 @@ class GroupPos:
         return gpos
 
     def is_splitted(self) -> bool:
-        """Return True if the group is split into input/output boxes."""
+        """Return True if the group is splitted into input/output boxes."""
         return bool(self.flags & GroupPosFlag.SPLITTED)
 
     def set_splitted(self, yesno: bool):
@@ -442,7 +442,7 @@ class GroupPos:
         return False
 
     def apply_only_diffs(
-            self, orig_gpos: 'Optional[GroupPos]', new_gpos: 'GroupPos'):
+            self, orig_gpos: 'GroupPos | None', new_gpos: 'GroupPos'):
         """Apply only the differences between `orig_gpos` and `new_gpos`.
 
         Update this GroupPos with changes from `new_gpos`, preserving other
