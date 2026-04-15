@@ -51,6 +51,7 @@ class PortType(IntFlag):
     MIDI_ALSA = 0x04
     VIDEO = 0x08
     PARAMETER = 0x10
+    ALL = AUDIO_JACK|MIDI_JACK|MIDI_ALSA|VIDEO|PARAMETER
 
     @classmethod
     def _missing_(cls, value) -> 'PortType':
@@ -67,7 +68,8 @@ class PortSubType(IntFlag):
     """Annotates port sub-types such as CV (control voltage) or a2j MIDI.
 
     CV ports are treated as audio ports but have connection restrictions.
-    A2J indicates ports originating from the ALSA-to-JACK bridge.
+    A2J indicates ports originating from the ALSA-to-JACK bridge or
+    PipeWire Midi-Bridge.
     """
     REGULAR = 0x01
     CV = 0x02

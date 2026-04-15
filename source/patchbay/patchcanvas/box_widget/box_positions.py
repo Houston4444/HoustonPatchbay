@@ -1123,12 +1123,14 @@ def update_positions(
         box._portgrp_list.clear()
 
         for port in canvas.list_ports(group_id=box._group_id):
-            if port.port_mode & box._port_mode:
+            if (port.port_mode in box._port_mode
+                    and port.port_type in box._port_type):
                 box._port_list.append(port)
                 box._current_port_mode |= port.port_mode
 
         for portgrp in canvas.list_portgroups(group_id=box._group_id):
-            if box._current_port_mode & portgrp.port_mode:
+            if (portgrp.port_mode in box._current_port_mode
+                    and portgrp.port_type in box._port_type):
                 box._portgrp_list.append(portgrp)
 
     if theme_change:

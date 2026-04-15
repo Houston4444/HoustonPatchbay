@@ -265,6 +265,12 @@ def split_group(group_id: int, on_place=False, redraw=True):
     canvas_helpers.split_group(group_id, on_place=on_place, redraw=redraw)
 
 @patchbay_api
+def split_port_types(
+        group_id: int, port_mode: PortMode, on_place=False, redraw=True):
+    canvas_helpers.split_port_types(
+        group_id, port_mode, on_place=on_place, redraw=redraw)
+
+@patchbay_api
 def repulse_all_boxes():
     canvas_helpers.repulse_all_boxes()
 

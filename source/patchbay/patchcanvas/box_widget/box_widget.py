@@ -25,6 +25,7 @@ from qtpy.QtGui import QCursor, QPainterPath, QImage
 from qtpy.QtWidgets import QGraphicsItem, QApplication
 
 from patshared import PortMode, BoxLayoutMode, BoxType
+from patshared.base_enums import PortType
 
 from ..init_values import (
     AliasingReason,
@@ -54,7 +55,8 @@ _logger = logging.getLogger(__name__)
 
 
 class BoxWidget(QGraphicsItem):
-    def __init__(self, group: GroupObject, port_mode: PortMode):
+    def __init__(self, group: GroupObject, port_mode: PortMode,
+                 port_type=PortType.ALL):
         canvas.ensure_init()
         QGraphicsItem.__init__(self)
         self.setCacheMode(QGraphicsItem.CacheMode.DeviceCoordinateCache)
@@ -88,6 +90,8 @@ class BoxWidget(QGraphicsItem):
 
         self._current_port_mode = PortMode.NULL
         'depends on present ports'
+
+        self._port_type = port_type
 
         self._cursor_moving = False
         self._mouse_down = False

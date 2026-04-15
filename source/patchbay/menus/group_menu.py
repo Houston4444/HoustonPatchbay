@@ -6,9 +6,11 @@ from qtpy.QtGui import QIcon, QPixmap, QAction
 from patchbay.bases.elements import CanvasOptimizeIt
 
 from patshared import PortMode, BoxLayoutMode
+from patshared.base_enums import PortTypesViewFlag
 
 from ..cancel_mng import CancelOp, CancellableAction
 from ..bases.group import Group, Track
+from ..bases.elements import port_full_type_to_ptv_flag
 from ..patchcanvas import canvas, patchcanvas, utils
 from ..dialogs.custom_name_dialog import CustomNameDialog
 from ..dialogs.group_info_dialog import GroupInfoDialog
@@ -140,11 +142,12 @@ class GroupMenu(QMenu):
         self.addSeparator()
 
         current_port_mode = PortMode.NULL
+        ptv = PortTypesViewFlag.NONE
+
         for port in self._group.ports:
             if port.in_canvas:
                 current_port_mode |= port.mode
-                if current_port_mode is PortMode.BOTH:
-                    break
+                ptv |= port_full_type_to_ptv_flag(*port.full_type)
 
         if self._group.current_position.is_splitted():
             join_act = self.addAction(
@@ -160,6 +163,11 @@ class GroupMenu(QMenu):
             split_act.triggered.connect(self._split)
             if current_port_mode is not PortMode.BOTH:
                 split_act.setEnabled(False)
+
+        split_types_act = self.addAction(
+            _translate('patchbay', 'Split port types'))
+        split_types_act.setIcon(QIcon.fromTheme('split'))
+        split_types_act.triggered.connect(self._split_port_types)
 
         if self._group.tracks:
             self.tracks_menu = QMenu()
@@ -291,6 +299,14 @@ class GroupMenu(QMenu):
         with CancellableAction(self._mng, CancelOp.VIEW) as a:
             a.name = _translate('undo', 'Split "%s"') % self._group.cnv_name
             patchcanvas.split_group(self._group.group_id, on_place=True)
+
+    @Slot()
+    def _split_port_types(self):
+        with CancellableAction(self._mng, CancelOp.VIEW) as a:
+            a.name = _translate('undo', 'Split port types on "%s"') \
+                % self._group.cnv_name
+            patchcanvas.split_port_types(
+                self._group.group_id, self._port_mode, on_place=True)
 
     @Slot()
     def _split_tracks(self):

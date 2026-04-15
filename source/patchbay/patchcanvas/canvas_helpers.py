@@ -4,6 +4,7 @@ import logging
 from qtpy.QtCore import QPointF, QRectF, QTimer
 
 from patshared import GroupPos, PortMode
+from patshared.base_enums import PortSubType, PortType
 
 from .init_values import canvas, options, Joining
 from . import grid
@@ -93,6 +94,57 @@ def split_group(group_id: int, on_place=False, redraw=True):
             [b for b in group.widgets if b.isVisible()])
 
     QTimer.singleShot(0, canvas.scene.update)
+
+def split_port_types(
+        group_id: int, port_mode: PortMode, on_place=False, redraw=True):
+    group = canvas.get_group(group_id)
+    if group is None:
+        _logger.error(f"{LogStr.func_args} - unable to find group to split")
+        return
+    
+    print('split port types', group.group_name, port_mode.name)
+    
+    for box in group.widgets:
+        if box.port_mode is port_mode:
+            break
+    else:
+        _logger.error(
+            f"{LogStr.func_args} - did not found box widget to split")
+        return
+    
+    wrap = box.is_wrapped
+    new_boxes = dict[PortType, BoxWidget]()
+    
+    for i, port_type in enumerate(PortType):
+        if port_type is PortType.NULL:
+            continue
+        if i == 0:
+            new_boxes[port_type] = box
+        else:
+            new_box = BoxWidget(group, port_mode)
+            new_box.set_wrapped(wrap, animate=False)
+            new_boxes[port_type] = new_box
+    
+    for portgroup in canvas.list_portgroups(group_id):
+        if (portgroup.widget is not None
+                and portgroup.widget.parentItem() is box):
+            portgroup.widget.setParentItem(
+                new_boxes[portgroup.port_type])
+    
+    for port in canvas.list_ports(group_id):
+        if port.widget.parentItem() is box:
+            port.widget.setParentItem(
+                new_boxes[port.port_type])
+    
+    for port_type, box_ in new_boxes.items():
+        if box_ is not box:
+            group.widgets.append(box_)
+    
+    if not redraw:
+        return
+    
+    for box in group.widgets:
+        box.update_positions(even_animated=True, scene_checks=False)
 
 def move_group_boxes(
         group_id: int, gpos: GroupPos,
