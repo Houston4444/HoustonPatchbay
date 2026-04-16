@@ -6,7 +6,8 @@ from typing import TYPE_CHECKING, Callable
 from qtpy.QtCore import QThread
 from qtpy.QtGui import QGuiApplication
 
-from patshared import PortType, PortSubType, JackMetadata
+from patshared import PortType, JackMetadata
+from patshared import PortMode
 
 from .bases.connection import Connection
 from .bases.elements import JackPortFlag, CanvasOptimizeIt
@@ -353,12 +354,33 @@ def add_connection(
     port_in = mng.get_port_from_name(port_in_name)
 
     if port_out is None or port_in is None:
+        _logger.error(
+            f'Failed to add connection between {port_out} and {port_in}, '
+            f'one port at least is missing.')
         return
 
-    for connection in mng.connections:
+    for connection in mng.connections.from_group(port_out.group):
         if (connection.port_out is port_out
                 and connection.port_in is port_in):
+            _logger.warning(
+                f'Attempt to add connection between ' 
+                f'{port_out_name} and {port_in_name}, '
+                f'but connection already exists')
             return
+
+    if port_out.type is not port_in.type:
+        _logger.error(
+            f'Attempt to connect ports of different type, '
+            f'{port_out_name} is {port_out.type.name}, '
+            f'{port_in_name} is {port_in.type.name}')
+        return
+
+    if (port_out.mode is not PortMode.OUTPUT
+            or port_in.mode is not PortMode.INPUT):
+        _logger.error(
+            f'Attempt to connect ports, {port_out_name} is not output, '
+            f'or {port_in_name} is not input')
+        return
 
     connection = Connection(mng, mng._next_connection_id, port_out, port_in)
     mng._next_connection_id += 1
@@ -372,16 +394,21 @@ def remove_connection(
     port_out = mng.get_port_from_name(port_out_name)
     port_in = mng.get_port_from_name(port_in_name)
     if port_out is None or port_in is None:
+        _logger.warning(
+            f'remove_connection, unable to find {port_out_name} '
+            f'or {port_in_name}')
         return
 
-    for connection in mng.connections:
+    for connection in mng.connections.from_group(port_out.group):
         if (connection.port_out is port_out
                 and connection.port_in is port_in):
             mng.connections.remove(connection)
-            mng.sg.connection_removed.emit(connection.connection_id)
             connection.remove_from_canvas()
             break
-
+    else:
+        _logger.warning(
+            f'remove_connection - ports {port_out_name} and {port_in_name} '
+            f'are not connected.')
 
 def delayed_orders_timeout(mng: 'PatchbayManager'):
     '''This method is called by the QTimer self._delayed_orders_timer
