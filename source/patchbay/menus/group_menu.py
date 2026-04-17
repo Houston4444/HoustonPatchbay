@@ -123,44 +123,7 @@ class GroupMenu(QMenu):
         self._port_mode = port_mode
         self._build()
 
-    def _build(self):
-        dark = '-dark' if utils.is_dark_theme(self) else ''
-
-        self._disconnect_menu = DisconnectMenu(
-            self._mng, self._group, self._port_mode)
-        self._disconnect_menu.setIcon(
-            QIcon(QPixmap(':scalable/breeze%s/lines-disconnector' % dark)))
-
-        self.addMenu(self._disconnect_menu)
-
-        disco_all_act = self.addAction(_translate('patchbay', 'Disconnect All'))
-        disco_all_act.setIcon(
-            QIcon(QPixmap(':scalable/breeze%s/lines-disconnector' % dark)))
-
-        self.addSeparator()
-
-        current_port_mode = PortMode.NULL
-        for port in self._group.ports:
-            if port.in_canvas:
-                current_port_mode |= port.mode
-                if current_port_mode is PortMode.BOTH:
-                    break
-
-        if self._group.current_position.is_splitted():
-            join_act = self.addAction(
-                _translate('patchbay', 'Join'))
-            join_act.setIcon(QIcon.fromTheme('join'))
-            join_act.triggered.connect(self._join)
-            if current_port_mode is not PortMode.BOTH:
-                join_act.setEnabled(False)
-        else:
-            split_act = self.addAction(
-                _translate('patchbay', 'Split'))
-            split_act.setIcon(QIcon.fromTheme('split'))
-            split_act.triggered.connect(self._split)
-            if current_port_mode is not PortMode.BOTH:
-                split_act.setEnabled(False)
-
+    def _build_tracks_menus(self):
         if self._group.tracks:
             self.tracks_menu = QMenu()
             self.tracks_menu.setIcon(QIcon.fromTheme('split'))
@@ -208,9 +171,49 @@ class GroupMenu(QMenu):
         
         elif isinstance(self._group, Track):
             repatriate_act = self.addAction(
-                _translate('patchbay', 'Repatriate'))
+                _translate('patchbay', 'Repatriate Track'))
             repatriate_act.setIcon(QIcon.fromTheme('join'))
             repatriate_act.triggered.connect(self._repatriate_track)
+
+    def _build(self):
+        dark = '-dark' if utils.is_dark_theme(self) else ''
+
+        self._disconnect_menu = DisconnectMenu(
+            self._mng, self._group, self._port_mode)
+        self._disconnect_menu.setIcon(
+            QIcon(QPixmap(':scalable/breeze%s/lines-disconnector' % dark)))
+
+        self.addMenu(self._disconnect_menu)
+
+        disco_all_act = self.addAction(_translate('patchbay', 'Disconnect All'))
+        disco_all_act.setIcon(
+            QIcon(QPixmap(':scalable/breeze%s/lines-disconnector' % dark)))
+
+        self.addSeparator()
+
+        current_port_mode = PortMode.NULL
+        for port in self._group.ports:
+            if port.in_canvas:
+                current_port_mode |= port.mode
+                if current_port_mode is PortMode.BOTH:
+                    break
+
+        if self._group.current_position.is_splitted():
+            join_act = self.addAction(
+                _translate('patchbay', 'Join'))
+            join_act.setIcon(QIcon.fromTheme('join'))
+            join_act.triggered.connect(self._join)
+            if current_port_mode is not PortMode.BOTH:
+                join_act.setEnabled(False)
+        else:
+            split_act = self.addAction(
+                _translate('patchbay', 'Split'))
+            split_act.setIcon(QIcon.fromTheme('split'))
+            split_act.triggered.connect(self._split)
+            if current_port_mode is not PortMode.BOTH:
+                split_act.setEnabled(False)
+
+        self._build_tracks_menus()
 
         box_pos = self._group.current_position.boxes[self._port_mode]
         self._is_wrapped = box_pos.is_wrapped()
