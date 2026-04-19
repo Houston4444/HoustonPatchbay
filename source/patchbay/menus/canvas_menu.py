@@ -1,10 +1,11 @@
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
-from qtpy.QtGui import QIcon, QDesktopServices, QPixmap
+from qtpy.QtGui import QIcon, QDesktopServices, QPixmap, QAction
 from qtpy.QtWidgets import QMenu, QApplication
 from qtpy.QtCore import QLocale, QUrl, Slot # type:ignore
 
+from ..bases.group import Track
 from .. import patchcanvas
 from ..patchcanvas import utils
 from patshared import PortTypesViewFlag, PortMode
@@ -272,7 +273,7 @@ class CanvasMenu(QMenu):
         dark = utils.is_dark_theme(self)
         has_hiddens = False
 
-        for group in self.mng.groups:
+        for group in self.mng.groups_and_tracks():
             hidden_port_mode = group.current_position.hidden_port_modes()
             if hidden_port_mode:
                 if not ((group.outs_ptv & self.mng.port_types_view
@@ -281,12 +282,21 @@ class CanvasMenu(QMenu):
                             and PortMode.INPUT in hidden_port_mode)):
                     continue
 
-                group_act = self.show_hiddens_menu.addAction(
-                    group.cnv_name)
-                group_act.setIcon(utils.get_icon(
-                        group.cnv_box_type, group.cnv_icon_name,
-                        hidden_port_mode,
+                if isinstance(group, Track):
+                    group_act = self.show_hiddens_menu.addAction(
+                        group.full_name)
+                    group_act.setIcon(utils.get_icon(
+                        group.parent_group.cnv_box_type,
+                        group.parent_group.cnv_icon_name,
+                        PortMode.BOTH,
                         dark=dark))
+                else:
+                    group_act = self.show_hiddens_menu.addAction(
+                        group.cnv_name)
+                    group_act.setIcon(utils.get_icon(
+                            group.cnv_box_type, group.cnv_icon_name,
+                            hidden_port_mode,
+                            dark=dark))
                 group_act.setData(group.group_id)
                 group_act.triggered.connect(self._show_hidden_group)
                 has_hiddens = True
@@ -324,24 +334,25 @@ class CanvasMenu(QMenu):
 
     @Slot()
     def _show_hidden_group(self):
-        group_id: int = self.sender().data() # type:ignore
-        sender_text: str = self.sender().text() # type:ignore
+        sender = cast(QAction, self.sender())
+        group_id = cast(int, sender.data())
+        sender_text = sender.text()
         with CancellableAction(self.mng, CancelOp.VIEW) as a:
             a.name = _translate('undo', 'Restore "%s"') % sender_text
             self.mng.restore_group_hidden_sides(group_id, self._scene_pos)
 
     @Slot()
     def _show_all_hidden_groups(self):
-        sender_text: str = self.sender().text() # type:ignore
+        sender = cast(QAction, self.sender())
         with CancellableAction(self.mng, CancelOp.VIEW) as a:
-            a.name = sender_text
+            a.name = sender.text()
             self.mng.restore_all_group_hidden_sides()
 
     @Slot(bool)
     def _set_view_white_list(self, state: bool):
-        sender_text: str = self.sender().text() # type:ignore
+        sender = cast(QAction, self.sender())
         with CancellableAction(self.mng, op_type=CancelOp.VIEW) as a:
-            a.name = sender_text
+            a.name = sender.text()
             self.mng.view().is_white_list = state
             self.mng.set_views_changed()
 
