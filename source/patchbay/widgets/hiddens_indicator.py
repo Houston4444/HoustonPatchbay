@@ -1,5 +1,5 @@
 
-from typing import TYPE_CHECKING, Callable, Iterator, Optional, Union
+from typing import TYPE_CHECKING, Callable, Iterator, Optional
 
 from qtpy.QtCore import Slot, QTimer # type:ignore
 from qtpy.QtGui import QIcon, QPixmap
@@ -79,8 +79,10 @@ def divide_group_list(group_list: GroupList) -> GroupList:
     common_min = len(group_list.common)
 
     for group in group_list.list:
-        if TYPE_CHECKING:
-            assert isinstance(group, Group)
+        if not isinstance(group, Group):
+            # to divide a group_list, it must contains groups only
+            raise TypeError
+        
         if len(common_str) == common_min:
             common_str = group.name
             groups.append(GroupList(common_str, [group]))
@@ -89,7 +91,7 @@ def divide_group_list(group_list: GroupList) -> GroupList:
         if TYPE_CHECKING:
             assert isinstance(groups[-1], GroupList)
 
-        common_str = common_prefix(common_str, group.name)
+        common_str = common_prefix(common_str, group.full_name)
         if len(common_str) > common_min:
             # add this group to the last list
             groups[-1].common = common_str
@@ -117,7 +119,7 @@ def divide_group_list(group_list: GroupList) -> GroupList:
             groups.append(gp)
 
     # do recursion
-    new_groups = list[Union[Group, GroupList]]()
+    new_groups = list[Group|GroupList]()
 
     for group_or_list in groups:
         if isinstance(group_or_list, Group):
@@ -129,7 +131,7 @@ def divide_group_list(group_list: GroupList) -> GroupList:
     # at this stage, list can now contains Group or GroupList objects
 
     # englobe directly items of childs containing less than MENU_MIN items
-    new_groups_ = list[Union[Group, GroupList]]()
+    new_groups_ = list[Group|GroupList]()
 
     for group_or_list in new_groups:
         if (isinstance(group_or_list, GroupList)
