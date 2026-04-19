@@ -90,6 +90,8 @@ class GroupPos:
             self.boxes[port_mode] = BoxPos()
         
         self.tracks = {}
+        self.joined_tracks = set[str]()
+        self.auto_split_tracks = False
 
     def __repr__(self):
         if self.tracks:
@@ -192,6 +194,7 @@ class GroupPos:
         group_pos = GroupPos()
         group_pos.__dict__ = self.__dict__.copy()
         group_pos.tracks = {}
+        group_pos.joined_tracks = set[str]()
 
         group_pos.boxes = dict[PortMode, BoxPos]()
         for port_mode, box_pos in self.boxes.items():
@@ -200,6 +203,7 @@ class GroupPos:
         if not no_tracks:
             for track_name, track_pos in self.tracks.items():
                 group_pos.tracks[track_name] = track_pos.copy(no_tracks=True)
+            group_pos.joined_tracks = group_pos.joined_tracks.copy()
 
         return group_pos
 
@@ -286,6 +290,13 @@ class GroupPos:
                 gpos.tracks[track_name] = GroupPos.from_new_dict(
                     ptv, f'{group_name}:{track_name}', track_pos_d)                
 
+        joined_tracks_list = in_dict.get('joined_tracks')
+        if isinstance(joined_tracks_list, list):
+            gpos.auto_split_tracks = True
+            for joined_track_name in joined_tracks_list:
+                if isinstance(joined_track_name, str):
+                    gpos.joined_tracks.add(joined_track_name)
+
         return gpos
 
     def as_new_dict(self, no_tracks=False) -> dict:
@@ -332,6 +343,9 @@ class GroupPos:
                 tracks_d[track_name] = track_pos.as_new_dict(no_tracks=True)
             if tracks_d:
                 d['tracks'] = tracks_d
+                
+            if self.auto_split_tracks:
+                d['joined_tracks'] = list(self.joined_tracks)
 
         return d
 

@@ -130,6 +130,13 @@ class GroupMenu(QMenu):
             self.tracks_menu.setTitle(
                 _translate('patchbay', 'Separate tracks'))
 
+            auto_split_act = self.tracks_menu.addAction(
+                _translate('patchbay', 'Auto split tracks'))
+            auto_split_act.setCheckable(True)
+            auto_split_act.setChecked(
+                self._group.current_position.auto_split_tracks)
+            auto_split_act.triggered.connect(self._toggle_auto_split_tracks)
+
             join_tracks_act = self.tracks_menu.addAction(
                 _translate('patchbay', 'Join all tracks'))
             join_tracks_act.setIcon(QIcon.fromTheme('join'))
@@ -139,6 +146,8 @@ class GroupMenu(QMenu):
                 _translate('patchbay', 'Separate all tracks'))
             split_tracks_act.setIcon(QIcon.fromTheme('split'))
             split_tracks_act.triggered.connect(self._split_tracks)
+            
+            self.tracks_menu.addSeparator()
             
             has_splitted, has_joined = False, False
             
@@ -294,6 +303,13 @@ class GroupMenu(QMenu):
         with CancellableAction(self._mng, CancelOp.VIEW) as a:
             a.name = _translate('undo', 'Split "%s"') % self._group.cnv_name
             patchcanvas.split_group(self._group.group_id, on_place=True)
+
+    @Slot()
+    def _toggle_auto_split_tracks(self):
+        yesno = not self._group.current_position.auto_split_tracks
+        with CancellableAction(self._mng, CancelOp.VIEW) as a:
+            a.name = _translate('undo', f'set auto split tracks to {yesno}')
+            self._group.current_position.auto_split_tracks = yesno
 
     @Slot()
     def _split_tracks(self):

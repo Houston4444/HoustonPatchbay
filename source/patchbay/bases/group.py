@@ -292,20 +292,21 @@ class Group:
         
         # prepare track if possible
         track_name = ''
-        port_track_name = ''
         match self.program_name:
             case 'ardour'|'Ardour':
                 if '/' in port.short_name:
-                    track_name, _, port_track_name = \
-                        port.short_name.partition('/')
-        
+                    track_name = port.short_name.partition('/')[0]
+
         if track_name:
             track = self.tracks.from_name(track_name)
             if track is None:
                 set_active = False
                 track_pos = self.current_position.tracks.get(track_name)
                 if track_pos is None:
-                    track_pos = GroupPos()
+                    track_pos = self.current_position.copy(no_tracks=True)
+                    if (self.current_position.auto_split_tracks
+                            and track_name not in self.current_position.joined_tracks):
+                        set_active = True
                 else:
                     set_active = True
 
@@ -320,6 +321,7 @@ class Group:
             
                 if set_active:
                     track.set_active(True)
+                    track.update_pos_to_parent()
                 
             if track.is_active:
                 port.track = track
