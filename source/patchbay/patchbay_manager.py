@@ -189,11 +189,16 @@ class PatchbayManager:
         Useful to win time at startup or refresh'''
         return self.canvas_optimize is CanvasOptimize.VERY_FAST
 
-    def groups_and_tracks(self) -> Iterator[Group | Track]:
+    def groups_and_tracks(self, active_only=False) -> Iterator[Group | Track]:
         for group in self.groups:
             yield group
-            for track in group.tracks:
-                yield track
+            if active_only:
+                for track in group.tracks:
+                    if track.is_active:
+                        yield track
+            else:
+                for track in group.tracks:
+                    yield track
 
     def _scene_scale_changed(self, value: float):
         self.sg.scene_scale_changed.emit(value)

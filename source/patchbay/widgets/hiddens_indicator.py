@@ -1,5 +1,5 @@
 
-from typing import TYPE_CHECKING, Callable, Iterator, Optional
+from typing import TYPE_CHECKING, Callable, Iterator, Optional, cast
 
 from qtpy.QtCore import Slot, QTimer # type:ignore
 from qtpy.QtGui import QIcon, QPixmap
@@ -415,18 +415,16 @@ class HiddensIndicator(QToolButton):
 
     @Slot()
     def _menu_action_triggered(self):
-        act: QAction = self.sender() # type:ignore
-        act_data: int = act.data() # type:ignore
-        act_text: str = act.text() # type:ignore
+        act = cast(QAction, self.sender())
+        act_data = cast(int, act.data())
+        act_text = act.text()
 
         if act_data == WHITE_LIST:
             with CancellableAction(self.mng, CancelOp.VIEW) as a:
                 a.name = act_text
-                if TYPE_CHECKING:
-                    assert isinstance(act, QAction)
-                if act.isChecked(): # type:ignore
+                if act.isChecked():
                     self.mng.clear_absents_in_view()
-                self.mng.view().is_white_list = act.isChecked() # type:ignore
+                self.mng.view().is_white_list = act.isChecked()
                 self.mng.set_views_changed()
             return
 

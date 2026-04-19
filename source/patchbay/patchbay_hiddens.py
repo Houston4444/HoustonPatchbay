@@ -97,7 +97,7 @@ def restore_all_group_hidden_sides(mng: 'PatchbayManager'):
     groups_to_restore = set[Group]()
 
     with CanvasOptimizeIt(mng):
-        for group in mng.groups:
+        for group in mng.groups_and_tracks(active_only=True):
             if group.current_position.hidden_port_modes():
                 group.current_position.set_hidden_port_mode(PortMode.NULL)
                 if not group.current_position.fully_set:
@@ -128,7 +128,7 @@ def hide_all_groups(mng: 'PatchbayManager'):
     groups_to_hide = set[Group]()
 
     with CanvasOptimizeIt(mng):
-        for group in mng.groups:
+        for group in mng.groups_and_tracks(active_only=True):
             if (group.current_position.hidden_port_modes()
                     is not PortMode.BOTH):
                 groups_to_hide.add(group)
