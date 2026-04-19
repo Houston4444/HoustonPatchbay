@@ -212,8 +212,7 @@ def get_icon(icon_type: BoxType, icon_name: str,
 
         if icon.isNull():
             for ext in ('svg', 'svgz', 'png'):
-                filename = ":app_icons/%s.%s" % (icon_name, ext)
-
+                filename = f':app_icons/{icon_name}.{ext}'
                 if QFile.exists(filename):
                     del icon
                     icon = QIcon()
@@ -223,10 +222,11 @@ def get_icon(icon_type: BoxType, icon_name: str,
 
     icon = QIcon()
 
+    dark_str = 'dark' if dark else 'light'
+
     match icon_type:
         case BoxType.HARDWARE:
-            icon_file = ":/canvas/"
-            icon_file += "dark/" if dark else "light/"
+            icon_file = f":/canvas/{dark_str}/"
 
             if icon_name == "a2j":
                 icon_file += "DIN-5.svg"
@@ -241,8 +241,7 @@ def get_icon(icon_type: BoxType, icon_name: str,
             icon.addFile(icon_file)
 
         case BoxType.MONITOR:
-            prefix = ":/canvas/"
-            prefix += "dark/" if dark else "light/"
+            prefix = f":/canvas/{dark_str}/"
 
             if port_mode is PortMode.INPUT:
                 icon.addFile(prefix + "monitor_capture.svg")
@@ -250,7 +249,7 @@ def get_icon(icon_type: BoxType, icon_name: str,
                 icon.addFile(prefix + "monitor_playback.svg")
 
         case BoxType.INTERNAL:
-            icon.addFile(":/scalable/%s" % icon_name)
+            icon.addFile(f':/scalable/{icon_name}')
 
     return icon
 

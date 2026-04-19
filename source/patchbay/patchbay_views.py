@@ -142,8 +142,7 @@ def _change_ptv_with_anim(
 
         patchcanvas.repulse_all_boxes()
 
-def _change_ptv_without_anim(
-        mng: 'PatchbayManager', ex_ptv: PortTypesViewFlag):
+def _change_ptv_without_anim(mng: 'PatchbayManager'):
     with CanvasOptimizeIt(mng):
         mng.clear_canvas()
 
@@ -187,7 +186,6 @@ def change_port_types_view(
     change_counter = 0
 
     if len(mng.groups) > 30:
-        pv_group_gpos = None
         for group, new_gpos in _groups_and_gpos(mng):
             if isinstance(group, Track):
                 if new_gpos is None:
@@ -216,7 +214,7 @@ def change_port_types_view(
         # between the current and the next view.
         # Strategy is to remove all from canvas and add all what is needed
         # without animation.
-        _change_ptv_without_anim(mng, ex_ptv)
+        _change_ptv_without_anim(mng)
     else:
         _change_ptv_with_anim(mng, ex_ptv)
 
