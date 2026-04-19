@@ -313,7 +313,7 @@ class HiddensIndicator(QToolButton):
         dark = self._is_dark()
         groups = [g for g in self._list_hidden_groups()]
 
-        groups.sort(key=lambda x: x.name)
+        groups.sort(key=lambda x: x.full_name)
         group_list = divide_group_list(GroupList('', groups))
 
         menus_dict = dict[tuple[str, ...], QMenu]()
@@ -337,11 +337,21 @@ class HiddensIndicator(QToolButton):
                     parent = mnu
 
             assert isinstance(mnu, QMenu)
-            group_act = mnu.addAction(group.cnv_name)
-            group_act.setIcon(utils.get_icon(
-                group.cnv_box_type, group.cnv_icon_name,
-                group.current_position.hidden_port_modes(),
-                dark=dark))
+            
+            if isinstance(group, Track):
+                group_act = mnu.addAction(
+                    f'{group.parent_group.cnv_name}:{group.name}')
+                group_act.setIcon(utils.get_icon(
+                    group.parent_group.cnv_box_type,
+                    group.parent_group.cnv_icon_name,
+                    PortMode.BOTH,
+                    dark=dark))
+            else:
+                group_act = mnu.addAction(group.cnv_name)
+                group_act.setIcon(utils.get_icon(
+                    group.cnv_box_type, group.cnv_icon_name,
+                    group.current_position.hidden_port_modes(),
+                    dark=dark))
             group_act.setData(group.group_id)
             group_act.triggered.connect(self._menu_action_triggered)
 

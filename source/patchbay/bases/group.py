@@ -154,6 +154,11 @@ class Group:
         'The custom name, if it exists'
         return self.manager.custom_names.custom_group(self.name)
 
+    @property
+    def full_name(self) -> str:
+        'The group name, but it will be different if this is a Track'
+        return self.name
+        
     def remove_from_canvas(self):
         if self.manager.very_fast_operation:
             return
@@ -1172,6 +1177,11 @@ class Track(Group):
 
     def __repr__(self) -> str:
         return f"Track({self.parent_group.name}:{self.name})"
+    
+    @property
+    def full_name(self) -> str:
+        'The group name, but it will be different if this is a Track'
+        return f'{self.parent_group.name}:{self.name}'
     
     def set_active(self, yesno: bool, manage_canvas=True):
         if yesno is self.is_active:
