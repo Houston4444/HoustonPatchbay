@@ -107,9 +107,12 @@ def _change_ptv_with_anim(
                 # only ports which should be hidden in previous and next
                 # view will be hidden (before to animate).
                 for port in group.ports:
-                    port.add_to_canvas(
-                        ignore_gpos=True,
-                        hidden_sides=hidden_modes & new_hidden_modes)
+                    # if port is in a track, it could be added to canvas
+                    # when treating the track.
+                    if port.track is None:
+                        port.add_to_canvas(
+                            ignore_gpos=True,
+                            hidden_sides=hidden_modes & new_hidden_modes)
 
                 for portgroup in group.portgroups:
                     portgroup.add_to_canvas()
