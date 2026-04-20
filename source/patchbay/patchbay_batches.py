@@ -266,7 +266,40 @@ def rename_port(
 
     port.full_name = new_name
     port.group.graceful_port(port)
-    port.rename_in_canvas()
+    
+    change_track = port.group.port_has_to_change_track(port)
+    if change_track:
+        group = port.group
+        track = port.track
+        
+        was_in_canvas = port.in_canvas
+        if was_in_canvas:
+            for conn in mng.connections.with_group(group):
+                conn.remove_from_canvas()
+            
+            for portgroup in group.portgroups:
+                if portgroup.portgroup_id == port.portgroup_id:
+                    group.remove_portgroup(portgroup)
+                    break
+                
+            port.remove_from_canvas()
+
+        if track is not None and port in track.ports:
+            print('port', port, 'not in', track, 'anymore')
+            track.ports.remove(port)              
+
+        group.remove_port(port)
+        group.add_port(port)
+        group.graceful_port(port)
+        group.add_to_canvas()
+        port.add_to_canvas()
+        group.check_for_portgroup_on_last_port()
+        group.check_for_display_name_on_last_port()        
+        for conn in mng.connections.with_group(group):
+            conn.add_to_canvas()
+    else:
+        port.rename_in_canvas()
+        
     return port.group.group_id
 
 @later_by_batch(metadata_change=True)

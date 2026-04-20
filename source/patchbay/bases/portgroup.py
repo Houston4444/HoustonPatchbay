@@ -46,9 +46,7 @@ class Portgroup:
             port.rename_in_canvas()
 
     def sort_ports(self):
-        port_list = list(self.ports)
-        port_list.sort()
-        self.ports = tuple(port_list)
+        self.ports = tuple(sorted(self.ports))
 
     def add_to_canvas(self):
         if self.manager.very_fast_operation:

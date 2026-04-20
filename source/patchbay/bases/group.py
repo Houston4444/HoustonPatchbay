@@ -28,6 +28,14 @@ if TYPE_CHECKING:
 _logger = logging.getLogger(__name__)
 
 
+def track_name_from_port_name(program_name: str, port_short_name: str) -> str:
+    match program_name:
+        case 'ardour'|'Ardour'|'mixbus'|'Mixbus':
+            if '/' in port_short_name:
+                return port_short_name.partition('/')[0]
+    return ''
+
+
 class Group:
     def __init__(self, manager: 'PatchbayManager', group_id: int,
                  name: str, group_position: GroupPos):
@@ -245,6 +253,47 @@ class Group:
         patchcanvas.animate_before_hide_box(
             self.group_id, port_mode)
 
+    def port_has_to_change_track(self, port: Port) -> bool:
+        track_name = track_name_from_port_name(
+            self.program_name, port.short_name)
+        track = self.tracks.from_name(track_name)
+        return track is not port.track
+
+    def check_port_track(self, port: Port):
+        track_name = track_name_from_port_name(
+            self.program_name, port.short_name)
+
+        if track_name:
+            track = self.tracks.from_name(track_name)
+            if track is None:
+                set_active = False
+                track_pos = self.current_position.tracks.get(track_name)
+                if track_pos is None:
+                    track_pos = self.current_position.copy(no_tracks=True)
+                    if (self.current_position.auto_split_tracks
+                            and track_name
+                                not in self.current_position.joined_tracks):
+                        set_active = True
+                else:
+                    set_active = True
+
+                track = Track(
+                    self, self.manager._next_group_id,
+                    track_name, track_pos)
+                self.manager._groups_by_id[self.manager._next_group_id] = \
+                    track
+                self.tracks.add(
+                    track, track_name, self.manager._next_group_id)
+                self.manager._next_group_id += 1
+            
+                if set_active:
+                    track.set_active(True)
+                    track.update_pos_to_parent()
+                
+            # if track.is_active:
+            port.track = track
+            track.add_port(port)
+
     def remove_all_ports(self):
         if self.in_canvas:
             for portgroup in self.portgroups:
@@ -294,43 +343,7 @@ class Group:
 
         self.manager._ports_by_name[port.full_name] = port
         self.manager._ports_by_uuid[port.uuid] = port
-        
-        # prepare track if possible
-        track_name = ''
-        match self.program_name:
-            case 'ardour'|'Ardour':
-                if '/' in port.short_name:
-                    track_name = port.short_name.partition('/')[0]
-
-        if track_name:
-            track = self.tracks.from_name(track_name)
-            if track is None:
-                set_active = False
-                track_pos = self.current_position.tracks.get(track_name)
-                if track_pos is None:
-                    track_pos = self.current_position.copy(no_tracks=True)
-                    if (self.current_position.auto_split_tracks
-                            and track_name not in self.current_position.joined_tracks):
-                        set_active = True
-                else:
-                    set_active = True
-
-                track = Track(
-                    self, self.manager._next_group_id,
-                    track_name, track_pos)
-                self.manager._groups_by_id[self.manager._next_group_id] = \
-                    track
-                self.tracks.add(
-                    track, track_name, self.manager._next_group_id)
-                self.manager._next_group_id += 1
-            
-                if set_active:
-                    track.set_active(True)
-                    track.update_pos_to_parent()
-                
-            if track.is_active:
-                port.track = track
-            track.add_port(port)
+        self.check_port_track(port)
 
     def remove_port(self, port: Port):
         for track in self.tracks:
@@ -1194,14 +1207,13 @@ class Track(Group):
         if manage_canvas:
             self.remove_all_ports_from_canvas()
 
+        for port in self.ports:
+            port.track = self
+
         if yesno:
-            for port in self.ports:
-                port.track = self
             for portgroup in self.portgroups:
                 portgroup.track_id = self.group_id
         else:
-            for port in self.ports:
-                port.track = None
             for portgroup in self.portgroups:
                 portgroup.track_id = -1
 

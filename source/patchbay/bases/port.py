@@ -49,7 +49,7 @@ class Port:
 
     @property
     def group_id(self) -> int:
-        if self.track is not None:
+        if self.track is not None and self.track.is_active:
             return self.track.group_id
         return self.group.group_id
 
@@ -185,7 +185,7 @@ class Port:
             if hidden_sides & self.mode:
                 return
         else:
-            if self.track is not None:
+            if self.track is not None and self.track.is_active:
                 if (self.track.current_position.hidden_port_modes()
                         & self.mode):
                     return
@@ -226,7 +226,7 @@ class Port:
         if not self.in_canvas:
             return
 
-        if keep_in_track and self.track is not None:
+        if keep_in_track and self.track is not None and self.track.is_active:
             return
 
         patchcanvas.remove_port(self.group_id, self.port_id)

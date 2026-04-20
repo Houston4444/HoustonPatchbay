@@ -109,7 +109,7 @@ def _change_ptv_with_anim(
                 for port in group.ports:
                     # if port is in a track, it could be added to canvas
                     # when treating the track.
-                    if port.track is None:
+                    if port.track is None or not port.track.is_active:
                         port.add_to_canvas(
                             ignore_gpos=True,
                             hidden_sides=hidden_modes & new_hidden_modes)

@@ -1,5 +1,5 @@
 from enum import IntFlag, IntEnum, auto
-from typing import TYPE_CHECKING, Iterator
+from typing import TYPE_CHECKING
 
 from patshared import PortSubType, PortType, PortTypesViewFlag
 
