@@ -61,25 +61,21 @@ class Portgroup:
         if len(self.ports) < 2:
             return
 
+        ports_group_ids = set[int]()
         for port in self.ports:
             if not port.in_canvas:
                 return
-
-        if self.track_id == -2:
-            # portgroup can't be added to canvas because it has portgroups
-            # on different tracks (rare)
+            ports_group_ids.add(port.group_id)
+            
+        if len(ports_group_ids) != 1:
             return
-        elif self.track_id >= 0:
-            group_id = self.track_id
-        else:
-            group_id = self.group_id
-
-        self.in_canvas = True
 
         patchcanvas.add_portgroup(
-            group_id, self.portgroup_id,
+            ports_group_ids.pop(), self.portgroup_id,
             self.port_mode, self.ports[0].type, self.ports[0].subtype,
             [port.port_id for port in self.ports])
+
+        self.in_canvas = True
 
     def remove_from_canvas(self, keep_in_track=False):
         if self.manager.very_fast_operation:
