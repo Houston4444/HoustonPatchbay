@@ -310,6 +310,9 @@ class Group:
             track.ports.clear()
 
     def add_port(self, port: Port):
+        '''add port to the group. It will set the port graceful_name
+        with very simple conditions, check the port track if any,
+        and make few settings on the group itself'''
         port.group = self
         port_full_name = port.full_name
 
@@ -365,7 +368,7 @@ class Group:
         if portgroup in self.portgroups:
             portgroup.remove_from_canvas()
             for port in portgroup.ports:
-                port.portgroup_id = 0
+                port.portgroup = None
             self.portgroups.remove(portgroup)
 
     def portgroup_memory_added(self, portgroup_mem: PortgroupMem):
@@ -812,7 +815,7 @@ class Group:
             if (other_port.type is port.type
                     and other_port.subtype is port.subtype
                     and other_port.mode is port.mode
-                    and not other_port.portgroup_id
+                    and other_port.portgroup is None
                     and not other_port.prevent_stereo):
                 for pg_mem in self.manager.portgroups_memory.iter_portgroups(
                         self.name, port.type, port.mode):
@@ -1077,7 +1080,7 @@ class Group:
                         founded_ports = list[Port]()
 
                         for port in self.ports:
-                            if (not port.portgroup_id
+                            if (port.portgroup is None
                                     and port.type is port_type
                                     and port.mode is port_mode
                                     and port.short_name
@@ -1101,7 +1104,7 @@ class Group:
                     if portgroups_mdata:
                         pg_mdata = portgroups_mdata[-1]
 
-                    if not port.portgroup_id:
+                    if port.portgroup is None:
                         if (pg_mdata is not None
                                 and pg_mdata['pg_name'] == port.mdata_portgroup
                                 and pg_mdata['port_type'] == port.type
@@ -1140,7 +1143,7 @@ class Group:
                         founded_ports = list[Port]()
 
                         for port in self.ports:
-                            if (not port.portgroup_id
+                            if (port.portgroup is None
                                     and port.type is port_type
                                     and port.mode is port_mode
                                     and port.short_name

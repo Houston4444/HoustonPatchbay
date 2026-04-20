@@ -92,12 +92,9 @@ def add_port(mng: 'PatchbayManager', name: str, port_type: PortType,
 
         group = exst_port.group
         # remove portgroup first if port is in a portgroup
-        if exst_port.portgroup_id:
-            for portgroup in group.portgroups:
-                if portgroup.portgroup_id == exst_port.portgroup_id:
-                    group.remove_portgroup(portgroup)
-                    portgroup.remove_from_canvas()
-                    break
+        if exst_port.portgroup is not None:
+            group.remove_portgroup(exst_port.portgroup)
+            exst_port.portgroup.remove_from_canvas()
 
         exst_port.remove_from_canvas()
         group.remove_port(exst_port)
@@ -184,12 +181,9 @@ def remove_port(mng: 'PatchbayManager', name: str) -> int | None:
     group = port.group
 
     # remove portgroup first if port is in a portgroup
-    if port.portgroup_id:
-        for portgroup in group.portgroups:
-            if portgroup.portgroup_id == port.portgroup_id:
-                group.remove_portgroup(portgroup)
-                portgroup.remove_from_canvas()
-                break
+    if port.portgroup is not None:
+        group.remove_portgroup(port.portgroup)
+        port.portgroup.remove_from_canvas()
 
     port.remove_from_canvas()
     group.remove_port(port)
@@ -277,15 +271,12 @@ def rename_port(
             for conn in mng.connections.with_group(group):
                 conn.remove_from_canvas()
             
-            for portgroup in group.portgroups:
-                if portgroup.portgroup_id == port.portgroup_id:
-                    group.remove_portgroup(portgroup)
-                    break
+            if port.portgroup is not None:
+                group.remove_portgroup(port.portgroup)
                 
             port.remove_from_canvas()
 
         if track is not None and port in track.ports:
-            print('port', port, 'not in', track, 'anymore')
             track.ports.remove(port)              
 
         group.remove_port(port)

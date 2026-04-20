@@ -8,13 +8,14 @@ from .connection import Connection
 if TYPE_CHECKING:
     from ..patchbay_manager import PatchbayManager
     from .group import Group, Track
+    from .portgroup import Portgroup
 
 
 class Port:
     graceful_name = ''
     group: 'Group'
     track: 'Track | None'
-    portgroup_id = 0
+    portgroup: 'Portgroup | None'
     prevent_stereo = False
     last_digit_to_add = ''
     in_canvas = False
@@ -31,6 +32,7 @@ class Port:
         self.flags = flags
         self.uuid = uuid
         self.subtype = PortSubType.REGULAR
+        self.portgroup = None
         self.track = None
 
         match port_type:
@@ -52,6 +54,12 @@ class Port:
         if self.track is not None and self.track.is_active:
             return self.track.group_id
         return self.group.group_id
+
+    @property
+    def portgroup_id(self) -> int:
+        if self.portgroup is None:
+            return 0
+        return self.portgroup.portgroup_id
 
     @property
     def mode(self) -> PortMode:

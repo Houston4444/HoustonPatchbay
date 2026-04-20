@@ -26,7 +26,7 @@ class Portgroup:
 
         if len(self.ports) >= 2:
             for port in self.ports:
-                port.portgroup_id = portgroup_id
+                port.portgroup = self
 
     @property
     def type(self) -> PortType:
