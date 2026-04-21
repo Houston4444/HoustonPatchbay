@@ -7,9 +7,10 @@ from qtpy.QtGui import QIcon, QPixmap
 from qtpy.QtWidgets import (QDialog, QApplication, QInputDialog,
                              QMessageBox, QWidget, QFileDialog)
 
-
 from patshared import Naming, PrettyDiff
-from ..patchcanvas import patchcanvas, xdg
+import xdg
+
+from ..patchcanvas import patchcanvas
 from ..patchcanvas.theme_manager import ThemeData
 from ..patchcanvas.init_values import GridStyle
 from ..tools_widgets import is_dark_theme
