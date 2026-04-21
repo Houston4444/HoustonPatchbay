@@ -30,9 +30,13 @@ _logger = logging.getLogger(__name__)
 
 def track_name_from_port_name(program_name: str, port_short_name: str) -> str:
     match program_name:
-        case 'ardour'|'Ardour'|'mixbus'|'Mixbus':
+        case 'ardour'|'Ardour'|'mixbus'|'Mixbus'|'Zrythm':
             if '/' in port_short_name:
                 return port_short_name.partition('/')[0]
+        
+        case 'Carla-Single-Client':
+            if ':' in port_short_name:
+                return port_short_name.partition(':')[0]
     return ''
 
 
@@ -545,34 +549,36 @@ class Group:
 
     @cached_property
     def program_name(self) -> str:
-        for client_name in (
+        for program_name in (
                 'firewire_pcm', 'a2j',
+                'Carla-Single-Client',
                 'Hydrogen', 'ardour', 'Ardour', 'Mixbus', 'mixbus',
                 'Qtractor', 'SooperLooper', 'sooperlooper', 'Luppp',
                 'seq64', 'calfjackhost', 'rakarrack-plus',
-                'seq192', 'Non-Mixer', 'Non-Mixer-XT', 'jack_mixer'):
-            if self.name == client_name:
-                return client_name
+                'seq192', 'Non-Mixer', 'Non-Mixer-XT', 'jack_mixer',
+                'Zrythm'):
+            if self.name == program_name:
+                return program_name
 
-            if self.name.startswith(client_name + '.'):
-                return client_name
+            if self.name.startswith(program_name + '.'):
+                return program_name
 
             name = self.name.partition('/')[0]
-            if name == client_name:
-                return client_name
+            if name == program_name:
+                return program_name
 
-            if name.startswith(client_name + '_'):
-                if name.replace(client_name + '_', '', 1).isdigit():
-                    return client_name
+            if name.startswith(program_name + '_'):
+                if name.replace(program_name + '_', '', 1).isdigit():
+                    return program_name
 
             if ' (' in name and name.endswith(')'):
                 name = name.partition(' (')[0]
-                if name == client_name:
-                    return client_name
+                if name == program_name:
+                    return program_name
 
-                if name.startswith(client_name + '_'):
-                    if name.replace(client_name + '_', '', 1).isdigit():
-                        return client_name
+                if name.startswith(program_name + '_'):
+                    if name.replace(program_name + '_', '', 1).isdigit():
+                        return program_name
 
         return ''
 
@@ -738,6 +744,15 @@ class Group:
                         ('rakarrack-plus ', 'rakarrack-plus.')):
                     display_name = display_name[15:]
                 display_name = display_name.replace('_', ' ')
+
+            case 'Zrythm':
+                if '/' in display_name:
+                    if display_name.endswith((' L', ' R')):
+                        display_name = (
+                            display_name.rpartition('/')[0]
+                            + ' ' + display_name.rpartition(' ')[2])
+                    else:
+                        display_name = display_name.rpartition('/')[0]
 
             case _:
                 display_name = display_name.replace('_', ' ')
