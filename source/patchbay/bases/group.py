@@ -13,6 +13,8 @@ from patshared import (
     PortgroupMem,
     Naming
 )
+from icon_finder import get_icon_name_for
+
 from .elements import (
     JackPortFlag, CanvasOptimizeIt, Tracks, port_full_type_to_ptv_flag)
 from .port import Port
@@ -195,7 +197,7 @@ class Group:
 
     def _get_box_type_and_icon(self) -> tuple[BoxType, str]:
         box_type = BoxType.APPLICATION
-        icon_name = self.name.partition('.')[0].lower()
+        icon_name = get_icon_name_for(self.name.partition('.')[0])
 
         if self._is_hardware:
             box_type = BoxType.HARDWARE
