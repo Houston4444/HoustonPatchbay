@@ -113,14 +113,7 @@ class Callbacker(ProtoCallbacker):
             group.set_layout_mode(port_mode, layout_mode)
 
     def group_selected(self, group_id: int, port_mode: PortMode):
-        ...
-
-    def group_hide_box(self, group_id: int, port_mode: PortMode):
-        group = self.mng.get_group_from_id(group_id)
-        if group is None:
-            return
-
-        self.mng.set_group_hidden_sides(group_id, port_mode)
+        pass
 
     def group_menu_call(self, group_id: int, port_mode: PortMode):
         group = self.mng.get_group_from_id(group_id)

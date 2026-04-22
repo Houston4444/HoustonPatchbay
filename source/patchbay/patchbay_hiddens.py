@@ -11,53 +11,6 @@ if TYPE_CHECKING:
     from .patchbay_manager import PatchbayManager
 
 
-def set_group_hidden_sides(
-        mng: 'PatchbayManager', group_id: int, port_mode: PortMode):
-    group = mng.get_group_from_id(group_id)
-    if group is None:
-        return
-
-    group.current_position.set_hidden_port_mode(
-        group.current_position.hidden_port_modes() | port_mode)
-    group.save_current_position()
-
-    with CanvasOptimizeIt(mng, auto_redraw=True):
-        if port_mode & PortMode.OUTPUT:
-            for conn in mng.connections:
-                if conn.port_out.group_id == group_id:
-                    conn.remove_from_canvas()
-
-            for portgroup in group.portgroups:
-                if portgroup.port_mode is PortMode.OUTPUT:
-                    portgroup.remove_from_canvas()
-
-            for port in group.ports:
-                if port.mode is PortMode.OUTPUT:
-                    port.remove_from_canvas()
-
-            for conn in mng.connections:
-                if conn.port_out.group_id == group_id:
-                    conn.add_to_canvas()
-
-        if port_mode & PortMode.INPUT:
-            for conn in mng.connections:
-                if conn.port_in.group_id == group_id:
-                    conn.remove_from_canvas()
-
-            for portgroup in group.portgroups:
-                if portgroup.port_mode is PortMode.INPUT:
-                    portgroup.remove_from_canvas()
-
-            for port in group.ports:
-                if port.mode is PortMode.INPUT:
-                    port.remove_from_canvas()
-
-            for conn in mng.connections:
-                if conn.port_in.group_id is group_id:
-                    conn.add_to_canvas()
-
-    mng.sg.hidden_boxes_changed.emit()
-
 def restore_group_hidden_sides(
         mng: 'PatchbayManager', group_id: int,
         scene_pos: tuple[int, int] | None =None):
