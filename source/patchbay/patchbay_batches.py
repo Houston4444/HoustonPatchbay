@@ -182,8 +182,8 @@ def remove_port(mng: 'PatchbayManager', name: str) -> int | None:
 
     # remove portgroup first if port is in a portgroup
     if port.portgroup is not None:
-        group.remove_portgroup(port.portgroup)
         port.portgroup.remove_from_canvas()
+        group.remove_portgroup(port.portgroup)
 
     port.remove_from_canvas()
     group.remove_port(port)
