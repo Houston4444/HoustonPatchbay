@@ -989,7 +989,8 @@ def _set_title_positions(box: 'BoxWidget'):
             case PortMode.OUTPUT:
                 if box.has_top_icon and not box._title_under_icon:
                     for title_line in box._title_lines:
-                        if title_line.y >= top + icon_size + 6:
+                        if (title_line.y - box_theme.font.pixelSize()
+                                >= top + icon_size + 6):
                             title_line.x = left + 4
                         else:
                             title_line.x = left + 3 + icon_size + 3
