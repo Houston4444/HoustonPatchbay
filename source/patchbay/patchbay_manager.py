@@ -813,12 +813,16 @@ class PatchbayManager:
             if (text.lower() not in group.name.lower()
                     and text.lower() not in group.graceful_name.lower()):
                 opac_grp_ids.add(group.group_id)
+                
+                for track in [t for t in group.tracks if t.is_active]:
+                    if text.lower() not in track.name.lower():
+                        opac_grp_ids.add(track.group_id)
 
         patchcanvas.semi_hide_groups(opac_grp_ids)
 
         n_boxes = 0
 
-        for group in self.groups:
+        for group in self.groups_and_tracks(active_only=True):
             if group.group_id not in opac_grp_ids:
                 n_grp_boxes = group.get_number_of_boxes()
 
