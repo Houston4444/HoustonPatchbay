@@ -9,11 +9,11 @@ if QT5 and not TYPE_CHECKING:
 else:
     from qtpy.QtGui import QAction
 
-from patchbay.bases.elements import CanvasOptimizeIt
 
 from patshared import PortMode, BoxLayoutMode
 
 from ..cancel_mng import CancelOp, CancellableAction
+from ..bases.elements import CanvasOptimizeIt
 from ..bases.group import Group, Track
 from ..patchcanvas import canvas, patchcanvas, utils
 from ..dialogs.custom_name_dialog import CustomNameDialog
