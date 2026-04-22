@@ -1,4 +1,4 @@
-from typing import Optional, Any, Union, Iterator
+from typing import Any, Iterator
 
 from .base_enums import PortTypesViewFlag
 from .group_pos import GroupPos
@@ -86,7 +86,7 @@ class ViewsDict(dict[int, ViewData]):
         if self._ensure_one_view:
             self[1] = ViewData(PortTypesViewFlag.ALL)
 
-    def first_view_num(self) -> Optional[int]:
+    def first_view_num(self) -> int | None:
         """Return the first view index.
 
         Guaranteed when `ensure_one_view` is True.
@@ -195,7 +195,7 @@ class ViewsDict(dict[int, ViewData]):
 
     def add_old_json_gpos(
             self, old_gpos_dict: dict,
-            version: Optional[tuple[int, int, int]]=None):
+            version: tuple[int, int, int] | None =None):
         if version is None:
             gpos = GroupPos.from_serialized_dict(old_gpos_dict)
         else:
@@ -212,14 +212,14 @@ class ViewsDict(dict[int, ViewData]):
 
         ptv_dict[gpos.group_name] = gpos
 
-    def short_data_states(self) -> dict[int, dict[str, Union[str, bool]]]:
+    def short_data_states(self) -> dict[int, dict[str, str | bool]]:
         """Return a compact representation of views for short OSC messages.
 
         Returns a mapping index -> {name, default_ptv, is_white_list} with
         only fields that differ from defaults included.
         """
 
-        out_dict = dict[int, dict[str, Union[str, bool]]]()
+        out_dict = dict[int, dict[str, str | bool]]()
 
         for index, view_data in self.items():
             view_dict = {}
@@ -234,7 +234,7 @@ class ViewsDict(dict[int, ViewData]):
         return out_dict
 
     def update_from_short_data_states(
-            self, data_states: dict[str, dict[str, Union[str, bool]]]):
+            self, data_states: dict[str, dict[str, str | bool]]):
 
         if not isinstance(data_states, dict):
             return
@@ -316,7 +316,7 @@ class ViewsDict(dict[int, ViewData]):
 
     def get_group_pos(
             self, view_num: int, ptv: PortTypesViewFlag,
-            group_name: str) -> Optional[GroupPos]:
+            group_name: str) -> GroupPos | None:
         view_data = self.get(view_num)
         if view_data is None:
             return
@@ -328,13 +328,12 @@ class ViewsDict(dict[int, ViewData]):
         return ptv_dict.get(group_name)
 
     def iter_group_poses(
-            self, view_num: Optional[int] =None) -> Iterator[GroupPos]:
+            self, view_num: int | None =None) -> Iterator[GroupPos]:
         if view_num is None:
             for view_data in self.values():
                 for ptv_dict in view_data.ptvs.values():
                     for gpos in ptv_dict.values():
                         yield gpos
-
             return
 
         view_data = self.get(view_num)
@@ -346,8 +345,8 @@ class ViewsDict(dict[int, ViewData]):
                 yield gpos
 
     def add_view(
-            self, view_num: Optional[int]=None,
-            default_ptv=PortTypesViewFlag.ALL) -> Optional[int]:
+            self, view_num: int | None =None,
+            default_ptv=PortTypesViewFlag.ALL) -> int | None:
         if view_num is None:
             new_num = 1
             while True:
@@ -414,7 +413,7 @@ class ViewsDictEnsureOne(ViewsDict):
         self._ensure_one()
 
     def update_from_short_data_states(
-            self, data_states: dict[str, dict[str, Union[str, bool]]]):
+            self, data_states: dict[str, dict[str, str | bool]]):
         super().update_from_short_data_states(data_states)
         self._ensure_one()
 
