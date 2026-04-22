@@ -1,8 +1,14 @@
 from typing import TYPE_CHECKING, cast
 
+from qtpy import QT5
 from qtpy.QtWidgets import QMenu, QApplication
 from qtpy.QtCore import Slot # type:ignore
-from qtpy.QtGui import QIcon, QPixmap, QAction
+from qtpy.QtGui import QIcon, QPixmap
+if QT5 and not TYPE_CHECKING:
+    from qtpy.QtWidgets import QAction
+else:
+    from qtpy.QtGui import QAction
+
 from patchbay.bases.elements import CanvasOptimizeIt
 
 from patshared import PortMode, BoxLayoutMode

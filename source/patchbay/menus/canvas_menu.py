@@ -1,9 +1,15 @@
 
 from typing import TYPE_CHECKING, cast
 
-from qtpy.QtGui import QIcon, QDesktopServices, QPixmap, QAction
+from qtpy import QT5
+
+from qtpy.QtGui import QIcon, QDesktopServices, QPixmap
 from qtpy.QtWidgets import QMenu, QApplication
 from qtpy.QtCore import QLocale, QUrl, Slot # type:ignore
+if QT5 and not TYPE_CHECKING:
+    from qtpy.QtWidgets import QAction
+else:
+    from qtpy.QtGui import QAction
 
 from ..bases.group import Track
 from .. import patchcanvas
