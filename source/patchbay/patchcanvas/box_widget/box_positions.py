@@ -521,29 +521,29 @@ def _choose_box_layout(
         for i in range(1, lines_choice_max + 1):
             box_layouts.append(
                 BoxLayout(i, BoxLayoutMode.LARGE,
-                            TitleOn.SIDE, all_title_templates[i]))
+                          TitleOn.SIDE, all_title_templates[i]))
 
         if box.has_top_icon:
             for i in range(1, lines_choice_max + 1):
                 box_layouts.append(
                     BoxLayout(i, BoxLayoutMode.LARGE,
-                                TitleOn.SIDE_UNDER_ICON,
-                                all_title_templates[i]))
+                              TitleOn.SIDE_UNDER_ICON,
+                              all_title_templates[i]))
 
         for i in range(1, lines_choice_max + 1):
             box_layouts.append(
                 BoxLayout(i, BoxLayoutMode.HIGH,
-                            TitleOn.TOP, all_title_templates[i]))
+                          TitleOn.TOP, all_title_templates[i]))
     else:
         for i in range(1, lines_choice_max + 1):
             box_layouts.append(
                 BoxLayout(i, BoxLayoutMode.LARGE,
-                            TitleOn.TOP, all_title_templates[i]))
+                          TitleOn.TOP, all_title_templates[i]))
 
         for i in range(1, lines_choice_max + 1):
             box_layouts.append(
                 BoxLayout(i, BoxLayoutMode.HIGH,
-                            TitleOn.TOP, all_title_templates[i]))
+                          TitleOn.TOP, all_title_templates[i]))
 
     # sort areas and choose the first one (the littlest area)
     box_layouts.sort()
