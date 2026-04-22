@@ -197,35 +197,35 @@ class Group:
 
     def _get_box_type_and_icon(self) -> tuple[BoxType, str]:
         box_type = BoxType.APPLICATION
-        icon_name = get_icon_name_for(self.name.partition('.')[0])
-
-        if self._is_hardware:
-            box_type = BoxType.HARDWARE
-            icon_name = ''
-            if self.a2j_group or self.graceful_name in ("Midi-Bridge", "a2j"):
-                icon_name = "a2j"
-
-        if self.client_icon:
-            box_type = BoxType.CLIENT
-            icon_name = self.client_icon
-
-        if (self.name.startswith("PulseAudio ")
-                and not self.client_icon):
-            if "sink" in self.name.lower():
-                box_type = BoxType.MONITOR
-                icon_name = 'monitor_playback'
-            elif "source" in self.name.lower():
-                box_type = BoxType.MONITOR
-                icon_name = 'monitor_capture'
-
-        elif (self.name.endswith(" Monitor")
-                and not self.client_icon):
-            # this group is (probably) a pipewire Monitor group
-            box_type = BoxType.MONITOR
-            icon_name = 'monitor_playback'
+        icon_name = ''
 
         if self.mdata_icon:
             icon_name = self.mdata_icon
+
+        elif self._is_hardware:
+            box_type = BoxType.HARDWARE
+            if self.a2j_group or self.graceful_name in ("Midi-Bridge", "a2j"):
+                icon_name = "a2j"
+
+        elif self.client_icon:
+            box_type = BoxType.CLIENT
+            icon_name = self.client_icon
+
+        else:
+            if self.name.startswith("PulseAudio "):
+                if "sink" in self.name.lower():
+                    box_type = BoxType.MONITOR
+                    icon_name = 'monitor_playback'
+                elif "source" in self.name.lower():
+                    box_type = BoxType.MONITOR
+                    icon_name = 'monitor_capture'
+
+            elif self.name.endswith(" Monitor"):
+                # this group is (probably) a pipewire Monitor group
+                box_type = BoxType.MONITOR
+                icon_name = 'monitor_playback'
+            else:
+                icon_name = get_icon_name_for(self.name.partition('.')[0])
 
         return (box_type, icon_name)
 
