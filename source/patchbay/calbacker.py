@@ -80,7 +80,6 @@ class Callbacker(ProtoCallbacker):
                 group.current_position.boxes[port_mode].pos = (x, y)
                 group.set_group_position(
                     group.current_position, PortMode.NULL, PortMode.NULL)
-                group.save_current_position()
                 patchcanvas.repulse_from_group(group_id, port_mode)
 
     def group_box_pos_changed(

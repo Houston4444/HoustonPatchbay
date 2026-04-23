@@ -1282,3 +1282,6 @@ class Track(Group):
     def _get_box_type_and_icon(self) -> tuple[BoxType, str]:
         box_type, icon_name = self.parent_group._get_box_type_and_icon()
         return BoxType.TRACK, icon_name
+    
+    def save_current_position(self):
+        self.manager.save_group_position(self.parent_group.current_position)
