@@ -5,7 +5,7 @@ from qtpy.QtCore import (
     Qt, Signal, Slot, QPoint, QSize, QRectF, QPointF) # type:ignore
 from qtpy.QtGui import (
     QWheelEvent, QKeyEvent, QMouseEvent, QPaintEvent,
-    QPainter, QPen, QPainterPath, QPixmap, QColor)
+    QPainter, QPen, QPainterPath, QPixmap, QColor, QFont)
 
 if TYPE_CHECKING:
     # FIX : QAction not found by pylance
@@ -19,6 +19,7 @@ from qtpy.QtWidgets import (
 from patshared import PortTypesViewFlag
 
 from .patchcanvas import patchcanvas, AliasingReason
+from .patchcanvas.utils import polyline
 from .bases.elements import TransportViewMode
 
 if TYPE_CHECKING:
@@ -230,6 +231,7 @@ class TypeViewCheckBox(QCheckBox):
 
     def __init__(self, parent=None):
         super().__init__(parent)
+        self.setMaximumWidth(50)
 
     def mousePressEvent(self, event: QMouseEvent) -> None:
         if event.button() in (Qt.MouseButton.LeftButton, Qt.MouseButton.RightButton):
@@ -240,6 +242,108 @@ class TypeViewCheckBox(QCheckBox):
             return
 
         super().mousePressEvent(event)
+        
+    def paintEvent(self, event):
+        theme = patchcanvas.canvas.theme
+        # port_height = int(theme.port_height * 1.15)
+        port_height = 18
+        port_theme = theme.port
+        line_theme = theme.line
+
+        TOP_SPACE = 6
+        lh = port_theme.fill_pen.widthF() * 0.5
+        top = lh + TOP_SPACE
+        bottom = port_height - lh + TOP_SPACE
+        left = lh
+        right = self.width() - lh
+        arrow_base = lh + port_height * 0.5
+        arrow_mid = lh + port_height * 0.25
+        y_arrow_pic = TOP_SPACE + port_height * 0.5
+        
+        points = []
+
+        match self.text():
+            case 'Audio':
+                port_theme = port_theme.audio
+                line_theme = line_theme.audio
+                points = [(arrow_base, top),
+                          (right, top),
+                          (right, bottom),
+                          (arrow_base, bottom),
+                          (left, y_arrow_pic),
+                          (arrow_base, top)]
+            case 'Midi':
+                port_theme = port_theme.midi
+                line_theme = line_theme.midi
+                points = [
+                    (right, top),
+                    (arrow_base, top),
+                    (arrow_base + (arrow_mid - arrow_base) * 0.62,
+                     TOP_SPACE + port_height * 0.15),
+                    (arrow_mid, TOP_SPACE + port_height * 0.40),
+                    (arrow_mid, TOP_SPACE + port_height * 0.60),
+                    (arrow_base + (arrow_mid - arrow_base) * 0.62,
+                     TOP_SPACE + port_height * 0.85),
+                    (arrow_base, bottom),
+                    (right, bottom),
+                    (right, top)]
+            case 'CV':
+                port_theme = port_theme.cv
+                line_theme = line_theme.audio
+                points = [(arrow_base, top),
+                          (right, top),
+                          (right, bottom),
+                          (arrow_base, bottom)]
+                
+            case 'Alsa':
+                port_theme = port_theme.alsa
+                line_theme = line_theme.alsa
+                points = [(arrow_mid, top),
+                          (right, top),
+                          (right, bottom),
+                          (arrow_mid, bottom)]
+
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+        painter.setPen(port_theme.fill_pen)
+        painter.setBrush(port_theme.background_color)
+        
+        painter.drawPolygon(polyline(points))
+        match self.text():
+            case 'CV':
+                divid = (bottom - top) / 12
+                painter.drawPolyline(polyline(
+                    [(arrow_base, top + divid * 5),
+                    (left, top + divid * 5),
+                    (left, top + divid * 7),
+                    (arrow_base, top + divid * 7)]))
+            case 'Alsa':
+                scene_col = theme.scene_background_color
+                circle_bg_col = QColor(scene_col)
+                circle_bg_col.setAlphaF(1.0)
+                painter.setBrush(circle_bg_col)
+                radius = abs(left - arrow_mid) * 0.667
+                painter.drawEllipse(
+                    QPointF(arrow_mid, TOP_SPACE + port_height / 2.0),
+                    radius, radius)
+
+        font = QFont(port_theme.font)
+        font.setPixelSize(12)
+        
+        painter.setFont(font)
+        text_y_pos = TOP_SPACE + ((port_height - 0.667 * font.pixelSize()) / 2
+                      + font.pixelSize() * 0.667)
+        painter.setPen(QPen(port_theme.text_color))
+        painter.drawText(
+            QPointF(3.0 + port_height * 0.5, text_y_pos), self.text())
+        
+        if self.isChecked():
+            painter.setPen(QPen(line_theme.background_color, 3.0))
+            painter.drawLine(
+                QPointF(1.5 + port_height * 0.5, TOP_SPACE + port_height + 4.0),
+                QPointF(self.width() - 1.5, TOP_SPACE + port_height + 4.0))
+
+        painter.end()
 
 
 class ViewsComboBox(QComboBox):

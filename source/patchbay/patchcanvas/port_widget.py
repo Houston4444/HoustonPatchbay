@@ -533,7 +533,6 @@ class PortWidget(ConnectableWidget):
                 painter.setPen(poly_pen)
 
                 radius = abs(x_arrowhead - x_arrowmid) * 0.667
-
                 painter.drawEllipse(
                     QPointF(x_arrowmid, p_height / 2.0), radius, radius)
 
