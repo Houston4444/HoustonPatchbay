@@ -1216,8 +1216,8 @@ class Track(Group):
         'The group name, but it will be different if this is a Track'
         return f'{self.parent_group.name}:{self.name}'
     
-    def set_active(self, yesno: bool, manage_canvas=True):
-        if yesno is self.is_active:
+    def set_active(self, yesno: bool, manage_canvas=True, force=False):
+        if not force and yesno is self.is_active:
             return
 
         self.is_active = yesno

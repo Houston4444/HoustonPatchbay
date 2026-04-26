@@ -40,7 +40,7 @@ def _change_ptv_with_anim(
         groups_and_pos = dict[Group, tuple[GroupPos, PortMode, PortMode]]()
 
         pv_group_gpos = None
-        for group, new_gpos in _groups_and_gpos(mng):
+        for group, new_gpos in _groups_and_gpos_reversed(mng):
             if isinstance(group, Track):
                 if new_gpos is None:
                     if not group.is_active:
@@ -55,11 +55,15 @@ def _change_ptv_with_anim(
                     group.parent_group.joining_tracks.add(group.name)
                 else:
                     group.parent_group.joining_tracks.discard(group.name)
-                    group.set_active(True)
+                    group.set_active(True, force=True)
+                
+                keep_in_track = False
             else:
                 pv_group_gpos = new_gpos
                 if TYPE_CHECKING:
                     new_gpos = cast(GroupPos, new_gpos)
+                
+                keep_in_track = True
 
             in_outs_ptv = group.ins_ptv | group.outs_ptv
             hidden_modes = group.current_position.hidden_port_modes()
@@ -92,12 +96,14 @@ def _change_ptv_with_anim(
 
                 for portgroup in group.portgroups:
                     if portgroup.port_mode & redraw_mode:
-                        portgroup.remove_from_canvas()
+                        portgroup.remove_from_canvas(
+                            keep_in_track=keep_in_track)
 
                 for port in group.ports:
                     if port.mode & redraw_mode:
-                        port.remove_from_canvas()
-
+                        port.remove_from_canvas(
+                            keep_in_track=keep_in_track)
+                
                 if (new_gpos.is_splitted()
                         is not group.current_position.is_splitted()):
                     group.add_to_canvas(gpos=new_gpos)
@@ -106,13 +112,17 @@ def _change_ptv_with_anim(
 
                 # only ports which should be hidden in previous and next
                 # view will be hidden (before to animate).
-                for port in group.ports:
-                    # if port is in a track, it could be added to canvas
-                    # when treating the track.
-                    if port.track is None or not port.track.is_active:
+                if isinstance(group, Track):
+                    for port in group.ports:
                         port.add_to_canvas(
                             ignore_gpos=True,
                             hidden_sides=hidden_modes & new_hidden_modes)
+                else:
+                    for port in group.ports:
+                        if port.track is None or not port.track.is_active:
+                            port.add_to_canvas(
+                                ignore_gpos=True,
+                                hidden_sides=hidden_modes & new_hidden_modes)
 
                 for portgroup in group.portgroups:
                     portgroup.add_to_canvas()
