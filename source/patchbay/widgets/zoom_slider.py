@@ -1,8 +1,8 @@
 from typing import TYPE_CHECKING
 
-from qtpy.QtCore import QSize, QPoint, QPointF, Qt, Slot # type:ignore
+from qtpy.QtCore import QSize, QPoint, QPointF, Qt, Slot, QTimer # type:ignore
 from qtpy.QtGui import QWheelEvent, QMouseEvent, QColor, QPainter, QPen, QFont
-from qtpy.QtWidgets import QSlider, QSizePolicy, QApplication, QToolTip
+from qtpy.QtWidgets import QSlider, QSizePolicy, QApplication
 
 from ..patchcanvas import AliasingReason
 from ..patchcanvas.utils import polyline
@@ -31,25 +31,38 @@ class ZoomSlider(QSlider):
         self.setMaximum(1000)
         self.setValue(500)
 
-        self.setSingleStep(10)
-        self.setPageStep(10)
+        # self.setSingleStep(10)
+        # self.setPageStep(10)
         self.setOrientation(Qt.Orientation.Horizontal)
-        self.setInvertedAppearance(False)
-        self.setInvertedControls(False)
-        self.setTickPosition(QSlider.TickPosition.TicksBelow)
-        self.setTickInterval(500)
+        # self.setInvertedAppearance(False)
+        # self.setInvertedControls(False)
+        # self.setTickPosition(QSlider.TickPosition.TicksBelow)
+        # self.setTickInterval(500)
         self.setSizePolicy(QSizePolicy(QSizePolicy.Policy.Minimum,
                                        QSizePolicy.Policy.Minimum))
 
+        self._text_timer = QTimer()
+        self._text_timer.setSingleShot(True)
+        self._text_timer.setInterval(2000)
+        self._text_timer.timeout.connect(self._hide_text)
+
         self._last_mouse_pos = QPoint()
+        self._show_text = False
         self.valueChanged.connect(self._value_changed)
 
     def _show_tool_tip(self):
-        win = QApplication.activeWindow()
-        if win and win.isFullScreen():
-            return
-        string = "  Zoom: %i%%  " % int(self.zoom_percent())
-        QToolTip.showText(self.mapToGlobal(QPoint(0, 12)), string)
+        self._show_text = True
+        self.update()
+        self._text_timer.start()
+        # win = QApplication.activeWindow()
+        # if win and win.isFullScreen():
+        #     return
+        # string = "  Zoom: %i%%  " % int(self.zoom_percent())
+        # QToolTip.showText(self.mapToGlobal(QPoint(0, 12)), string)
+
+    def _hide_text(self):
+        self._show_text = False
+        self.update()
 
     @Slot(int)
     def _value_changed(self, value: int):
@@ -82,6 +95,14 @@ class ZoomSlider(QSlider):
 
     def _scale_changed(self, ratio: float):
         self.set_percent(ratio * 100)
+
+    def enterEvent(self, event):
+        self._show_text = True
+        super().enterEvent(event)
+
+    def leaveEvent(self, event):
+        self._show_text = False
+        super().leaveEvent(event)
 
     def mouseDoubleClickEvent(self, event):
         if self._mng is None:
@@ -190,12 +211,13 @@ class ZoomSlider(QSlider):
         painter.setBrush(loope_col)
         painter.drawPolygon(polyline(loupe))
         
-        painter.setPen(QPen(fill_col, 1.0))
-        font = QFont(self.font())
-        font.setPixelSize(10)
-        painter.setFont(font)
-        painter.drawText(
-            QPointF(3.0, 3.0 + font.pixelSize()),
-            "%.0f %%" % self.zoom_percent())
+        if self._show_text:
+            painter.setPen(QPen(fill_col, 1.0))
+            font = QFont(self.font())
+            font.setPixelSize(10)
+            painter.setFont(font)
+            painter.drawText(
+                QPointF(3.0, 3.0 + font.pixelSize()),
+                "%.0f %%" % self.zoom_percent())
         
         painter.end()
