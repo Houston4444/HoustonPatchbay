@@ -24,8 +24,13 @@ class ZoomSlider(QSlider):
 
         self._mng = None
         self._moving = False
+        self._zoom = 100.0
         self.setMinimumSize(QSize(40, 0))
         self.setMaximumSize(QSize(180, 16777215))
+
+        self._MIN = 20.0
+        self._MAX = 300.0
+        self._CENTER = 100.0
 
         self.setMinimum(0)
         self.setMaximum(1000)
@@ -94,7 +99,10 @@ class ZoomSlider(QSlider):
         self._show_tool_tip()
 
     def _scale_changed(self, ratio: float):
-        self.set_percent(ratio * 100)
+        self._zoom = ratio * 100.0
+        self._show_text = True
+        self._text_timer.start()
+        self.update()
 
     def enterEvent(self, event):
         self._show_text = True
@@ -110,6 +118,7 @@ class ZoomSlider(QSlider):
             return
 
         self._mng.zoom_fit()
+        self.update()
 
     def contextMenuEvent(self, event):
         if self._mng is None:
@@ -117,31 +126,50 @@ class ZoomSlider(QSlider):
             return
 
         self._mng.zoom_reset()
+        self.update()
 
     def wheelEvent(self, event: QWheelEvent):
-        direction = 1 if event.angleDelta().y() > 0 else -1
+        step = 1 if event.angleDelta().y() > 0 else -1
+        if not (QApplication.keyboardModifiers()
+                & Qt.KeyboardModifier.ControlModifier):
+            step *= 5
 
-        if QApplication.keyboardModifiers() & Qt.KeyboardModifier.ControlModifier:
-            self.set_percent(self.zoom_percent() + direction)
+        if step > 0:
+            if self._zoom < self._MAX:
+                self._zoom += step
+                self._zoom = min(self._zoom, self._MAX)
         else:
-            self.set_percent(self.zoom_percent() + direction * 5)
-        self._show_tool_tip()
+            if self._zoom > self._MIN:
+                self._zoom += step
+                self._zoom = max(self._zoom, self._MIN)
+        
+        if self._mng is not None:
+            self._mng.set_zoom(self._zoom)
+
+        self.update()
 
     def mousePressEvent(self, event: QMouseEvent):
         self._last_mouse_pos = event.pos()
 
     def mouseMoveEvent(self, event: QMouseEvent):
         mouse_pos = event.pos()
-        self._moving = True
-        self.setValue(
-            self.value()
-            + 10 * (mouse_pos.x() - self._last_mouse_pos.x()))
+        
+        step = 5 * (mouse_pos.x() - self._last_mouse_pos.x())
+        if step > 0:
+            if self._zoom < self._MAX:
+                self._zoom += step
+                self._zoom = min(self._zoom, self._MAX)
+        else:
+            if self._zoom > self._MIN:
+                self._zoom += step
+                self._zoom = max(self._zoom, self._MIN)
 
-        self._moving = False
         self._last_mouse_pos = mouse_pos
         
-        if self._mng is not None and event.buttons():
-            self._mng.start_aliasing_check(AliasingReason.SCROLL_BAR_MOVE)
+        if self._mng is not None:
+            if event.buttons():
+                self._mng.start_aliasing_check(AliasingReason.SCROLL_BAR_MOVE)
+            self._mng.set_zoom(self._zoom)
         
         self.update()
 
@@ -154,14 +182,19 @@ class ZoomSlider(QSlider):
     def paintEvent(self, event):
         BAND_WIDTH = 20
         TOP = 8
-        loupe_side = 7 * (self.zoom_percent() / 100) ** 0.25
+        zoom = min(max(self._zoom, self._MIN), self._MAX)
+        loupe_side = 7 * (zoom / 100) ** 0.25
         left = loupe_side
         right = self.width() - loupe_side
-        if self.value() > 500:
-            right -= (self.value() - 500) * loupe_side * 0.002
+
+        lit = map_float_to(zoom, self._MIN, self._CENTER, 0.0, 0.5)
+        big = map_float_to(zoom, self._CENTER, self._MAX, 0.5, 1.0)
+        rat = (zoom - self._MIN) / (self._MAX - self._MIN)
+        ratio = rat * big + (1 - rat) * lit
+        if ratio > 0.5:
+            right -= (ratio - 0.5) * loupe_side * 2
         
-        zm_center = map_float_to(
-            self.value(), 0, 1000, left, right)
+        zm_center = map_float_to(ratio, 0.0, 1.0, left, right)
 
         fill_col = QColor(self.palette().buttonText().color())
         painter = QPainter(self)
@@ -178,7 +211,7 @@ class ZoomSlider(QSlider):
 
         done_ramp = [
             (zm_center, TOP + BAND_WIDTH
-             - BAND_WIDTH * map_float_to(self.value(), 0, 1000, 0.25, 1.0)),
+             - BAND_WIDTH * map_float_to(ratio, 0.0, 1.0, 0.25, 1.0)),
             (zm_center, TOP + BAND_WIDTH * 1.0),
             (left, TOP + BAND_WIDTH * 1.0),
             (left, TOP + BAND_WIDTH * 0.75)]
@@ -189,7 +222,7 @@ class ZoomSlider(QSlider):
         painter.drawPolygon(polyline(done_ramp))
 
         topi = ((loupe_side * 2 - BAND_WIDTH) * 0.5
-                + ((self.value() - 500)/500) * 6)
+                + 12 * (ratio - 0.5))
         lh = 0.5
         
         loupe = [
@@ -212,12 +245,15 @@ class ZoomSlider(QSlider):
         painter.drawPolygon(polyline(loupe))
         
         if self._show_text:
+            if self._zoom - int(self._zoom) == 0.0:
+                text = "%.0f %%" % self._zoom
+            else:
+                text = "%.1f %%" % self._zoom
+
             painter.setPen(QPen(fill_col, 1.0))
             font = QFont(self.font())
             font.setPixelSize(10)
             painter.setFont(font)
-            painter.drawText(
-                QPointF(3.0, 3.0 + font.pixelSize()),
-                "%.0f %%" % self.zoom_percent())
+            painter.drawText(QPointF(3.0, 3.0 + font.pixelSize()), text)
         
         painter.end()
