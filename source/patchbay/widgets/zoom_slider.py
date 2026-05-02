@@ -135,7 +135,10 @@ class ZoomSlider(QSlider):
         TOP = 8
         loupe_side = 7 * (self.zoom_percent() / 100) ** 0.25
         left = loupe_side
-        right = self.width() - loupe_side - loupe_side * self.value() * 0.001
+        right = self.width() - loupe_side
+        if self.value() > 500:
+            right -= (self.value() - 500) * loupe_side * 0.002
+        
         zm_center = map_float_to(
             self.value(), 0, 1000, left, right)
 
@@ -164,20 +167,22 @@ class ZoomSlider(QSlider):
         painter.setBrush(done_col)
         painter.drawPolygon(polyline(done_ramp))
 
-        topi = (loupe_side * 2 - BAND_WIDTH) * 0.5 + ((self.value() - 500)/500) * 6
+        topi = ((loupe_side * 2 - BAND_WIDTH) * 0.5
+                + ((self.value() - 500)/500) * 6)
         lh = 0.5
         
-        loupe = [(zm_center - 0.75 * loupe_side + lh, TOP - topi + lh),
-                 (zm_center + loupe_side * 0.75 - lh, TOP - topi + lh),
-                 (zm_center + loupe_side - lh, TOP - topi + 0.25 * loupe_side),
-                 (zm_center + loupe_side - lh, TOP - topi + 1.75 * loupe_side),
-                 (zm_center + loupe_side * 2.0, TOP - topi + 2.75 * loupe_side),
-                 (zm_center + loupe_side * 1.75, TOP - topi + 3.0 * loupe_side),
-                 (zm_center + loupe_side * 0.75, TOP + 2 * loupe_side - topi - lh),
-                 (zm_center - loupe_side * 0.75 + lh, TOP + 2 * loupe_side - topi - lh),
-                 (zm_center - loupe_side + lh, TOP - topi + 1.75 * loupe_side),
-                 (zm_center - loupe_side + lh, TOP - topi + 0.25 * loupe_side),
-                 (zm_center - 0.75 * loupe_side + lh, TOP - topi + lh)]
+        loupe = [
+            (zm_center - 0.75 * loupe_side + lh, TOP - topi + lh),
+            (zm_center + loupe_side * 0.75 - lh, TOP - topi + lh),
+            (zm_center + loupe_side - lh, TOP - topi + 0.25 * loupe_side),
+            (zm_center + loupe_side - lh, TOP - topi + 1.75 * loupe_side),
+            (zm_center + loupe_side * 2.0, TOP - topi + 2.75 * loupe_side),
+            (zm_center + loupe_side * 1.75, TOP - topi + 3.0 * loupe_side),
+            (zm_center + loupe_side * 0.75, TOP + 2 * loupe_side - topi - lh),
+            (zm_center - loupe_side * 0.75 + lh, TOP + 2 * loupe_side - topi - lh),
+            (zm_center - loupe_side + lh, TOP - topi + 1.75 * loupe_side),
+            (zm_center - loupe_side + lh, TOP - topi + 0.25 * loupe_side),
+            (zm_center - 0.75 * loupe_side + lh, TOP - topi + lh)]
         
         painter.setPen(Qt.PenStyle.NoPen)
         loope_col = QColor(self.palette().brightText())
