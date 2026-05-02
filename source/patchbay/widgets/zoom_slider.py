@@ -134,17 +134,19 @@ class ZoomSlider(QSlider):
         BAND_WIDTH = 20
         TOP = 8
         loupe_side = 7 * (self.zoom_percent() / 100) ** 0.25
+        left = loupe_side
+        right = self.width() - loupe_side - loupe_side * self.value() * 0.001
         zm_center = map_float_to(
-            self.value(), 0, 1000, loupe_side, self.width() - loupe_side)
+            self.value(), 0, 1000, left, right)
 
         fill_col = QColor(self.palette().buttonText().color())
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
 
-        ramp = [(self.width() - loupe_side, TOP),
-                (self.width() - loupe_side, TOP + BAND_WIDTH),
-                (loupe_side, TOP + BAND_WIDTH),
-                (loupe_side, TOP + BAND_WIDTH * 0.75)]
+        ramp = [(right, TOP),
+                (right, TOP + BAND_WIDTH),
+                (left, TOP + BAND_WIDTH),
+                (left, TOP + BAND_WIDTH * 0.75)]
         
         painter.setPen(Qt.PenStyle.NoPen)
         painter.setBrush(self.palette().base().color())
@@ -154,8 +156,8 @@ class ZoomSlider(QSlider):
             (zm_center, TOP + BAND_WIDTH
              - BAND_WIDTH * map_float_to(self.value(), 0, 1000, 0.25, 1.0)),
             (zm_center, TOP + BAND_WIDTH * 1.0),
-            (loupe_side, TOP + BAND_WIDTH * 1.0),
-            (loupe_side, TOP + BAND_WIDTH * 0.75)]
+            (left, TOP + BAND_WIDTH * 1.0),
+            (left, TOP + BAND_WIDTH * 0.75)]
 
         done_col = self.palette().highlight().color()
         done_col.setAlphaF(0.25)
