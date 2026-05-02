@@ -14,7 +14,7 @@ if TYPE_CHECKING:
 from qtpy.QtWidgets import (
     QApplication, QProgressBar, QSlider, QToolTip,
     QLineEdit, QLabel, QMenu, QAction, QCheckBox, # type:ignore
-    QComboBox, QFrame, QWidget)
+    QComboBox, QFrame, QWidget, QSizePolicy)
 
 from patshared import PortTypesViewFlag
 
@@ -61,38 +61,36 @@ class ProgressBarDsp(QProgressBar):
 
 class ZoomSlider(QSlider):
     def __init__(self, parent):
-        QSlider.__init__(self, parent)
+        super().__init__(parent)
 
         self._mng = None
+        self._moving = False
         self.setMinimumSize(QSize(40, 0))
-        self.setMaximumSize(QSize(90, 16777215))
-        self.setMouseTracking(True)
+        self.setMaximumSize(QSize(180, 16777215))
+        # self.setMouseTracking(True)
 
-        dark_theme = self.palette().text().color().lightnessF() > 0.5
-        dark = '-dark' if dark_theme else ''
 
-        self.setStyleSheet(
-            'QSlider:focus{border: none;} '
-            'QSlider::handle:horizontal{'
-            f'image: url(:scalable/breeze{dark}/zoom-centered.svg);}}'
-            )
+
         self.setMinimum(0)
         self.setMaximum(1000)
+        self.setValue(500)
+
         self.setSingleStep(10)
         self.setPageStep(10)
-        self.setProperty("value", 500)
-        self.setTracking(True)
         self.setOrientation(Qt.Orientation.Horizontal)
         self.setInvertedAppearance(False)
         self.setInvertedControls(False)
         self.setTickPosition(QSlider.TickPosition.TicksBelow)
         self.setTickInterval(500)
+        self.setSizePolicy(QSizePolicy(QSizePolicy.Policy.Minimum,
+                                       QSizePolicy.Policy.Minimum))
 
+        self._last_mouse_pos = QPoint()
         self.valueChanged.connect(self._value_changed)
 
     @staticmethod
-    def map_float_to(x: float, min_a: int, max_a: int,
-                     min_b: int, max_b: int) -> float:
+    def map_float_to(x: int | float, min_a: int | float, max_a: int | float,
+                     min_b: int | float, max_b: int | float) -> float:
         if max_a == min_a:
             return min_b
         return min_b + ((x - min_a) / (max_a - min_a)) * (max_b - min_b)
@@ -122,6 +120,9 @@ class ZoomSlider(QSlider):
         return int(self.map_float_to(self.value(), 500, 1000, 100, 300))
 
     def set_percent(self, percent: float):
+        if self._moving:
+            return
+
         if 99.99999 < percent < 100.00001:
             self.setValue(500)
         elif percent < 100:
@@ -156,18 +157,93 @@ class ZoomSlider(QSlider):
             self.set_percent(self.zoom_percent() + direction * 5)
         self._show_tool_tip()
 
-    def mouseMoveEvent(self, event: QMouseEvent):
-        QSlider.mouseMoveEvent(self, event)
-        self._show_tool_tip()
+    def mousePressEvent(self, event: QMouseEvent):
+        self._last_mouse_pos = event.pos()
 
+    def mouseMoveEvent(self, event: QMouseEvent):
+        mouse_pos = event.pos()
+        self._moving = True
+        self.setValue(
+            self.value()
+            + 10 * (mouse_pos.x() - self._last_mouse_pos.x()))
+
+        self._moving = False
+        self._last_mouse_pos = mouse_pos
+        
         if self._mng is not None and event.buttons():
             self._mng.start_aliasing_check(AliasingReason.SCROLL_BAR_MOVE)
+        
+        self.update()
 
-    def mouseReleaseEvent(self, event):
+    def mouseReleaseEvent(self, event: QMouseEvent):
         super().mouseReleaseEvent(event)
 
         if self._mng is not None:
             self._mng.set_aliasing_reason(AliasingReason.SCROLL_BAR_MOVE, False)
+
+    def paintEvent(self, event):
+        BAND_WIDTH = 20
+        TOP = 8
+        LOUPE_SIDE = 7 * (self.zoom_percent() / 100) ** 0.25
+        ZM_CENTER = self.map_float_to(
+            self.value(), 0, 1000, LOUPE_SIDE * 2, self.width() - LOUPE_SIDE * 2)
+
+        fill_col = QColor(self.palette().buttonText().color())
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+
+        ramp = [(self.width() - LOUPE_SIDE * 2, TOP),
+                (self.width() - LOUPE_SIDE * 2, TOP + BAND_WIDTH),
+                (LOUPE_SIDE * 2, TOP + BAND_WIDTH),
+                (LOUPE_SIDE * 2, TOP + BAND_WIDTH * 0.75)]
+        
+        painter.setPen(Qt.PenStyle.NoPen)
+        painter.setBrush(self.palette().base().color())
+        painter.drawPolygon(polyline(ramp))
+
+        done_ramp = [
+            (ZM_CENTER, TOP + BAND_WIDTH
+             - BAND_WIDTH * self.map_float_to(self.value(), 0, 1000,
+                                              0.25, 1.0)),
+            (ZM_CENTER, TOP + BAND_WIDTH * 1.0),
+            (LOUPE_SIDE * 2, TOP + BAND_WIDTH * 1.0),
+            (LOUPE_SIDE * 2, TOP + BAND_WIDTH * 0.75)]
+
+        done_col = self.palette().highlight().color()
+        done_col.setAlphaF(0.25)
+        painter.setBrush(done_col)
+        painter.drawPolygon(polyline(done_ramp))
+
+        topi = (LOUPE_SIDE * 2 - BAND_WIDTH) * 0.5 + ((self.value() - 500)/500) * 6
+        lh = 0.5
+        
+        loupe = [(ZM_CENTER - 0.75 * LOUPE_SIDE + lh, TOP - topi + lh),
+                 (ZM_CENTER + LOUPE_SIDE * 0.75 - lh, TOP - topi + lh),
+                 (ZM_CENTER + LOUPE_SIDE - lh, TOP - topi + 0.25 * LOUPE_SIDE),
+                 (ZM_CENTER + LOUPE_SIDE - lh, TOP - topi + 1.75 * LOUPE_SIDE),
+                 (ZM_CENTER + LOUPE_SIDE * 2.0, TOP - topi + 2.75 * LOUPE_SIDE),
+                 (ZM_CENTER + LOUPE_SIDE * 1.75, TOP - topi + 3.0 * LOUPE_SIDE),
+                 (ZM_CENTER + LOUPE_SIDE * 0.75, TOP + 2 * LOUPE_SIDE - topi - lh),
+                 (ZM_CENTER - LOUPE_SIDE * 0.75 + lh, TOP + 2 * LOUPE_SIDE - topi - lh),
+                 (ZM_CENTER - LOUPE_SIDE + lh, TOP - topi + 1.75 * LOUPE_SIDE),
+                 (ZM_CENTER - LOUPE_SIDE + lh, TOP - topi + 0.25 * LOUPE_SIDE),
+                 (ZM_CENTER - 0.75 * LOUPE_SIDE + lh, TOP - topi + lh)]
+        
+        painter.setPen(Qt.PenStyle.NoPen)
+        loope_col = QColor(self.palette().brightText())
+        loope_col.setAlphaF(0.35)
+        painter.setBrush(loope_col)
+        painter.drawPolygon(polyline(loupe))
+        
+        painter.setPen(QPen(fill_col, 1.0))
+        font = QFont(self.font())
+        font.setPixelSize(10)
+        painter.setFont(font)
+        painter.drawText(
+            QPointF(3.0, 3.0 + font.pixelSize()),
+            "%.0f %%" % self.zoom_percent())
+        
+        painter.end()
 
 
 class TimeTransportLabel(QLabel):
