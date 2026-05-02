@@ -23,11 +23,10 @@ class ZoomSlider(QSlider):
         super().__init__(parent)
 
         self._mng = None
-        self._moving = False
-        self._zoom = 100.0
-        self.setMinimumSize(QSize(40, 0))
+        self.setMinimumSize(QSize(50, 0))
         self.setMaximumSize(QSize(180, 16777215))
 
+        self._zoom = 100.0
         self._MIN = 20.0
         self._MAX = 300.0
         self._CENTER = 100.0
@@ -36,13 +35,7 @@ class ZoomSlider(QSlider):
         self.setMaximum(1000)
         self.setValue(500)
 
-        # self.setSingleStep(10)
-        # self.setPageStep(10)
         self.setOrientation(Qt.Orientation.Horizontal)
-        # self.setInvertedAppearance(False)
-        # self.setInvertedControls(False)
-        # self.setTickPosition(QSlider.TickPosition.TicksBelow)
-        # self.setTickInterval(500)
         self.setSizePolicy(QSizePolicy(QSizePolicy.Policy.Minimum,
                                        QSizePolicy.Policy.Minimum))
 
@@ -53,50 +46,15 @@ class ZoomSlider(QSlider):
 
         self._last_mouse_pos = QPoint()
         self._show_text = False
-        self.valueChanged.connect(self._value_changed)
-
-    def _show_tool_tip(self):
-        self._show_text = True
-        self.update()
-        self._text_timer.start()
-        # win = QApplication.activeWindow()
-        # if win and win.isFullScreen():
-        #     return
-        # string = "  Zoom: %i%%  " % int(self.zoom_percent())
-        # QToolTip.showText(self.mapToGlobal(QPoint(0, 12)), string)
 
     def _hide_text(self):
         self._show_text = False
         self.update()
 
-    @Slot(int)
-    def _value_changed(self, value: int):
-        if self._mng is None:
-            return
-
-        self._mng.set_zoom(self.zoom_percent())
-
     def set_patchbay_manager(self, patchbay_manager: 'PatchbayManager'):
         self._mng = patchbay_manager
         self._mng.sg.scene_scale_changed.connect(
             self._scale_changed)
-
-    def zoom_percent(self) -> int:
-        if self.value() <= 500:
-            return int(map_float_to(self.value(), 0, 500, 20, 100))
-        return int(map_float_to(self.value(), 500, 1000, 100, 300))
-
-    def set_percent(self, percent: float):
-        if self._moving:
-            return
-
-        if 99.99999 < percent < 100.00001:
-            self.setValue(500)
-        elif percent < 100:
-            self.setValue(int(map_float_to(percent, 20, 100, 0, 500)))
-        else:
-            self.setValue(int(map_float_to(percent, 100, 300, 500, 1000)))
-        self._show_tool_tip()
 
     def _scale_changed(self, ratio: float):
         self._zoom = ratio * 100.0
@@ -245,7 +203,7 @@ class ZoomSlider(QSlider):
         painter.drawPolygon(polyline(loupe))
         
         if self._show_text:
-            if self._zoom - int(self._zoom) == 0.0:
+            if abs(self._zoom - round(self._zoom)) <= 0.001:
                 text = "%.0f %%" % self._zoom
             else:
                 text = "%.1f %%" % self._zoom
