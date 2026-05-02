@@ -11,6 +11,13 @@ if TYPE_CHECKING:
     from ..patchbay_manager import PatchbayManager
 
 
+def map_float_to(x: int | float, min_a: int | float, max_a: int | float,
+                 min_b: int | float, max_b: int | float) -> float:
+    if max_a == min_a:
+        return min_b
+    return min_b + ((x - min_a) / (max_a - min_a)) * (max_b - min_b)
+
+
 class ZoomSlider(QSlider):
     def __init__(self, parent):
         super().__init__(parent)
@@ -37,13 +44,6 @@ class ZoomSlider(QSlider):
         self._last_mouse_pos = QPoint()
         self.valueChanged.connect(self._value_changed)
 
-    @staticmethod
-    def map_float_to(x: int | float, min_a: int | float, max_a: int | float,
-                     min_b: int | float, max_b: int | float) -> float:
-        if max_a == min_a:
-            return min_b
-        return min_b + ((x - min_a) / (max_a - min_a)) * (max_b - min_b)
-
     def _show_tool_tip(self):
         win = QApplication.activeWindow()
         if win and win.isFullScreen():
@@ -65,8 +65,8 @@ class ZoomSlider(QSlider):
 
     def zoom_percent(self) -> int:
         if self.value() <= 500:
-            return int(self.map_float_to(self.value(), 0, 500, 20, 100))
-        return int(self.map_float_to(self.value(), 500, 1000, 100, 300))
+            return int(map_float_to(self.value(), 0, 500, 20, 100))
+        return int(map_float_to(self.value(), 500, 1000, 100, 300))
 
     def set_percent(self, percent: float):
         if self._moving:
@@ -75,9 +75,9 @@ class ZoomSlider(QSlider):
         if 99.99999 < percent < 100.00001:
             self.setValue(500)
         elif percent < 100:
-            self.setValue(int(self.map_float_to(percent, 20, 100, 0, 500)))
+            self.setValue(int(map_float_to(percent, 20, 100, 0, 500)))
         else:
-            self.setValue(int(self.map_float_to(percent, 100, 300, 500, 1000)))
+            self.setValue(int(map_float_to(percent, 100, 300, 500, 1000)))
         self._show_tool_tip()
 
     def _scale_changed(self, ratio: float):
@@ -133,50 +133,49 @@ class ZoomSlider(QSlider):
     def paintEvent(self, event):
         BAND_WIDTH = 20
         TOP = 8
-        LOUPE_SIDE = 7 * (self.zoom_percent() / 100) ** 0.25
-        ZM_CENTER = self.map_float_to(
-            self.value(), 0, 1000, LOUPE_SIDE * 2, self.width() - LOUPE_SIDE * 2)
+        loupe_side = 7 * (self.zoom_percent() / 100) ** 0.25
+        zm_center = map_float_to(
+            self.value(), 0, 1000, loupe_side, self.width() - loupe_side)
 
         fill_col = QColor(self.palette().buttonText().color())
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
 
-        ramp = [(self.width() - LOUPE_SIDE * 2, TOP),
-                (self.width() - LOUPE_SIDE * 2, TOP + BAND_WIDTH),
-                (LOUPE_SIDE * 2, TOP + BAND_WIDTH),
-                (LOUPE_SIDE * 2, TOP + BAND_WIDTH * 0.75)]
+        ramp = [(self.width() - loupe_side, TOP),
+                (self.width() - loupe_side, TOP + BAND_WIDTH),
+                (loupe_side, TOP + BAND_WIDTH),
+                (loupe_side, TOP + BAND_WIDTH * 0.75)]
         
         painter.setPen(Qt.PenStyle.NoPen)
         painter.setBrush(self.palette().base().color())
         painter.drawPolygon(polyline(ramp))
 
         done_ramp = [
-            (ZM_CENTER, TOP + BAND_WIDTH
-             - BAND_WIDTH * self.map_float_to(self.value(), 0, 1000,
-                                              0.25, 1.0)),
-            (ZM_CENTER, TOP + BAND_WIDTH * 1.0),
-            (LOUPE_SIDE * 2, TOP + BAND_WIDTH * 1.0),
-            (LOUPE_SIDE * 2, TOP + BAND_WIDTH * 0.75)]
+            (zm_center, TOP + BAND_WIDTH
+             - BAND_WIDTH * map_float_to(self.value(), 0, 1000, 0.25, 1.0)),
+            (zm_center, TOP + BAND_WIDTH * 1.0),
+            (loupe_side, TOP + BAND_WIDTH * 1.0),
+            (loupe_side, TOP + BAND_WIDTH * 0.75)]
 
         done_col = self.palette().highlight().color()
         done_col.setAlphaF(0.25)
         painter.setBrush(done_col)
         painter.drawPolygon(polyline(done_ramp))
 
-        topi = (LOUPE_SIDE * 2 - BAND_WIDTH) * 0.5 + ((self.value() - 500)/500) * 6
+        topi = (loupe_side * 2 - BAND_WIDTH) * 0.5 + ((self.value() - 500)/500) * 6
         lh = 0.5
         
-        loupe = [(ZM_CENTER - 0.75 * LOUPE_SIDE + lh, TOP - topi + lh),
-                 (ZM_CENTER + LOUPE_SIDE * 0.75 - lh, TOP - topi + lh),
-                 (ZM_CENTER + LOUPE_SIDE - lh, TOP - topi + 0.25 * LOUPE_SIDE),
-                 (ZM_CENTER + LOUPE_SIDE - lh, TOP - topi + 1.75 * LOUPE_SIDE),
-                 (ZM_CENTER + LOUPE_SIDE * 2.0, TOP - topi + 2.75 * LOUPE_SIDE),
-                 (ZM_CENTER + LOUPE_SIDE * 1.75, TOP - topi + 3.0 * LOUPE_SIDE),
-                 (ZM_CENTER + LOUPE_SIDE * 0.75, TOP + 2 * LOUPE_SIDE - topi - lh),
-                 (ZM_CENTER - LOUPE_SIDE * 0.75 + lh, TOP + 2 * LOUPE_SIDE - topi - lh),
-                 (ZM_CENTER - LOUPE_SIDE + lh, TOP - topi + 1.75 * LOUPE_SIDE),
-                 (ZM_CENTER - LOUPE_SIDE + lh, TOP - topi + 0.25 * LOUPE_SIDE),
-                 (ZM_CENTER - 0.75 * LOUPE_SIDE + lh, TOP - topi + lh)]
+        loupe = [(zm_center - 0.75 * loupe_side + lh, TOP - topi + lh),
+                 (zm_center + loupe_side * 0.75 - lh, TOP - topi + lh),
+                 (zm_center + loupe_side - lh, TOP - topi + 0.25 * loupe_side),
+                 (zm_center + loupe_side - lh, TOP - topi + 1.75 * loupe_side),
+                 (zm_center + loupe_side * 2.0, TOP - topi + 2.75 * loupe_side),
+                 (zm_center + loupe_side * 1.75, TOP - topi + 3.0 * loupe_side),
+                 (zm_center + loupe_side * 0.75, TOP + 2 * loupe_side - topi - lh),
+                 (zm_center - loupe_side * 0.75 + lh, TOP + 2 * loupe_side - topi - lh),
+                 (zm_center - loupe_side + lh, TOP - topi + 1.75 * loupe_side),
+                 (zm_center - loupe_side + lh, TOP - topi + 0.25 * loupe_side),
+                 (zm_center - 0.75 * loupe_side + lh, TOP - topi + lh)]
         
         painter.setPen(Qt.PenStyle.NoPen)
         loope_col = QColor(self.palette().brightText())

@@ -1,19 +1,20 @@
 
 from typing import TYPE_CHECKING
 
+from qtpy import QT5
 from qtpy.QtCore import (
     Qt, Signal, Slot, QPoint, QSize, QRectF, QPointF) # type:ignore
 from qtpy.QtGui import (
     QWheelEvent, QKeyEvent, QMouseEvent, QPaintEvent,
     QPainter, QPen, QPainterPath, QPixmap, QColor, QFont)
-
-if TYPE_CHECKING:
-    # FIX : QAction not found by pylance
-    from qtpy.QtGui import QAction
-
 from qtpy.QtWidgets import (
     QApplication, QProgressBar, QLineEdit, QLabel, QMenu,
-    QAction, QCheckBox, QComboBox, QFrame, QWidget)
+    QCheckBox, QComboBox, QFrame, QWidget)
+
+if not QT5 or TYPE_CHECKING:
+    from qtpy.QtGui import QAction
+else:
+    from qtpy.QtWidgets import QAction
 
 from patshared import PortTypesViewFlag
 
