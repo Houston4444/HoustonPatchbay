@@ -2,7 +2,7 @@ from typing import TYPE_CHECKING
 
 from qtpy.QtCore import QSize, QPoint, QPointF, Qt, Slot, QTimer # type:ignore
 from qtpy.QtGui import QWheelEvent, QMouseEvent, QColor, QPainter, QPen, QFont
-from qtpy.QtWidgets import QSlider, QSizePolicy, QApplication
+from qtpy.QtWidgets import QSizePolicy, QApplication, QWidget
 
 from ..patchcanvas import AliasingReason
 from ..patchcanvas.utils import polyline
@@ -18,25 +18,18 @@ def map_float_to(x: int | float, min_a: int | float, max_a: int | float,
     return min_b + ((x - min_a) / (max_a - min_a)) * (max_b - min_b)
 
 
-class ZoomSlider(QSlider):
+class ZoomSlider(QWidget):
     def __init__(self, parent):
         super().__init__(parent)
 
         self._mng = None
-        self.setMinimumSize(QSize(50, 0))
-        self.setMaximumSize(QSize(180, 16777215))
 
         self._zoom = 100.0
         self._MIN = 20.0
         self._MAX = 300.0
         self._CENTER = 100.0
 
-        self.setMinimum(0)
-        self.setMaximum(1000)
-        self.setValue(500)
-
-        self.setOrientation(Qt.Orientation.Horizontal)
-        self.setSizePolicy(QSizePolicy(QSizePolicy.Policy.Minimum,
+        self.setSizePolicy(QSizePolicy(QSizePolicy.Policy.Preferred,
                                        QSizePolicy.Policy.Minimum))
 
         self._text_timer = QTimer()
@@ -46,6 +39,12 @@ class ZoomSlider(QSlider):
 
         self._last_mouse_pos = QPoint()
         self._show_text = False
+
+    def sizeHint(self) -> QSize:
+        return QSize(80, 20)
+    
+    def minimumSizeHint(self) -> QSize:
+        return QSize(50, 20)
 
     def _hide_text(self):
         self._show_text = False
@@ -64,11 +63,11 @@ class ZoomSlider(QSlider):
 
     def enterEvent(self, event):
         self._show_text = True
-        super().enterEvent(event)
+        self.update()
 
     def leaveEvent(self, event):
         self._show_text = False
-        super().leaveEvent(event)
+        self.update()
 
     def mouseDoubleClickEvent(self, event):
         if self._mng is None:
