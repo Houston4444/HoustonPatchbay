@@ -177,7 +177,7 @@ QToolButton::menu-indicator{image: none}</string>
   <customwidget>
    <class>ZoomSlider</class>
    <extends>QSlider</extends>
-   <header>..surclassed_widgets</header>
+   <header>..widgets/zoom_slider</header>
   </customwidget>
   <customwidget>
    <class>TypeFilterFrame</class>
