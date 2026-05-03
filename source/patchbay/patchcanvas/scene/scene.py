@@ -99,7 +99,7 @@ class PatchScene(QGraphicsScene):
         self._mouse_down_init = False
         self._mouse_rubberband = False
         self._pointer_border = QRectF(0.0, 0.0, 1.0, 1.0)
-        self._scale_min = 0.1
+        self._scale_min = 0.25
         self._scale_max = 4.0
 
         self._rubberband = RubberbandRect(self)
@@ -600,7 +600,7 @@ class PatchScene(QGraphicsScene):
         view = self._view
         transform = view.transform()
         if transform.m11() < self._scale_max:
-            transform.scale(1.2, 1.2)
+            transform.scale(2 ** 0.0625, 2 ** 0.0625)
             if transform.m11() > self._scale_max:
                 transform.reset()
                 transform.scale(self._scale_max, self._scale_max)
@@ -611,7 +611,7 @@ class PatchScene(QGraphicsScene):
         view = self._view
         transform = view.transform()
         if transform.m11() > self._scale_min:
-            transform.scale(0.833333333333333, 0.833333333333333)
+            transform.scale(2 ** -0.0625, 2 ** -0.0625)
             if transform.m11() < self._scale_min:
                 transform.reset()
                 transform.scale(self._scale_min, self._scale_min)
