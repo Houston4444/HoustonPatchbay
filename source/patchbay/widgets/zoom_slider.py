@@ -1,3 +1,5 @@
+import math
+from re import M
 from typing import TYPE_CHECKING
 
 from qtpy.QtCore import QSize, QPoint, QPointF, Qt, Slot, QTimer # type:ignore
@@ -25,8 +27,8 @@ class ZoomSlider(QWidget):
         self._mng = None
 
         self._zoom = 100.0
-        self._MIN = 20.0
-        self._MAX = 300.0
+        self._MIN = 25.0
+        self._MAX = 400.0
         self._CENTER = 100.0
 
         self.setSizePolicy(QSizePolicy(QSizePolicy.Policy.Preferred,
@@ -45,6 +47,13 @@ class ZoomSlider(QWidget):
     
     def minimumSizeHint(self) -> QSize:
         return QSize(50, 20)
+
+    def _zoom_to_value(self, zoom: float) -> float:        
+        return map_float_to(
+            math.log2(zoom / self._CENTER),
+            math.log2(self._MIN / self._CENTER),
+            math.log2(self._MAX / self._CENTER),
+            0.0, 1.0)
 
     def _hide_text(self):
         self._show_text = False
@@ -89,15 +98,15 @@ class ZoomSlider(QWidget):
         step = 1 if event.angleDelta().y() > 0 else -1
         if not (QApplication.keyboardModifiers()
                 & Qt.KeyboardModifier.ControlModifier):
-            step *= 5
+            step *= 4
 
         if step > 0:
             if self._zoom < self._MAX:
-                self._zoom += step
+                self._zoom *= 2 ** (0.015625 * step)
                 self._zoom = min(self._zoom, self._MAX)
         else:
             if self._zoom > self._MIN:
-                self._zoom += step
+                self._zoom *= 2 ** (0.015625 * step)
                 self._zoom = max(self._zoom, self._MIN)
         
         if self._mng is not None:
@@ -111,14 +120,14 @@ class ZoomSlider(QWidget):
     def mouseMoveEvent(self, event: QMouseEvent):
         mouse_pos = event.pos()
         
-        step = 5 * (mouse_pos.x() - self._last_mouse_pos.x())
+        step = 2 * (mouse_pos.x() - self._last_mouse_pos.x())
         if step > 0:
             if self._zoom < self._MAX:
-                self._zoom += step
+                self._zoom *= 2 ** (0.03125 * step)
                 self._zoom = min(self._zoom, self._MAX)
         else:
             if self._zoom > self._MIN:
-                self._zoom += step
+                self._zoom *= 2 ** (0.03125 * step)
                 self._zoom = max(self._zoom, self._MIN)
 
         self._last_mouse_pos = mouse_pos
@@ -134,7 +143,8 @@ class ZoomSlider(QWidget):
         super().mouseReleaseEvent(event)
 
         if self._mng is not None:
-            self._mng.set_aliasing_reason(AliasingReason.SCROLL_BAR_MOVE, False)
+            self._mng.set_aliasing_reason(
+                AliasingReason.SCROLL_BAR_MOVE, False)
 
     def paintEvent(self, event):
         BAND_WIDTH = 20
@@ -144,10 +154,7 @@ class ZoomSlider(QWidget):
         left = loupe_side
         right = self.width() - loupe_side
 
-        lit = map_float_to(zoom, self._MIN, self._CENTER, 0.0, 0.5)
-        big = map_float_to(zoom, self._CENTER, self._MAX, 0.5, 1.0)
-        rat = (zoom - self._MIN) / (self._MAX - self._MIN)
-        ratio = rat * big + (1 - rat) * lit
+        ratio = self._zoom_to_value(zoom)
         if ratio > 0.5:
             right -= (ratio - 0.5) * loupe_side * 2
         
@@ -202,15 +209,11 @@ class ZoomSlider(QWidget):
         painter.drawPolygon(polyline(loupe))
         
         if self._show_text:
-            if abs(self._zoom - round(self._zoom)) <= 0.001:
-                text = "%.0f %%" % self._zoom
-            else:
-                text = "%.1f %%" % self._zoom
-
             painter.setPen(QPen(fill_col, 1.0))
             font = QFont(self.font())
             font.setPixelSize(10)
             painter.setFont(font)
-            painter.drawText(QPointF(3.0, 3.0 + font.pixelSize()), text)
+            painter.drawText(QPointF(3.0, 3.0 + font.pixelSize()),
+                             f"{round(self._zoom)} %")
         
         painter.end()
