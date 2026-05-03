@@ -6,7 +6,7 @@ from qtpy.QtGui import QPainter, QBrush
 from qtpy.QtCore import Slot, QRectF, Qt # type:ignore
 
 
-from patshared import PortTypesViewFlag
+from patshared import PortTypesViewFlag, PortType, PortSubType
 
 from ..cancel_mng import CancelOp, CancellableAction
 from ..patchcanvas import patchcanvas
@@ -30,6 +30,7 @@ class TypeFilterFrame(QFrame):
             self.ui.checkBoxMidiFilter,
             self.ui.checkBoxCvFilter,
             self.ui.checkBoxAlsaFilter)
+
         self.ui.checkBoxAudioFilter.really_clicked.connect(
             self._check_box_audio_right_clicked)
         self.ui.checkBoxMidiFilter.really_clicked.connect(
@@ -38,6 +39,15 @@ class TypeFilterFrame(QFrame):
             self._check_box_cv_right_clicked)
         self.ui.checkBoxAlsaFilter.really_clicked.connect(
             self._check_box_alsa_right_clicked)
+
+        self.ui.checkBoxAudioFilter.set_full_port_type(
+            PortType.AUDIO_JACK, PortSubType.REGULAR)
+        self.ui.checkBoxMidiFilter.set_full_port_type(
+            PortType.MIDI_JACK, PortSubType.REGULAR)
+        self.ui.checkBoxCvFilter.set_full_port_type(
+            PortType.AUDIO_JACK, PortSubType.CV)
+        self.ui.checkBoxAlsaFilter.set_full_port_type(
+            PortType.MIDI_ALSA, PortSubType.REGULAR)
 
         self._mng : 'Optional[PatchbayManager]' = None
 
@@ -183,4 +193,5 @@ class TypeFilterFrame(QFrame):
         painter.drawRect(box_rect)
         
         painter.end()
+        
     

@@ -16,7 +16,7 @@ if not QT5 or TYPE_CHECKING:
 else:
     from qtpy.QtWidgets import QAction
 
-from patshared import PortTypesViewFlag
+from patshared import PortTypesViewFlag, PortType, PortSubType
 
 from .patchcanvas import patchcanvas
 from .patchcanvas.utils import polyline
@@ -124,12 +124,20 @@ class TypeViewCheckBox(QCheckBox):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setMaximumWidth(50)
+        self._port_type = PortType.NULL
+        self._port_sub_type = PortSubType.REGULAR
+
+    def set_full_port_type(self, port_type: PortType, sub_type: PortSubType):
+        self._port_type = port_type
+        self._port_sub_type = sub_type
 
     def mousePressEvent(self, event: QMouseEvent) -> None:
-        if event.button() in (Qt.MouseButton.LeftButton, Qt.MouseButton.RightButton):
+        if event.button() in (Qt.MouseButton.LeftButton,
+                              Qt.MouseButton.RightButton):
             alternate = bool(
                 event.button() == Qt.MouseButton.RightButton
-                or QApplication.keyboardModifiers() & Qt.KeyboardModifier.ControlModifier)
+                or (QApplication.keyboardModifiers()
+                    & Qt.KeyboardModifier.ControlModifier))
             self.really_clicked.emit(alternate)
             return
 
@@ -154,17 +162,28 @@ class TypeViewCheckBox(QCheckBox):
         
         points = []
 
-        match self.text():
-            case 'Audio':
-                port_theme = port_theme.audio
-                line_theme = line_theme.audio
-                points = [(arrow_base, top),
-                          (right, top),
-                          (right, bottom),
-                          (arrow_base, bottom),
-                          (left, y_arrow_pic),
-                          (arrow_base, top)]
-            case 'Midi':
+        match self._port_type:
+            case PortType.AUDIO_JACK:
+                match self._port_sub_type:
+                    case PortSubType.CV:
+                        port_theme = port_theme.cv
+                        line_theme = line_theme.audio
+                        points = [(arrow_base, top),
+                                (right, top),
+                                (right, bottom),
+                                (arrow_base, bottom),
+                                (arrow_base, top)]
+                    case _:                    
+                        port_theme = port_theme.audio
+                        line_theme = line_theme.audio
+                        points = [(arrow_base, top),
+                                (right, top),
+                                (right, bottom),
+                                (arrow_base, bottom),
+                                (left, y_arrow_pic),
+                                (arrow_base, top)]
+
+            case PortType.MIDI_JACK:
                 port_theme = port_theme.midi
                 line_theme = line_theme.midi
                 points = [
@@ -179,16 +198,8 @@ class TypeViewCheckBox(QCheckBox):
                     (arrow_base, bottom),
                     (right, bottom),
                     (right, top)]
-            case 'CV':
-                port_theme = port_theme.cv
-                line_theme = line_theme.audio
-                points = [(arrow_base, top),
-                          (right, top),
-                          (right, bottom),
-                          (arrow_base, bottom),
-                          (arrow_base, top)]
                 
-            case 'Alsa':
+            case PortType.MIDI_ALSA:
                 port_theme = port_theme.alsa
                 line_theme = line_theme.alsa
                 points = [(arrow_mid, top),
@@ -210,28 +221,33 @@ class TypeViewCheckBox(QCheckBox):
         
         if port_theme.border_mode is BorderMode.MINIMAL:
             painter.setPen(port_theme.fill_pen)
-            match self.text():
-                case 'Audio':
-                    painter.drawPolyline(polyline(points[1:3]))
-                    painter.drawPolyline(polyline(points[3:6]))
+            match self._port_type:
+                case PortType.AUDIO_JACK:
+                    match self._port_sub_type:
+                        case PortSubType.CV:
+                            painter.drawPolyline(polyline(points[1:3]))
+                            painter.drawPolyline(polyline(points[3:5]))
+                        case _:
+                            painter.drawPolyline(polyline(points[1:3]))
+                            painter.drawPolyline(polyline(points[3:6]))
                 
-                case 'Midi':
+                case PortType.MIDI_JACK:
                     painter.drawPolyline(polyline(points[1:7]))
                     painter.drawPolyline(polyline(points[7:9]))
                     
-                case _:
+                case PortType.MIDI_ALSA:
                     painter.drawPolyline(polyline(points[1:3]))
                     painter.drawPolyline(polyline(points[3:5]))
         
-        match self.text():
-            case 'CV':
+        match (self._port_type, self._port_sub_type):
+            case (PortType.AUDIO_JACK, PortSubType.CV):
                 divid = (bottom - top) / 12
                 painter.drawPolyline(polyline(
                     [(arrow_base, top + divid * 5),
                     (left, top + divid * 5),
                     (left, top + divid * 7),
                     (arrow_base, top + divid * 7)]))
-            case 'Alsa':
+            case (PortType.MIDI_ALSA, PortSubType.REGULAR):
                 scene_col = theme.scene_background_color
                 circle_bg_col = QColor(scene_col)
                 circle_bg_col.setAlphaF(1.0)
