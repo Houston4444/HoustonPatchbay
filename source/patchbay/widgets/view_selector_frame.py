@@ -90,7 +90,7 @@ class ItemmDeleg(QAbstractItemDelegate):
 
         bg_col = QApplication.palette().base().color()
         bg_ligthness = bg_col.lightnessF()
-        pcols = self._port_colors
+        self._port_colors = pcols
 
         if bg_ligthness > 0.5:
             for i in range(len(pcols)):
