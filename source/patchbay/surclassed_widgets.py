@@ -20,6 +20,7 @@ from patshared import PortTypesViewFlag
 
 from .patchcanvas import patchcanvas
 from .patchcanvas.utils import polyline
+from .patchcanvas.theme import BorderMode
 from .bases.elements import TransportViewMode
 
 if TYPE_CHECKING:
@@ -136,7 +137,7 @@ class TypeViewCheckBox(QCheckBox):
         
     def paintEvent(self, event):
         theme = patchcanvas.canvas.theme
-        # port_height = int(theme.port_height * 1.15)
+
         port_height = 18
         port_theme = theme.port
         line_theme = theme.line
@@ -184,7 +185,8 @@ class TypeViewCheckBox(QCheckBox):
                 points = [(arrow_base, top),
                           (right, top),
                           (right, bottom),
-                          (arrow_base, bottom)]
+                          (arrow_base, bottom),
+                          (arrow_base, top)]
                 
             case 'Alsa':
                 port_theme = port_theme.alsa
@@ -192,14 +194,35 @@ class TypeViewCheckBox(QCheckBox):
                 points = [(arrow_mid, top),
                           (right, top),
                           (right, bottom),
-                          (arrow_mid, bottom)]
+                          (arrow_mid, bottom),
+                          (arrow_mid, top)]
 
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
-        painter.setPen(port_theme.fill_pen)
+        
+        if port_theme.border_mode is BorderMode.MINIMAL:
+            painter.setPen(Qt.PenStyle.NoPen)
+        else:
+            painter.setPen(port_theme.fill_pen)
         painter.setBrush(port_theme.background_color)
         
         painter.drawPolygon(polyline(points))
+        
+        if port_theme.border_mode is BorderMode.MINIMAL:
+            painter.setPen(port_theme.fill_pen)
+            match self.text():
+                case 'Audio':
+                    painter.drawPolyline(polyline(points[1:3]))
+                    painter.drawPolyline(polyline(points[3:6]))
+                
+                case 'Midi':
+                    painter.drawPolyline(polyline(points[1:7]))
+                    painter.drawPolyline(polyline(points[7:9]))
+                    
+                case _:
+                    painter.drawPolyline(polyline(points[1:3]))
+                    painter.drawPolyline(polyline(points[3:5]))
+        
         match self.text():
             case 'CV':
                 divid = (bottom - top) / 12
