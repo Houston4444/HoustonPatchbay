@@ -13,6 +13,9 @@ if TYPE_CHECKING:
     from ..patchbay_manager import PatchbayManager
 
 
+_translate = QApplication.translate
+
+
 def map_float_to(x: int | float, min_a: int | float, max_a: int | float,
                  min_b: int | float, max_b: int | float) -> float:
     if max_a == min_a:
@@ -33,6 +36,13 @@ class ZoomSlider(QWidget):
 
         self.setSizePolicy(QSizePolicy(QSizePolicy.Policy.Preferred,
                                        QSizePolicy.Policy.Minimum))
+
+        self.setToolTip(
+            _translate(
+                'zoom_slider',
+                "<p style='font-weight: bold;'>Zoom</p>"
+                '<p>Right click to reset to default zoom.<br>'
+                'Double click to fit view to contents.</p>'))
 
         self._text_timer = QTimer()
         self._text_timer.setSingleShot(True)
