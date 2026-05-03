@@ -98,7 +98,6 @@ class PatchScene(QGraphicsScene):
         self._scale_area = False
         self._mouse_down_init = False
         self._mouse_rubberband = False
-        self._mid_button_down = False
         self._pointer_border = QRectF(0.0, 0.0, 1.0, 1.0)
         self._scale_min = 0.1
         self._scale_max = 4.0
@@ -113,7 +112,6 @@ class PatchScene(QGraphicsScene):
             _logger.critical("Invalid view")
             return
 
-        self._cursor_cut = None
         self._cursor_zoom_area = None
 
         self.prevent_box_user_move = False
@@ -450,7 +448,6 @@ class PatchScene(QGraphicsScene):
 
         cur_color = ("black" if canvas.theme.scene_background_color.blackF() < 0.5
                      else "white")
-        self._cursor_cut = QCursor(QPixmap(f":/cursors/cut-{cur_color}.png"), 1, 1)
         self._cursor_zoom_area = QCursor(
             QPixmap(f":/cursors/zoom-area-{cur_color}.png"), 8, 7)
 
@@ -673,45 +670,30 @@ class PatchScene(QGraphicsScene):
             event.ignore()
             return
 
-        if event.key() == Qt.Key.Key_Control:
-            if self._mid_button_down:
-                self._start_connection_cut()
-
-        elif event.key() == Qt.Key.Key_Home:
+        if event.key() == Qt.Key.Key_Home:
             event.accept()
             self.zoom_fit()
             return
 
-        elif (QApplication.keyboardModifiers()
+        if (QApplication.keyboardModifiers()
                 & Qt.KeyboardModifier.ControlModifier):
-            if event.key() == Qt.Key.Key_Plus:
-                event.accept()
-                self.zoom_in()
-                return
+            match event.key():
+                case Qt.Key.Key_Plus:
+                    event.accept()
+                    self.zoom_in()
+                    return
 
-            if event.key() == Qt.Key.Key_Minus:
-                event.accept()
-                self.zoom_out()
-                return
+                case Qt.Key.Key_Minus:
+                    event.accept()
+                    self.zoom_out()
+                    return
 
-            if event.key() == Qt.Key.Key_1:
-                event.accept()
-                self.zoom_reset()
-                return
+                case Qt.Key.Key_1:
+                    event.accept()
+                    self.zoom_reset()
+                    return
 
-        QGraphicsScene.keyPressEvent(self, event)
-
-    def keyReleaseEvent(self, event):
-        if event.key() == Qt.Key.Key_Control:
-            # Connection cut mode off
-            if self._mid_button_down:
-                self.unset_cursor()
-
-        QGraphicsScene.keyReleaseEvent(self, event)
-
-    def _start_connection_cut(self):
-        if self._cursor_cut:
-            self.set_cursor(self._cursor_cut)
+        super().keyPressEvent(event)
 
     def zoom_wheel(self, delta: int):
         transform = self._view.transform()
@@ -827,25 +809,6 @@ class PatchScene(QGraphicsScene):
         self._press_point = event.scenePos()
         self._mouse_rubberband = False
 
-        # There is no more possibility to use trigger disconnect
-        # with Ctrl + Middle click
-        # because connection objects are now grouped.
-        # we keep the code here,
-        # it may be possible to re-implement it,
-        # if really wanted by some users.
-
-        # if event.button() == Qt.MidButton:
-        #     if ctrl_pressed:
-        #         self._mid_button_down = True
-        #         self._start_connection_cut()
-
-        #         pos = event.scenePos()
-        #         self._pointer_border.moveTo(floor(pos.x()), floor(pos.y()))
-
-        #         for item in self.items(self._pointer_border):
-        #             if isinstance(item, (ConnectableWidget, LineWidget)):
-        #                 item.trigger_disconnect()
-
         self._selected_boxes = [
             b for b in self.selectedItems()
             if isinstance(b, BoxWidget) and b.isVisible()]
@@ -894,15 +857,6 @@ class PatchScene(QGraphicsScene):
                 x + line_hinting, y + line_hinting,
                 abs(pos_x - rubb_orig_point.x()),
                 abs(pos_y - rubb_orig_point.y()))
-
-        if (self._mid_button_down
-                and (QApplication.keyboardModifiers()
-                     & Qt.KeyboardModifier.ControlModifier)):
-            for item in self.items(
-                    QPolygonF([event.scenePos(), event.lastScenePos(),
-                               event.scenePos()])):
-                if isinstance(item, LineWidget):
-                    item.trigger_disconnect()
 
         QGraphicsScene.mouseMoveEvent(self, event)
 
@@ -956,17 +910,6 @@ class PatchScene(QGraphicsScene):
         if event.button() == Qt.MouseButton.LeftButton:
             self._borders_nav_timer.stop()
             canvas.set_aliasing_reason(AliasingReason.NAV_ON_BORDERS, False)
-
-        if event.button() == Qt.MouseButton.MiddleButton:
-            event.accept()
-
-            self._mid_button_down = False
-
-            # Connection cut mode off
-            if (QApplication.keyboardModifiers()
-                    & Qt.KeyboardModifier.ControlModifier):
-                self.unset_cursor()
-            return
 
         QGraphicsScene.mouseReleaseEvent(self, event)
 
