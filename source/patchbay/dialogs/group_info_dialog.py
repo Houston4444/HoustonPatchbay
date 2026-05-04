@@ -1,6 +1,7 @@
 from qtpy.QtWidgets import QDialog, QTableWidgetItem
 from qtpy.QtGui import QIcon
 from qtpy.QtCore import Qt
+from patchbay.patchcanvas.utils import is_dark_theme
 
 from patshared.base_enums import BoxType, PortType
 
@@ -31,13 +32,15 @@ class GroupInfoDialog(QDialog):
     def _fill_contents(self):
         if self.group.cnv_box_type in (BoxType.HARDWARE, BoxType.MONITOR):
             icon = QIcon()
+            color_theme = 'dark' if is_dark_theme(self) else 'light'
+
             if self.group.cnv_box_type is BoxType.HARDWARE:
                 if self.group.cnv_icon_name == 'a2j':
-                    icon.addFile(':scalable/DIN-5.svg')
+                    icon.addFile(f':canvas/{color_theme}/DIN-5.svg')
                 else:
-                    icon.addFile(':scalable/pb_hardware.svg')
+                    icon.addFile(f':canvas/{color_theme}/pb_hardware.svg')
             else:
-                icon.addFile(':scalable/audio-volume-medium.svg')
+                icon.addFile(f':canvas/{color_theme}/audio-volume-medium.svg')
             self.ui.toolButtonGroupIcon.setIcon(icon)
         else:
             app_icon = get_app_icon(self.group.cnv_icon_name)
