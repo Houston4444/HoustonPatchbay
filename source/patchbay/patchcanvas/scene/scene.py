@@ -446,10 +446,10 @@ class PatchScene(QGraphicsScene):
         self._rubberband.setPen(canvas.theme.rubberband.fill_pen)
         self._rubberband.setBrush(canvas.theme.rubberband.background_color)
 
-        cur_color = ("black" if canvas.theme.scene_background_color.blackF() < 0.5
-                     else "white")
+        cur_color = ("dark" if canvas.theme.scene_background_color.blackF() > 0.5
+                     else "light")
         self._cursor_zoom_area = QCursor(
-            QPixmap(f":/cursors/zoom-area-{cur_color}.png"), 8, 7)
+            QPixmap(f":/scalables/{cur_color}/misc/zoom-area.svg"), 8, 7)
 
         self.update_grid_style()
 

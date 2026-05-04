@@ -44,6 +44,7 @@
        <file>scalables/dark/transport/media-seek-forward.svg</file>
        <file>scalables/dark/misc/handshake-deal.svg</file>
        <file>scalables/dark/misc/lines-disconnector.svg</file>
+       <file>scalables/dark/misc/zoom-area.svg</file>
        <file>scalables/dark/misc/lines-connector.svg</file>
        <file>scalables/dark/breeze/color-picker-white.svg</file>
        <file>scalables/dark/breeze/im-user.svg</file>
@@ -64,6 +65,7 @@
        <file>scalables/light/transport/media-seek-forward.svg</file>
        <file>scalables/light/misc/handshake-deal.svg</file>
        <file>scalables/light/misc/lines-disconnector.svg</file>
+       <file>scalables/light/misc/zoom-area.svg</file>
        <file>scalables/light/misc/lines-connector.svg</file>
        <file>scalables/light/breeze/color-picker-white.svg</file>
        <file>scalables/light/breeze/im-user.svg</file>
@@ -79,9 +81,5 @@
        <file>scalables/light/box_icons/audio-volume-medium.svg</file>
        <file>fonts/Ubuntu-R.ttf</file>
        <file>fonts/Ubuntu-C.ttf</file>
-       <file>cursors/zoom-area-white.png</file>
-       <file>cursors/update-pixmaps.sh</file>
-       <file>cursors/zoom-area-black.png</file>
-       <file>cursors/src/zoom-area.svg</file>
    </qresource>
 </RCC>
