@@ -36,11 +36,14 @@ class GroupInfoDialog(QDialog):
 
             if self.group.cnv_box_type is BoxType.HARDWARE:
                 if self.group.cnv_icon_name == 'a2j':
-                    icon.addFile(f':canvas/{color_theme}/DIN-5.svg')
+                    icon.addFile(
+                        f':scalables/{color_theme}/box_icons/DIN-5.svg')
                 else:
-                    icon.addFile(f':canvas/{color_theme}/pb_hardware.svg')
+                    icon.addFile(
+                        f':scalables/{color_theme}/box_icons/pb_hardware.svg')
             else:
-                icon.addFile(f':canvas/{color_theme}/audio-volume-medium.svg')
+                icon.addFile(
+                    f':scalables/{color_theme}/box_icons/audio-volume-medium.svg')
             self.ui.toolButtonGroupIcon.setIcon(icon)
         else:
             app_icon = get_app_icon(self.group.cnv_icon_name)

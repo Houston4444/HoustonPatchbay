@@ -61,24 +61,24 @@
        <file>transport/light/media-playback-pause.svg</file>
        <file>transport/light/media-playback-stop.svg</file>
        <file>transport/light/media-seek-forward.svg</file>
+       <file>scalables/dark/box_icons/monitor_playback.svg</file>
+       <file>scalables/dark/box_icons/audio-headphones.svg</file>
+       <file>scalables/dark/box_icons/DIN-5.svg</file>
+       <file>scalables/dark/box_icons/audio-input-microphone.svg</file>
+       <file>scalables/dark/box_icons/monitor_capture.svg</file>
+       <file>scalables/dark/box_icons/pb_hardware.svg</file>
+       <file>scalables/dark/box_icons/microphone.svg</file>
+       <file>scalables/dark/box_icons/audio-volume-medium.svg</file>
+       <file>scalables/light/box_icons/monitor_playback.svg</file>
+       <file>scalables/light/box_icons/audio-headphones.svg</file>
+       <file>scalables/light/box_icons/DIN-5.svg</file>
+       <file>scalables/light/box_icons/audio-input-microphone.svg</file>
+       <file>scalables/light/box_icons/monitor_capture.svg</file>
+       <file>scalables/light/box_icons/pb_hardware.svg</file>
+       <file>scalables/light/box_icons/microphone.svg</file>
+       <file>scalables/light/box_icons/audio-volume-medium.svg</file>
        <file>fonts/Ubuntu-R.ttf</file>
        <file>fonts/Ubuntu-C.ttf</file>
-       <file>canvas/dark/monitor_playback.svg</file>
-       <file>canvas/dark/audio-headphones.svg</file>
-       <file>canvas/dark/DIN-5.svg</file>
-       <file>canvas/dark/audio-input-microphone.svg</file>
-       <file>canvas/dark/monitor_capture.svg</file>
-       <file>canvas/dark/pb_hardware.svg</file>
-       <file>canvas/dark/microphone.svg</file>
-       <file>canvas/dark/audio-volume-medium.svg</file>
-       <file>canvas/light/monitor_playback.svg</file>
-       <file>canvas/light/audio-headphones.svg</file>
-       <file>canvas/light/DIN-5.svg</file>
-       <file>canvas/light/audio-input-microphone.svg</file>
-       <file>canvas/light/monitor_capture.svg</file>
-       <file>canvas/light/pb_hardware.svg</file>
-       <file>canvas/light/microphone.svg</file>
-       <file>canvas/light/audio-volume-medium.svg</file>
        <file>cursors/zoom-area-white.png</file>
        <file>cursors/update-pixmaps.sh</file>
        <file>cursors/zoom-area-black.png</file>

@@ -226,7 +226,7 @@ def get_icon(icon_type: BoxType, icon_name: str,
 
     match icon_type:
         case BoxType.HARDWARE:
-            icon_file = f":/canvas/{dark_str}/"
+            icon_file = f":scalables/{dark_str}/box_icons/"
 
             if icon_name == "a2j":
                 icon_file += "DIN-5.svg"
@@ -241,7 +241,7 @@ def get_icon(icon_type: BoxType, icon_name: str,
             icon.addFile(icon_file)
 
         case BoxType.MONITOR:
-            prefix = f":/canvas/{dark_str}/"
+            prefix = f":scalables/{dark_str}/box_icons/"
 
             if port_mode is PortMode.INPUT:
                 icon.addFile(prefix + "monitor_capture.svg")
@@ -249,7 +249,7 @@ def get_icon(icon_type: BoxType, icon_name: str,
                 icon.addFile(prefix + "monitor_playback.svg")
 
         case BoxType.INTERNAL:
-            icon.addFile(f':/scalable/{icon_name}')
+            icon.addFile(f':scalables/{dark_str}/box_icons/{icon_name}')
 
     return icon
 

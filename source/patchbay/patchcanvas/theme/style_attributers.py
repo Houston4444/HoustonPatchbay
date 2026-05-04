@@ -71,7 +71,7 @@ class GridStyleAttributer(StyleAttributer):
 
 class IconTheme:
     def __init__(self):
-        src = ':/canvas/dark/'
+        src = ':scalables/dark/box_icons/'
         self.hardware_capture = src + 'microphone.svg'
         self.hardware_playback = src + 'audio-headphones.svg'
         self.hardware_grouped = src + 'pb_hardware.svg'
