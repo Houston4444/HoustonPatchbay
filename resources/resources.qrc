@@ -51,16 +51,11 @@
        <file>app_icons/amsynth.svg</file>
        <file>app_icons/dark/curve-connector.svg</file>
        <file>app_icons/dark/network-wired.svg</file>
-       <file>transport/dark/media-playback-start.svg</file>
-       <file>transport/dark/media-seek-backward.svg</file>
-       <file>transport/dark/media-playback-pause.svg</file>
-       <file>transport/dark/media-playback-stop.svg</file>
-       <file>transport/dark/media-seek-forward.svg</file>
-       <file>transport/light/media-playback-start.svg</file>
-       <file>transport/light/media-seek-backward.svg</file>
-       <file>transport/light/media-playback-pause.svg</file>
-       <file>transport/light/media-playback-stop.svg</file>
-       <file>transport/light/media-seek-forward.svg</file>
+       <file>scalables/dark/transport/media-playback-start.svg</file>
+       <file>scalables/dark/transport/media-seek-backward.svg</file>
+       <file>scalables/dark/transport/media-playback-pause.svg</file>
+       <file>scalables/dark/transport/media-playback-stop.svg</file>
+       <file>scalables/dark/transport/media-seek-forward.svg</file>
        <file>scalables/dark/box_icons/monitor_playback.svg</file>
        <file>scalables/dark/box_icons/audio-headphones.svg</file>
        <file>scalables/dark/box_icons/DIN-5.svg</file>
@@ -69,6 +64,11 @@
        <file>scalables/dark/box_icons/pb_hardware.svg</file>
        <file>scalables/dark/box_icons/microphone.svg</file>
        <file>scalables/dark/box_icons/audio-volume-medium.svg</file>
+       <file>scalables/light/transport/media-playback-start.svg</file>
+       <file>scalables/light/transport/media-seek-backward.svg</file>
+       <file>scalables/light/transport/media-playback-pause.svg</file>
+       <file>scalables/light/transport/media-playback-stop.svg</file>
+       <file>scalables/light/transport/media-seek-forward.svg</file>
        <file>scalables/light/box_icons/monitor_playback.svg</file>
        <file>scalables/light/box_icons/audio-headphones.svg</file>
        <file>scalables/light/box_icons/DIN-5.svg</file>

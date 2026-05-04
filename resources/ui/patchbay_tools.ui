@@ -86,7 +86,7 @@ background-color:  rgba(50%, 50%, 50%, 25%);
         </property>
         <property name="icon">
          <iconset resource="../resources.qrc">
-          <normaloff>:/transport/dark/media-seek-backward.svg</normaloff>:/transport/dark/media-seek-backward.svg</iconset>
+          <normaloff>:/scalables/dark/transport/media-seek-backward.svg</normaloff>:/scalables/dark/transport/media-seek-backward.svg</iconset>
         </property>
         <property name="iconSize">
          <size>
@@ -148,7 +148,7 @@ background-color:  rgba(50%, 50%, 50%, 25%);
         </property>
         <property name="icon">
          <iconset resource="../resources.qrc">
-          <normaloff>:/transport/dark/media-seek-forward.svg</normaloff>:/transport/dark/media-seek-forward.svg</iconset>
+          <normaloff>:/scalables/dark/transport/media-seek-forward.svg</normaloff>:/scalables/dark/transport/media-seek-forward.svg</iconset>
         </property>
         <property name="iconSize">
          <size>
@@ -196,7 +196,7 @@ background-color:  rgba(50%, 50%, 50%, 25%);
         </property>
         <property name="icon">
          <iconset resource="../resources.qrc">
-          <normaloff>:/transport/dark/media-playback-start.svg</normaloff>:/transport/dark/media-playback-start.svg</iconset>
+          <normaloff>:/scalables/dark/transport/media-playback-start.svg</normaloff>:/scalables/dark/transport/media-playback-start.svg</iconset>
         </property>
         <property name="iconSize">
          <size>
@@ -228,7 +228,7 @@ background-color:  rgba(50%, 50%, 50%, 25%);
         </property>
         <property name="icon">
          <iconset resource="../resources.qrc">
-          <normaloff>:/transport/dark/media-playback-stop.svg</normaloff>:/transport/dark/media-playback-stop.svg</iconset>
+          <normaloff>:/scalables/dark/transport/media-playback-stop.svg</normaloff>:/scalables/dark/transport/media-playback-stop.svg</iconset>
         </property>
         <property name="iconSize">
          <size>

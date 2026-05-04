@@ -57,17 +57,17 @@ class BarWidgetTransport(QWidget):
 
         scheme = 'dark' if dark else 'light'
         self._icon_play = QIcon(
-            f':/transport/{scheme}/media-playback-start.svg')
+            f':/scalables/{scheme}/transport/media-playback-start.svg')
         self._icon_pause = QIcon(
-            f':/transport/{scheme}/media-playback-pause.svg')
+            f':/scalables/{scheme}/transport/media-playback-pause.svg')
 
         self.ui.toolButtonRewind.setIcon(
-            QIcon(f':/transport/{scheme}/media-seek-backward.svg')) # type:ignore
+            QIcon(f':/scalables/{scheme}/transport/media-seek-backward.svg')) # type:ignore
         self.ui.toolButtonForward.setIcon(
-            QIcon(f':/transport/{scheme}/media-seek-forward.svg')) # type:ignore
+            QIcon(f':/scalables/{scheme}/transport/media-seek-forward.svg')) # type:ignore
         self.ui.toolButtonPlayPause.setIcon(self._icon_play) # type:ignore
         self.ui.toolButtonStop.setIcon(
-            QIcon(f':/transport/{scheme}/media-playback-stop.svg')) # type:ignore
+            QIcon(f':/scalables/{scheme}/transport/media-playback-stop.svg')) # type:ignore
 
         bg = QColor(app_bg)
         more_gray = 20 if dark else -30
