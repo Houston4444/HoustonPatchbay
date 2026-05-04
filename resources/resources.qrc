@@ -1,15 +1,13 @@
 <RCC version="1.0">
    <qresource prefix="/">
-       <file>scalable/breeze/zoom-centered.svg</file>
+       <file>scalable/liberapay_logo_black-on-yellow.svg</file>
        <file>scalable/breeze/color-picker-white.svg</file>
        <file>scalable/breeze/im-user.svg</file>
        <file>scalable/breeze/hint_orange.svg</file>
        <file>scalable/breeze/hint.svg</file>
        <file>scalable/breeze/handshake-deal.svg</file>
-       <file>scalable/breeze/visibility.svg</file>
        <file>scalable/breeze/lines-disconnector.svg</file>
        <file>scalable/breeze/lines-connector.svg</file>
-       <file>scalable/breeze-dark/zoom-centered.svg</file>
        <file>scalable/breeze-dark/color-picker-white.svg</file>
        <file>scalable/breeze-dark/im-user.svg</file>
        <file>scalable/breeze-dark/hint_orange.svg</file>

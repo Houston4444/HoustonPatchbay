@@ -10,12 +10,15 @@ on part de:
     transport
 
 le but:
-    scalable
+    scalables
     -> dark
+       -> hardware
+       -> transport
+       -> breeze
+       -> misc
     -> light
 
     mentionner breeze et breeze-dark comme sources
 
-gérer les doublons (dans scalable les fichiers ni dans breeze ni dans breeze-dark sont déjà dans canvas)
 
 supprimer pas mal de fichiers
