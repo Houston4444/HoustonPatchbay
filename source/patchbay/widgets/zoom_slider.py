@@ -46,7 +46,7 @@ class ZoomSlider(QWidget):
 
         self._text_timer = QTimer()
         self._text_timer.setSingleShot(True)
-        self._text_timer.setInterval(2000)
+        self._text_timer.setInterval(1000)
         self._text_timer.timeout.connect(self._hide_text)
 
         self._last_mouse_pos = QPoint()
