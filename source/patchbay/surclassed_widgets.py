@@ -288,7 +288,7 @@ class ViewsComboBox(QComboBox):
         color_scheme = 'breeze-dark' if dark else 'breeze'
 
         self._white_image = QPixmap(
-            f':scalable/{color_scheme}/color-picker-white.svg').toImage()
+            f':scalables/{color_scheme}/breeze/color-picker-white.svg').toImage()
 
         self.editTextChanged.connect(self._edit_text_changed)
         self.view().setMinimumWidth(800)

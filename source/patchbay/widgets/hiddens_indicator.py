@@ -167,9 +167,10 @@ class HiddensIndicator(QToolButton):
         self._blink_times_done = 0
 
         dark = '-dark' if self._is_dark() else ''
+        color_scheme = 'dark' if self._is_dark() else 'light'
 
-        self._icon_normal = QIcon(QPixmap(f':scalable/breeze{dark}/hint.svg'))
-        self._icon_orange = QIcon(QPixmap(f':scalable/breeze{dark}/hint_orange.svg'))
+        self._icon_normal = QIcon(QPixmap(f':scalables/{color_scheme}/breeze/hint.svg'))
+        self._icon_orange = QIcon(QPixmap(f':scalables/{color_scheme}/breeze/hint_orange.svg'))
 
         self.setIcon(self._icon_normal)
 

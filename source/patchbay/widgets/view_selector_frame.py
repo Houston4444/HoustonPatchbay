@@ -41,10 +41,10 @@ class ItemmDeleg(QAbstractItemDelegate):
         self._port_colors = [QColor() for i in range(4)]
 
         dark = QApplication.palette().text().color().lightnessF() > 0.5
-        color_scheme = 'breeze-dark' if dark else 'breeze'
+        color_scheme = 'dark' if dark else 'light'
 
         self._white_image = QPixmap(
-            f':scalable/{color_scheme}/color-picker-white.svg').toImage()
+            f':scalables/{color_scheme}/breeze/color-picker-white.svg').toImage()
 
     def sizeHint(self, option: 'QStyleOptionViewItem',
                  index: QModelIndex) -> QSize:

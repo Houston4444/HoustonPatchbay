@@ -1,5 +1,6 @@
 
 from pathlib import Path
+from turtle import color
 from typing import TYPE_CHECKING, Optional
 
 from qtpy.QtCore import Qt, QProcess, QSettings, Slot # type:ignore
@@ -286,8 +287,8 @@ class CanvasOptionsDialog(QDialog):
         del self._theme_list
         self._theme_list = theme_list
 
-        dark = '-dark' if is_dark_theme(self) else ''
-        user_icon = QIcon(QPixmap(f':scalable/breeze{dark}/im-user'))
+        color_scheme = 'dark' if is_dark_theme(self) else ''
+        user_icon = QIcon(QPixmap(f':scalables/{color_scheme}/breeze/im-user'))
 
         for theme_data in theme_list:
             if theme_data.editable:

@@ -132,7 +132,7 @@ QToolButton::menu-indicator{image: none}</string>
      </property>
      <property name="icon">
       <iconset resource="../resources.qrc">
-       <normaloff>:/scalable/breeze-dark/hint.svg</normaloff>:/scalable/breeze-dark/hint.svg</iconset>
+       <normaloff>:/scalables/dark/breeze/hint.svg</normaloff>:/scalables/dark/breeze/hint.svg</iconset>
      </property>
      <property name="popupMode">
       <enum>QToolButton::InstantPopup</enum>

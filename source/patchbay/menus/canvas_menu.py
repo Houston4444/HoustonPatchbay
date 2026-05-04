@@ -309,10 +309,10 @@ class CanvasMenu(QMenu):
 
         self.show_hiddens_menu.addSeparator()
 
-        color_scheme = 'breeze-dark' if dark else 'breeze'
+        color_scheme = 'dark' if dark else 'light'
         act_white_list = self.show_hiddens_menu.addAction(
             QIcon(QPixmap(
-                f':scalable/{color_scheme}/color-picker-white.svg')),
+                f':scalables/{color_scheme}/breeze/color-picker-white.svg')),
                 _translate('hiddens_indicator', 'Hide all new boxes'))
         act_white_list.setCheckable(True)
         act_white_list.setChecked(

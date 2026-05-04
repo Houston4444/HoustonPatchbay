@@ -1,17 +1,9 @@
 <RCC version="1.0">
    <qresource prefix="/">
        <file>scalable/liberapay_logo_black-on-yellow.svg</file>
-       <file>scalable/breeze/color-picker-white.svg</file>
-       <file>scalable/breeze/im-user.svg</file>
-       <file>scalable/breeze/hint_orange.svg</file>
-       <file>scalable/breeze/hint.svg</file>
        <file>scalable/breeze/handshake-deal.svg</file>
        <file>scalable/breeze/lines-disconnector.svg</file>
        <file>scalable/breeze/lines-connector.svg</file>
-       <file>scalable/breeze-dark/color-picker-white.svg</file>
-       <file>scalable/breeze-dark/im-user.svg</file>
-       <file>scalable/breeze-dark/hint_orange.svg</file>
-       <file>scalable/breeze-dark/hint.svg</file>
        <file>scalable/breeze-dark/handshake-deal.svg</file>
        <file>scalable/breeze-dark/lines-disconnector.svg</file>
        <file>scalable/breeze-dark/lines-connector.svg</file>
@@ -56,6 +48,10 @@
        <file>scalables/dark/transport/media-playback-pause.svg</file>
        <file>scalables/dark/transport/media-playback-stop.svg</file>
        <file>scalables/dark/transport/media-seek-forward.svg</file>
+       <file>scalables/dark/breeze/color-picker-white.svg</file>
+       <file>scalables/dark/breeze/im-user.svg</file>
+       <file>scalables/dark/breeze/hint_orange.svg</file>
+       <file>scalables/dark/breeze/hint.svg</file>
        <file>scalables/dark/box_icons/monitor_playback.svg</file>
        <file>scalables/dark/box_icons/audio-headphones.svg</file>
        <file>scalables/dark/box_icons/DIN-5.svg</file>
@@ -69,6 +65,10 @@
        <file>scalables/light/transport/media-playback-pause.svg</file>
        <file>scalables/light/transport/media-playback-stop.svg</file>
        <file>scalables/light/transport/media-seek-forward.svg</file>
+       <file>scalables/light/breeze/color-picker-white.svg</file>
+       <file>scalables/light/breeze/im-user.svg</file>
+       <file>scalables/light/breeze/hint_orange.svg</file>
+       <file>scalables/light/breeze/hint.svg</file>
        <file>scalables/light/box_icons/monitor_playback.svg</file>
        <file>scalables/light/box_icons/audio-headphones.svg</file>
        <file>scalables/light/box_icons/DIN-5.svg</file>
