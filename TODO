@@ -1,2 +1,21 @@
 
 patchbay_manager.disannounce (RaySession ?)  
+
+restructuration resources
+
+on part de:
+    canvas
+    cursors
+    scalable
+    transport
+
+le but:
+    scalable
+    -> dark
+    -> light
+
+    mentionner breeze et breeze-dark comme sources
+
+gérer les doublons (dans scalable les fichiers ni dans breeze ni dans breeze-dark sont déjà dans canvas)
+
+supprimer pas mal de fichiers

@@ -140,7 +140,8 @@ class IconPixmapWidget(QGraphicsPixmapItem):
 
 
 class IconSvgWidget(QGraphicsSvgItem): # type:ignore
-    def __init__(self, box_type: BoxType, name: str, port_mode: PortMode, parent):
+    def __init__(self, box_type: BoxType, name: str,
+                 port_mode: PortMode, parent):
         super().__init__(parent)
         self._renderer = None
         self._size = QRectF(4, 4, 24, 24)
@@ -154,31 +155,6 @@ class IconSvgWidget(QGraphicsSvgItem): # type:ignore
         box_theme = canvas.theme.box
 
         match box_type:
-            case BoxType.APPLICATION:
-                self._size = QRectF(3, 2, 19, 18)
-
-                if "audacious" in name:
-                    icon_path = ":/scalable/pb_audacious.svg"
-                    self._size = QRectF(5, 4, 16, 16)
-                elif "clementine" in name:
-                    icon_path = ":/scalable/pb_clementine.svg"
-                    self._size = QRectF(5, 4, 16, 16)
-                elif "distrho" in name:
-                    icon_path = ":/scalable/pb_distrho.svg"
-                    self._size = QRectF(5, 4, 16, 16)
-                elif "jamin" in name:
-                    icon_path = ":/scalable/pb_jamin.svg"
-                    self._size = QRectF(5, 3, 16, 16)
-                elif "mplayer" in name:
-                    icon_path = ":/scalable/pb_mplayer.svg"
-                    self._size = QRectF(5, 4, 16, 16)
-                elif "vlc" in name:
-                    icon_path = ":/scalable/pb_vlc.svg"
-                    self._size = QRectF(5, 3, 16, 16)
-                else:
-                    icon_path = ":/scalable/pb_generic.svg"
-                    self._size = QRectF(4, 4, 24, 24)
-
             case BoxType.HARDWARE:
                 box_theme = box_theme.hardware
                 icon_size = int(box_theme.icon_size)
@@ -194,22 +170,6 @@ class IconSvgWidget(QGraphicsSvgItem): # type:ignore
                         icon_path = theme.hardware_capture
                     else:
                         icon_path = theme.hardware_grouped
-
-            case BoxType.DISTRHO:
-                icon_path = ":/scalable/pb_distrho.svg"
-                self._size = QRectF(5, 4, 16, 16)
-
-            case BoxType.FILE:
-                icon_path = ":/scalable/pb_file.svg"
-                self._size = QRectF(5, 4, 16, 16)
-
-            case BoxType.PLUGIN:
-                icon_path = ":/scalable/pb_plugin.svg"
-                self._size = QRectF(5, 4, 16, 16)
-
-            case BoxType.LADISH_ROOM:
-                icon_path = ":/scalable/pb_hardware.svg"
-                self._size = QRectF(5, 2, 16, 16)
 
             case BoxType.MONITOR:
                 box_theme = box_theme.monitor
