@@ -548,8 +548,9 @@ class ConnectMenu(AbstractConnectionsMenu):
         AbstractConnectionsMenu.__init__(self, mng, po, parent)
         self.setTitle(_translate('patchbay', 'Connect'))
         dark = '-dark' if is_dark_theme(self) else ''
+        color_scheme = 'dark' if is_dark_theme(self) else 'light'
         self.setIcon(
-            QIcon(QPixmap(':scalable/breeze%s/lines-connector' % dark)))
+            QIcon(QPixmap(f':scalables/{color_scheme}/misc/lines-connector')))
 
         self._gp_menus = list[GroupConnectMenu]()
 
@@ -658,9 +659,9 @@ class DisconnectMenu(AbstractConnectionsMenu):
         self._one_frame_checked = False
 
         self.setTitle(_translate('patchbay', 'Disconnect'))
-        dark = '-dark' if is_dark_theme(self) else ''
+        color_scheme = 'dark' if is_dark_theme(self) else 'light'
         self.setIcon(
-            QIcon(QPixmap(':scalable/breeze%s/lines-disconnector' % dark)))
+            QIcon(QPixmap(f':scalables/{color_scheme}/misc/lines-disconnector.svg')))
 
         self.setSeparatorsCollapsible(False)
 
@@ -788,9 +789,9 @@ class PoMenu(AbstractConnectionsMenu):
         self.conn_menu = ConnectMenu(mng, po)
         self.disconn_menu = DisconnectMenu(mng, po, self)
 
-        dark = '-dark' if is_dark_theme(self) else ''
+        color_scheme = 'dark' if is_dark_theme(self) else 'light'
         disconn_icon = QIcon(
-            QPixmap(':scalable/breeze%s/lines-disconnector' % dark))
+            QPixmap(f':scalables/{color_scheme}/misc/lines-disconnector.svg'))
         self.disconn_menu.setIcon(disconn_icon)
 
         self.addMenu(self.conn_menu)

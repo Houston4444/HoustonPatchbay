@@ -1,12 +1,6 @@
 <RCC version="1.0">
    <qresource prefix="/">
        <file>scalable/liberapay_logo_black-on-yellow.svg</file>
-       <file>scalable/breeze/handshake-deal.svg</file>
-       <file>scalable/breeze/lines-disconnector.svg</file>
-       <file>scalable/breeze/lines-connector.svg</file>
-       <file>scalable/breeze-dark/handshake-deal.svg</file>
-       <file>scalable/breeze-dark/lines-disconnector.svg</file>
-       <file>scalable/breeze-dark/lines-connector.svg</file>
        <file>app_icons/padthv1.svg</file>
        <file>app_icons/samplv1.svg</file>
        <file>app_icons/carla.svg</file>
@@ -48,6 +42,9 @@
        <file>scalables/dark/transport/media-playback-pause.svg</file>
        <file>scalables/dark/transport/media-playback-stop.svg</file>
        <file>scalables/dark/transport/media-seek-forward.svg</file>
+       <file>scalables/dark/misc/handshake-deal.svg</file>
+       <file>scalables/dark/misc/lines-disconnector.svg</file>
+       <file>scalables/dark/misc/lines-connector.svg</file>
        <file>scalables/dark/breeze/color-picker-white.svg</file>
        <file>scalables/dark/breeze/im-user.svg</file>
        <file>scalables/dark/breeze/hint_orange.svg</file>
@@ -65,6 +62,9 @@
        <file>scalables/light/transport/media-playback-pause.svg</file>
        <file>scalables/light/transport/media-playback-stop.svg</file>
        <file>scalables/light/transport/media-seek-forward.svg</file>
+       <file>scalables/light/misc/handshake-deal.svg</file>
+       <file>scalables/light/misc/lines-disconnector.svg</file>
+       <file>scalables/light/misc/lines-connector.svg</file>
        <file>scalables/light/breeze/color-picker-white.svg</file>
        <file>scalables/light/breeze/im-user.svg</file>
        <file>scalables/light/breeze/hint_orange.svg</file>

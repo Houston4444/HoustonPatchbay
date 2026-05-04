@@ -191,18 +191,18 @@ class GroupMenu(QMenu):
             repatriate_act.triggered.connect(self._repatriate_track)
 
     def _build(self):
-        dark = '-dark' if utils.is_dark_theme(self) else ''
+        color_scheme = 'dark' if utils.is_dark_theme(self) else 'light'
 
         self._disconnect_menu = DisconnectMenu(
             self._mng, self._group, self._port_mode)
         self._disconnect_menu.setIcon(
-            QIcon(QPixmap(':scalable/breeze%s/lines-disconnector' % dark)))
+            QIcon(QPixmap(f':scalables/{color_scheme}/misc/lines-disconnector.svg')))
 
         self.addMenu(self._disconnect_menu)
 
         disco_all_act = self.addAction(_translate('patchbay', 'Disconnect All'))
         disco_all_act.setIcon(
-            QIcon(QPixmap(':scalable/breeze%s/lines-disconnector' % dark)))
+            QIcon(QPixmap(f':scalables/{color_scheme}/misc/lines-disconnector.svg')))
 
         self.addSeparator()
 
