@@ -3,7 +3,9 @@ from qtpy.QtGui import QIcon
 from qtpy.QtCore import Qt
 from patchbay.patchcanvas.utils import is_dark_theme
 
-from patshared.base_enums import BoxType, PortType
+from patshared import BoxType, PortType
+from resourcer import icon
+from resources.scalables import box_icons
 
 from ..bases.group import Group
 from ..patchcanvas.box_widget.icon_widget import get_app_icon
@@ -31,20 +33,16 @@ class GroupInfoDialog(QDialog):
 
     def _fill_contents(self):
         if self.group.cnv_box_type in (BoxType.HARDWARE, BoxType.MONITOR):
-            icon = QIcon()
-            color_theme = 'dark' if is_dark_theme(self) else 'light'
-
             if self.group.cnv_box_type is BoxType.HARDWARE:
                 if self.group.cnv_icon_name == 'a2j':
-                    icon.addFile(
-                        f':scalables/{color_theme}/box_icons/DIN-5.svg')
+                    box_icon = box_icons.DIN_5
                 else:
-                    icon.addFile(
-                        f':scalables/{color_theme}/box_icons/pb_hardware.svg')
+                    box_icon = box_icons.PB_HARDWARE
             else:
-                icon.addFile(
-                    f':scalables/{color_theme}/box_icons/audio-volume-medium.svg')
-            self.ui.toolButtonGroupIcon.setIcon(icon)
+                box_icon = box_icons.AUDIO_VOLUME_MEDIUM
+
+            self.ui.toolButtonGroupIcon.setIcon(
+                icon(box_icon, dark=is_dark_theme(self)))
         else:
             app_icon = get_app_icon(self.group.cnv_icon_name)
             self.ui.toolButtonGroupIcon.setVisible(not app_icon.isNull())

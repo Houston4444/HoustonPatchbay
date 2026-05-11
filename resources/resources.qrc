@@ -37,6 +37,7 @@
        <file>app_icons/amsynth.svg</file>
        <file>app_icons/dark/curve-connector.svg</file>
        <file>app_icons/dark/network-wired.svg</file>
+       <file>scalables/__init__.py</file>
        <file>scalables/dark/transport/media-playback-start.svg</file>
        <file>scalables/dark/transport/media-seek-backward.svg</file>
        <file>scalables/dark/transport/media-playback-pause.svg</file>

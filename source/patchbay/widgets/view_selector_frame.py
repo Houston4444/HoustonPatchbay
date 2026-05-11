@@ -11,6 +11,8 @@ from qtpy.QtCore import (
     Slot, Qt, QSize, QPointF, QRect, QRectF, QModelIndex) # type:ignore
 
 from patshared import PortTypesViewFlag
+from resourcer import pixmap
+from resources import scalables
 
 from ..patchcanvas import canvas
 from ..cancel_mng import CancelOp, CancellableAction
@@ -40,11 +42,10 @@ class ItemmDeleg(QAbstractItemDelegate):
         self._width = 500
         self._port_colors = [QColor() for i in range(4)]
 
-        dark = QApplication.palette().text().color().lightnessF() > 0.5
-        color_scheme = 'dark' if dark else 'light'
-
-        self._white_image = QPixmap(
-            f':scalables/{color_scheme}/breeze/color-picker-white.svg').toImage()
+        self._white_image = pixmap(
+            scalables.breeze.COLOR_PICKER_WHITE,
+            dark=QApplication.palette().text().color().lightnessF() > 0.5).\
+                toImage()
 
     def sizeHint(self, option: 'QStyleOptionViewItem',
                  index: QModelIndex) -> QSize:

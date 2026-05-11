@@ -4,12 +4,14 @@ from turtle import color
 from typing import TYPE_CHECKING, Optional
 
 from qtpy.QtCore import Qt, QProcess, QSettings, Slot # type:ignore
-from qtpy.QtGui import QIcon, QPixmap
 from qtpy.QtWidgets import (QDialog, QApplication, QInputDialog,
                              QMessageBox, QWidget, QFileDialog)
 
 from patshared import Naming, PrettyDiff
+from resources import scalables
+from resourcer import icon
 import xdg
+
 
 from ..patchcanvas import patchcanvas
 from ..patchcanvas.theme_manager import ThemeData
@@ -287,8 +289,7 @@ class CanvasOptionsDialog(QDialog):
         del self._theme_list
         self._theme_list = theme_list
 
-        color_scheme = 'dark' if is_dark_theme(self) else ''
-        user_icon = QIcon(QPixmap(f':scalables/{color_scheme}/breeze/im-user'))
+        user_icon = icon(scalables.breeze.IM_USER, dark=is_dark_theme(self))
 
         for theme_data in theme_list:
             if theme_data.editable:

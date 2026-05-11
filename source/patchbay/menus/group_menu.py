@@ -3,14 +3,15 @@ from typing import TYPE_CHECKING, cast
 from qtpy import QT5
 from qtpy.QtWidgets import QMenu, QApplication
 from qtpy.QtCore import Slot # type:ignore
-from qtpy.QtGui import QIcon, QPixmap
+from qtpy.QtGui import QIcon
 if QT5 and not TYPE_CHECKING:
     from qtpy.QtWidgets import QAction
 else:
     from qtpy.QtGui import QAction
 
-
 from patshared import PortMode, BoxLayoutMode
+from resourcer import icon
+from resources import scalables
 
 from ..cancel_mng import CancelOp, CancellableAction
 from ..bases.elements import CanvasOptimizeIt
@@ -191,18 +192,18 @@ class GroupMenu(QMenu):
             repatriate_act.triggered.connect(self._repatriate_track)
 
     def _build(self):
-        color_scheme = 'dark' if utils.is_dark_theme(self) else 'light'
+        dark = utils.is_dark_theme(self)
 
         self._disconnect_menu = DisconnectMenu(
             self._mng, self._group, self._port_mode)
         self._disconnect_menu.setIcon(
-            QIcon(QPixmap(f':scalables/{color_scheme}/misc/lines-disconnector.svg')))
+            icon(scalables.misc.LINES_DISCONNECTOR, dark=dark))
 
         self.addMenu(self._disconnect_menu)
 
         disco_all_act = self.addAction(_translate('patchbay', 'Disconnect All'))
         disco_all_act.setIcon(
-            QIcon(QPixmap(f':scalables/{color_scheme}/misc/lines-disconnector.svg')))
+            icon(scalables.misc.LINES_DISCONNECTOR, dark=dark))
 
         self.addSeparator()
 

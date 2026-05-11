@@ -6,6 +6,8 @@ from qtpy.QtGui import QPalette, QIcon, QColor, QKeySequence
 from qtpy.QtCore import Slot # type:ignore
 
 from patshared import TransportPosition
+from resources import scalables
+from resourcer import icon
 
 from ..bases.elements import ToolDisplayed, TransportViewMode
 
@@ -53,21 +55,20 @@ class BarWidgetTransport(QWidget):
 
         # set theme
         app_bg = self.ui.labelTempo.palette().brush(
-            QPalette.ColorGroup.Active, QPalette.ColorRole.Button).color() # type:ignore
+            QPalette.ColorGroup.Active, QPalette.ColorRole.Button).color()
 
-        scheme = 'dark' if dark else 'light'
-        self._icon_play = QIcon(
-            f':/scalables/{scheme}/transport/media-playback-start.svg')
-        self._icon_pause = QIcon(
-            f':/scalables/{scheme}/transport/media-playback-pause.svg')
+        self._icon_play = icon(
+            scalables.transport.MEDIA_PLAYBACK_START, dark=dark)
+        self._icon_pause = icon(
+            scalables.transport.MEDIA_PLAYBACK_PAUSE, dark=dark)
 
-        self.ui.toolButtonRewind.setIcon(
-            QIcon(f':/scalables/{scheme}/transport/media-seek-backward.svg')) # type:ignore
-        self.ui.toolButtonForward.setIcon(
-            QIcon(f':/scalables/{scheme}/transport/media-seek-forward.svg')) # type:ignore
-        self.ui.toolButtonPlayPause.setIcon(self._icon_play) # type:ignore
-        self.ui.toolButtonStop.setIcon(
-            QIcon(f':/scalables/{scheme}/transport/media-playback-stop.svg')) # type:ignore
+        self.ui.toolButtonRewind.setIcon(icon(
+            scalables.transport.MEDIA_SEEK_BACKWARD, dark=dark))
+        self.ui.toolButtonForward.setIcon(icon(
+            scalables.transport.MEDIA_SEEK_FORWARD, dark=dark))
+        self.ui.toolButtonPlayPause.setIcon(self._icon_play)
+        self.ui.toolButtonStop.setIcon(icon(
+            scalables.transport.MEDIA_PLAYBACK_STOP, dark=dark))
 
         bg = QColor(app_bg)
         more_gray = 20 if dark else -30

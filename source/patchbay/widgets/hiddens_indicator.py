@@ -8,10 +8,13 @@ if TYPE_CHECKING:
     from qtpy.QtGui import QAction
 from qtpy.QtWidgets import QToolButton, QMenu, QApplication, QAction # type:ignore
 
+from patshared import PortMode
+from resourcer import icon
+from resources import scalables
+
 from ..cancel_mng import CancelOp, CancellableAction
 from ..bases.group import Group, Track
 from ..patchcanvas import utils
-from patshared import PortMode
 
 if TYPE_CHECKING:
     from ..patchbay_manager import PatchbayManager
@@ -166,12 +169,10 @@ class HiddensIndicator(QToolButton):
         self._BLINK_TIMES = 6
         self._blink_times_done = 0
 
-        dark = '-dark' if self._is_dark() else ''
-        color_scheme = 'dark' if self._is_dark() else 'light'
-
-        self._icon_normal = QIcon(QPixmap(f':scalables/{color_scheme}/breeze/hint.svg'))
-        self._icon_orange = QIcon(QPixmap(f':scalables/{color_scheme}/breeze/hint_orange.svg'))
-
+        self._icon_normal = icon(
+            scalables.breeze.HINT, dark=self._is_dark())
+        self._icon_orange = icon(
+            scalables.breeze.HINT_ORANGE, dark=self._is_dark())
         self.setIcon(self._icon_normal)
 
         self._menu = QMenu()

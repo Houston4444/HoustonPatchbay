@@ -17,6 +17,8 @@ else:
     from qtpy.QtWidgets import QAction
 
 from patshared import PortTypesViewFlag, PortType, PortSubType
+from resourcer import pixmap
+from resources import scalables
 
 from .patchcanvas import patchcanvas
 from .patchcanvas.utils import polyline
@@ -284,11 +286,10 @@ class ViewsComboBox(QComboBox):
         self._selected_index = 0
         self._selected_view = 1
 
-        dark = self.palette().text().color().lightnessF() > 0.5
-        color_scheme = 'breeze-dark' if dark else 'breeze'
-
-        self._white_image = QPixmap(
-            f':scalables/{color_scheme}/breeze/color-picker-white.svg').toImage()
+        self._white_image = pixmap(
+            scalables.breeze.COLOR_PICKER_WHITE,
+            dark=self.palette().text().color().lightnessF() > 0.5).\
+                toImage()
 
         self.editTextChanged.connect(self._edit_text_changed)
         self.view().setMinimumWidth(800)

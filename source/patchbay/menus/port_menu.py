@@ -4,11 +4,10 @@ from typing import TYPE_CHECKING, Union, Optional
 
 from qtpy.QtCore import Qt, QSize, Slot, QEvent, QPoint # type:ignore
 from qtpy.QtGui import (
-    QIcon, QColor, QKeyEvent, QPixmap, QMouseEvent,
+    QIcon, QColor, QKeyEvent, QMouseEvent,
     QCursor, QFocusEvent, QPaintEvent, QPainter,
     QPen, QBrush)
 
-from ..dialogs.custom_name_dialog import CustomNameDialog
 if TYPE_CHECKING:
     # FIX : QAction not found by pylance
     from qtpy.QtGui import QAction
@@ -17,9 +16,11 @@ from qtpy.QtWidgets import (
     QSpacerItem, QSizePolicy, QWidgetAction,
     QApplication, QAction) # type:ignore
 
-from patshared import (
-    PortType, PortSubType, PortMode)
+from patshared import PortType, PortSubType, PortMode
+from resourcer import icon
+from resources import scalables
 
+from ..dialogs.custom_name_dialog import CustomNameDialog
 from ..patchcanvas import canvas, BoxType, options
 from ..patchcanvas.theme import StyleAttributer
 from ..patchcanvas.utils import (
@@ -547,10 +548,8 @@ class ConnectMenu(AbstractConnectionsMenu):
                  po: Union[Portgroup, Port], parent=None):
         AbstractConnectionsMenu.__init__(self, mng, po, parent)
         self.setTitle(_translate('patchbay', 'Connect'))
-        dark = '-dark' if is_dark_theme(self) else ''
-        color_scheme = 'dark' if is_dark_theme(self) else 'light'
         self.setIcon(
-            QIcon(QPixmap(f':scalables/{color_scheme}/misc/lines-connector')))
+            icon(scalables.misc.LINES_CONNECTOR, dark=is_dark_theme(self)))
 
         self._gp_menus = list[GroupConnectMenu]()
 
@@ -659,9 +658,8 @@ class DisconnectMenu(AbstractConnectionsMenu):
         self._one_frame_checked = False
 
         self.setTitle(_translate('patchbay', 'Disconnect'))
-        color_scheme = 'dark' if is_dark_theme(self) else 'light'
         self.setIcon(
-            QIcon(QPixmap(f':scalables/{color_scheme}/misc/lines-disconnector.svg')))
+            icon(scalables.misc.LINES_DISCONNECTOR, dark=is_dark_theme(self)))
 
         self.setSeparatorsCollapsible(False)
 
@@ -789,9 +787,8 @@ class PoMenu(AbstractConnectionsMenu):
         self.conn_menu = ConnectMenu(mng, po)
         self.disconn_menu = DisconnectMenu(mng, po, self)
 
-        color_scheme = 'dark' if is_dark_theme(self) else 'light'
-        disconn_icon = QIcon(
-            QPixmap(f':scalables/{color_scheme}/misc/lines-disconnector.svg'))
+        disconn_icon = icon(scalables.misc.LINES_DISCONNECTOR,
+                            dark=is_dark_theme(self))
         self.disconn_menu.setIcon(disconn_icon)
 
         self.addMenu(self.conn_menu)

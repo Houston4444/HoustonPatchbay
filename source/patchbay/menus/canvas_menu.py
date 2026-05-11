@@ -3,13 +3,16 @@ from typing import TYPE_CHECKING, cast
 
 from qtpy import QT5
 
-from qtpy.QtGui import QIcon, QDesktopServices, QPixmap
+from qtpy.QtGui import QIcon, QDesktopServices
 from qtpy.QtWidgets import QMenu, QApplication
 from qtpy.QtCore import QLocale, QUrl, Slot # type:ignore
 if QT5 and not TYPE_CHECKING:
     from qtpy.QtWidgets import QAction
 else:
     from qtpy.QtGui import QAction
+
+from resourcer import icon
+from resources import scalables
 
 from ..bases.group import Track
 from .. import patchcanvas
@@ -309,11 +312,9 @@ class CanvasMenu(QMenu):
 
         self.show_hiddens_menu.addSeparator()
 
-        color_scheme = 'dark' if dark else 'light'
         act_white_list = self.show_hiddens_menu.addAction(
-            QIcon(QPixmap(
-                f':scalables/{color_scheme}/breeze/color-picker-white.svg')),
-                _translate('hiddens_indicator', 'Hide all new boxes'))
+            icon(scalables.breeze.COLOR_PICKER_WHITE, dark=dark),
+            _translate('hiddens_indicator', 'Hide all new boxes'))
         act_white_list.setCheckable(True)
         act_white_list.setChecked(
             self.mng.view().is_white_list)
