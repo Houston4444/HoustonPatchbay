@@ -7,11 +7,8 @@ from qtpy.QtGui import QPixmap, QIcon
 _logger = logging.getLogger(__name__)
 _dark_pixmaps_cache = dict[str, QPixmap]()
 _light_pixmaps_cache = dict[str, QPixmap]()
-_dark_icons_cache = dict[str, QIcon]()
-_light_icons_cache = dict[str, QIcon]()
 resources_path = Path(__file__).parents[2] / 'resources'
 scalables = resources_path / 'scalables'
-
 
 
 def _get_path(rel_path: str, dark=True) -> Path:
@@ -49,13 +46,7 @@ def pixmap(rel_path: str, dark=True) -> QPixmap:
     return pixmap
 
 def icon(rel_path: str, dark=True) -> QIcon:
-    icon_ = QIcon()
-    img_path = _get_path(rel_path, dark=dark)
-    if not img_path.is_file():
-        return QIcon()
-
-    icon_.addFile(str(img_path))
-    return icon_
+    return QIcon(pixmap(rel_path, dark=dark))
 
 def icon_path(rel_path: str, dark=True) -> str:
     return str(_get_path(rel_path, dark=dark))

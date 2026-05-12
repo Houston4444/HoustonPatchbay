@@ -1,12 +1,14 @@
 
 from typing import TYPE_CHECKING, Callable, Iterator, Optional, cast
 
+from qtpy import QT5
 from qtpy.QtCore import Slot, QTimer # type:ignore
-from qtpy.QtGui import QIcon, QPixmap
-if TYPE_CHECKING:
-    # FIX : QAction not found by pylance
+from qtpy.QtGui import QIcon
+from qtpy.QtWidgets import QToolButton, QMenu, QApplication
+if not QT5 or TYPE_CHECKING:
     from qtpy.QtGui import QAction
-from qtpy.QtWidgets import QToolButton, QMenu, QApplication, QAction # type:ignore
+else:
+    from qtpy.QtWidgets import QAction
 
 from patshared import PortMode
 from resourcer import icon
