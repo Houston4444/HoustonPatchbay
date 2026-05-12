@@ -85,8 +85,7 @@ background-color:  rgba(50%, 50%, 50%, 25%);
          <string>...</string>
         </property>
         <property name="icon">
-         <iconset resource="../resources.qrc">
-          <normaloff>:/scalables/dark/transport/media-seek-backward.svg</normaloff>:/scalables/dark/transport/media-seek-backward.svg</iconset>
+         <iconset theme="media-seek-backward"/>
         </property>
         <property name="iconSize">
          <size>
@@ -147,8 +146,7 @@ background-color:  rgba(50%, 50%, 50%, 25%);
          <string>...</string>
         </property>
         <property name="icon">
-         <iconset resource="../resources.qrc">
-          <normaloff>:/scalables/dark/transport/media-seek-forward.svg</normaloff>:/scalables/dark/transport/media-seek-forward.svg</iconset>
+         <iconset theme="media-seek-forward"/>
         </property>
         <property name="iconSize">
          <size>
@@ -195,8 +193,7 @@ background-color:  rgba(50%, 50%, 50%, 25%);
          <string>...</string>
         </property>
         <property name="icon">
-         <iconset resource="../resources.qrc">
-          <normaloff>:/scalables/dark/transport/media-playback-start.svg</normaloff>:/scalables/dark/transport/media-playback-start.svg</iconset>
+         <iconset theme="media-playback-start"/>
         </property>
         <property name="iconSize">
          <size>
@@ -227,8 +224,7 @@ background-color:  rgba(50%, 50%, 50%, 25%);
          <string>...</string>
         </property>
         <property name="icon">
-         <iconset resource="../resources.qrc">
-          <normaloff>:/scalables/dark/transport/media-playback-stop.svg</normaloff>:/scalables/dark/transport/media-playback-stop.svg</iconset>
+         <iconset theme="media-playback-stop"/>
         </property>
         <property name="iconSize">
          <size>
@@ -575,8 +571,7 @@ QToolButton::menu-indicator{image: none}</string>
          <string>0</string>
         </property>
         <property name="icon">
-         <iconset resource="../resources.qrc">
-          <normaloff>:/scalables/dark/breeze/hint.svg</normaloff>:/scalables/dark/breeze/hint.svg</iconset>
+         <iconset theme="hint"/>
         </property>
         <property name="popupMode">
          <enum>QToolButton::InstantPopup</enum>

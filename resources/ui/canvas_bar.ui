@@ -63,7 +63,8 @@
       <string>...</string>
      </property>
      <property name="icon">
-      <iconset theme="edit-undo"/>
+      <iconset theme="edit-undo">
+       <normaloff>.</normaloff>.</iconset>
      </property>
     </widget>
    </item>
@@ -79,7 +80,8 @@
       <string>...</string>
      </property>
      <property name="icon">
-      <iconset theme="edit-redo"/>
+      <iconset theme="edit-redo">
+       <normaloff>.</normaloff>.</iconset>
      </property>
     </widget>
    </item>
@@ -131,8 +133,7 @@ QToolButton::menu-indicator{image: none}</string>
       <string>0</string>
      </property>
      <property name="icon">
-      <iconset resource="../resources.qrc">
-       <normaloff>:/scalables/dark/breeze/hint.svg</normaloff>:/scalables/dark/breeze/hint.svg</iconset>
+      <iconset theme="hint"/>
      </property>
      <property name="popupMode">
       <enum>QToolButton::InstantPopup</enum>
