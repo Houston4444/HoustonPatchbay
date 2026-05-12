@@ -56,3 +56,6 @@ def icon(rel_path: str, dark=True) -> QIcon:
 
     icon_.addFile(str(img_path))
     return icon_
+
+def icon_path(rel_path: str, dark=True) -> str:
+    return str(_get_path(rel_path, dark=dark))

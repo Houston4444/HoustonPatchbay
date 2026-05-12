@@ -1,5 +1,9 @@
 from pathlib import Path
 
+from resources.scalables import box_icons
+from resourcer import icon_path
+
+
 from .style_attributer import StyleAttributer
 
 
@@ -71,13 +75,12 @@ class GridStyleAttributer(StyleAttributer):
 
 class IconTheme:
     def __init__(self):
-        src = ':scalables/dark/box_icons/'
-        self.hardware_capture = src + 'microphone.svg'
-        self.hardware_playback = src + 'audio-headphones.svg'
-        self.hardware_grouped = src + 'pb_hardware.svg'
-        self.hardware_midi = src + 'DIN-5.svg'
-        self.monitor_capture = src + 'monitor_capture.svg'
-        self.monitor_playback = src + 'monitor_playback.svg'
+        self.hardware_capture = icon_path(box_icons.MICROPHONE)
+        self.hardware_playback = icon_path(box_icons.AUDIO_HEADPHONES)
+        self.hardware_grouped = icon_path(box_icons.PB_HARDWARE)
+        self.hardware_midi = icon_path(box_icons.DIN_5)
+        self.monitor_capture = icon_path(box_icons.MONITOR_CAPTURE)
+        self.monitor_playback = icon_path(box_icons.MONITOR_PLAYBACK)
 
     def read_theme(self, theme_file: Path):
         icons_dir = theme_file.parent / 'icons'
