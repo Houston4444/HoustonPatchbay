@@ -183,7 +183,9 @@ class IconSvgWidget(QGraphicsSvgItem): # type:ignore
                     case 'monitor_playback':
                         icon_path = theme.monitor_playback
                     case _:
-                        icon_path = f":scalables/dark/box_icons/{name}"
+                        icon_path = name
+                        _logger.warning(
+                            f'Monitor BoxType with invalid icon name {name=}')
 
             case _:
                 self._size = QRectF(0, 0, 0, 0)
