@@ -28,10 +28,7 @@ def _generate_rc():
     with open('resources.qrc', 'w') as f:
         f.write(contents)
 
-def _generate_modules():
-    res = Path(__file__).parents[1] / 'source' / 'resources'
-    res.mkdir(exist_ok=True)
-    
+def _generate_scalables():
     scalables = Path(__file__).parent / 'scalables'
     scalables.mkdir(exist_ok=True)
 
@@ -73,6 +70,11 @@ def _generate_modules():
     
     with open(generated_scalables / '__init__.py', 'w') as f:
         f.write('\n'.join(lines))    
+
+def _generate_modules():
+    res = Path(__file__).parents[1] / 'source' / 'resources'
+    res.mkdir(exist_ok=True)
+    _generate_scalables()
 
 
 if __name__ == '__main__':

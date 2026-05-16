@@ -1,7 +1,7 @@
 import logging
 from pathlib import Path
 
-from qtpy.QtGui import QPixmap, QIcon
+from qtpy.QtGui import QPixmap, QIcon, QFontDatabase
 
 
 _logger = logging.getLogger(__name__)
@@ -50,3 +50,9 @@ def icon(rel_path: str, dark=True) -> QIcon:
 
 def icon_path(rel_path: str, dark=True) -> str:
     return str(_get_path(rel_path, dark=dark))
+
+def install_fonts():
+    fonts_dir = resources_path / 'fonts'
+    for font_file in fonts_dir.iterdir():
+        if font_file.is_file() and font_file.name.endswith('.ttf'):
+            QFontDatabase.addApplicationFont(str(font_file))
