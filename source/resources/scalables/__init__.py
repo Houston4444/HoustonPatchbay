@@ -9,6 +9,7 @@ class transport:
     MEDIA_SEEK_FORWARD = "transport/media-seek-forward.svg"
 
 class misc:
+    LIBERAPAY_LOGO_BLACK_ON_YELLOW = "misc/liberapay_logo_black-on-yellow.svg"
     HANDSHAKE_DEAL = "misc/handshake-deal.svg"
     LINES_DISCONNECTOR = "misc/lines-disconnector.svg"
     ZOOM_AREA = "misc/zoom-area.svg"
