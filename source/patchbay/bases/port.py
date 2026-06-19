@@ -188,6 +188,7 @@ class Port:
 
             for conn in visible_conns:
                 self.set_hidden_conn_in_canvas(conn, False)
+                conn.add_to_canvas()
 
             if self.conns_hidden_in_canvas:
                 patchcanvas.port_has_hidden_connection(
