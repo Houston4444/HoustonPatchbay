@@ -854,7 +854,7 @@ class PatchEngine:
         except:
             _logger.warning(
                 "Failed to get JACK properties, "
-                "JACK seems to be compiled without Metadatas support, ",
+                "JACK seems to be compiled without Metadatas support, "
                 "you can't rename ports in the graph.")
             jack_properties = {}
 
