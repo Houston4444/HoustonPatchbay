@@ -47,8 +47,9 @@ class ProgressBarDsp(QProgressBar):
         QProgressBar.__init__(self)
 
     def setValue(self, value: int):
-        color_border = "rgba(%i%%, %i%%, 0, 55%%)" % (value, 100 - value)
-        color_center = "rgba(%i%%, %i%%, 0, 45%%)" % (value, 100 - value)
+        v = max(0, min(100, value))
+        color_border = "rgba(%i%%, %i%%, 0, 55%%)" % (v, 100 - v)
+        color_center = "rgba(%i%%, %i%%, 0, 45%%)" % (v, 100 - v)
         self.setStyleSheet(
             "QProgressBar:chunk{background-color: "
             + "qlineargradient(x1:0, y1:0, x2:0, y1:1, "
