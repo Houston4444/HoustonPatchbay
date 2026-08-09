@@ -1022,6 +1022,7 @@ def set_optional_gui_state(group_id: int, visible: bool):
     for widget in group.widgets:
         if widget is not None:
             widget.set_optional_gui_state(visible)
+            widget.update()
 
     if not canvas.loading_items:
         canvas.scene.update()
