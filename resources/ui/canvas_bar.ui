@@ -63,7 +63,8 @@
       <string>...</string>
      </property>
      <property name="icon">
-      <iconset theme="edit-undo"/>
+      <iconset theme="edit-undo">
+       <normaloff>.</normaloff>.</iconset>
      </property>
     </widget>
    </item>
@@ -79,7 +80,8 @@
       <string>...</string>
      </property>
      <property name="icon">
-      <iconset theme="edit-redo"/>
+      <iconset theme="edit-redo">
+       <normaloff>.</normaloff>.</iconset>
      </property>
     </widget>
    </item>
@@ -131,8 +133,7 @@ QToolButton::menu-indicator{image: none}</string>
       <string>0</string>
      </property>
      <property name="icon">
-      <iconset resource="../resources.qrc">
-       <normaloff>:/scalable/breeze-dark/hint.svg</normaloff>:/scalable/breeze-dark/hint.svg</iconset>
+      <iconset theme="hint"/>
      </property>
      <property name="popupMode">
       <enum>QToolButton::InstantPopup</enum>
@@ -177,7 +178,7 @@ QToolButton::menu-indicator{image: none}</string>
   <customwidget>
    <class>ZoomSlider</class>
    <extends>QSlider</extends>
-   <header>..surclassed_widgets</header>
+   <header>..widgets/zoom_slider</header>
   </customwidget>
   <customwidget>
    <class>TypeFilterFrame</class>
@@ -204,7 +205,6 @@ QToolButton::menu-indicator{image: none}</string>
   </customwidget>
  </customwidgets>
  <resources>
-  <include location="../resources.qrc"/>
  </resources>
  <connections/>
 </ui>

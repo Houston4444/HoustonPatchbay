@@ -24,7 +24,7 @@ from typing import TYPE_CHECKING
 from qtpy.QtCore import Qt, QPointF, QRectF
 from qtpy.QtGui import (
     QBrush, QFontMetrics, QPainter, QPen, QPolygonF,
-    QLinearGradient, QColor, QPainterPath)
+    QLinearGradient, QColor)
 from qtpy.QtWidgets import QGraphicsItem, QApplication
 
 
@@ -42,25 +42,20 @@ if TYPE_CHECKING:
     from .portgroup_widget import PortgroupWidget
 
 
+_logger = logging.getLogger(__name__)
+
+_TRUNCK_SEP = '⠿'
+
+
 class PortWidget(ConnectableWidget):
     def __init__(self, port: PortObject, parent: 'BoxWidget'):
         ConnectableWidget.__init__(self, port, parent)
-        self._logger = logging.getLogger(__name__)
 
         # Save Variables, useful for later
         self._port = port
-        self._port_id = port.port_id
-        self._port_name = port.port_name
-        self._portgrp_id = port.portgrp_id
-        self._pg_pos = port.pg_pos
-        'the port position in portgroup, 0 if port is not in a portgroup'
-        self._pg_len = port.pg_len
-        'the portgroup length, 1 if port is not in a portgroup'
-        self._port_subtype = port.port_subtype
         self._print_name = port.port_name
         self._print_name_right = ''
         self._name_truncked = False
-        self._trunck_sep = '⠿'
 
         # Base Variables
         self._port_width = 15
@@ -69,16 +64,41 @@ class PortWidget(ConnectableWidget):
         self._loop_select_done = False
 
         self._connect_pos = QPointF(0.0, 0.0)
-        self._update_connect_pos()
+        self.update_connect_pos()
         self.setZValue(ZvBox.PORT.value)
         
         self._bounding_rect = QRectF()
 
+    def recycle(self, port: PortObject):
+        self._port = port
+
+    @property
+    def port_id(self) -> int:
+        return self._port.port_id
+
+    @property
+    def port_name(self) -> str:
+        return self._port.port_name
+    
+    @property
+    def portgrp_id(self) -> int:
+        return self._port.portgrp_id
+
+    @property
+    def pg_pos(self) -> int:
+        'the port position in portgroup, 0 if port is not in a portgroup'
+        return self._port.pg_pos
+
+    @property
+    def pg_len(self) -> int:
+        'the portgroup length, 1 if port is not in a portgroup'
+        return self._port.pg_len
+
     def get_theme(self) -> UslStyleAttributer:
         theme = canvas.theme.port
-        match self._port_type:
+        match self.port_type:
             case PortType.AUDIO_JACK:
-                if self._port_subtype is PortSubType.CV:
+                if self.port_subtype is PortSubType.CV:
                     return theme.cv
                 return theme.audio
             case PortType.MIDI_JACK:
@@ -94,22 +114,12 @@ class PortWidget(ConnectableWidget):
     def get_connection_distance(self) -> float:
         return self._port_width
 
-    def set_portgroup_id(self, portgrp_id: int, index: int, portgrp_len: int):
-        self._portgrp_id = portgrp_id
-        self._pg_pos = index
-        self._pg_len = portgrp_len
-        self._update_connect_pos()
-
     def set_portgroup_widget(self, widget: 'PortgroupWidget'):
         self._portgrp_widget = widget
 
-    def set_port_name(self, port_name: str):
-        self._port_name = port_name
-        self._update_connect_pos()
-
     def set_port_width(self, port_width: int | float):
         self._port_width = int(port_width)
-        self._update_connect_pos()
+        self.update_connect_pos()
 
     def set_print_name(self, print_name: str, width_limited: int):
         self._print_name = print_name
@@ -124,7 +134,7 @@ class PortWidget(ConnectableWidget):
                 name_len = len(self._print_name)
                 middle = int(name_len / 2)
                 left_text = self._print_name[:middle]
-                middle_text = self._trunck_sep
+                middle_text = _TRUNCK_SEP
                 right_text = self._print_name[middle + 1:]
                 left_size = theme.get_text_width(left_text)
                 middle_size = theme.get_text_width(middle_text)
@@ -144,43 +154,43 @@ class PortWidget(ConnectableWidget):
                 self._print_name = left_text
                 self._print_name_right = right_text
                 self._name_truncked = True
-        self._update_connect_pos()
+        self.update_connect_pos()
 
     def get_text_width(self) -> float:
         theme = self.get_theme()
         
         if self._name_truncked:
             return (theme.get_text_width(self._print_name)
-                    + theme.get_text_width(self._trunck_sep)
+                    + theme.get_text_width(_TRUNCK_SEP)
                     + theme.get_text_width(self._print_name_right))
 
         return theme.get_text_width(self._print_name)
 
     def set_as_stereo(self, port_id: int):
         canvas.cb.portgroup_add(
-            self._group_id, self._port_mode, self._port_type,
-            tuple([p.port_id for p in canvas.list_ports(group_id=self._group_id)
-                   if p.port_id in (self._port_id, port_id)]))
+            self.group_id, self.port_mode, self.port_type,
+            tuple([p.port_id for p in canvas.list_ports(group_id=self.group_id)
+                   if p.port_id in (self.port_id, port_id)]))
 
     def type(self) -> CanvasItemType:
         return CanvasItemType.PORT
 
-    def _update_connect_pos(self):
-        phi = 0.75 if self._pg_len > 2 else 0.62
+    def update_connect_pos(self):
+        phi = 0.75 if self.pg_len > 2 else 0.62
 
         height = canvas.theme.port_height
 
-        x_delta = (self._port_width if self._port_mode is PortMode.OUTPUT
+        x_delta = (self._port_width if self.port_mode is PortMode.OUTPUT
                    else 0.0)
         y_delta = canvas.theme.port_height / 2
 
-        if self._pg_len >= 2:
+        if self.pg_len >= 2:
             first_old_y = height * phi
-            last_old_y = height * (self._pg_len - phi)
-            delta = (last_old_y - first_old_y) / (self._pg_len -1)
+            last_old_y = height * (self.pg_len - phi)
+            delta = (last_old_y - first_old_y) / (self.pg_len -1)
             y_delta = (first_old_y
-                       + (self._pg_pos * delta)
-                       - (height * self._pg_pos))
+                       + (self.pg_pos * delta)
+                       - (height * self.pg_pos))
 
         if not self.isVisible():
             # item is hidden port when its box is folded
@@ -193,9 +203,9 @@ class PortWidget(ConnectableWidget):
 
     def set_bounding_rect(self, spacing: float):
         top, bottom = 0.0, 0.0
-        if self._pg_pos == 0:
+        if self.pg_pos == 0:
             top = spacing / 2
-        if self._pg_pos + 1 == self._pg_len:
+        if self.pg_pos + 1 == self.pg_len:
             bottom = spacing / 2
         
         self._bounding_rect = QRectF(
@@ -205,7 +215,7 @@ class PortWidget(ConnectableWidget):
 
     def setVisible(self, visible: bool):
         super().setVisible(visible)
-        self._update_connect_pos()
+        self.update_connect_pos()
 
     def itemChange(
             self, change: QGraphicsItem.GraphicsItemChange, value: bool):
@@ -231,23 +241,23 @@ class PortWidget(ConnectableWidget):
                 other_group_ids = set[int]()
                 selected = self.isSelected()
 
-                if self._port_mode is PortMode.OUTPUT:
+                if self.port_mode is PortMode.OUTPUT:
                     for conn in connections:
                         conn.out_selected = selected
                         other_group_ids.add(conn.group_in_id)
 
                     for in_group_id in other_group_ids:
                         GroupedLinesWidget.connections_changed(
-                            self._group_id, in_group_id)
+                            self.group_id, in_group_id)
 
-                elif self._port_mode is PortMode.INPUT:
+                elif self.port_mode is PortMode.INPUT:
                     for conn in connections:
                         conn.in_selected = selected
                         other_group_ids.add(conn.group_out_id)
 
                     for out_group_id in other_group_ids:
                         GroupedLinesWidget.connections_changed(
-                            out_group_id, self._group_id)
+                            out_group_id, self.group_id)
 
             self.changing_select_state = False
 
@@ -275,14 +285,14 @@ class PortWidget(ConnectableWidget):
         start_point = canvas.scene.screen_position(
             self.scenePos() + QPointF(0.0, canvas.theme.port_height)) # type:ignore
 
-        if (self._portgrp_id and self._port_mode is PortMode.INPUT
-                and self._pg_pos + 1 <= self._pg_len // 2):
+        if (self.portgrp_id and self.port_mode is PortMode.INPUT
+                and self.pg_pos + 1 <= self.pg_len // 2):
             start_point = canvas.scene.screen_position(
                 self.scenePos() + QPointF(
-                    0.0, canvas.theme.port_height * (0.5 + self._pg_len / 2.0))) # type:ignore
+                    0.0, canvas.theme.port_height * (0.5 + self.pg_len / 2.0))) # type:ignore
 
         bottom_screen = QApplication.primaryScreen().geometry().bottom()
-        more = 12 if self._port_mode is PortMode.OUTPUT else 0
+        more = 12 if self.port_mode is PortMode.OUTPUT else 0
 
         if start_point.y() + 250 > bottom_screen:
             start_point = canvas.scene.screen_position(
@@ -290,20 +300,20 @@ class PortWidget(ConnectableWidget):
                 + QPointF(self._port_width + more, canvas.theme.port_height)) # type:ignore
 
         canvas.cb.port_menu_call(
-            self._group_id, self._port_id,
+            self.group_id, self.port_id,
             is_only_connect, start_point.x(), start_point.y())
 
     def boundingRect(self) -> QRectF:
         spacing = self.parentItem().get_theme().port_spacing
         port_height = canvas.theme.port_height
 
-        if self._pg_len == 1:
+        if self.pg_len == 1:
             return QRectF(0.0, - spacing * 0.5,
                           self._port_width, port_height + spacing)
-        if self._pg_pos == 0:
+        if self.pg_pos == 0:
             return QRectF(0.0, -spacing * 0.5,
                           self._port_width, port_height + spacing * 0.5)
-        if self._pg_pos == self._pg_len - 1:
+        if self.pg_pos == self.pg_len - 1:
             return QRectF(0.0, 0.0,
                           self._port_width, port_height + spacing * 0.5)
         
@@ -344,11 +354,11 @@ class PortWidget(ConnectableWidget):
                       + font.pixelSize() * 0.667)
 
         middle_width = p_height * 0.5
-        is_cv_port = bool(self._port_subtype is PortSubType.CV)
+        is_cv_port = bool(self.port_subtype is PortSubType.CV)
         y_top = line_hinting
         y_bottom = p_height - line_hinting
 
-        if self._port_mode is PortMode.INPUT:
+        if self.port_mode is PortMode.INPUT:
             text_pos = QPointF(3.0, text_y_pos)
 
             x_box_border = line_hinting
@@ -356,7 +366,7 @@ class PortWidget(ConnectableWidget):
             x_arrowmid = self._port_width - middle_width / 2 - line_hinting
             x_arrowhead = self._port_width - line_hinting * 2
 
-        elif self._port_mode is PortMode.OUTPUT:
+        elif self.port_mode is PortMode.OUTPUT:
             if theme.output_align is Align.RIGHT:
                 text_pos = QPointF(
                     self._port_width - 3.0 - self.get_text_width(),
@@ -370,15 +380,14 @@ class PortWidget(ConnectableWidget):
             x_arrowhead = line_hinting * 2
 
         else:
-            self._logger.critical(
-                f"invalid port mode {str(self._port_mode)}")
+            _logger.critical(f"invalid port mode {str(self.port_mode)}")
             return
 
         polygon = QPolygonF()
 
-        if self._portgrp_id:
-            first_of_portgrp = bool(self._pg_pos == 0)
-            last_of_portgrp = bool(self._pg_pos + 1 == self._pg_len)
+        if self.portgrp_id:
+            first_of_portgrp = bool(self.pg_pos == 0)
+            last_of_portgrp = bool(self.pg_pos + 1 == self.pg_len)
 
             if first_of_portgrp:
                 points = [(line_hinting, y_top),
@@ -394,7 +403,7 @@ class PortWidget(ConnectableWidget):
                 points += [(self._port_width - line_hinting, p_height),
                            (line_hinting, p_height)]
 
-        elif self._port_type is PortType.MIDI_JACK:
+        elif self.port_type is PortType.MIDI_JACK:
             points = [(x_box_border, y_top),
                       (x_arrowbase, y_top),
                       (x_arrowbase + (x_arrowmid - x_arrowbase) * 0.62,
@@ -413,13 +422,13 @@ class PortWidget(ConnectableWidget):
                       (x_arrowbase, y_bottom),
                       (x_box_border, y_bottom)]
 
-        elif self._port_type is PortType.MIDI_ALSA:
+        elif self.port_type is PortType.MIDI_ALSA:
             points = [(x_box_border, y_top),
                       (x_arrowmid, y_top),
                       (x_arrowmid, y_bottom),
                       (x_box_border, y_bottom)]
 
-        elif self._port_type is PortType.VIDEO:
+        elif self.port_type is PortType.VIDEO:
             x_cam_base = x_box_border + x_arrowhead - x_arrowbase
 
             points = [(x_box_border, y_top),
@@ -467,8 +476,8 @@ class PortWidget(ConnectableWidget):
                 QPointF(x_box_border, y_top + 2 * line_hinting),
                 QPointF(x_box_border, y_bottom - 2 * line_hinting))
             
-            match self._port_type:
-                case _ if self._portgrp_id:
+            match self.port_type:
+                case _ if self.portgrp_id:
                     pass
                 case PortType.MIDI_JACK:
                     painter.drawPolyline(polyline(points[1:7]))
@@ -489,8 +498,8 @@ class PortWidget(ConnectableWidget):
             painter.setPen(poly_pen)
             painter.drawPolygon(polygon)
 
-        if not self._portgrp_id:
-            if self._port_subtype is PortSubType.CV:
+        if not self.portgrp_id:
+            if self.port_subtype is PortSubType.CV:
                 divid = (y_bottom - y_top) / 12
                 painter.drawPolyline(polyline(
                     [(x_arrowbase, y_top + divid * 5),
@@ -498,8 +507,8 @@ class PortWidget(ConnectableWidget):
                      (x_arrowhead, y_top + divid * 7),
                      (x_arrowbase, y_top + divid * 7)]))
 
-            elif (self._port_subtype is PortSubType.A2J
-                    or self._port_type is PortType.MIDI_ALSA):
+            elif (self.port_subtype is PortSubType.A2J
+                    or self.port_type is PortType.MIDI_ALSA):
                 # draw the little circle for a2j (or MidiBridge) port.
                 # we emulate a hole in the port, so we need the background
                 # of the box.
@@ -524,7 +533,6 @@ class PortWidget(ConnectableWidget):
                 painter.setPen(poly_pen)
 
                 radius = abs(x_arrowhead - x_arrowmid) * 0.667
-
                 painter.drawEllipse(
                     QPointF(x_arrowmid, p_height / 2.0), radius, radius)
 
@@ -532,17 +540,17 @@ class PortWidget(ConnectableWidget):
         painter.setFont(font)
 
         sizer = QFontMetrics(font)
-        sep_width = sizer.horizontalAdvance(self._trunck_sep)
+        sep_width = sizer.horizontalAdvance(_TRUNCK_SEP)
 
-        if self._portgrp_id:
+        if self.portgrp_id:
             print_name_size = self.get_text_width()
 
-            if self._port_mode is PortMode.OUTPUT:
+            if self.port_mode is PortMode.OUTPUT:
                 text_pos = QPointF(self._port_width - 3 - print_name_size,
                                    text_y_pos)
 
-        elif self._port_type is PortType.VIDEO:
-            if self._port_mode is PortMode.OUTPUT:
+        elif self.port_type is PortType.VIDEO:
+            if self.port_mode is PortMode.OUTPUT:
                 text_pos.setX(text_pos.x() - middle_width)
             else:
                 text_pos.setX(text_pos.x() + middle_width)
@@ -560,6 +568,6 @@ class PortWidget(ConnectableWidget):
             color.setAlphaF(color.alphaF() * 0.25)
             trunck_pen.setColor(color)
             painter.setPen(trunck_pen)
-            painter.drawText(QPointF(sep_x, text_pos.y() + 1), self._trunck_sep)
+            painter.drawText(QPointF(sep_x, text_pos.y() + 1), _TRUNCK_SEP)
 
         painter.restore()

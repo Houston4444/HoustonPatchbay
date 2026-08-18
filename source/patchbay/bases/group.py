@@ -1,4 +1,6 @@
-from typing import TYPE_CHECKING, Optional, Union
+from functools import cached_property
+import logging
+from typing import TYPE_CHECKING
 
 from patshared import (
     BoxType,
@@ -11,7 +13,10 @@ from patshared import (
     PortgroupMem,
     Naming
 )
-from .elements import JackPortFlag, CanvasOptimizeIt
+from icon_finder import get_icon_name_for
+
+from .elements import (
+    JackPortFlag, CanvasOptimizeIt, Tracks, port_full_type_to_ptv_flag)
 from .port import Port
 from .portgroup import Portgroup
 from .connection import Connection
@@ -20,6 +25,21 @@ from ..patchcanvas import patchcanvas
 
 if TYPE_CHECKING:
     from ..patchbay_manager import PatchbayManager
+
+
+_logger = logging.getLogger(__name__)
+
+
+def track_name_from_port_name(program_name: str, port_short_name: str) -> str:
+    match program_name:
+        case 'ardour'|'Ardour'|'mixbus'|'Mixbus'|'Zrythm':
+            if '/' in port_short_name:
+                return port_short_name.partition('/')[0]
+        
+        case 'Carla-Single-Client':
+            if ':' in port_short_name:
+                return port_short_name.partition(':')[0]
+    return ''
 
 
 class Group:
@@ -46,9 +66,12 @@ class Group:
 
         self.outs_ptv = PortTypesViewFlag.NONE
         'PortTypesViewFlag containing present output port types'
-
         self.ins_ptv = PortTypesViewFlag.NONE
         'PortTypesViewFlag containing present input port types'
+
+        self.tracks = Tracks()
+        'dict where track_name is the key and track Group is the value'
+        self.joining_tracks = set[str]()
 
     def __repr__(self) -> str:
         return f"Group({self.name})"
@@ -78,7 +101,7 @@ class Group:
     def is_in_port_types_view(self, ptv: PortTypesViewFlag) -> bool:
         return bool(self.outs_ptv & ptv or self.ins_ptv & ptv)
 
-    def add_to_canvas(self, gpos: Optional[GroupPos]=None):
+    def add_to_canvas(self, gpos: GroupPos | None =None):
         if self.manager.very_fast_operation:
             return
 
@@ -145,6 +168,11 @@ class Group:
         'The custom name, if it exists'
         return self.manager.custom_names.custom_group(self.name)
 
+    @property
+    def full_name(self) -> str:
+        'The group name, but it will be different if this is a Track'
+        return self.name
+        
     def remove_from_canvas(self):
         if self.manager.very_fast_operation:
             return
@@ -169,35 +197,35 @@ class Group:
 
     def _get_box_type_and_icon(self) -> tuple[BoxType, str]:
         box_type = BoxType.APPLICATION
-        icon_name = self.name.partition('.')[0].lower()
-
-        if self._is_hardware:
-            box_type = BoxType.HARDWARE
-            icon_name = ''
-            if self.a2j_group or self.graceful_name in ("Midi-Bridge", "a2j"):
-                icon_name = "a2j"
-
-        if self.client_icon:
-            box_type = BoxType.CLIENT
-            icon_name = self.client_icon
-
-        if (self.name.startswith("PulseAudio ")
-                and not self.client_icon):
-            if "sink" in self.name.lower():
-                box_type = BoxType.MONITOR
-                icon_name = 'monitor_playback'
-            elif "source" in self.name.lower():
-                box_type = BoxType.MONITOR
-                icon_name = 'monitor_capture'
-
-        elif (self.name.endswith(" Monitor")
-                and not self.client_icon):
-            # this group is (probably) a pipewire Monitor group
-            box_type = BoxType.MONITOR
-            icon_name = 'monitor_playback'
+        icon_name = ''
 
         if self.mdata_icon:
             icon_name = self.mdata_icon
+
+        elif self._is_hardware:
+            box_type = BoxType.HARDWARE
+            if self.a2j_group or self.graceful_name in ("Midi-Bridge", "a2j"):
+                icon_name = "a2j"
+
+        elif self.client_icon:
+            box_type = BoxType.CLIENT
+            icon_name = self.client_icon
+
+        else:
+            if self.name.startswith("PulseAudio "):
+                if "sink" in self.name.lower():
+                    box_type = BoxType.MONITOR
+                    icon_name = 'monitor_playback'
+                elif "source" in self.name.lower():
+                    box_type = BoxType.MONITOR
+                    icon_name = 'monitor_capture'
+
+            elif self.name.endswith(" Monitor"):
+                # this group is (probably) a pipewire Monitor group
+                box_type = BoxType.MONITOR
+                icon_name = 'monitor_playback'
+            else:
+                icon_name = get_icon_name_for(self.name.partition('.')[0])
 
         return (box_type, icon_name)
 
@@ -231,6 +259,47 @@ class Group:
         patchcanvas.animate_before_hide_box(
             self.group_id, port_mode)
 
+    def port_has_to_change_track(self, port: Port) -> bool:
+        track_name = track_name_from_port_name(
+            self.program_name, port.short_name)
+        track = self.tracks.from_name(track_name)
+        return track is not port.track
+
+    def check_port_track(self, port: Port):
+        track_name = track_name_from_port_name(
+            self.program_name, port.short_name)
+
+        if track_name:
+            track = self.tracks.from_name(track_name)
+            if track is None:
+                set_active = False
+                track_pos = self.current_position.tracks.get(track_name)
+                if track_pos is None:
+                    track_pos = self.current_position.copy(no_tracks=True)
+                    if (self.current_position.auto_split_tracks
+                            and track_name
+                                not in self.current_position.joined_tracks):
+                        set_active = True
+                else:
+                    set_active = True
+
+                track = Track(
+                    self, self.manager._next_group_id,
+                    track_name, track_pos)
+                self.manager._groups_by_id[self.manager._next_group_id] = \
+                    track
+                self.tracks.add(
+                    track, track_name, self.manager._next_group_id)
+                self.manager._next_group_id += 1
+            
+                if set_active:
+                    track.set_active(True)
+                    track.update_pos_to_parent()
+                
+            # if track.is_active:
+            port.track = track
+            track.add_port(port)
+
     def remove_all_ports(self):
         if self.in_canvas:
             for portgroup in self.portgroups:
@@ -242,8 +311,14 @@ class Group:
         self.portgroups.clear()
         self.ports.clear()
 
+        for track in self.tracks:
+            track.portgroups.clear()
+            track.ports.clear()
+
     def add_port(self, port: Port):
-        port.group_id = self.group_id
+        '''add port to the group. It will set the port graceful_name
+        with very simple conditions, check the port track if any,
+        and make few settings on the group itself'''
         port.group = self
         port_full_name = port.full_name
 
@@ -269,39 +344,37 @@ class Group:
 
         self.ports.append(port)
 
-        port_type, port_sub_type = port.full_type
-        if port_type is PortType.AUDIO_JACK:
-            if port_sub_type is PortSubType.CV:
-                ptv_flag = PortTypesViewFlag.CV
-            else:
-                ptv_flag = PortTypesViewFlag.AUDIO
-        elif port_type is PortType.MIDI_JACK:
-            ptv_flag = PortTypesViewFlag.MIDI
-        elif port_type is PortType.MIDI_ALSA:
-            ptv_flag = PortTypesViewFlag.ALSA
-        elif port_type is PortType.VIDEO:
-            ptv_flag = PortTypesViewFlag.VIDEO
-        else:
-            ptv_flag = PortTypesViewFlag.NONE
-
+        ptv_flag = port_full_type_to_ptv_flag(port.type, port.subtype)
         if port.mode is PortMode.OUTPUT:
             self.outs_ptv |= ptv_flag
-        else:
+        elif port.mode is PortMode.INPUT:
             self.ins_ptv |= ptv_flag
 
         self.manager._ports_by_name[port.full_name] = port
         self.manager._ports_by_uuid[port.uuid] = port
+        self.check_port_track(port)
 
     def remove_port(self, port: Port):
+        for track in self.tracks:
+            if port in track.ports:
+                track.ports.remove(port)
+                break
+
         if port in self.ports:
             port.remove_from_canvas()
             self.ports.remove(port)
 
     def remove_portgroup(self, portgroup: Portgroup):
+        # remove portgroup from track if any
+        for track in self.tracks:
+            if portgroup in track.portgroups:
+                track.portgroups.remove(portgroup)
+                break
+        
         if portgroup in self.portgroups:
             portgroup.remove_from_canvas()
             for port in portgroup.ports:
-                port.portgroup_id = 0
+                port.portgroup = None
             self.portgroups.remove(portgroup)
 
     def portgroup_memory_added(self, portgroup_mem: PortgroupMem):
@@ -338,7 +411,7 @@ class Group:
                     # all ports are presents, create the portgroup
                     portgroup = self.manager.new_portgroup(
                         self.group_id, port.mode, port_list)
-                    self.portgroups.append(portgroup)
+                    self.add_portgroup(portgroup)
                     portgroup.add_to_canvas()
                     break
 
@@ -395,35 +468,119 @@ class Group:
             patchcanvas.set_group_icon(
                 self.group_id, box_type, icon_name)
 
-    def get_pretty_client(self) -> str:
-        for client_name in (
+    def separate_track(self, track_name: str, yesno: bool):
+        track = self.tracks.from_name(track_name)
+        if track is None:
+            _logger.warning(f'No track named "{track_name}" to separate')
+            return
+        
+        if not yesno:
+            track.set_group_position(
+                self.current_position.copy(no_tracks=True),
+                PortMode.NULL, PortMode.NULL)
+            self.joining_tracks.add(track_name)
+            return
+
+        for conn in self.manager.connections.with_group(self):
+            conn.remove_from_canvas()
+                
+        self.remove_all_ports_from_canvas()
+        
+        track.current_position = self.current_position.copy(no_tracks=True)
+        track.set_active(True)
+        track.update_pos_to_parent()
+        
+        self.add_all_ports_to_canvas()
+        
+        for conn in self.manager.connections.with_group(self):
+            conn.add_to_canvas()
+
+    def separate_all_tracks(self, yesno: bool):
+        if not yesno:
+            for track in self.tracks:
+                track.set_group_position(
+                    self.current_position.copy(),
+                    PortMode.NULL, PortMode.NULL)
+                self.joining_tracks.add(track.name)
+            return
+        
+        conns = list[Connection]()
+        for conn in self.manager.connections:
+            if conn.port_out.group is self or conn.port_in.group is self:
+                conns.append(conn)
+                conn.remove_from_canvas()
+
+        self.remove_all_ports_from_canvas()
+
+        for track in self.tracks:
+            if not track.is_active:
+                track.current_position = self.current_position.copy(
+                    no_tracks=True)
+                track.set_active(True)
+                track.update_pos_to_parent()
+
+        self.add_all_ports_to_canvas()
+        for conn in conns:
+            conn.add_to_canvas()
+        
+        self.tracks_are_splitted = yesno
+
+    def join_tracks(self):
+        'Join tracks after move animation'
+        if not self.joining_tracks:
+            return
+        
+        conns = list[Connection]()
+        for conn in self.manager.connections.with_group(self):
+            conns.append(conn)
+            conn.remove_from_canvas()
+
+        self.remove_all_ports_from_canvas()
+        
+        for track in self.tracks:
+            if track.name not in self.joining_tracks:
+                continue
+
+            track.set_active(False)
+            track.update_pos_to_parent()
+
+        self.joining_tracks.clear()
+        self.add_all_ports_to_canvas()
+        for conn in conns:
+            conn.add_to_canvas()
+
+    @cached_property
+    def program_name(self) -> str:
+        for program_name in (
                 'firewire_pcm', 'a2j',
+                'Carla-Single-Client',
                 'Hydrogen', 'ardour', 'Ardour', 'Mixbus', 'mixbus',
                 'Qtractor', 'SooperLooper', 'sooperlooper', 'Luppp',
                 'seq64', 'calfjackhost', 'rakarrack-plus',
-                'seq192', 'Non-Mixer', 'Non-Mixer-XT', 'jack_mixer'):
-            if self.name == client_name:
-                return client_name
+                'seq192', 'Non-Mixer', 'Non-Mixer-XT', 'jack_mixer',
+                'Zrythm'):
+            if self.name == program_name:
+                return program_name
 
-            if self.name.startswith(client_name + '.'):
-                return client_name
+            if self.name.startswith(program_name + '.'):
+                return program_name
 
             name = self.name.partition('/')[0]
-            if name == client_name:
-                return client_name
+            if name == program_name:
+                return program_name
 
-            if name.startswith(client_name + '_'):
-                if name.replace(client_name + '_', '', 1).isdigit():
-                    return client_name
+            if name.startswith(program_name + '_'):
+                if name.replace(program_name + '_', '', 1).isdigit():
+                    return program_name
 
             if ' (' in name and name.endswith(')'):
                 name = name.partition(' (')[0]
-                if name == client_name:
-                    return client_name
+                if name == program_name:
+                    return program_name
 
-                if name.startswith(client_name + '_'):
-                    if name.replace(client_name + '_', '', 1).isdigit():
-                        return client_name
+                if name.startswith(program_name + '_'):
+                    if name.replace(program_name + '_', '', 1).isdigit():
+                        return program_name
 
         return ''
 
@@ -445,164 +602,178 @@ class Group:
                     return name.rsplit(end)[0]
             return name
 
-        client_name = self.get_pretty_client()
+        program_name = self.program_name
 
-        if (not client_name
+        if (not program_name
                 and ((port.type is PortType.MIDI_JACK
                         and port.full_name.startswith(
                             ('a2j:', 'Midi-Bridge:')))
                      or port.type is PortType.MIDI_ALSA)
                 and port.flags & JackPortFlag.IS_PHYSICAL):
-            client_name = 'a2j'
+            program_name = 'a2j'
 
         display_name = port.short_name
         s_display_name = display_name
 
-        if client_name == 'firewire_pcm':
-            if '(' in display_name and ')' in display_name:
-                after_para = display_name.partition('(')[2]
-                display_name = after_para.rpartition(')')[0]
-                display_name, num = split_end_digits(display_name)
+        match program_name:
+            case 'firewire_pcm':
+                if '(' in display_name and ')' in display_name:
+                    after_para = display_name.partition('(')[2]
+                    display_name = after_para.rpartition(')')[0]
+                    display_name, num = split_end_digits(display_name)
 
+                    if num:
+                        if display_name.endswith(':'):
+                            display_name = display_name[:-1]
+                        display_name += ' ' + num
+                else:
+                    display_name = display_name.partition('_')[2]
+                    display_name = cut_end(display_name, '_in', '_out')
+                    display_name = display_name.replace(':', ' ')
+                    display_name, num = split_end_digits(display_name)
+                    display_name = display_name + num
+
+            case 'Hydrogen':
+                if display_name.startswith('Track_'):
+                    display_name = display_name.replace('Track_', '', 1)
+
+                    num, udsc, name = display_name.partition('_')
+                    if num.isdigit():
+                        display_name = num + ' ' + name
+
+                if display_name.endswith('_Main_L'):
+                    display_name = display_name.replace('_Main_L', ' L', 1)
+                elif display_name.endswith('_Main_R'):
+                    display_name = display_name.replace('_Main_R', ' R', 1)
+
+            case 'a2j':
+                display_name, num = split_end_digits(display_name)
                 if num:
-                    if display_name.endswith(':'):
-                        display_name = display_name[:-1]
-                    display_name += ' ' + num
-            else:
-                display_name = display_name.partition('_')[2]
-                display_name = cut_end(display_name, '_in', '_out')
-                display_name = display_name.replace(':', ' ')
-                display_name, num = split_end_digits(display_name)
-                display_name = display_name + num
+                    if display_name.endswith(' MIDI '):
+                        display_name = cut_end(display_name, ' MIDI ')
 
-        elif client_name == 'Hydrogen':
-            if display_name.startswith('Track_'):
-                display_name = display_name.replace('Track_', '', 1)
+                        if num == '1':
+                            port.last_digit_to_add = '1'
+                        else:
+                            display_name += ' ' + num
 
-                num, udsc, name = display_name.partition('_')
-                if num.isdigit():
-                    display_name = num + ' ' + name
+                    elif display_name.endswith(' Port-'):
+                        display_name = cut_end(display_name, ' Port-')
 
-            if display_name.endswith('_Main_L'):
-                display_name = display_name.replace('_Main_L', ' L', 1)
-            elif display_name.endswith('_Main_R'):
-                display_name = display_name.replace('_Main_R', ' R', 1)
+                        if num == '0':
+                            port.last_digit_to_add = '0'
+                        else:
+                            display_name += ' ' + num
 
-        elif client_name == 'a2j':
-            display_name, num = split_end_digits(display_name)
-            if num:
-                if display_name.endswith(' MIDI '):
-                    display_name = cut_end(display_name, ' MIDI ')
+            case 'ardour'|'Ardour'|'Mixbus'|'mixbus':
+                if '/TriggerBox/' in display_name:
+                    display_name = \
+                        '▸ ' + display_name.replace('/TriggerBox/', '/', 1)
 
-                    if num == '1':
-                        port.last_digit_to_add = '1'
-                    else:
-                        display_name += ' ' + num
+                for pt in ('audio', 'midi'):
+                    if display_name == f"physical_{pt}_input_monitor_enable":
+                        display_name = "physical monitor"
+                        break
+                else:
+                    display_name, num = split_end_digits(display_name)
+                    if num:
+                        display_name = cut_end(
+                            display_name,
+                            '/audio_out ', '/audio_in ',
+                            '/midi_out ', '/midi_in ')
+                        if num == '1':
+                            port.last_digit_to_add = '1'
+                        else:
+                            display_name += ' ' + num
 
-                elif display_name.endswith(' Port-'):
-                    display_name = cut_end(display_name, ' Port-')
-
-                    if num == '0':
-                        port.last_digit_to_add = '0'
-                    else:
-                        display_name += ' ' + num
-
-        elif client_name in ('ardour', 'Ardour', 'Mixbus', 'mixbus'):
-            if '/TriggerBox/' in display_name:
-                display_name = '▸ ' + display_name.replace('/TriggerBox/', '/', 1)
-
-            for pt in ('audio', 'midi'):
-                if display_name == f"physical_{pt}_input_monitor_enable":
-                    display_name = "physical monitor"
-                    break
-            else:
+            case 'Qtractor':
                 display_name, num = split_end_digits(display_name)
                 if num:
                     display_name = cut_end(display_name,
-                                        '/audio_out ', '/audio_in ',
-                                        '/midi_out ', '/midi_in ')
+                                        '/in_', '/out_')
                     if num == '1':
                         port.last_digit_to_add = '1'
                     else:
                         display_name += ' ' + num
 
-        elif client_name == 'Qtractor':
-            display_name, num = split_end_digits(display_name)
-            if num:
-                display_name = cut_end(display_name,
-                                       '/in_', '/out_')
-                if num == '1':
-                    port.last_digit_to_add = '1'
-                else:
-                    display_name += ' ' + num
+            case 'Non-Mixer'|'Non-Mixer-XT':
+                display_name, num = split_end_digits(display_name)
+                if num:
+                    display_name = cut_end(display_name, '/in-', '/out-')
 
-        elif client_name in ('Non-Mixer', 'Non-Mixer-XT'):
-            display_name, num = split_end_digits(display_name)
-            if num:
-                display_name = cut_end(display_name, '/in-', '/out-')
+                    if num == '1':
+                        port.last_digit_to_add = '1'
+                    else:
+                        display_name += ' ' + num
 
-                if num == '1':
-                    port.last_digit_to_add = '1'
-                else:
-                    display_name += ' ' + num
+            case 'jack_mixer':
+                prefix, out, side = display_name.rpartition(' Out')
+                if out and side in (' L', ' R', ''):
+                    display_name = prefix + side
 
-        elif client_name == 'jack_mixer':
-            prefix, out, side = display_name.rpartition(' Out')
-            if out and side in (' L', ' R', ''):
-                display_name = prefix + side
+            case 'SooperLooper'|'sooperlooper':
+                display_name, num = split_end_digits(display_name)
+                if num:
+                    display_name = cut_end(display_name,
+                                        '_in_', '_out_')
+                    if num == '1':
+                        port.last_digit_to_add = '1'
+                    else:
+                        display_name += ' ' + num
 
-        elif client_name in ('SooperLooper', 'sooperlooper'):
-            display_name, num = split_end_digits(display_name)
-            if num:
-                display_name = cut_end(display_name,
-                                       '_in_', '_out_')
-                if num == '1':
-                    port.last_digit_to_add = '1'
-                else:
-                    display_name += ' ' + num
+            case 'Luppp':
+                if display_name.endswith('\n'):
+                    display_name = display_name[:-1]
 
-        elif client_name == 'Luppp':
-            if display_name.endswith('\n'):
-                display_name = display_name[:-1]
+                display_name = display_name.replace('_', ' ')
 
-            display_name = display_name.replace('_', ' ')
+            case 'seq64':
+                display_name = display_name.replace('seq64 midi ', '', 1)
 
-        elif client_name == 'seq64':
-            display_name = display_name.replace('seq64 midi ', '', 1)
+            case 'seq192':
+                display_name = display_name.replace('seq192 ', '', 1)
 
-        elif client_name == 'seq192':
-            display_name = display_name.replace('seq192 ', '', 1)
+            case 'calfjackhost':
+                display_name, num = split_end_digits(display_name)
+                if num:
+                    display_name = cut_end(display_name,
+                                        ' Out #', ' In #')
 
-        elif client_name == 'calfjackhost':
-            display_name, num = split_end_digits(display_name)
-            if num:
-                display_name = cut_end(display_name,
-                                       ' Out #', ' In #')
+                    display_name += " " + num
 
-                display_name += " " + num
+            case 'rakarrack-plus':
+                if display_name.startswith(
+                        ('rakarrack-plus ', 'rakarrack-plus.')):
+                    display_name = display_name[15:]
+                display_name = display_name.replace('_', ' ')
 
-        elif client_name == 'rakarrack-plus':
-            if display_name.startswith(('rakarrack-plus ', 'rakarrack-plus.')):
-                display_name = display_name[15:]
-            display_name = display_name.replace('_', ' ')
+            case 'Zrythm':
+                if '/' in display_name:
+                    if display_name.endswith((' L', ' R')):
+                        display_name = (
+                            display_name.rpartition('/')[0]
+                            + ' ' + display_name.rpartition(' ')[2])
+                    else:
+                        display_name = display_name.rpartition('/')[0]
 
-        elif not client_name:
-            display_name = display_name.replace('_', ' ')
-            if display_name.lower().endswith(('-left', ' left')):
-                display_name = display_name[:-5] + ' L'
-            elif display_name.lower().endswith(('-right', ' right')):
-                display_name = display_name[:-6] + ' R'
-            elif display_name.lower() == 'left in':
-                display_name = 'In L'
-            elif display_name.lower() == 'right in':
-                display_name = 'In R'
-            elif display_name.lower() == 'left out':
-                display_name = 'Out L'
-            elif display_name.lower() == 'right out':
-                display_name = 'Out R'
+            case _:
+                display_name = display_name.replace('_', ' ')
+                match display_name.lower():
+                    case s if s.endswith(('-left', ' left')):
+                        display_name = display_name[:-5] + ' L'
+                    case s if s.endswith(('-right', ' right')):
+                        display_name = display_name[:-6] + ' R'
+                    case 'left in':
+                        display_name = 'In L'
+                    case 'right in':
+                        display_name = 'In R'
+                    case 'left out':
+                        display_name = 'Out L'
+                    case 'right out':
+                        display_name = 'Out R'
 
-            if display_name.startswith('Audio'):
-                display_name = display_name.replace('Audio ', '')
+                if display_name.startswith('Audio'):
+                    display_name = display_name.replace('Audio ', '')
 
         # reduce graceful name for pipewire Midi-Bridge with
         # option jack.filter_name = true
@@ -613,6 +784,14 @@ class Group:
         port.graceful_name = display_name if display_name else s_display_name
 
     def add_portgroup(self, portgroup: Portgroup):
+        for track in self.tracks:
+            if (len([p for p in portgroup.ports if p in track.ports])
+                    == len(portgroup.ports)):
+                track.portgroups.append(portgroup)
+                if track.is_active:
+                    portgroup.track_id = track.group_id
+                break
+        
         self.portgroups.append(portgroup)
 
     def change_port_types_view(self):
@@ -653,7 +832,7 @@ class Group:
             if (other_port.type is port.type
                     and other_port.subtype is port.subtype
                     and other_port.mode is port.mode
-                    and not other_port.portgroup_id
+                    and other_port.portgroup is None
                     and not other_port.prevent_stereo):
                 for pg_mem in self.manager.portgroups_memory.iter_portgroups(
                         self.name, port.type, port.mode):
@@ -773,7 +952,7 @@ class Group:
                         if len(port_list) == len(pg_mem.port_names):
                             portgroup = self.manager.new_portgroup(
                                 self.group_id, port.mode, port_list)
-                            self.portgroups.append(portgroup)
+                            self.add_portgroup(portgroup)
                             for port in port_list:
                                 if not port.in_canvas:
                                     break
@@ -814,6 +993,11 @@ class Group:
                                  and last_digit == '2')):
                         port.add_the_last_digit()
                 break
+
+    def add_tracks_to_canvas(self):
+        for track in self.tracks:
+            if track.is_active:
+                track.add_to_canvas()
 
     def sort_ports_in_canvas(self):
         conn_list = list[Connection]()
@@ -913,7 +1097,7 @@ class Group:
                         founded_ports = list[Port]()
 
                         for port in self.ports:
-                            if (not port.portgroup_id
+                            if (port.portgroup is None
                                     and port.type is port_type
                                     and port.mode is port_mode
                                     and port.short_name
@@ -922,7 +1106,7 @@ class Group:
                                 if len(founded_ports) == len(portgroup_mem.port_names):
                                     new_portgroup = self.manager.new_portgroup(
                                         self.group_id, port.mode, founded_ports)
-                                    self.portgroups.append(new_portgroup)
+                                    self.add_portgroup(new_portgroup)
                                     break
 
                             elif founded_ports:
@@ -937,7 +1121,7 @@ class Group:
                     if portgroups_mdata:
                         pg_mdata = portgroups_mdata[-1]
 
-                    if not port.portgroup_id:
+                    if port.portgroup is None:
                         if (pg_mdata is not None
                                 and pg_mdata['pg_name'] == port.mdata_portgroup
                                 and pg_mdata['port_type'] == port.type
@@ -957,7 +1141,7 @@ class Group:
                 new_portgroup = self.manager.new_portgroup(
                     self.group_id, pg_mdata['port_mode'], pg_mdata['ports'])
                 new_portgroup.mdata_portgroup = pg_mdata['pg_name']
-                self.portgroups.append(new_portgroup)
+                self.add_portgroup(new_portgroup)
 
             # add missing portgroups from portgroup memory
             for port_type in self.manager.portgroups_memory.keys():
@@ -976,7 +1160,7 @@ class Group:
                         founded_ports = list[Port]()
 
                         for port in self.ports:
-                            if (not port.portgroup_id
+                            if (port.portgroup is None
                                     and port.type is port_type
                                     and port.mode is port_mode
                                     and port.short_name
@@ -985,7 +1169,7 @@ class Group:
                                 if len(founded_ports) == len(portgroup_mem.port_names):
                                     new_portgroup = self.manager.new_portgroup(
                                         self.group_id, port.mode, founded_ports)
-                                    self.portgroups.append(new_portgroup)
+                                    self.add_portgroup(new_portgroup)
                                     break
 
                             elif founded_ports:
@@ -1015,3 +1199,89 @@ class Group:
 
         for port in self.ports:
             port.remove_from_canvas()
+
+
+class Track(Group):
+    def __init__(self, parent: 'Group',
+                 track_id: int, name: str, group_position: GroupPos):
+        super().__init__(parent.manager, track_id, name, group_position)
+        self.parent_group = parent
+        self.is_active = False
+
+    def __repr__(self) -> str:
+        return f"Track({self.parent_group.name}:{self.name})"
+    
+    @property
+    def full_name(self) -> str:
+        'The group name, but it will be different if this is a Track'
+        return f'{self.parent_group.name}:{self.name}'
+    
+    def set_active(self, yesno: bool, manage_canvas=True, force=False):
+        if not force and yesno is self.is_active:
+            return
+
+        self.is_active = yesno
+
+        if self.manager.very_fast_operation:
+            manage_canvas = False
+        if manage_canvas:
+            self.remove_all_ports_from_canvas()
+
+        for port in self.ports:
+            port.track = self
+
+        if yesno:
+            for portgroup in self.portgroups:
+                portgroup.track_id = self.group_id
+        else:
+            for portgroup in self.portgroups:
+                portgroup.track_id = -1
+
+        if not manage_canvas:
+            return
+
+        if yesno:
+            self.add_to_canvas()
+            self.add_all_ports_to_canvas()
+        else:
+            self.remove_all_ports_from_canvas()
+            self.remove_from_canvas()
+
+    def update_pos_to_parent(self):
+        if self.is_active:
+            self.parent_group.current_position.tracks[self.name] = \
+                self.current_position
+        else:
+            self.parent_group.current_position.tracks.pop(self.name, None)
+    
+    def repatriate_track(self):
+        self.parent_group.separate_track(self.name, False)
+
+    def set_group_position(self, group_position: GroupPos, redraw: PortMode,
+                           restore: PortMode):
+        self.current_position = group_position
+
+        if not self.is_active:
+            return
+
+        patchcanvas.move_group_boxes(
+            self.group_id,
+            self.current_position,
+            redraw=redraw,
+            restore=restore,
+            destroyed_at_end=self.name in self.parent_group.joining_tracks)
+
+    def add_port(self, port: Port):
+        ptv = port_full_type_to_ptv_flag(port.type, port.subtype)
+        if port.mode is PortMode.OUTPUT:
+            self.outs_ptv |= ptv
+        elif port.mode is PortMode.INPUT:
+            self.ins_ptv |= ptv
+        self.ports.append(port)
+        
+    def _get_box_type_and_icon(self) -> tuple[BoxType, str]:
+        box_type, icon_name = self.parent_group._get_box_type_and_icon()
+        return BoxType.TRACK, icon_name
+    
+    def save_current_position(self):
+        self.manager.save_group_position(self.parent_group.current_position)

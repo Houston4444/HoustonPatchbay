@@ -1,11 +1,14 @@
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Iterator
 
 from patshared import PortType
+
 from ..patchcanvas import patchcanvas
 
 if TYPE_CHECKING:
     from ..patchbay_manager import PatchbayManager
     from .port import Port
+    from .group import Group
+
 
 class Connection:
     def __init__(self, manager: 'PatchbayManager', connection_id: int,
@@ -54,3 +57,60 @@ class Connection:
 
         patchcanvas.disconnect_ports(self.connection_id)
         self.in_canvas = False
+        
+
+class Connections(list[Connection]):
+    def __init__(self):
+        super().__init__()
+        self._group_out: 'dict[Group, list[Connection]]' = {}
+        self._group_in: 'dict[Group, list[Connection]]' = {}
+    
+    def append(self, conn: Connection):
+        super().append(conn)
+        
+        group_ins = self._group_in.get(conn.port_in.group)
+        if group_ins is None:
+            group_ins = self._group_in[conn.port_in.group] = \
+                list[Connection]()
+                
+        group_outs = self._group_out.get(conn.port_out.group)
+        if group_outs is None:
+            group_outs = self._group_out[conn.port_out.group] = \
+                list[Connection]()
+
+        group_ins.append(conn)
+        group_outs.append(conn)
+        
+    def remove(self, conn: Connection):
+        super().remove(conn)
+        self._group_in[conn.port_in.group].remove(conn)
+        self._group_out[conn.port_out.group].remove(conn)
+
+    def from_group(self, group: 'Group') -> Iterator[Connection]:
+        group_out = self._group_out.get(group)
+        if group_out is None:
+            return
+        
+        for conn in group_out:
+            yield conn
+            
+    def to_group(self, group: 'Group') -> Iterator[Connection]:
+        group_in = self._group_in.get(group)
+        if group_in is None:
+            return
+        
+        for conn in group_in:
+            yield conn
+            
+    def with_group(self, group: 'Group') -> Iterator[Connection]:
+        already = set[Connection]()
+        group_out = self._group_out.get(group)
+        if group_out is not None:
+            for conn in group_out:
+                already.add(conn)
+                yield conn
+        group_in = self._group_in.get(group)
+        if group_in is not None:
+            for conn in group_in:
+                if conn not in already:
+                    yield conn

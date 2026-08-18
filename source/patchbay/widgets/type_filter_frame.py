@@ -2,11 +2,14 @@
 from typing import TYPE_CHECKING, Optional
 
 from qtpy.QtWidgets import QFrame, QApplication
+from qtpy.QtGui import QPainter, QBrush
+from qtpy.QtCore import Slot, QRectF, Qt # type:ignore
 
 
-from patshared import PortTypesViewFlag
+from patshared import PortTypesViewFlag, PortType, PortSubType
+
 from ..cancel_mng import CancelOp, CancellableAction
-
+from ..patchcanvas import patchcanvas
 from ..ui.type_filter_frame import Ui_FrameTypesFilter
 
 if TYPE_CHECKING:
@@ -22,6 +25,12 @@ class TypeFilterFrame(QFrame):
         self.ui = Ui_FrameTypesFilter()
         self.ui.setupUi(self)
 
+        self._checkboxes = (
+            self.ui.checkBoxAudioFilter,
+            self.ui.checkBoxMidiFilter,
+            self.ui.checkBoxCvFilter,
+            self.ui.checkBoxAlsaFilter)
+
         self.ui.checkBoxAudioFilter.really_clicked.connect(
             self._check_box_audio_right_clicked)
         self.ui.checkBoxMidiFilter.really_clicked.connect(
@@ -31,13 +40,27 @@ class TypeFilterFrame(QFrame):
         self.ui.checkBoxAlsaFilter.really_clicked.connect(
             self._check_box_alsa_right_clicked)
 
+        self.ui.checkBoxAudioFilter.set_full_port_type(
+            PortType.AUDIO_JACK, PortSubType.REGULAR)
+        self.ui.checkBoxMidiFilter.set_full_port_type(
+            PortType.MIDI_JACK, PortSubType.REGULAR)
+        self.ui.checkBoxCvFilter.set_full_port_type(
+            PortType.AUDIO_JACK, PortSubType.CV)
+        self.ui.checkBoxAlsaFilter.set_full_port_type(
+            PortType.MIDI_ALSA, PortSubType.REGULAR)
+
         self._mng : 'Optional[PatchbayManager]' = None
 
     def set_patchbay_manager(self, manager: 'PatchbayManager'):
         self._mng = manager
         self._mng.sg.port_types_view_changed.connect(
             self._port_types_view_changed)
+        self._mng.sg.theme_changed.connect(self._theme_changed)
         self._port_types_view_changed(self._mng.port_types_view)
+
+    @Slot()
+    def _theme_changed(self):
+        self.update()
 
     def _change_port_types_view(self):
         if self._mng is None:
@@ -147,3 +170,28 @@ class TypeFilterFrame(QFrame):
             bool(port_types_view & PortTypesViewFlag.CV))
         self.ui.checkBoxAlsaFilter.setChecked(
             bool(port_types_view & PortTypesViewFlag.ALSA))
+
+    def paintEvent(self, event):
+        theme = patchcanvas.canvas.theme
+        
+        big_rect = QRectF(0.0, 1.0, self.width(), self.height() - 2.0)
+        box_rect = QRectF(1.0, 5.0, self.width() - 2.0, 18 + 2.0)
+        
+        painter = QPainter(self)
+        painter.setPen(Qt.PenStyle.NoPen)
+        if theme.scene_background_image is not None:
+            bg_brush = QBrush()
+            bg_brush.setTextureImage(theme.scene_background_image)
+            painter.setBrush(bg_brush)
+        painter.drawRoundedRect(big_rect, 2.0, 2.0)
+
+        painter.setBrush(theme.scene_background_color)
+        painter.drawRoundedRect(big_rect, 2.0, 2.0)
+        
+        painter.setBrush(theme.box.background_color)
+        painter.setPen(Qt.PenStyle.NoPen)
+        painter.drawRect(box_rect)
+        
+        painter.end()
+        
+    

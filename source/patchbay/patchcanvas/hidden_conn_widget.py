@@ -54,7 +54,7 @@ class HiddenConnWidget(QGraphicsPathItem):
             # if port is hidden, the group box is wrapped
             # a X offset is applied, this way user can see
             # there are many type of hidden connections
-            port_type = self._port_widget._port_type
+            port_type = self._port_widget.port_type
             if port_type is PortType.MIDI_JACK:
                 x_type_offset += 1
             elif port_type is PortType.MIDI_ALSA:
@@ -62,7 +62,7 @@ class HiddenConnWidget(QGraphicsPathItem):
             elif port_type is PortType.VIDEO:
                 x_type_offset += 3
 
-        if self._port_widget.get_port_mode() is PortMode.OUTPUT:
+        if self._port_widget.port_mode is PortMode.OUTPUT:
             x += x_type_offset
             polygon += QPointF(x + dx, y + dy1)
             polygon += QPointF(x + dx, y + canvas.theme.port_height - dy1)
@@ -86,7 +86,7 @@ class HiddenConnWidget(QGraphicsPathItem):
         return CanvasItemType.BEZIER_LINE
 
     def update_theme(self):
-        port_type = self._port_widget.get_port_type()
+        port_type = self._port_widget.port_type
 
         theme = canvas.theme.line
         if port_type is PortType.AUDIO_JACK:

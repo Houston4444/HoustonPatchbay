@@ -2,7 +2,7 @@ import logging
 import pickle
 from typing import TypeAlias
 
-from .. import xdg
+import xdg
 
 
 _logger = logging.getLogger(__name__)

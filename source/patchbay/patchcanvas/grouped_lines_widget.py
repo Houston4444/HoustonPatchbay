@@ -223,14 +223,14 @@ class GroupedLinesWidget(QGraphicsPathItem):
         if port.port_mode is PortMode.OUTPUT:
             for connection in canvas.list_connections(
                     group_out_id=port.group_id):
-                if connection.port_out_id is port.port_id:
+                if connection.port_out_id == port.port_id:
                     _groups_to_check.add(
                         (port.group_id, connection.group_in_id))
 
         elif port.port_mode is PortMode.INPUT:
             for connection in canvas.list_connections(
                     group_in_id=port.group_id):
-                if connection.port_in_id is port.port_id:
+                if connection.port_in_id == port.port_id:
                     _groups_to_check.add(
                         (connection.group_out_id, port.group_id))
 

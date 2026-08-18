@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Any, Union, Optional
+from typing import Any
 
 from .base_enums import (
     BoxLayoutMode, BoxFlag,
@@ -12,7 +12,7 @@ class BoxPos:
     layout_mode: BoxLayoutMode = BoxLayoutMode.AUTO
     flags: BoxFlag = BoxFlag.NONE
 
-    def __init__(self, box_pos: Optional['BoxPos']=None) -> None:
+    def __init__(self, box_pos: 'BoxPos | None' =None) -> None:
         if box_pos:
             self.eat(box_pos)
             return
@@ -78,13 +78,25 @@ class GroupPos:
     'If false, it will ask the program to choose the splitted state.'
 
     has_sure_existence: bool = True
-    """If False, this GroupPos may refer to a group with no ports."""
+    'If False, this GroupPos may refer to a group with no ports.'
+
+    tracks: 'dict[str, GroupPos]'
+    'All GroupPos tracks, key is track name'
 
     def __init__(self):
         self.boxes = dict[PortMode, BoxPos]()
 
         for port_mode in PortMode.in_out_both():
             self.boxes[port_mode] = BoxPos()
+        
+        self.tracks = {}
+        self.joined_tracks = set[str]()
+        self.auto_split_tracks = False
+
+    def __repr__(self):
+        if self.tracks:
+            return f'GroupPos({self.group_name} {hex(id(self))} &tracks)'
+        return f'GroupPos({self.group_name} {hex(id(self))})'
 
     @staticmethod
     def is_point(value: Any) -> bool:
@@ -171,18 +183,27 @@ class GroupPos:
 
         return gpos
 
-    def copy(self) -> 'GroupPos':
+    def copy(self, no_tracks=False) -> 'GroupPos':
         """Return a deep-ish copy of this GroupPos.
 
         The returned object has copied boxes so further mutations do not
         affect the original.
+        
+        no_tracks: set it True to not copy the tracks related positions
         """
         group_pos = GroupPos()
         group_pos.__dict__ = self.__dict__.copy()
+        group_pos.tracks = {}
+        group_pos.joined_tracks = set[str]()
 
         group_pos.boxes = dict[PortMode, BoxPos]()
         for port_mode, box_pos in self.boxes.items():
             group_pos.boxes[port_mode] = box_pos.copy()
+        
+        if not no_tracks:
+            for track_name, track_pos in self.tracks.items():
+                group_pos.tracks[track_name] = track_pos.copy(no_tracks=True)
+            group_pos.joined_tracks = group_pos.joined_tracks.copy()
 
         return group_pos
 
@@ -218,47 +239,67 @@ class GroupPos:
             gpos.boxes[port_mode] = BoxPos()
 
             for key, value in box_dict.items():
-                if key == 'pos':
-                    if not (isinstance(value, list)
-                            and len(value) == 2
-                            and isinstance(value[0], int)
-                            and isinstance(value[1], int)):
-                        continue
+                match key:
+                    case 'pos':
+                        if not (isinstance(value, list)
+                                and len(value) == 2
+                                and isinstance(value[0], int)
+                                and isinstance(value[1], int)):
+                            continue
 
-                    gpos.boxes[port_mode].pos = tuple(value)
+                        gpos.boxes[port_mode].pos = tuple(value)
 
-                elif key == 'flags':
-                    if not isinstance(value, str):
-                        continue
+                    case 'flags':
+                        if not isinstance(value, str):
+                            continue
 
-                    flags_str_list = [v.upper() for v in value.split('|')]
+                        flags_str_list = [v.upper() for v in value.split('|')]
 
-                    box_flags = BoxFlag.NONE
-                    for box_flag in BoxFlag:
-                        if box_flag.name in flags_str_list:
-                            box_flags |= box_flag
+                        box_flags = BoxFlag.NONE
+                        for box_flag in BoxFlag:
+                            if box_flag.name in flags_str_list:
+                                box_flags |= box_flag
 
-                    gpos.boxes[port_mode].flags = box_flags
+                        gpos.boxes[port_mode].flags = box_flags
 
-                elif key == 'layout_mode':
-                    if not isinstance(value, str):
-                        continue
+                    case 'layout_mode':
+                        if not isinstance(value, str):
+                            continue
 
-                    layout_mode = BoxLayoutMode.AUTO
-                    if value.upper() == 'LARGE':
-                        layout_mode = BoxLayoutMode.LARGE
-                    elif value.upper() == 'HIGH':
-                        layout_mode = BoxLayoutMode.HIGH
+                        match value.upper():
+                            case 'LARGE':
+                                layout_mode = BoxLayoutMode.LARGE
+                            case 'HIGH':
+                                layout_mode = BoxLayoutMode.HIGH
+                            case _:
+                                layout_mode = BoxLayoutMode.AUTO
 
-                    gpos.boxes[port_mode].layout_mode = layout_mode
+                        gpos.boxes[port_mode].layout_mode = layout_mode
 
         if not gpos.is_splitted():
             for port_mode in PortMode.INPUT, PortMode.OUTPUT:
                 gpos.boxes[port_mode].flags = gpos.boxes[PortMode.BOTH].flags
 
+        tracks_d = in_dict.get('tracks')
+        if isinstance(tracks_d, dict):
+            for track_name, track_pos_d in tracks_d.items():
+                if not isinstance(track_name, str):
+                    continue
+                if not isinstance(track_pos_d, dict):
+                    continue
+                gpos.tracks[track_name] = GroupPos.from_new_dict(
+                    ptv, f'{group_name}:{track_name}', track_pos_d)                
+
+        joined_tracks_list = in_dict.get('joined_tracks')
+        if isinstance(joined_tracks_list, list):
+            gpos.auto_split_tracks = True
+            for joined_track_name in joined_tracks_list:
+                if isinstance(joined_track_name, str):
+                    gpos.joined_tracks.add(joined_track_name)
+
         return gpos
 
-    def as_new_dict(self) -> dict:
+    def as_new_dict(self, no_tracks=False) -> dict:
         """Serialize this GroupPos to the newer JSON-friendly dict format.
 
         Returns a dict suitable for persisting in the session JSON format.
@@ -296,6 +337,16 @@ class GroupPos:
 
             d['|'.join(port_mode_names)] = box_dict
 
+        if not no_tracks:
+            tracks_d = {}
+            for track_name, track_pos in self.tracks.items():
+                tracks_d[track_name] = track_pos.as_new_dict(no_tracks=True)
+            if tracks_d:
+                d['tracks'] = tracks_d
+                
+            if self.auto_split_tracks:
+                d['joined_tracks'] = list(self.joined_tracks)
+
         return d
 
     def to_arg_list(self) -> list[str | int]:
@@ -303,7 +354,7 @@ class GroupPos:
 
         Layout: ptv_value, group_name, flags, then per-port-mode numbers.
         """
-        arg_list = list[Union[str, int]]()
+        arg_list = list[str | int]()
 
         arg_list.append(self.port_types_view.value)
         arg_list.append(self.group_name)
@@ -353,7 +404,7 @@ class GroupPos:
         return gpos
 
     def is_splitted(self) -> bool:
-        """Return True if the group is split into input/output boxes."""
+        """Return True if the group is splitted into input/output boxes."""
         return bool(self.flags & GroupPosFlag.SPLITTED)
 
     def set_splitted(self, yesno: bool):
@@ -405,7 +456,7 @@ class GroupPos:
         return False
 
     def apply_only_diffs(
-            self, orig_gpos: 'Optional[GroupPos]', new_gpos: 'GroupPos'):
+            self, orig_gpos: 'GroupPos | None', new_gpos: 'GroupPos'):
         """Apply only the differences between `orig_gpos` and `new_gpos`.
 
         Update this GroupPos with changes from `new_gpos`, preserving other

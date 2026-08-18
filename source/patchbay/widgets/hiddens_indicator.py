@@ -1,17 +1,22 @@
 
-from typing import TYPE_CHECKING, Callable, Iterator, Optional, Union
+from typing import TYPE_CHECKING, Callable, Iterator, Optional, cast
 
+from qtpy import QT5
 from qtpy.QtCore import Slot, QTimer # type:ignore
-from qtpy.QtGui import QIcon, QPixmap
-if TYPE_CHECKING:
-    # FIX : QAction not found by pylance
+from qtpy.QtGui import QIcon
+from qtpy.QtWidgets import QToolButton, QMenu, QApplication
+if not QT5 or TYPE_CHECKING:
     from qtpy.QtGui import QAction
-from qtpy.QtWidgets import QToolButton, QMenu, QApplication, QAction # type:ignore
+else:
+    from qtpy.QtWidgets import QAction
+
+from patshared import PortMode
+from resourcer import icon
+from resources import scalables
 
 from ..cancel_mng import CancelOp, CancellableAction
-from ..bases.group import Group
+from ..bases.group import Group, Track
 from ..patchcanvas import utils
-from patshared import PortMode
 
 if TYPE_CHECKING:
     from ..patchbay_manager import PatchbayManager
@@ -79,8 +84,10 @@ def divide_group_list(group_list: GroupList) -> GroupList:
     common_min = len(group_list.common)
 
     for group in group_list.list:
-        if TYPE_CHECKING:
-            assert isinstance(group, Group)
+        if not isinstance(group, Group):
+            # to divide a group_list, it must contains groups only
+            raise TypeError
+        
         if len(common_str) == common_min:
             common_str = group.name
             groups.append(GroupList(common_str, [group]))
@@ -89,7 +96,7 @@ def divide_group_list(group_list: GroupList) -> GroupList:
         if TYPE_CHECKING:
             assert isinstance(groups[-1], GroupList)
 
-        common_str = common_prefix(common_str, group.name)
+        common_str = common_prefix(common_str, group.full_name)
         if len(common_str) > common_min:
             # add this group to the last list
             groups[-1].common = common_str
@@ -117,7 +124,7 @@ def divide_group_list(group_list: GroupList) -> GroupList:
             groups.append(gp)
 
     # do recursion
-    new_groups = list[Union[Group, GroupList]]()
+    new_groups = list[Group|GroupList]()
 
     for group_or_list in groups:
         if isinstance(group_or_list, Group):
@@ -129,7 +136,7 @@ def divide_group_list(group_list: GroupList) -> GroupList:
     # at this stage, list can now contains Group or GroupList objects
 
     # englobe directly items of childs containing less than MENU_MIN items
-    new_groups_ = list[Union[Group, GroupList]]()
+    new_groups_ = list[Group|GroupList]()
 
     for group_or_list in new_groups:
         if (isinstance(group_or_list, GroupList)
@@ -164,11 +171,10 @@ class HiddensIndicator(QToolButton):
         self._BLINK_TIMES = 6
         self._blink_times_done = 0
 
-        dark = '-dark' if self._is_dark() else ''
-
-        self._icon_normal = QIcon(QPixmap(f':scalable/breeze{dark}/hint.svg'))
-        self._icon_orange = QIcon(QPixmap(f':scalable/breeze{dark}/hint_orange.svg'))
-
+        self._icon_normal = icon(
+            scalables.breeze.HINT, dark=self._is_dark())
+        self._icon_orange = icon(
+            scalables.breeze.HINT_ORANGE, dark=self._is_dark())
         self.setIcon(self._icon_normal)
 
         self._menu = QMenu()
@@ -278,7 +284,7 @@ class HiddensIndicator(QToolButton):
         self.set_count(0)
         self._stop_blink()
 
-    def _list_hidden_groups(self) -> Iterator[Group]:
+    def _list_hidden_groups(self) -> Iterator[Group | Track]:
         if self.mng is None:
             return
 
@@ -286,7 +292,7 @@ class HiddensIndicator(QToolButton):
         if self._get_filter_text is not None:
             flt = self._get_filter_text()
 
-        for group in self.mng.groups:
+        for group in self.mng.groups_and_tracks():
             hpm = group.current_position.hidden_port_modes()
             if hpm is PortMode.NULL:
                 continue
@@ -313,7 +319,7 @@ class HiddensIndicator(QToolButton):
         dark = self._is_dark()
         groups = [g for g in self._list_hidden_groups()]
 
-        groups.sort(key=lambda x: x.name)
+        groups.sort(key=lambda x: x.full_name)
         group_list = divide_group_list(GroupList('', groups))
 
         menus_dict = dict[tuple[str, ...], QMenu]()
@@ -337,11 +343,21 @@ class HiddensIndicator(QToolButton):
                     parent = mnu
 
             assert isinstance(mnu, QMenu)
-            group_act = mnu.addAction(group.cnv_name)
-            group_act.setIcon(utils.get_icon(
-                group.cnv_box_type, group.cnv_icon_name,
-                group.current_position.hidden_port_modes(),
-                dark=dark))
+            
+            if isinstance(group, Track):
+                group_act = mnu.addAction(
+                    f'{group.parent_group.cnv_name}:{group.name}')
+                group_act.setIcon(utils.get_icon(
+                    group.parent_group.cnv_box_type,
+                    group.parent_group.cnv_icon_name,
+                    PortMode.BOTH,
+                    dark=dark))
+            else:
+                group_act = mnu.addAction(group.cnv_name)
+                group_act.setIcon(utils.get_icon(
+                    group.cnv_box_type, group.cnv_icon_name,
+                    group.current_position.hidden_port_modes(),
+                    dark=dark))
             group_act.setData(group.group_id)
             group_act.triggered.connect(self._menu_action_triggered)
 
@@ -403,18 +419,16 @@ class HiddensIndicator(QToolButton):
 
     @Slot()
     def _menu_action_triggered(self):
-        act: QAction = self.sender() # type:ignore
-        act_data: int = act.data() # type:ignore
-        act_text: str = act.text() # type:ignore
+        act = cast(QAction, self.sender())
+        act_data = cast(int, act.data())
+        act_text = act.text()
 
         if act_data == WHITE_LIST:
             with CancellableAction(self.mng, CancelOp.VIEW) as a:
                 a.name = act_text
-                if TYPE_CHECKING:
-                    assert isinstance(act, QAction)
-                if act.isChecked(): # type:ignore
+                if act.isChecked():
                     self.mng.clear_absents_in_view()
-                self.mng.view().is_white_list = act.isChecked() # type:ignore
+                self.mng.view().is_white_list = act.isChecked()
                 self.mng.set_views_changed()
             return
 

@@ -183,6 +183,7 @@ class Theme(StyleAttributer):
         # set some specific default values
         self.box_header.set_attribute('margin', 0.0)
         self.gui_button._attrs['text-color'] = QColor()
+        self.box.track._attrs['icon-size'] = 16
 
         ThemeFile.path = theme_file_path
         self.icon.read_theme(theme_file_path)

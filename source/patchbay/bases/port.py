@@ -7,14 +7,15 @@ from .connection import Connection
 
 if TYPE_CHECKING:
     from ..patchbay_manager import PatchbayManager
-    from .group import Group
+    from .group import Group, Track
+    from .portgroup import Portgroup
 
 
 class Port:
     graceful_name = ''
     group: 'Group'
-    group_id = -1
-    portgroup_id = 0
+    track: 'Track | None'
+    portgroup: 'Portgroup | None'
     prevent_stereo = False
     last_digit_to_add = ''
     in_canvas = False
@@ -31,6 +32,8 @@ class Port:
         self.flags = flags
         self.uuid = uuid
         self.subtype = PortSubType.REGULAR
+        self.portgroup = None
+        self.track = None
 
         match port_type:
             case PortType.AUDIO_JACK:
@@ -45,6 +48,18 @@ class Port:
 
     def __repr__(self) -> str:
         return f"Port({self.full_name})"
+
+    @property
+    def group_id(self) -> int:
+        if self.track is not None and self.track.is_active:
+            return self.track.group_id
+        return self.group.group_id
+
+    @property
+    def portgroup_id(self) -> int:
+        if self.portgroup is None:
+            return 0
+        return self.portgroup.portgroup_id
 
     @property
     def mode(self) -> PortMode:
@@ -147,6 +162,18 @@ class Port:
             return ':'.join(names[0:2] + names[4:])
         return self.full_name
 
+    def set_cv_from_metadata(self, signal_type: str):
+        if self.type is not PortType.AUDIO_JACK:
+            return
+        if signal_type.upper() == 'CV':
+            self.subtype = PortSubType.CV
+        else:
+            self.subtype = PortSubType.REGULAR
+            
+        if self.in_canvas:
+            patchcanvas.change_port_type(
+                self.group_id, self.port_id, self.type, self.subtype)
+
     def add_the_last_digit(self):
         self.graceful_name += ' ' + self.last_digit_to_add
         self.last_digit_to_add = ''
@@ -166,7 +193,11 @@ class Port:
             if hidden_sides & self.mode:
                 return
         else:
-            if self.group.current_position.hidden_port_modes() & self.mode:
+            if self.track is not None and self.track.is_active:
+                if (self.track.current_position.hidden_port_modes()
+                        & self.mode):
+                    return
+            elif self.group.current_position.hidden_port_modes() & self.mode:
                 return
 
         patchcanvas.add_port(
@@ -194,11 +225,16 @@ class Port:
                     self.group_id, self.port_id,
                     bool(self.conns_hidden_in_canvas))
 
-    def remove_from_canvas(self):
+    def remove_from_canvas(self, keep_in_track=False):
+        '''keep_in_track is used when the main group is hidden
+        but the track is shown'''
         if self.manager.very_fast_operation:
             return
 
         if not self.in_canvas:
+            return
+
+        if keep_in_track and self.track is not None and self.track.is_active:
             return
 
         patchcanvas.remove_port(self.group_id, self.port_id)
@@ -234,7 +270,7 @@ class Port:
         if not self.in_canvas:
             return
 
-        if had_hidden_conns == bool(self.conns_hidden_in_canvas):
+        if had_hidden_conns is bool(self.conns_hidden_in_canvas):
             return
 
         patchcanvas.port_has_hidden_connection(

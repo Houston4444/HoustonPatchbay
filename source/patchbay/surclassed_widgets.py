@@ -1,28 +1,31 @@
 
 from typing import TYPE_CHECKING
 
+from qtpy import QT5
 from qtpy.QtCore import (
     Qt, Signal, Slot, QPoint, QSize, QRectF, QPointF) # type:ignore
 from qtpy.QtGui import (
     QWheelEvent, QKeyEvent, QMouseEvent, QPaintEvent,
-    QPainter, QPen, QPainterPath, QPixmap, QColor)
-
-if TYPE_CHECKING:
-    # FIX : QAction not found by pylance
-    from qtpy.QtGui import QAction
-
+    QPainter, QPen, QPainterPath, QPixmap, QColor, QFont)
 from qtpy.QtWidgets import (
-    QApplication, QProgressBar, QSlider, QToolTip,
-    QLineEdit, QLabel, QMenu, QAction, QCheckBox, # type:ignore
-    QComboBox, QFrame, QWidget)
+    QApplication, QProgressBar, QLineEdit, QLabel, QMenu,
+    QCheckBox, QComboBox, QFrame, QWidget)
 
-from patshared import PortTypesViewFlag
+if not QT5 or TYPE_CHECKING:
+    from qtpy.QtGui import QAction
+else:
+    from qtpy.QtWidgets import QAction
 
-from .patchcanvas import patchcanvas, AliasingReason
+from patshared import PortTypesViewFlag, PortType, PortSubType
+from resourcer import pixmap
+from resources import scalables
+
+from .patchcanvas import patchcanvas
+from .patchcanvas.utils import polyline
+from .patchcanvas.theme import BorderMode
 from .bases.elements import TransportViewMode
 
 if TYPE_CHECKING:
-    from .patchbay_manager import PatchbayManager
     from .widgets.view_selector_frame import ViewSelectorWidget
 
 _translate = QApplication.translate
@@ -59,116 +62,6 @@ class ProgressBarDsp(QProgressBar):
         QProgressBar.setValue(self, value)
 
 
-class ZoomSlider(QSlider):
-    def __init__(self, parent):
-        QSlider.__init__(self, parent)
-
-        self._mng = None
-        self.setMinimumSize(QSize(40, 0))
-        self.setMaximumSize(QSize(90, 16777215))
-        self.setMouseTracking(True)
-
-        dark_theme = self.palette().text().color().lightnessF() > 0.5
-        dark = '-dark' if dark_theme else ''
-
-        self.setStyleSheet(
-            'QSlider:focus{border: none;} '
-            'QSlider::handle:horizontal{'
-            f'image: url(:scalable/breeze{dark}/zoom-centered.svg);}}'
-            )
-        self.setMinimum(0)
-        self.setMaximum(1000)
-        self.setSingleStep(10)
-        self.setPageStep(10)
-        self.setProperty("value", 500)
-        self.setTracking(True)
-        self.setOrientation(Qt.Orientation.Horizontal)
-        self.setInvertedAppearance(False)
-        self.setInvertedControls(False)
-        self.setTickPosition(QSlider.TickPosition.TicksBelow)
-        self.setTickInterval(500)
-
-        self.valueChanged.connect(self._value_changed)
-
-    @staticmethod
-    def map_float_to(x: float, min_a: int, max_a: int,
-                     min_b: int, max_b: int) -> float:
-        if max_a == min_a:
-            return min_b
-        return min_b + ((x - min_a) / (max_a - min_a)) * (max_b - min_b)
-
-    def _show_tool_tip(self):
-        win = QApplication.activeWindow()
-        if win and win.isFullScreen():
-            return
-        string = "  Zoom: %i%%  " % int(self.zoom_percent())
-        QToolTip.showText(self.mapToGlobal(QPoint(0, 12)), string)
-
-    @Slot(int)
-    def _value_changed(self, value: int):
-        if self._mng is None:
-            return
-
-        self._mng.set_zoom(self.zoom_percent())
-
-    def set_patchbay_manager(self, patchbay_manager: 'PatchbayManager'):
-        self._mng = patchbay_manager
-        self._mng.sg.scene_scale_changed.connect(
-            self._scale_changed)
-
-    def zoom_percent(self) -> int:
-        if self.value() <= 500:
-            return int(self.map_float_to(self.value(), 0, 500, 20, 100))
-        return int(self.map_float_to(self.value(), 500, 1000, 100, 300))
-
-    def set_percent(self, percent: float):
-        if 99.99999 < percent < 100.00001:
-            self.setValue(500)
-        elif percent < 100:
-            self.setValue(int(self.map_float_to(percent, 20, 100, 0, 500)))
-        else:
-            self.setValue(int(self.map_float_to(percent, 100, 300, 500, 1000)))
-        self._show_tool_tip()
-
-    def _scale_changed(self, ratio: float):
-        self.set_percent(ratio * 100)
-
-    def mouseDoubleClickEvent(self, event):
-        if self._mng is None:
-            super().mouseDoubleClickEvent(event)
-            return
-
-        self._mng.zoom_fit()
-
-    def contextMenuEvent(self, event):
-        if self._mng is None:
-            super().contextMenuEvent(event)
-            return
-
-        self._mng.zoom_reset()
-
-    def wheelEvent(self, event: QWheelEvent):
-        direction = 1 if event.angleDelta().y() > 0 else -1
-
-        if QApplication.keyboardModifiers() & Qt.KeyboardModifier.ControlModifier:
-            self.set_percent(self.zoom_percent() + direction)
-        else:
-            self.set_percent(self.zoom_percent() + direction * 5)
-        self._show_tool_tip()
-
-    def mouseMoveEvent(self, event: QMouseEvent):
-        QSlider.mouseMoveEvent(self, event)
-        self._show_tool_tip()
-
-        if self._mng is not None and event.buttons():
-            self._mng.start_aliasing_check(AliasingReason.SCROLL_BAR_MOVE)
-
-    def mouseReleaseEvent(self, event):
-        super().mouseReleaseEvent(event)
-
-        if self._mng is not None:
-            self._mng.set_aliasing_reason(AliasingReason.SCROLL_BAR_MOVE, False)
-
 
 class TimeTransportLabel(QLabel):
     transport_view_changed = Signal()
@@ -196,14 +89,16 @@ class TimeTransportLabel(QLabel):
         self._actions[TransportViewMode.HOURS_MINUTES_SECONDS].setChecked(True)
 
     def _update_tool_tip(self):
-        text = ""
-        if self.transport_view_mode is TransportViewMode.HOURS_MINUTES_SECONDS:
-            text = _translate('transport', 'Hours:Minutes:Seconds')
-        elif self.transport_view_mode is TransportViewMode.BEAT_BAR_TICK:
-            text = _translate('transport', 'Beat|Bar|Tick')
-        elif self.transport_view_mode is TransportViewMode.FRAMES:
-            text = _translate('transport', 'Frames')
-
+        match self.transport_view_mode:
+            case TransportViewMode.HOURS_MINUTES_SECONDS:
+                text = _translate('transport', 'Hours:Minutes:Seconds')
+            case TransportViewMode.BEAT_BAR_TICK:
+                text = _translate('transport', 'Beat|Bar|Tick')
+            case TransportViewMode.FRAMES:
+                text = _translate('transport', 'Frames')
+            case _:
+                text = ''
+        
         self.setToolTip(text)
 
     def mousePressEvent(self, event: QMouseEvent):
@@ -231,16 +126,157 @@ class TypeViewCheckBox(QCheckBox):
 
     def __init__(self, parent=None):
         super().__init__(parent)
+        self.setMaximumWidth(50)
+        self._port_type = PortType.NULL
+        self._port_sub_type = PortSubType.REGULAR
+
+    def set_full_port_type(self, port_type: PortType, sub_type: PortSubType):
+        self._port_type = port_type
+        self._port_sub_type = sub_type
 
     def mousePressEvent(self, event: QMouseEvent) -> None:
-        if event.button() in (Qt.MouseButton.LeftButton, Qt.MouseButton.RightButton):
+        if event.button() in (Qt.MouseButton.LeftButton,
+                              Qt.MouseButton.RightButton):
             alternate = bool(
                 event.button() == Qt.MouseButton.RightButton
-                or QApplication.keyboardModifiers() & Qt.KeyboardModifier.ControlModifier)
+                or (QApplication.keyboardModifiers()
+                    & Qt.KeyboardModifier.ControlModifier))
             self.really_clicked.emit(alternate)
             return
 
         super().mousePressEvent(event)
+        
+    def paintEvent(self, event):
+        theme = patchcanvas.canvas.theme
+
+        port_height = 18
+        port_theme = theme.port
+        line_theme = theme.line
+
+        TOP_SPACE = 6
+        lh = port_theme.fill_pen.widthF() * 0.5
+        top = lh + TOP_SPACE
+        bottom = port_height - lh + TOP_SPACE
+        left = lh
+        right = self.width() - lh
+        arrow_base = lh + port_height * 0.5
+        arrow_mid = lh + port_height * 0.25
+        y_arrow_pic = TOP_SPACE + port_height * 0.5
+        
+        points = []
+
+        match self._port_type:
+            case PortType.AUDIO_JACK:
+                match self._port_sub_type:
+                    case PortSubType.CV:
+                        port_theme = port_theme.cv
+                        line_theme = line_theme.audio
+                        points = [(arrow_base, top),
+                                (right, top),
+                                (right, bottom),
+                                (arrow_base, bottom),
+                                (arrow_base, top)]
+                    case _:                    
+                        port_theme = port_theme.audio
+                        line_theme = line_theme.audio
+                        points = [(arrow_base, top),
+                                (right, top),
+                                (right, bottom),
+                                (arrow_base, bottom),
+                                (left, y_arrow_pic),
+                                (arrow_base, top)]
+
+            case PortType.MIDI_JACK:
+                port_theme = port_theme.midi
+                line_theme = line_theme.midi
+                points = [
+                    (right, top),
+                    (arrow_base, top),
+                    (arrow_base + (arrow_mid - arrow_base) * 0.62,
+                     TOP_SPACE + port_height * 0.15),
+                    (arrow_mid, TOP_SPACE + port_height * 0.40),
+                    (arrow_mid, TOP_SPACE + port_height * 0.60),
+                    (arrow_base + (arrow_mid - arrow_base) * 0.62,
+                     TOP_SPACE + port_height * 0.85),
+                    (arrow_base, bottom),
+                    (right, bottom),
+                    (right, top)]
+                
+            case PortType.MIDI_ALSA:
+                port_theme = port_theme.alsa
+                line_theme = line_theme.alsa
+                points = [(arrow_mid, top),
+                          (right, top),
+                          (right, bottom),
+                          (arrow_mid, bottom),
+                          (arrow_mid, top)]
+
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+        
+        if port_theme.border_mode is BorderMode.MINIMAL:
+            painter.setPen(Qt.PenStyle.NoPen)
+        else:
+            painter.setPen(port_theme.fill_pen)
+        painter.setBrush(port_theme.background_color)
+        
+        painter.drawPolygon(polyline(points))
+        
+        if port_theme.border_mode is BorderMode.MINIMAL:
+            painter.setPen(port_theme.fill_pen)
+            match self._port_type:
+                case PortType.AUDIO_JACK:
+                    match self._port_sub_type:
+                        case PortSubType.CV:
+                            painter.drawPolyline(polyline(points[1:3]))
+                            painter.drawPolyline(polyline(points[3:5]))
+                        case _:
+                            painter.drawPolyline(polyline(points[1:3]))
+                            painter.drawPolyline(polyline(points[3:6]))
+                
+                case PortType.MIDI_JACK:
+                    painter.drawPolyline(polyline(points[1:7]))
+                    painter.drawPolyline(polyline(points[7:9]))
+                    
+                case PortType.MIDI_ALSA:
+                    painter.drawPolyline(polyline(points[1:3]))
+                    painter.drawPolyline(polyline(points[3:5]))
+        
+        match (self._port_type, self._port_sub_type):
+            case (PortType.AUDIO_JACK, PortSubType.CV):
+                divid = (bottom - top) / 12
+                painter.drawPolyline(polyline(
+                    [(arrow_base, top + divid * 5),
+                    (left, top + divid * 5),
+                    (left, top + divid * 7),
+                    (arrow_base, top + divid * 7)]))
+            case (PortType.MIDI_ALSA, PortSubType.REGULAR):
+                scene_col = theme.scene_background_color
+                circle_bg_col = QColor(scene_col)
+                circle_bg_col.setAlphaF(1.0)
+                painter.setBrush(circle_bg_col)
+                radius = abs(left - arrow_mid) * 0.667
+                painter.drawEllipse(
+                    QPointF(arrow_mid, TOP_SPACE + port_height / 2.0),
+                    radius, radius)
+
+        font = QFont(port_theme.font)
+        font.setPixelSize(12)
+        
+        painter.setFont(font)
+        text_y_pos = TOP_SPACE + ((port_height - 0.667 * font.pixelSize()) / 2
+                      + font.pixelSize() * 0.667)
+        painter.setPen(QPen(port_theme.text_color))
+        painter.drawText(
+            QPointF(3.0 + port_height * 0.5, text_y_pos), self.text())
+        
+        if self.isChecked():
+            painter.setPen(QPen(line_theme.background_color, 3.0))
+            painter.drawLine(
+                QPointF(1.5 + port_height * 0.5, TOP_SPACE + port_height + 4.0),
+                QPointF(self.width() - 1.5, TOP_SPACE + port_height + 4.0))
+
+        painter.end()
 
 
 class ViewsComboBox(QComboBox):
@@ -251,11 +287,10 @@ class ViewsComboBox(QComboBox):
         self._selected_index = 0
         self._selected_view = 1
 
-        dark = self.palette().text().color().lightnessF() > 0.5
-        color_scheme = 'breeze-dark' if dark else 'breeze'
-
-        self._white_image = QPixmap(
-            f':scalable/{color_scheme}/color-picker-white.svg').toImage()
+        self._white_image = pixmap(
+            scalables.breeze.COLOR_PICKER_WHITE,
+            dark=self.palette().text().color().lightnessF() > 0.5).\
+                toImage()
 
         self.editTextChanged.connect(self._edit_text_changed)
         self.view().setMinimumWidth(800)

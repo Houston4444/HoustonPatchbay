@@ -6,7 +6,8 @@ from typing import TYPE_CHECKING, Callable
 from qtpy.QtCore import QThread
 from qtpy.QtGui import QGuiApplication
 
-from patshared import PortType, PortSubType, JackMetadata
+from patshared import PortType, JackMetadata
+from patshared import PortMode
 
 from .bases.connection import Connection
 from .bases.elements import JackPortFlag, CanvasOptimizeIt
@@ -89,18 +90,14 @@ def add_port(mng: 'PatchbayManager', name: str, port_type: PortType,
         if exst_port.type.is_jack and exst_port.uuid:
             mng.jack_metadatas.remove_uuid(exst_port.uuid)
 
-        group = mng.get_group_from_id(exst_port.group_id)
-        if group is not None:
-            # remove portgroup first if port is in a portgroup
-            if exst_port.portgroup_id:
-                for portgroup in group.portgroups:
-                    if portgroup.portgroup_id == exst_port.portgroup_id:
-                        group.portgroups.remove(portgroup)
-                        portgroup.remove_from_canvas()
-                        break
+        group = exst_port.group
+        # remove portgroup first if port is in a portgroup
+        if exst_port.portgroup is not None:
+            group.remove_portgroup(exst_port.portgroup)
+            exst_port.portgroup.remove_from_canvas()
 
-            exst_port.remove_from_canvas()
-            group.remove_port(exst_port)
+        exst_port.remove_from_canvas()
+        group.remove_port(exst_port)
 
     port = Port(mng, mng._next_port_id, name, port_type, flags, uuid)
     mng._next_port_id += 1
@@ -171,6 +168,7 @@ def remove_port(mng: 'PatchbayManager', name: str) -> int | None:
     '''remove a port from name and return its group_id'''
     port = mng.get_port_from_name(name)
     if port is None:
+        _logger.warning(f'No port "{name} to remove"')
         return None
 
     if name in mng._ports_by_name:
@@ -180,17 +178,12 @@ def remove_port(mng: 'PatchbayManager', name: str) -> int | None:
     if port.type.is_jack and port.uuid:
         mng.jack_metadatas.remove_uuid(port.uuid)
 
-    group = mng.get_group_from_id(port.group_id)
-    if group is None:
-        return None
+    group = port.group
 
     # remove portgroup first if port is in a portgroup
-    if port.portgroup_id:
-        for portgroup in group.portgroups:
-            if portgroup.portgroup_id == port.portgroup_id:
-                group.portgroups.remove(portgroup)
-                portgroup.remove_from_canvas()
-                break
+    if port.portgroup is not None:
+        port.portgroup.remove_from_canvas()
+        group.remove_portgroup(port.portgroup)
 
     port.remove_from_canvas()
     group.remove_port(port)
@@ -219,6 +212,13 @@ def rename_port(
         else:
             _logger.warning(
                 f"rename_port to '{new_name}', no port named '{name}'")
+        return
+
+    exst_port = mng.get_port_from_name(new_name)
+    if exst_port is not None:
+        _logger.warning(
+            f'Impossible to rename port "{name}" to "{new_name}", '
+            f'It already exists.')
         return
 
     # change port key in self._ports_by_name dict
@@ -260,7 +260,37 @@ def rename_port(
 
     port.full_name = new_name
     port.group.graceful_port(port)
-    port.rename_in_canvas()
+    
+    change_track = port.group.port_has_to_change_track(port)
+    if change_track:
+        group = port.group
+        track = port.track
+        
+        was_in_canvas = port.in_canvas
+        if was_in_canvas:
+            for conn in mng.connections.with_group(group):
+                conn.remove_from_canvas()
+            
+            if port.portgroup is not None:
+                group.remove_portgroup(port.portgroup)
+                
+            port.remove_from_canvas()
+
+        if track is not None and port in track.ports:
+            track.ports.remove(port)              
+
+        group.remove_port(port)
+        group.add_port(port)
+        group.graceful_port(port)
+        group.add_to_canvas()
+        port.add_to_canvas()
+        group.check_for_portgroup_on_last_port()
+        group.check_for_display_name_on_last_port()        
+        for conn in mng.connections.with_group(group):
+            conn.add_to_canvas()
+    else:
+        port.rename_in_canvas()
+        
     return port.group.group_id
 
 @later_by_batch(metadata_change=True)
@@ -337,10 +367,7 @@ def metadata_update(
                 return
 
             if port.type is PortType.AUDIO_JACK:
-                if value == 'CV':
-                    port.subtype = PortSubType.CV
-                elif value == 'AUDIO':
-                    port.subtype = PortSubType.REGULAR
+                port.set_cv_from_metadata(value)
 
             return port.group_id
 
@@ -351,12 +378,33 @@ def add_connection(
     port_in = mng.get_port_from_name(port_in_name)
 
     if port_out is None or port_in is None:
+        _logger.error(
+            f'Failed to add connection between {port_out} and {port_in}, '
+            f'one port at least is missing.')
         return
 
-    for connection in mng.connections:
+    for connection in mng.connections.from_group(port_out.group):
         if (connection.port_out is port_out
                 and connection.port_in is port_in):
+            _logger.warning(
+                f'Attempt to add connection between ' 
+                f'{port_out_name} and {port_in_name}, '
+                f'but connection already exists')
             return
+
+    if port_out.type is not port_in.type:
+        _logger.error(
+            f'Attempt to connect ports of different type, '
+            f'{port_out_name} is {port_out.type.name}, '
+            f'{port_in_name} is {port_in.type.name}')
+        return
+
+    if (port_out.mode is not PortMode.OUTPUT
+            or port_in.mode is not PortMode.INPUT):
+        _logger.error(
+            f'Attempt to connect ports, {port_out_name} is not output, '
+            f'or {port_in_name} is not input')
+        return
 
     connection = Connection(mng, mng._next_connection_id, port_out, port_in)
     mng._next_connection_id += 1
@@ -370,16 +418,21 @@ def remove_connection(
     port_out = mng.get_port_from_name(port_out_name)
     port_in = mng.get_port_from_name(port_in_name)
     if port_out is None or port_in is None:
+        _logger.warning(
+            f'remove_connection, unable to find {port_out_name} '
+            f'or {port_in_name}')
         return
 
-    for connection in mng.connections:
+    for connection in mng.connections.from_group(port_out.group):
         if (connection.port_out is port_out
                 and connection.port_in is port_in):
             mng.connections.remove(connection)
-            mng.sg.connection_removed.emit(connection.connection_id)
             connection.remove_from_canvas()
             break
-
+    else:
+        _logger.warning(
+            f'remove_connection - ports {port_out_name} and {port_in_name} '
+            f'are not connected.')
 
 def delayed_orders_timeout(mng: 'PatchbayManager'):
     '''This method is called by the QTimer self._delayed_orders_timer
@@ -396,7 +449,7 @@ def delayed_orders_timeout(mng: 'PatchbayManager'):
         while _delayed_orders.qsize():
             oq = _delayed_orders.get()
 
-            _logger.debug(f'  execute {oq.func.__name__}, {oq.args[1:]}')
+            _logger.debug(f'execute {oq.func.__name__}, {oq.args[1:]}')
 
             # execute the function, and get concerned group_id
             group_id = oq.func(*oq.args, **oq.kwargs)
@@ -426,7 +479,7 @@ def delayed_orders_timeout(mng: 'PatchbayManager'):
             for conn in mng.connections:
                 for port in (conn.port_out, conn.port_in):
                     fport = mng.get_port_from_name(port.full_name)
-                    if fport is None:
+                    if fport is None or fport is not port:
                         conn.remove_from_canvas()
                         conns_to_clean.append(conn)
                         break
@@ -435,6 +488,10 @@ def delayed_orders_timeout(mng: 'PatchbayManager'):
                         conn.remove_from_canvas()
 
             for conn in conns_to_clean:
+                _logger.warning(
+                    f'Connection between "{conn.port_out.full_name}" '
+                    f'and "{conn.port_in.full_name}" '
+                    f'removed because one of its ports has been removed.')
                 mng.connections.remove(conn)
 
     if some_groups_removed:

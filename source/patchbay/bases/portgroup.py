@@ -7,6 +7,7 @@ from ..patchcanvas import patchcanvas
 if TYPE_CHECKING:
     from ..patchbay_manager import PatchbayManager
 
+
 class Portgroup:
     '''Portgroup is a group of ports, in most cases a stereo pair'''
     def __init__(self, manager: 'PatchbayManager', group_id: int,
@@ -16,6 +17,7 @@ class Portgroup:
         self.portgroup_id = portgroup_id
         self.port_mode = port_mode
         self.ports = tuple(ports)
+        self.track_id = -1
 
         self.mdata_portgroup = ''
         self.above_metadatas = False
@@ -24,7 +26,7 @@ class Portgroup:
 
         if len(self.ports) >= 2:
             for port in self.ports:
-                port.portgroup_id = portgroup_id
+                port.portgroup = self
 
     @property
     def type(self) -> PortType:
@@ -44,9 +46,7 @@ class Portgroup:
             port.rename_in_canvas()
 
     def sort_ports(self):
-        port_list = list(self.ports)
-        port_list.sort()
-        self.ports = tuple(port_list)
+        self.ports = tuple(sorted(self.ports))
 
     def add_to_canvas(self):
         if self.manager.very_fast_operation:
@@ -61,23 +61,35 @@ class Portgroup:
         if len(self.ports) < 2:
             return
 
+        ports_group_ids = set[int]()
         for port in self.ports:
             if not port.in_canvas:
                 return
-
-        self.in_canvas = True
+            ports_group_ids.add(port.group_id)
+            
+        if len(ports_group_ids) != 1:
+            return
 
         patchcanvas.add_portgroup(
-            self.group_id, self.portgroup_id,
+            ports_group_ids.pop(), self.portgroup_id,
             self.port_mode, self.ports[0].type, self.ports[0].subtype,
             [port.port_id for port in self.ports])
 
-    def remove_from_canvas(self):
+        self.in_canvas = True
+
+    def remove_from_canvas(self, keep_in_track=False):
         if self.manager.very_fast_operation:
             return
 
         if not self.in_canvas:
             return
 
-        patchcanvas.remove_portgroup(self.group_id, self.portgroup_id)
+        if self.track_id >= 0:
+            if keep_in_track:
+                return
+            group_id = self.track_id
+        else:
+            group_id = self.group_id
+
+        patchcanvas.remove_portgroup(group_id, self.portgroup_id)
         self.in_canvas = False

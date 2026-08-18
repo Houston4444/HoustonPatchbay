@@ -7,9 +7,13 @@ from qtpy.QtWidgets import (
 from qtpy.QtGui import (
     QIcon, QKeyEvent, QPen, QFont, QFontMetricsF,
     QResizeEvent, QColor, QPixmap)
-from qtpy.QtCore import Slot, Qt, QSize, QPointF, QRect, QRectF, QModelIndex # type:ignore
+from qtpy.QtCore import (
+    Slot, Qt, QSize, QPointF, QRect, QRectF, QModelIndex) # type:ignore
 
 from patshared import PortTypesViewFlag
+from resourcer import pixmap
+from resources import scalables
+
 from ..patchcanvas import canvas
 from ..cancel_mng import CancelOp, CancellableAction
 
@@ -38,11 +42,10 @@ class ItemmDeleg(QAbstractItemDelegate):
         self._width = 500
         self._port_colors = [QColor() for i in range(4)]
 
-        dark = QApplication.palette().text().color().lightnessF() > 0.5
-        color_scheme = 'breeze-dark' if dark else 'breeze'
-
-        self._white_image = QPixmap(
-            f':scalable/{color_scheme}/color-picker-white.svg').toImage()
+        self._white_image = pixmap(
+            scalables.breeze.COLOR_PICKER_WHITE,
+            dark=QApplication.palette().text().color().lightnessF() > 0.5).\
+                toImage()
 
     def sizeHint(self, option: 'QStyleOptionViewItem',
                  index: QModelIndex) -> QSize:
@@ -88,7 +91,7 @@ class ItemmDeleg(QAbstractItemDelegate):
 
         bg_col = QApplication.palette().base().color()
         bg_ligthness = bg_col.lightnessF()
-        pcols = self._port_colors
+        self._port_colors = pcols
 
         if bg_ligthness > 0.5:
             for i in range(len(pcols)):

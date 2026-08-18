@@ -86,12 +86,12 @@ class CancelMng:
         action.view_num_bef = self.mng.view_number
 
         match op_type:
-            case CancelOp.VIEW|CancelOp.PTV_CHOICE:
+            case CancelOp.VIEW | CancelOp.PTV_CHOICE:
                 action.view_data_bef = self.mng.view().copy()
                 if op_type is CancelOp.PTV_CHOICE:
                     action.ptv_bef = self.mng.port_types_view
 
-            case CancelOp.VIEW_CHOICE|CancelOp.ALL_VIEWS:
+            case CancelOp.VIEW_CHOICE | CancelOp.ALL_VIEWS:
                 action.views_bef = self.mng.views.copy()
 
             case CancelOp.ALL_VIEWS_NO_POS:

@@ -56,7 +56,6 @@ class SignalsObject(QObject):
     scene_scale_changed = Signal(float)
 
     connection_added = Signal(int)
-    connection_removed = Signal(int)
     patch_may_have_changed = Signal()
 
     def __init__(self):

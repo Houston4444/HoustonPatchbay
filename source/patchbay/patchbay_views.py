@@ -1,11 +1,11 @@
 
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Iterator, cast
 
 from patshared import GroupPos, PortMode, PortTypesViewFlag
 
 from .bases.elements import CanvasOptimizeIt
-from .bases.group import Group
+from .bases.group import Group, Track
 from .patchcanvas import patchcanvas
 
 if TYPE_CHECKING:
@@ -15,93 +15,56 @@ if TYPE_CHECKING:
 _logger = logging.getLogger(__name__)
 
 
-def change_port_types_view(
-        mng: 'PatchbayManager', port_types_view: PortTypesViewFlag,
-        force=False):
-    if not force and port_types_view is mng.port_types_view:
-        return
+def _groups_and_gpos(mng: 'PatchbayManager') \
+        -> Iterator[tuple[Group, GroupPos] | tuple[Track, GroupPos | None]]:
+    for group in mng.groups:
+        new_gpos = mng.get_group_position(group.name)
+        yield group, new_gpos
+        for track in group.tracks:
+            yield track, new_gpos.tracks.get(track.name)
+            
+def _groups_and_gpos_reversed(mng: 'PatchbayManager') \
+        -> Iterator[tuple[Group, GroupPos] | tuple[Track, GroupPos | None]]:
+    for group in mng.groups:
+        new_gpos = mng.get_group_position(group.name)
+        for track in group.tracks:
+            yield track, new_gpos.tracks.get(track.name)
+        yield group, new_gpos
 
-    ex_ptv = mng.port_types_view
-    mng.port_types_view = port_types_view
-    _logger.info(
-        f"Change Port Types View: {ex_ptv.name} -> {port_types_view.name}")
-    # Prevent visual update at each canvas item creation
-    # because we may create/remove a lot of ports here
-
-    change_counter = 0
-
-    if len(mng.groups) > 30:
-        for group in mng.groups:
-            in_outs_ptv = group.ins_ptv | group.outs_ptv
-
-            if in_outs_ptv & port_types_view is not in_outs_ptv & ex_ptv:
-                change_counter += 1
-                continue
-
-            new_gpos = mng.get_group_position(group.name)
-            if group.current_position.needs_redraw(new_gpos):
-                change_counter += 1
-
-    if change_counter > 30:
-        # Big changes between the current and the next view
-        # Strategy is to remove all from canvas and add all what is needed
-        # without animation.
+def _change_ptv_with_anim(
+        mng: 'PatchbayManager', ex_ptv: PortTypesViewFlag):
+    with CanvasOptimizeIt(mng, auto_redraw=True):
         for connection in mng.connections:
-            connection.in_canvas = False
-
-        for group in mng.groups:
-            group.in_canvas = False
-            for portgroup in group.portgroups:
-                portgroup.in_canvas = False
-            for port in group.ports:
-                port.in_canvas = False
-
-        patchcanvas.clear_all()
-
-        with CanvasOptimizeIt(mng):
-            for group in mng.groups:
-                group.current_position = mng.get_group_position(group.name)
-                if (group.outs_ptv | group.ins_ptv) & mng.port_types_view:
-                    group.add_to_canvas()
-                    group.add_all_ports_to_canvas()
-
-            for connection in mng.connections:
-                connection.add_to_canvas()
-
-        patchcanvas.redraw_all_groups()
-
-        mng.sg.port_types_view_changed.emit(mng.port_types_view)
-        mng.view().default_port_types_view = mng.port_types_view
-        mng.save_view_and_port_types_view()
-        return
-
-    rm_all_before = bool(ex_ptv & mng.port_types_view
-                            is PortTypesViewFlag.NONE)
-
-    with CanvasOptimizeIt(mng):
-        if rm_all_before:
-            # there is no common port type between previous and next view,
-            # strategy is to remove fastly all contents from the patchcanvas.
-            for connection in mng.connections:
-                connection.in_canvas = False
-
-            for group in mng.groups:
-                group.in_canvas = False
-                for portgroup in group.portgroups:
-                    portgroup.in_canvas = False
-                for port in group.ports:
-                    port.in_canvas = False
-
-            patchcanvas.clear_all()
-
-        else:
-            for connection in mng.connections:
-                connection.remove_from_canvas()
+            connection.remove_from_canvas()
 
         groups_and_pos = dict[Group, tuple[GroupPos, PortMode, PortMode]]()
 
-        for group in mng.groups:
-            new_gpos = mng.get_group_position(group.name)
+        pv_group_gpos = None
+        for group, new_gpos in _groups_and_gpos_reversed(mng):
+            if isinstance(group, Track):
+                if new_gpos is None:
+                    if not group.is_active:
+                        continue
+                    new_gpos = \
+                        cast(GroupPos, pv_group_gpos).copy(no_tracks=True)
+                    new_gpos.set_hidden_port_mode(PortMode.NULL)
+                    new_gpos.group_name = \
+                        f'{group.parent_group.name}:{group.name}'
+                    # in new view, the track will be repatriated
+                    # lets add it to join list
+                    group.parent_group.joining_tracks.add(group.name)
+                else:
+                    group.parent_group.joining_tracks.discard(group.name)
+                    group.set_active(True, force=True)
+                
+                keep_in_track = False
+            else:
+                pv_group_gpos = new_gpos
+                if TYPE_CHECKING:
+                    new_gpos = cast(GroupPos, new_gpos)
+                
+                keep_in_track = True
+
             in_outs_ptv = group.ins_ptv | group.outs_ptv
             hidden_modes = group.current_position.hidden_port_modes()
             new_hidden_modes = new_gpos.hidden_port_modes()
@@ -131,15 +94,16 @@ def change_port_types_view(
                         is not ex_ptv & group.outs_ptv):
                     redraw_mode |= PortMode.OUTPUT
 
-                if not rm_all_before:
-                    for portgroup in group.portgroups:
-                        if portgroup.port_mode & redraw_mode:
-                            portgroup.remove_from_canvas()
+                for portgroup in group.portgroups:
+                    if portgroup.port_mode & redraw_mode:
+                        portgroup.remove_from_canvas(
+                            keep_in_track=keep_in_track)
 
-                    for port in group.ports:
-                        if port.mode & redraw_mode:
-                            port.remove_from_canvas()
-
+                for port in group.ports:
+                    if port.mode & redraw_mode:
+                        port.remove_from_canvas(
+                            keep_in_track=keep_in_track)
+                
                 if (new_gpos.is_splitted()
                         is not group.current_position.is_splitted()):
                     group.add_to_canvas(gpos=new_gpos)
@@ -148,10 +112,17 @@ def change_port_types_view(
 
                 # only ports which should be hidden in previous and next
                 # view will be hidden (before to animate).
-                for port in group.ports:
-                    port.add_to_canvas(
-                        ignore_gpos=True,
-                        hidden_sides=hidden_modes & new_hidden_modes)
+                if isinstance(group, Track):
+                    for port in group.ports:
+                        port.add_to_canvas(
+                            ignore_gpos=True,
+                            hidden_sides=hidden_modes & new_hidden_modes)
+                else:
+                    for port in group.ports:
+                        if port.track is None or not port.track.is_active:
+                            port.add_to_canvas(
+                                ignore_gpos=True,
+                                hidden_sides=hidden_modes & new_hidden_modes)
 
                 for portgroup in group.portgroups:
                     portgroup.add_to_canvas()
@@ -180,6 +151,82 @@ def change_port_types_view(
             group.set_group_position(*gpos_redraw)
 
         patchcanvas.repulse_all_boxes()
+
+def _change_ptv_without_anim(mng: 'PatchbayManager'):
+    with CanvasOptimizeIt(mng):
+        mng.clear_canvas()
+
+        for group, new_gpos in _groups_and_gpos_reversed(mng):
+            if isinstance(group, Track):
+                if new_gpos is None:
+                    if not group.is_active:
+                        continue
+                    group.set_active(False, manage_canvas=False)
+                    continue
+                else:
+                    group.current_position = new_gpos
+                    group.set_active(True, manage_canvas=False)
+                    group.add_to_canvas()
+            else:
+                group.current_position = cast(GroupPos, new_gpos)
+            
+            if (group.outs_ptv | group.ins_ptv) & mng.port_types_view:
+                group.add_to_canvas()
+                group.add_all_ports_to_canvas()
+
+        for connection in mng.connections:
+            connection.add_to_canvas()
+
+    patchcanvas.redraw_all_groups()
+
+def change_port_types_view(
+        mng: 'PatchbayManager', port_types_view: PortTypesViewFlag,
+        force=False):
+    if not force and port_types_view is mng.port_types_view:
+        return
+
+    ex_ptv = mng.port_types_view
+    mng.port_types_view = port_types_view
+    _logger.info(
+        f"Change Port Types View: {ex_ptv.name} -> {port_types_view.name}")
+
+    # Prevent visual update at each canvas item creation
+    # because we may create/remove a lot of ports here
+
+    change_counter = 0
+
+    if len(mng.groups) > 30:
+        for group, new_gpos in _groups_and_gpos(mng):
+            if isinstance(group, Track):
+                if new_gpos is None:
+                    if group.is_active:
+                        change_counter += 1
+                    continue
+                else:
+                    if not group.is_active:
+                        change_counter += 1
+                        continue
+            else:
+                new_gpos = cast(GroupPos, new_gpos)
+            
+            in_outs_ptv = group.ins_ptv | group.outs_ptv
+
+            if in_outs_ptv & port_types_view is not in_outs_ptv & ex_ptv:
+                change_counter += 1
+                continue
+
+            if group.current_position.needs_redraw(new_gpos):
+                change_counter += 1
+
+    if (ex_ptv & mng.port_types_view is PortTypesViewFlag.NONE
+            or change_counter > 30):
+        # No common port type or big changes 
+        # between the current and the next view.
+        # Strategy is to remove all from canvas and add all what is needed
+        # without animation.
+        _change_ptv_without_anim(mng)
+    else:
+        _change_ptv_with_anim(mng, ex_ptv)
 
     mng.sg.port_types_view_changed.emit(mng.port_types_view)
     mng.view().default_port_types_view = mng.port_types_view

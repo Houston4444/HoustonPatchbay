@@ -1,13 +1,21 @@
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
+from qtpy import QT5
 from qtpy.QtWidgets import QMenu, QApplication
 from qtpy.QtCore import Slot # type:ignore
-from qtpy.QtGui import QIcon, QPixmap
+from qtpy.QtGui import QIcon
+if QT5 and not TYPE_CHECKING:
+    from qtpy.QtWidgets import QAction
+else:
+    from qtpy.QtGui import QAction
 
 from patshared import PortMode, BoxLayoutMode
+from resourcer import icon
+from resources import scalables
 
 from ..cancel_mng import CancelOp, CancellableAction
-from ..bases.group import Group
+from ..bases.elements import CanvasOptimizeIt
+from ..bases.group import Group, Track
 from ..patchcanvas import canvas, patchcanvas, utils
 from ..dialogs.custom_name_dialog import CustomNameDialog
 from ..dialogs.group_info_dialog import GroupInfoDialog
@@ -37,14 +45,12 @@ class DisconnectMenu(QMenu):
 
         if self._port_mode & PortMode.OUTPUT:
             for conn in self._mng.connections:
-                if (conn.port_out.group_id is self._group.group_id
-                        and conn.in_canvas):
+                if conn.port_out.group is self._group and conn.in_canvas:
                     in_groups.add(conn.port_in.group)
 
         if self._port_mode & PortMode.INPUT:
             for conn in self._mng.connections:
-                if (conn.port_in.group_id is self._group.group_id
-                        and conn.in_canvas):
+                if conn.port_in is self._group and conn.in_canvas:
                     out_groups.add(conn.port_out.group)
 
         if not out_groups and not in_groups:
@@ -103,15 +109,15 @@ class DisconnectMenu(QMenu):
 
         if port_mode is PortMode.INPUT:
             for conn in self._mng.connections:
-                if (conn.port_out.group_id is self._group.group_id
-                        and conn.port_in.group_id is group.group_id
+                if (conn.port_out.group is self._group
+                        and conn.port_in.group is group
                         and conn.in_canvas):
                     canvas.cb.ports_disconnect(conn.connection_id)
 
         elif port_mode is PortMode.OUTPUT:
             for conn in self._mng.connections:
-                if (conn.port_in.group_id is self._group.group_id
-                        and conn.port_out.group_id is group.group_id
+                if (conn.port_in.group is self._group
+                        and conn.port_out.group is group
                         and conn.in_canvas):
                     canvas.cb.ports_disconnect(conn.connection_id)
 
@@ -124,19 +130,80 @@ class GroupMenu(QMenu):
         self._port_mode = port_mode
         self._build()
 
+    def _build_tracks_menus(self):
+        if self._group.tracks:
+            self.tracks_menu = QMenu()
+            self.tracks_menu.setIcon(QIcon.fromTheme('split'))
+            self.tracks_menu.setTitle(
+                _translate('patchbay', 'Separate tracks'))
+
+            auto_split_act = self.tracks_menu.addAction(
+                _translate('patchbay', 'Auto split tracks'))
+            auto_split_act.setCheckable(True)
+            auto_split_act.setChecked(
+                self._group.current_position.auto_split_tracks)
+            auto_split_act.triggered.connect(self._toggle_auto_split_tracks)
+
+            join_tracks_act = self.tracks_menu.addAction(
+                _translate('patchbay', 'Join all tracks'))
+            join_tracks_act.setIcon(QIcon.fromTheme('join'))
+            join_tracks_act.triggered.connect(self._join_tracks)
+
+            split_tracks_act = self.tracks_menu.addAction(
+                _translate('patchbay', 'Separate all tracks'))
+            split_tracks_act.setIcon(QIcon.fromTheme('split'))
+            split_tracks_act.triggered.connect(self._split_tracks)
+            
+            self.tracks_menu.addSeparator()
+            
+            has_splitted, has_joined = False, False
+            
+            for track in self._group.tracks:
+                if track.is_active:
+                    has_splitted = True
+                else:
+                    has_joined = True
+                
+                # filter visible track action to theses with at least
+                # one port in canvas
+                for port in track.ports:
+                    if port.in_canvas:
+                        break
+                else:
+                    continue
+                
+                sep_track_act = self.tracks_menu.addAction(track.name)
+                sep_track_act.setCheckable(True)
+                sep_track_act.setChecked(track.is_active)
+                sep_track_act.setData(track.name)
+                sep_track_act.triggered.connect(self._separate_track)
+            
+            if not has_splitted:
+                join_tracks_act.setVisible(False)
+            if not has_joined:
+                split_tracks_act.setVisible(False)
+            
+            self.addMenu(self.tracks_menu)
+        
+        elif isinstance(self._group, Track):
+            repatriate_act = self.addAction(
+                _translate('patchbay', 'Repatriate Track'))
+            repatriate_act.setIcon(QIcon.fromTheme('join'))
+            repatriate_act.triggered.connect(self._repatriate_track)
+
     def _build(self):
-        dark = '-dark' if utils.is_dark_theme(self) else ''
+        dark = utils.is_dark_theme(self)
 
         self._disconnect_menu = DisconnectMenu(
             self._mng, self._group, self._port_mode)
         self._disconnect_menu.setIcon(
-            QIcon(QPixmap(':scalable/breeze%s/lines-disconnector' % dark)))
+            icon(scalables.misc.LINES_DISCONNECTOR, dark=dark))
 
         self.addMenu(self._disconnect_menu)
 
         disco_all_act = self.addAction(_translate('patchbay', 'Disconnect All'))
         disco_all_act.setIcon(
-            QIcon(QPixmap(':scalable/breeze%s/lines-disconnector' % dark)))
+            icon(scalables.misc.LINES_DISCONNECTOR, dark=dark))
 
         self.addSeparator()
 
@@ -161,6 +228,8 @@ class GroupMenu(QMenu):
             split_act.triggered.connect(self._split)
             if current_port_mode is not PortMode.BOTH:
                 split_act.setEnabled(False)
+
+        self._build_tracks_menus()
 
         box_pos = self._group.current_position.boxes[self._port_mode]
         self._is_wrapped = box_pos.is_wrapped()
@@ -211,13 +280,13 @@ class GroupMenu(QMenu):
     def _disconnect_all(self):
         if self._port_mode & PortMode.OUTPUT:
             for conn in self._mng.connections:
-                if (conn.port_out.group_id is self._group.group_id
+                if (conn.port_out.group is self._group
                         and conn.in_canvas):
                     canvas.cb.ports_disconnect(conn.connection_id)
 
         if self._port_mode & PortMode.INPUT:
             for conn in self._mng.connections:
-                if (conn.port_in.group_id is self._group.group_id
+                if (conn.port_in.group is self._group
                         and conn.in_canvas):
                     canvas.cb.ports_disconnect(conn.connection_id)
 
@@ -241,6 +310,51 @@ class GroupMenu(QMenu):
         with CancellableAction(self._mng, CancelOp.VIEW) as a:
             a.name = _translate('undo', 'Split "%s"') % self._group.cnv_name
             patchcanvas.split_group(self._group.group_id, on_place=True)
+
+    @Slot()
+    def _toggle_auto_split_tracks(self):
+        yesno = not self._group.current_position.auto_split_tracks
+        with CancellableAction(self._mng, CancelOp.VIEW) as a:
+            a.name = _translate('undo', f'set auto split tracks to {yesno}')
+            self._group.current_position.auto_split_tracks = yesno
+
+    @Slot()
+    def _split_tracks(self):
+        with CancellableAction(self._mng, CancelOp.VIEW) as a:
+            a.name = _translate('undo', 'Split tracks for "%s"') \
+                %  self._group.cnv_name
+            with CanvasOptimizeIt(self._mng, auto_redraw=True):
+                self._group.separate_all_tracks(True)
+
+    @Slot()
+    def _join_tracks(self):
+        with CancellableAction(self._mng, CancelOp.VIEW) as a:
+            a.name = _translate('undo', 'Join tracks for "%s"') \
+                %  self._group.cnv_name
+            with CanvasOptimizeIt(self._mng, auto_redraw=True):
+                self._group.separate_all_tracks(False)
+
+    @Slot()
+    def _separate_track(self):
+        sep_track_act = self.sender()
+        if not isinstance(sep_track_act, QAction):
+            return
+
+        track_name = cast(str, sep_track_act.data())
+        with CanvasOptimizeIt(self._mng, auto_redraw=True):
+            self._group.separate_track(track_name, sep_track_act.isChecked())
+
+    @Slot()
+    def _repatriate_track(self):
+        repatriate_act = self.sender()
+        if not isinstance(repatriate_act, QAction):
+            return
+        
+        if not isinstance(self._group, Track):
+            return
+
+        with CanvasOptimizeIt(self._mng, auto_redraw=True):
+            self._group.repatriate_track()
 
     @Slot()
     def _wrap(self):

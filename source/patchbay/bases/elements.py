@@ -1,9 +1,11 @@
-from dataclasses import dataclass
-from enum import IntFlag, IntEnum, auto, Flag
+from enum import IntFlag, IntEnum, auto
 from typing import TYPE_CHECKING
+
+from patshared import PortSubType, PortType, PortTypesViewFlag
 
 if TYPE_CHECKING:
     from ..patchbay_manager import PatchbayManager
+    from .group import Track
 
 
 class JackPortFlag(IntFlag):
@@ -105,8 +107,15 @@ class CanvasOptimize(IntEnum):
 
 
 class CanvasOptimizeIt:
-    '''Context for 'with' statment. save the data at begin and at end
-    for undo/redo actions'''
+    '''Context for 'with' statment. Prevent to redraw each widget
+    in canvas at each operation.
+
+    auto_redraw : bool
+        if True, redraw modified boxes when finished
+    
+    prevent_overlap : bool
+        if True, apply boxes repulsion when finished    
+    '''
     def __init__(
             self, mng: 'PatchbayManager', canvas_optimize=CanvasOptimize.FAST,
             auto_redraw=False, prevent_overlap=True):
@@ -129,3 +138,37 @@ class CanvasOptimizeIt:
                 False, auto_redraw=self._auto_redraw,
                 prevent_overlap=self._prevent_overlap)
 
+
+class Tracks(list['Track']):
+    def __init__(self):
+        super().__init__()
+        self._from_names: 'dict[str, Track]' = {}
+    
+    def from_name(self, name: str) -> 'Track | None':
+        return self._from_names.get(name)
+    
+    def add(self, track: 'Track', name: str, id: int):
+        super().append(track)
+        self._from_names[name] = track
+        
+    def remove(self, track: 'Track'):
+        self._from_names.pop(track.name)
+        super().remove(track)
+
+
+def port_full_type_to_ptv_flag(
+        port_type: PortType, port_sub_type: PortSubType) -> PortTypesViewFlag:
+    match port_type:
+        case PortType.AUDIO_JACK:
+            if port_sub_type is PortSubType.CV:
+                return PortTypesViewFlag.CV
+            else:
+                return PortTypesViewFlag.AUDIO
+        case PortType.MIDI_JACK:
+            return PortTypesViewFlag.MIDI
+        case PortType.MIDI_ALSA:
+            return PortTypesViewFlag.ALSA
+        case PortType.VIDEO:
+            return PortTypesViewFlag.VIDEO
+        case _:
+            return PortTypesViewFlag.NONE

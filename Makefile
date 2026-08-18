@@ -5,7 +5,6 @@
 #
 
 LRELEASE ?= lrelease
-RCC ?= rcc
 QT_VERSION ?= 6
 
 
@@ -17,10 +16,6 @@ ifeq ($(QT_VERSION), 6)
 	PYUIC ?= pyuic6
 	PYLUPDATE ?= pylupdate6
 
-	ifeq (, $(which $(RCC)))
-		RCC := /usr/lib/qt6/libexec/rcc
-	endif
-
 	ifeq (, $(shell which $(LRELEASE)))
 		LRELEASE := lrelease-qt6
 	endif
@@ -28,7 +23,6 @@ else
     QT_API ?= PyQt5
 	PYUIC ?= pyuic5
 	PYLUPDATE ?= pylupdate5
-	RCC ?= rcc
 	ifeq (, $(shell which $(LRELEASE)))
 		LRELEASE := lrelease-qt5
 	endif
@@ -41,7 +35,7 @@ QT_API_INST ?= PyQt5
 
 # ---------------------
 
-all: QT_PREPARE RES UI LOCALE
+all: QT_PREPARE UI LOCALE
 
 QT_PREPARE:
 	$(info compiling for Qt$(QT_VERSION) using $(QT_API))
@@ -53,13 +47,6 @@ QT_PREPARE:
     endif
 	install -d source/patchbay/ui/
 
-# ---------------------
-# Resources
-
-RES: source/patchbay/resources_rc.py
-
-source/patchbay/resources_rc.py: resources/resources.qrc
-	${RCC} -g python $< |sed 's/ PySide. / qtpy /' > $@
 
 # ---------------------
 # UI code
@@ -68,12 +55,7 @@ UI: $(shell \
 	ls resources/ui/*.ui| sed 's|\.ui$$|.py|'| sed 's|^resources/|source/patchbay/|')
 
 source/patchbay/ui/%.py: resources/ui/%.ui
-ifeq ($(PYUIC), pyuic6)
 	$(PYUIC) $< > $@
-	echo 'from .. import resources_rc' >> $@
-else
-	$(PYUIC) --import-from=.. $< > $@
-endif
 		
 # ------------------------
 # # Translations Files

@@ -26,7 +26,10 @@ from qtpy.QtGui import QIcon, QPalette, QPolygonF
 from qtpy.QtWidgets import QWidget
 
 from patshared import PortMode, BoxType
-from .init_values import canvas, options
+from resourcer import icon
+from resources.scalables import box_icons
+
+from .init_values import canvas
 
 if TYPE_CHECKING:
     from .box_widget import BoxWidget
@@ -208,51 +211,45 @@ def portgroup_name_splitted(
 def get_icon(icon_type: BoxType, icon_name: str,
              port_mode: PortMode, dark=True) -> QIcon:
     if icon_type in (BoxType.CLIENT, BoxType.APPLICATION):
-        icon = QIcon.fromTheme(icon_name)
+        icon_ = QIcon.fromTheme(icon_name)
 
-        if icon.isNull():
+        if icon_.isNull():
             for ext in ('svg', 'svgz', 'png'):
-                filename = ":app_icons/%s.%s" % (icon_name, ext)
-
+                filename = f':app_icons/{icon_name}.{ext}'
                 if QFile.exists(filename):
-                    del icon
-                    icon = QIcon()
-                    icon.addFile(filename)
+                    del icon_
+                    icon_ = QIcon()
+                    icon_.addFile(filename)
                     break
-        return icon
-
-    icon = QIcon()
+        return icon_
 
     match icon_type:
         case BoxType.HARDWARE:
-            icon_file = ":/canvas/"
-            icon_file += "dark/" if dark else "light/"
-
             if icon_name == "a2j":
-                icon_file += "DIN-5.svg"
+                box_icon = box_icons.DIN_5
             else:
                 if port_mode is PortMode.INPUT:
-                    icon_file += "audio-headphones.svg"
+                    box_icon = box_icons.AUDIO_HEADPHONES
                 elif port_mode is PortMode.OUTPUT:
-                    icon_file += "microphone.svg"
+                    box_icon = box_icons.MICROPHONE
                 else:
-                    icon_file += "pb_hardware.svg"
-
-            icon.addFile(icon_file)
+                    box_icon = box_icons.PB_HARDWARE
+            
+            icon_ = icon(box_icon, dark=dark)
 
         case BoxType.MONITOR:
-            prefix = ":/canvas/"
-            prefix += "dark/" if dark else "light/"
-
             if port_mode is PortMode.INPUT:
-                icon.addFile(prefix + "monitor_capture.svg")
+                box_icon = box_icons.MONITOR_CAPTURE
             else:
-                icon.addFile(prefix + "monitor_playback.svg")
+                box_icon = box_icons.MONITOR_PLAYBACK
 
         case BoxType.INTERNAL:
-            icon.addFile(":/scalable/%s" % icon_name)
+            box_icon = f'box_icons/{icon_name}'
+        
+        case _:
+            box_icon = ''
 
-    return icon
+    return icon(box_icon, dark=dark)
 
 def is_dark_theme(widget: QWidget) -> bool:
     return bool(

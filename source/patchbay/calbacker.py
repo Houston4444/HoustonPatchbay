@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Callable
+from typing import TYPE_CHECKING
 
 from qtpy.QtCore import QPoint
 from qtpy.QtGui import QCursor
@@ -75,13 +75,11 @@ class Callbacker(ProtoCallbacker):
                     continue
 
                 if len(pos_tuples) == 1:
-                    a.name = _translate('undo', 'Move %s') \
-                        % group.cnv_name
+                    a.name = _translate('undo', 'Move %s') % group.cnv_name
 
                 group.current_position.boxes[port_mode].pos = (x, y)
                 group.set_group_position(
                     group.current_position, PortMode.NULL, PortMode.NULL)
-                group.save_current_position()
                 patchcanvas.repulse_from_group(group_id, port_mode)
 
     def group_box_pos_changed(
@@ -114,14 +112,7 @@ class Callbacker(ProtoCallbacker):
             group.set_layout_mode(port_mode, layout_mode)
 
     def group_selected(self, group_id: int, port_mode: PortMode):
-        ...
-
-    def group_hide_box(self, group_id: int, port_mode: PortMode):
-        group = self.mng.get_group_from_id(group_id)
-        if group is None:
-            return
-
-        self.mng.set_group_hidden_sides(group_id, port_mode)
+        pass
 
     def group_menu_call(self, group_id: int, port_mode: PortMode):
         group = self.mng.get_group_from_id(group_id)
@@ -210,26 +201,21 @@ class Callbacker(ProtoCallbacker):
             menu = PoMenu(self.mng, port)
         menu.exec(QPoint(x, y))
 
-    def portgroup_menu_call(self, group_id: int, portgrp_id: int, connect_only: bool,
-                             x: int, y: int):
-        for group in self.mng.groups:
-            if group.group_id != group_id:
-                continue
-
-            for portgroup in group.portgroups:
-                if portgroup.portgroup_id == portgrp_id:
-                    break
-            else:
-                continue
-            break
-        else:
+    def portgroup_menu_call(
+            self, group_id: int, portgrp_id: int, connect_only: bool,
+            x: int, y: int):
+        group = self.mng.get_group_from_id(group_id)
+        if group is None:
             return
 
-        if connect_only:
-            menu = ConnectMenu(self.mng, portgroup)
-        else:
-            menu = PoMenu(self.mng, portgroup)
-        menu.exec(QPoint(x, y))
+        for portgroup in group.portgroups:
+            if portgroup.portgroup_id == portgrp_id:
+                if connect_only:
+                    menu = ConnectMenu(self.mng, portgroup)
+                else:
+                    menu = PoMenu(self.mng, portgroup)
+                menu.exec(QPoint(x, y))
+                break
 
     def plugin_clone(self, plugin_id: int):
         ...

@@ -54,6 +54,7 @@ from . import arranger, grid, canvas_helpers
 from .box_widget import BoxWidget
 from .cnv_qobject import CanvasObject
 from .port_widget import PortWidget
+from .portgroup_widget import PortgroupWidget
 from .grouped_lines_widget import GroupedLinesWidget
 from .hidden_conn_widget import HiddenConnWidget
 from .theme_manager import ThemeData, ThemeManager
@@ -69,7 +70,7 @@ _logger = logging.getLogger(__name__)
 def init(view: PatchGraphicsView, callbacker: ProtoCallbacker,
           theme_paths: tuple[Path, ...], fallback_theme: str):
     if canvas.initiated:
-        _logger.critical("init() - already initiated")
+        _logger.error("init() - already initiated")
         return
 
     if not callbacker:
@@ -236,7 +237,7 @@ def remove_group(group_id: int, save_positions=True):
 def rename_group(group_id: int, new_group_name: str):
     group = canvas.get_group(group_id)
     if group is None:
-        _logger.critical(f"{LogStr.func_args} - unable to find group to rename")
+        _logger.error(f"{LogStr.func_args} - unable to find group to rename")
         return
 
     group.group_name = new_group_name
@@ -388,7 +389,8 @@ def change_grid_widget_style(style: GridStyle):
 @patchbay_api
 def move_group_boxes(
         group_id: int, gpos: GroupPos,
-        redraw=PortMode.NULL, restore=PortMode.NULL):
+        redraw=PortMode.NULL, restore=PortMode.NULL,
+        destroyed_at_end=False):
     '''Highly optimized function used at view change.
     Only things that need to be redrawn are redrawn.
     Any change in this function can easily create unwanted bugs ;)
@@ -397,7 +399,8 @@ def move_group_boxes(
     and this one shown, but without ports
     (e.g. a pure audio group in midi view)'''
     canvas_helpers.move_group_boxes(
-        group_id, gpos, redraw=redraw, restore=restore)
+        group_id, gpos, redraw=redraw, restore=restore,
+        destroyed_at_end=destroyed_at_end)
 
 @patchbay_api
 def wrap_group_box(group_id: int, port_mode: PortMode, yesno: bool):
@@ -441,7 +444,7 @@ def set_group_icon(group_id: int, box_type: BoxType, icon_name: str):
     canvas.ensure_init()
     group = canvas.get_group(group_id)
     if group is None:
-        _logger.critical(f"{LogStr.func_args} - "
+        _logger.error(f"{LogStr.func_args} - "
                          "unable to find group to change icon")
         return
 
@@ -463,7 +466,7 @@ def set_group_as_plugin(group_id: int, plugin_id: int,
                         has_ui: bool, has_inline_display: bool):
     group = canvas.get_group(group_id)
     if group is None:
-        _logger.critical(f"{LogStr.func_args} - "
+        _logger.error(f"{LogStr.func_args} - "
                          "unable to find group to set as plugin")
         return
 
@@ -482,11 +485,11 @@ def add_port(group_id: int, port_id: int, port_name: str,
              port_subtype: PortSubType):
     canvas.ensure_init()
     if canvas.get_port(group_id, port_id) is not None:
-        _logger.critical(f"{LogStr.func_args} - port already exists")
+        _logger.error(f"{LogStr.func_args} - port already exists")
 
     group = canvas.get_group(group_id)
     if group is None:
-        _logger.critical(f"{LogStr.func_args} - Unable to find parent group")
+        _logger.error(f"{LogStr.func_args} - Unable to find parent group")
         return
 
     for box in group.widgets:
@@ -495,6 +498,9 @@ def add_port(group_id: int, port_id: int, port_name: str,
     else:
         _logger.error(f"{LogStr.func_args} - Unable to find a box for port")
         return
+
+    if box._box_type is BoxType.TRACK:
+        port_name = port_name.replace(box._group_name, '', 1)
 
     port = PortObject()
     port.group_id = group_id
@@ -526,11 +532,12 @@ def remove_port(group_id: int, port_id: int):
     canvas.ensure_init()
     port = canvas.get_port(group_id, port_id)
     if port is None:
-        _logger.critical(f"{LogStr.func_args} - Unable to find port to remove")
+        _logger.error(
+            f"{LogStr.func_args} - Unable to find port to remove")
         return
 
     if port.portgrp_id:
-        _logger.critical(f"{LogStr.func_args} - Port is in portgroup "
+        _logger.error(f"{LogStr.func_args} - Port is in portgroup "
                             f"{port.portgrp_id}, remove it before !")
         return
 
@@ -566,13 +573,17 @@ def rename_port(group_id: int, port_id: int, new_port_name: str):
     canvas.ensure_init()
     port = canvas.get_port(group_id, port_id)
     if port is None:
-        _logger.critical(
+        _logger.error(
             f"{LogStr.func_args} - Unable to find port to rename")
         return
 
     if new_port_name != port.port_name:
-        port.port_name = new_port_name
-        port.widget.set_port_name(new_port_name)
+        box = port.widget.parentItem()
+        if box._box_type is BoxType.TRACK:
+            port.port_name = new_port_name.replace(box._group_name, '', 1)
+        else:
+            port.port_name = new_port_name
+        port.widget.update_connect_pos()
 
     if canvas.loading_items:
         if port.port_mode is PortMode.OUTPUT:
@@ -586,10 +597,34 @@ def rename_port(group_id: int, port_id: int, new_port_name: str):
     QTimer.singleShot(0, canvas.scene.update)
 
 @patchbay_api
+def change_port_type(
+        group_id: int, port_id: int, port_type: PortType,
+        port_subtype: PortSubType):
+    '''Change the port type, here only because an audio port
+    can become a CV port with metadata change'''
+    port = canvas.get_port(group_id, port_id)
+    if port is None:
+        _logger.error(f'{LogStr.func_args} - Unable to find port')
+        return
+
+    port.port_type = port_type
+    port.port_subtype = port_subtype
+    
+    if canvas.loading_items:
+        if port.port_mode is PortMode.OUTPUT:
+            canvas.groups_to_redraw_out.add(group_id)
+        else:
+            canvas.groups_to_redraw_in.add(group_id)
+        return
+    
+    port.widget.parentItem().update_positions()
+    QTimer.singleShot(0, canvas.scene.update)
+
+@patchbay_api
 def port_has_hidden_connection(group_id: int, port_id: int, yesno: bool):
     port = canvas.get_port(group_id, port_id)
     if port is None:
-        _logger.critical(
+        _logger.error(
             f"{LogStr.func_args} - "
             "Unable to find port to set hidden connection")
         return
@@ -618,18 +653,22 @@ def port_has_hidden_connection(group_id: int, port_id: int, yesno: bool):
 def add_portgroup(group_id: int, portgrp_id: int, port_mode: PortMode,
                   port_type: PortType, port_subtype: PortSubType,
                   port_id_list: list[int]):
-    if canvas.get_portgroup(group_id, portgrp_id) is not None:
-        _logger.critical(f"{LogStr.func_args} - portgroup already exists")
+    group = canvas.get_group(group_id)
+    if group is None:
+        _logger.error(f"{LogStr.func_args} - unable to find parent group")
         return
 
-    portgrp = PortgrpObject()
-    portgrp.group_id = group_id
-    portgrp.portgrp_id = portgrp_id
-    portgrp.port_mode = port_mode
-    portgrp.port_type = port_type
-    portgrp.port_subtype = port_subtype
-    portgrp.port_id_list = list(port_id_list)
-    portgrp.widget = None
+    for box in group.widgets:
+        if port_mode in box.port_mode:
+            break
+    else:
+        _logger.error(
+            f'{LogStr.func_args} - Unable to find box with port mode')
+        return
+
+    if canvas.get_portgroup(group_id, portgrp_id) is not None:
+        _logger.error(f"{LogStr.func_args} - portgroup already exists")
+        return
 
     i = 0
     # check that port ids are present and groupable in this group
@@ -659,6 +698,14 @@ def add_portgroup(group_id: int, portgrp_id: int, port_mode: PortMode,
             f"{LogStr.func_args} - not enought ports with port_id_list")
         return
 
+    portgrp = PortgrpObject()
+    portgrp.group_id = group_id
+    portgrp.portgrp_id = portgrp_id
+    portgrp.port_mode = port_mode
+    portgrp.port_type = port_type
+    portgrp.port_subtype = port_subtype
+    portgrp.port_id_list = list(port_id_list)
+
     # modify ports impacted by portgroup
     for port in canvas.list_ports(group_id=group_id):
         if (port.port_id in port_id_list):
@@ -666,19 +713,19 @@ def add_portgroup(group_id: int, portgrp_id: int, port_mode: PortMode,
                 portgrp_id, port_id_list.index(port.port_id),
                 len(port_id_list))
 
+    portgrp.widget = PortgroupWidget(portgrp, box)
+    portgrp.widget.setVisible(box.ports_are_visible())
+
     canvas.add_portgroup(portgrp)
 
-    # add portgroup widget and refresh the view
-    group = canvas.get_group(group_id)
-    if group is None:
+    if canvas.loading_items:
+        if port_mode is PortMode.INPUT:
+            canvas.groups_to_redraw_in.add(group_id)
+        elif port_mode is PortMode.OUTPUT:
+            canvas.groups_to_redraw_out.add(group_id)
         return
 
-    for box in group.widgets:
-        if box.port_mode & port_mode:
-            portgrp.widget = box.add_portgroup_from_group(portgrp)
-
-            if not canvas.loading_items:
-                box.update_positions()
+    box.update_positions()
 
 @patchbay_api
 def remove_portgroup(group_id: int, portgrp_id: int):
@@ -700,7 +747,8 @@ def remove_portgroup(group_id: int, portgrp_id: int):
                 portgrp.widget = None
             break
     else:
-        _logger.error(f"{LogStr.func_args} - Unable to find portgrp to remove")
+        _logger.error(
+            f"{LogStr.func_args} - Unable to find portgrp to remove")
         return
 
     canvas.remove_portgroup(portgrp)
@@ -726,7 +774,7 @@ def connect_ports(connection_id: int, group_out_id: int, port_out_id: int,
     in_port = canvas.get_port(group_in_id, port_in_id)
 
     if out_port is None or in_port is None:
-        _logger.critical(f"{LogStr.func_args} - unable to find ports to connect")
+        _logger.error(f"{LogStr.func_args} - unable to find ports to connect")
         return
 
     connection = ConnectionObject()
@@ -753,7 +801,7 @@ def connect_ports(connection_id: int, group_out_id: int, port_out_id: int,
 def disconnect_ports(connection_id: int):
     connection = canvas.get_connection(connection_id)
     if connection is None:
-        _logger.critical(
+        _logger.error(
             f"{LogStr.func_args} - unable to find connection ports")
         return
 
@@ -835,7 +883,7 @@ def redraw_plugin_group(plugin_id: int):
     group = canvas.group_plugin_map.get(plugin_id, None)
 
     if group is None:
-        _logger.critical(f"{LogStr.func_args} - unable to find group")
+        _logger.error(f"{LogStr.func_args} - unable to find group")
         return
 
     assert isinstance(group, GroupObject)

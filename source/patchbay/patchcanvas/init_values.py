@@ -272,7 +272,6 @@ class PortObject(ConnectableObject):
         portgrp: object
         hidden_conn_widget: object
 
-
     pg_pos = 0
     'the port position in its portgroup, 0 if port is not in a portgroup'
     pg_len = 1
@@ -289,13 +288,13 @@ class PortObject(ConnectableObject):
         self.pg_pos = pg_pos
         self.pg_len = pg_len
         if self.widget is not None:
-            self.widget.set_portgroup_id(pg_id, pg_pos, pg_len)
+            self.widget.update_connect_pos()
 
 
 class PortgrpObject(ConnectableObject):
     port_id_list: list[int]
     if TYPE_CHECKING:
-        widget: Optional[PortgroupWidget]
+        widget: PortgroupWidget | None
     else:
         widget: object
 

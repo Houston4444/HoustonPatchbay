@@ -9,9 +9,11 @@ from typing import Optional
 
 from qtpy.QtCore import QTimer
 
+from xdg import xdg_data_dirs, xdg_data_home
+
 from .theme import Theme
 from .init_values import canvas
-from .xdg import xdg_data_dirs, xdg_data_home
+
 
 
 _logger = logging.getLogger(__name__)

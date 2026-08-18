@@ -12,9 +12,9 @@ from patshared import (
     ViewsDictEnsureOne, ViewData, PortgroupsDict, PortgroupMem, CustomNames)
 
 from . import patchbay_batches, patchbay_hiddens, patchbay_views
-from .bases.connection import Connection
+from .bases.connection import Connections
 from .bases.elements import ToolDisplayed, CanvasOptimizeIt, CanvasOptimize
-from .bases.group import Group
+from .bases.group import Group, Track
 from .bases.port import Port
 from .bases.portgroup import Portgroup
 from .calbacker import Callbacker
@@ -66,7 +66,7 @@ class PatchbayManager:
     canvas_optimize = CanvasOptimize.NORMAL
 
     groups = list[Group]()
-    connections = list[Connection]()
+    connections = Connections()
     _groups_by_name = dict[str, Group]()
     _groups_by_id = dict[int, Group]()
     _ports_by_name = dict[str, Port]()
@@ -189,6 +189,17 @@ class PatchbayManager:
         Useful to win time at startup or refresh'''
         return self.canvas_optimize is CanvasOptimize.VERY_FAST
 
+    def groups_and_tracks(self, active_only=False) -> Iterator[Group | Track]:
+        for group in self.groups:
+            yield group
+            if active_only:
+                for track in group.tracks:
+                    if track.is_active:
+                        yield track
+            else:
+                for track in group.tracks:
+                    yield track
+
     def _scene_scale_changed(self, value: float):
         self.sg.scene_scale_changed.emit(value)
 
@@ -297,47 +308,49 @@ class PatchbayManager:
         '''Executed after any patchcanvas animation, it cleans
         in patchcanvas all boxes that should be hidden now.'''
         with CanvasOptimizeIt(self, auto_redraw=True, prevent_overlap=False):
-            for group in self.groups:
-                if group.current_position.hidden_port_modes() is PortMode.NULL:
+            for troup in self.groups_and_tracks(active_only=True):
+                if isinstance(troup, Track):
+                    group = troup.parent_group
+                    keep_in_track = False
+                else:
+                    group = troup
+                    troup.join_tracks()
+                    keep_in_track = True
+
+                hidden_port_mode = troup.current_position.hidden_port_modes()
+                if hidden_port_mode is PortMode.NULL:
                     continue
 
-                hidden_port_mode = group.current_position.hidden_port_modes()
-
                 if hidden_port_mode & PortMode.OUTPUT:
-                    for conn in self.connections:
-                        if conn.port_out.group_id is group.group_id:
-                            conn.remove_from_canvas()
+                    for conn in self.connections.from_group(group):
+                        conn.remove_from_canvas()
 
                 if hidden_port_mode & PortMode.INPUT:
-                    for conn in self.connections:
-                        if conn.port_in.group_id is group.group_id:
-                            conn.remove_from_canvas()
+                    for conn in self.connections.to_group(group):
+                        conn.remove_from_canvas()
 
-                for portgroup in group.portgroups:
+                for portgroup in troup.portgroups:
                     if hidden_port_mode & portgroup.port_mode:
-                        portgroup.remove_from_canvas()
+                        portgroup.remove_from_canvas(
+                            keep_in_track=keep_in_track)
 
-                for port in group.ports:
+                for port in troup.ports:
                     if hidden_port_mode & port.mode:
-                        port.remove_from_canvas()
+                        port.remove_from_canvas(keep_in_track=keep_in_track)
 
-                if group.outs_ptv is PortTypesViewFlag.NONE:
+                if troup.outs_ptv is PortTypesViewFlag.NONE:
                     hidden_port_mode |= PortMode.OUTPUT
-                if group.ins_ptv is PortTypesViewFlag.NONE:
+                if troup.ins_ptv is PortTypesViewFlag.NONE:
                     hidden_port_mode |= PortMode.INPUT
 
                 if hidden_port_mode is PortMode.BOTH:
-                    group.remove_from_canvas()
+                    troup.remove_from_canvas()
 
             for conn in self.connections:
                 conn.add_to_canvas()
 
-        # patchcanvas.canvas.scene.resize_the_scene()
         self.sg.hidden_boxes_changed.emit()
         self.sg.animation_finished.emit()
-
-    def set_group_hidden_sides(self, group_id: int, port_mode: PortMode):
-        patchbay_hiddens.set_group_hidden_sides(self, group_id, port_mode)
 
     def restore_group_hidden_sides(
             self, group_id: int, scene_pos: tuple[int, int] | None =None):
@@ -480,6 +493,19 @@ class PatchbayManager:
 
         self.sg.all_groups_removed.emit()
 
+    def clear_canvas(self):
+        patchcanvas.clear_all()
+        for group in self.groups:
+            group.in_canvas = False
+            for track in group.tracks:
+                track.in_canvas = False
+            for portgroup in group.portgroups:
+                portgroup.in_canvas = False
+            for port in group.ports:
+                port.in_canvas = False
+        for connection in self.connections:
+            connection.in_canvas = False                
+
     def save_view_and_port_types_view(self):
         pass
 
@@ -614,6 +640,8 @@ class PatchbayManager:
             connection.in_canvas = False
 
         for group in self.groups:
+            for track in group.tracks:
+                track.in_canvas = False
             for portgroup in group.portgroups:
                 portgroup.in_canvas = False
             for port in group.ports:
@@ -626,6 +654,7 @@ class PatchbayManager:
         with CanvasOptimizeIt(self):
             for group in self.groups:
                 group.add_to_canvas()
+                group.add_tracks_to_canvas()
                 for port in group.ports:
                     port.add_to_canvas()
                 for portgroup in group.portgroups:
@@ -773,12 +802,16 @@ class PatchbayManager:
             if (text.lower() not in group.name.lower()
                     and text.lower() not in group.graceful_name.lower()):
                 opac_grp_ids.add(group.group_id)
+                
+                for track in [t for t in group.tracks if t.is_active]:
+                    if text.lower() not in track.name.lower():
+                        opac_grp_ids.add(track.group_id)
 
         patchcanvas.semi_hide_groups(opac_grp_ids)
 
         n_boxes = 0
 
-        for group in self.groups:
+        for group in self.groups_and_tracks(active_only=True):
             if group.group_id not in opac_grp_ids:
                 n_grp_boxes = group.get_number_of_boxes()
 

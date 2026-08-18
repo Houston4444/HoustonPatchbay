@@ -103,7 +103,7 @@ class LineWidget(QGraphicsPathItem):
         return CanvasItemType.BEZIER_LINE
 
     def update_theme(self):
-        port_type1 = self._item1.get_port_type()
+        port_type1 = self._item1.port_type
 
         for theme_state in _ThemeState:
             if theme_state is _ThemeState.DISCONNECTING:
