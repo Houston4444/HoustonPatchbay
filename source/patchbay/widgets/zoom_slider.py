@@ -212,7 +212,7 @@ class ZoomSlider(QWidget):
             (zm_center - loupe_side + lh, TOP - topi + 0.25 * loupe_side),
             (zm_center - 0.75 * loupe_side + lh, TOP - topi + lh)]
         
-        painter.setPen(Qt.PenStyle.NoPen)
+        painter.setPen(self.palette().mid().color())
         loope_col = QColor(self.palette().brightText())
         loope_col.setAlphaF(0.35)
         painter.setBrush(loope_col)
