@@ -86,7 +86,7 @@ class CustomNames:
 
         if custom_name:
             ctov = d.get(el_name)
-            if ctov is None:
+            if ctov is None or ctov.custom != custom_name:
                 d[el_name] = _CustomAndOver(custom_name, *over_prettys)
             else:
                 for over_pretty in over_prettys:
@@ -101,14 +101,12 @@ class CustomNames:
         self._save_el(True, group_name, custom_name, *over_prettys)
 
     def save_port(self, port_name: str, custom_name: str, *over_prettys: str):
-        """Convenience wrapper to save a custom name for `port_name`.
-        """
+        """Convenience wrapper to save a custom name for `port_name`."""
         self._save_el(False, port_name, custom_name, *over_prettys)
 
     def custom_group(self, group_name: str, cur_pretty_name='') -> str:
         """Return the stored custom group name if it applies to
-        the current pretty-name, otherwise return empty string.
-        """
+        the current pretty-name, otherwise return empty string."""
         ctov = self.groups.get(group_name)
         if ctov is None:
             return ''
