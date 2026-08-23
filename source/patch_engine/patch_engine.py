@@ -95,7 +95,7 @@ class PatchEngine:
     is activated (True by default).'''
 
     one_shot_act = ''
-    '''can be an OSC path in case if this object is instantiated
+    '''can be an OSC path in case this object is instantiated
     only to make one action about pretty names
     (import, export, clear)'''
 
@@ -143,7 +143,7 @@ class PatchEngine:
         self._client_uuid = 0
         self._client_name = ''
 
-        self.peo: Optional[PatchEngineOuter] = None
+        self.peo: PatchEngineOuter | None = None
 
     def start(self, patchbay_engine: PatchEngineOuter):
         self.peo = patchbay_engine
@@ -398,7 +398,7 @@ class PatchEngine:
             if client_uuid is None:
                 continue
 
-            if self.set_jack_pretty_name_conditionally(
+            if self.export_custom_name(
                     True, client_name, client_uuid):
                 has_changes = True
 
@@ -408,7 +408,7 @@ class PatchEngine:
             except:
                 continue
 
-            if self.set_jack_pretty_name_conditionally(
+            if self.export_custom_name(
                     False, port_name, port.uuid):
                 has_changes = True
 
@@ -955,6 +955,8 @@ class PatchEngine:
         if not self.jack_running or self.pretty_names_lockers:
             return
 
+        _logger.debug('apply_pretty_names_export')
+
         self.set_pretty_names_auto_export(
             self.auto_export_pretty_names.active, force=True)
 
@@ -994,7 +996,7 @@ class PatchEngine:
         self._set_jack_pretty_name(port.uuid, pretty_name)
         self._save_uuid_pretty_names()
 
-    def set_jack_pretty_name_conditionally(
+    def export_custom_name(
             self, for_client: bool, name: str, uuid: int) -> bool:
         '''set jack pretty name if checks are ok.
         checks are :
@@ -1052,8 +1054,24 @@ class PatchEngine:
             self.auto_export_pretty_names = AutoExportPretty.YES
             self._write_locker_mdata()
 
+            # check in all existing pretty names if some have been
+            # created by this program and should not still exist.
+            # Useful at session close or switch.
+            # TODO : find a faster solution,
+            # parse all ports can be quite long (>1ms with a quite light setup)
             for client_name, client_uuid in self.client_name_uuids.items():
-                self.set_jack_pretty_name_conditionally(
+                if (client_uuid in self.uuid_pretty_names
+                        and not self.custom_names.custom_group(client_name)):
+                    self._set_jack_pretty_name(client_uuid, '')
+            
+            for port in list_ports(self.client):
+                if (port.uuid in self.uuid_pretty_names
+                        and not self.custom_names.custom_port(port.name)):
+                    self._set_jack_pretty_name(port.uuid, '')
+            
+            # set clients and ports pretty names within the custom names 
+            for client_name, client_uuid in self.client_name_uuids.items():
+                self.export_custom_name(
                     True, client_name, client_uuid)
 
             for port_name in self.custom_names.ports:
@@ -1062,7 +1080,7 @@ class PatchEngine:
                 except jack.JackError:
                     continue
 
-                self.set_jack_pretty_name_conditionally(
+                self.export_custom_name(
                     False, port_name, port.uuid)
 
         else:

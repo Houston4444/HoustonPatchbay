@@ -15,7 +15,7 @@ class JackMetadata:
 
 
 class JackMetadatas(dict[int, dict[str, str]]):
-    """Mapping of client UUID to metadata dict."""
+    """Mapping of client or port UUID to metadata dict."""
     def __init__(self):
         super().__init__()
 
