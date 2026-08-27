@@ -373,10 +373,10 @@ class GroupMenu(QMenu):
         current_layout = patchcanvas.get_box_true_layout(
             self._group.group_id, self._port_mode)
 
-        if current_layout is BoxLayoutMode.HIGH:
-            next_layout = BoxLayoutMode.LARGE
-        elif current_layout is BoxLayoutMode.LARGE:
-            next_layout = BoxLayoutMode.HIGH
+        if current_layout is BoxLayoutMode.TALL:
+            next_layout = BoxLayoutMode.WIDE
+        elif current_layout is BoxLayoutMode.WIDE:
+            next_layout = BoxLayoutMode.TALL
         else:
             next_layout = BoxLayoutMode.AUTO
 

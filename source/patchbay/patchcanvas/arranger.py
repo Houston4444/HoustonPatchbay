@@ -599,14 +599,14 @@ def arrange_face_to_face():
                 gp_gposes[group.group_id] = gpos
 
             box_pos = gpos.boxes[box.port_mode]
-            layout_mode = BoxLayoutMode.LARGE
+            layout_mode = BoxLayoutMode.WIDE
             wrapped = False
 
-            high_layout = box.get_layout(BoxLayoutMode.HIGH)
+            high_layout = box.get_layout(BoxLayoutMode.TALL)
 
             # decide if box should be wrapped with its height
             if high_layout.needed_height - high_layout.header_height >= 64:
-                layout_mode = BoxLayoutMode.HIGH
+                layout_mode = BoxLayoutMode.TALL
                 wrapped = True
 
             box_pos.set_wrapped(wrapped)

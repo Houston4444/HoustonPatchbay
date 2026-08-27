@@ -146,7 +146,7 @@ class BoxWidget(QGraphicsItem):
         'NSM GUI visibility state'
 
         self._layout_mode = group.gpos.boxes[port_mode].layout_mode
-        self._current_layout_mode = BoxLayoutMode.LARGE
+        self._current_layout_mode = BoxLayoutMode.WIDE
         self._title_under_icon = False
         self._painter_paths = dict[bool, dict[PaintElement, QPainterPath]]()
         self._layout: BoxLayout | None = None
@@ -531,7 +531,7 @@ class BoxWidget(QGraphicsItem):
     @property
     def has_side_title(self) -> bool:
         return (self._current_port_mode is not PortMode.BOTH
-                and self._current_layout_mode is BoxLayoutMode.LARGE)
+                and self._current_layout_mode is BoxLayoutMode.WIDE)
 
     def wrap_unwrap_at_point(self, scene_pos: QPointF) -> bool:
         '''order a wrap or unwrap on the box if scene_pos is on the

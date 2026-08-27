@@ -520,29 +520,29 @@ def _choose_box_layout(
     if box.current_port_mode in (PortMode.INPUT, PortMode.OUTPUT):
         for i in range(1, lines_choice_max + 1):
             box_layouts.append(
-                BoxLayout(i, BoxLayoutMode.LARGE,
+                BoxLayout(i, BoxLayoutMode.WIDE,
                           TitleOn.SIDE, all_title_templates[i]))
 
         if box.has_top_icon:
             for i in range(1, lines_choice_max + 1):
                 box_layouts.append(
-                    BoxLayout(i, BoxLayoutMode.LARGE,
+                    BoxLayout(i, BoxLayoutMode.WIDE,
                               TitleOn.SIDE_UNDER_ICON,
                               all_title_templates[i]))
 
         for i in range(1, lines_choice_max + 1):
             box_layouts.append(
-                BoxLayout(i, BoxLayoutMode.HIGH,
+                BoxLayout(i, BoxLayoutMode.TALL,
                           TitleOn.TOP, all_title_templates[i]))
     else:
         for i in range(1, lines_choice_max + 1):
             box_layouts.append(
-                BoxLayout(i, BoxLayoutMode.LARGE,
+                BoxLayout(i, BoxLayoutMode.WIDE,
                           TitleOn.TOP, all_title_templates[i]))
 
         for i in range(1, lines_choice_max + 1):
             box_layouts.append(
-                BoxLayout(i, BoxLayoutMode.HIGH,
+                BoxLayout(i, BoxLayoutMode.TALL,
                           TitleOn.TOP, all_title_templates[i]))
 
     # sort areas and choose the first one (the littlest area)
@@ -552,10 +552,10 @@ def _choose_box_layout(
 
     for layout in box_layouts:
         if (high_layout is None
-                and layout.layout_mode is BoxLayoutMode.HIGH):
+                and layout.layout_mode is BoxLayoutMode.TALL):
             high_layout = layout
         elif (large_layout is None
-                and layout.layout_mode is BoxLayoutMode.LARGE):
+                and layout.layout_mode is BoxLayoutMode.WIDE):
             large_layout = layout
 
     if high_layout is None or large_layout is None:
@@ -570,7 +570,7 @@ def _choose_box_layout(
             return high_layout, large_layout
         return large_layout, high_layout
 
-    if layout_mode is BoxLayoutMode.HIGH:
+    if layout_mode is BoxLayoutMode.TALL:
         return high_layout, large_layout
 
     return large_layout, high_layout
@@ -1059,7 +1059,7 @@ def _get_wrap_triangle_pos(box: 'BoxWidget') -> UnwrapButton:
 
     if box._height - box._header_height >= 64.0:
         if (box.current_port_mode is PortMode.BOTH
-                and box._current_layout_mode is BoxLayoutMode.HIGH):
+                and box._current_layout_mode is BoxLayoutMode.TALL):
             if last_in_pos > last_out_pos:
                 return UnwrapButton.RIGHT
             else:
@@ -1283,15 +1283,15 @@ def get_layout(box: 'BoxWidget',
     if layout_mode is None:
         return box._layout
 
-    if layout_mode is BoxLayoutMode.LARGE:
-        if box._current_layout_mode is BoxLayoutMode.LARGE:
+    if layout_mode is BoxLayoutMode.WIDE:
+        if box._current_layout_mode is BoxLayoutMode.WIDE:
             return box._layout
         if box._alter_layout is None:
             raise Exception('get_layout, ._alter_layout is required !')
         return box._alter_layout
 
-    if layout_mode is BoxLayoutMode.HIGH:
-        if box._current_layout_mode is BoxLayoutMode.HIGH:
+    if layout_mode is BoxLayoutMode.TALL:
+        if box._current_layout_mode is BoxLayoutMode.TALL:
             return box._layout
         if box._alter_layout is None:
             raise Exception('get_layout, ._alter_layout is required !')

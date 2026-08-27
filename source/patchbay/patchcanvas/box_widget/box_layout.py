@@ -83,7 +83,7 @@ class BoxLayout:
         self.title_on = title_on
         self.one_column = False
         
-        if (layout_mode is BoxLayoutMode.LARGE
+        if (layout_mode is BoxLayoutMode.WIDE
                 and title_on is TitleOn.SIDE_UNDER_ICON):
             self.header_width = int(max(
                 self._icon_size + 10, title_template['title_width'] + 10))
@@ -108,7 +108,7 @@ class BoxLayout:
             else:
                 ports_width = self._pms.outs_width
 
-            if layout_mode is BoxLayoutMode.LARGE:
+            if layout_mode is BoxLayoutMode.WIDE:
                 if title_on is TitleOn.SIDE:
                     self.needed_width = \
                         ports_width + self.header_width + self._pen_width
@@ -135,7 +135,7 @@ class BoxLayout:
                 self.needed_height = (
                     self.header_height + height_for_ports + self._pen_width * 2)
         else:
-            if layout_mode is BoxLayoutMode.HIGH:
+            if layout_mode is BoxLayoutMode.TALL:
                 self.one_column = True
                 self.needed_width = (
                     max(self.header_width,
@@ -166,7 +166,7 @@ class BoxLayout:
 
         # with the option box_grouped_auto_layout_ratio,
         # we simulate that the area can be higher in one_column mode
-        # (PortMode.BOTH and BoxLayoutMode.HIGH)
+        # (PortMode.BOTH and BoxLayoutMode.TALL)
         if self.one_column:
             self._n_cells *= options.box_grouped_auto_layout_ratio
 
@@ -189,7 +189,7 @@ class BoxLayout:
         self._pms = PortsMinSizes(**self._pms.__dict__)
         
         if (self._port_mode in (PortMode.INPUT, PortMode.OUTPUT)
-                and self.layout_mode is BoxLayoutMode.LARGE):
+                and self.layout_mode is BoxLayoutMode.WIDE):
             needed_width = 2 * self._pen_width + self.header_width
             self.full_wrapped_width = \
                 grid.next_width(self._hwr * 2 + needed_width)
@@ -220,9 +220,9 @@ class BoxLayout:
         self.exceeding_y_inouts = 0.0
 
         if ((self._port_mode is PortMode.BOTH
-                    and self.layout_mode is BoxLayoutMode.LARGE)
+                    and self.layout_mode is BoxLayoutMode.WIDE)
                 or (self._port_mode in (PortMode.INPUT, PortMode.OUTPUT)
-                    and self.layout_mode is BoxLayoutMode.HIGH)):
+                    and self.layout_mode is BoxLayoutMode.TALL)):
             self.exceeding_y_ins = (
                 self.height
                 - (2 * self._pen_width + self.header_height

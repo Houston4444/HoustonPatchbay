@@ -267,10 +267,10 @@ class GroupPos:
                             continue
 
                         match value.upper():
-                            case 'LARGE':
-                                layout_mode = BoxLayoutMode.LARGE
-                            case 'HIGH':
-                                layout_mode = BoxLayoutMode.HIGH
+                            case 'WIDE'|'LARGE':
+                                layout_mode = BoxLayoutMode.WIDE
+                            case 'TALL'|'HIGH':
+                                layout_mode = BoxLayoutMode.TALL
                             case _:
                                 layout_mode = BoxLayoutMode.AUTO
 

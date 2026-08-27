@@ -95,14 +95,14 @@ class BoxLayoutMode(IntEnum):
     """Define how ports are arranged inside a box."""
 
     AUTO = 0
-    '''Choose the layout between HIGH or LARGE
+    '''Choose the layout between TALL or WIDE
     within the box area.'''
 
-    HIGH = 1
+    TALL = 1
     """When only INPUT or only OUTPUT ports exist the title is on top.
     If both types are present, ports are displayed top-to-bottom."""
 
-    LARGE = 2
+    WIDE = 2
     """When only INPUT or only OUTPUT ports exist the title is on a side.
     If both types are present, ports are displayed in two columns
     (left = INPUT, right = OUTPUT)."""
