@@ -152,11 +152,11 @@ image:../fr/options_general.png["Onglet General"]
 
 * *Canevas élastique*: Toujours redimensionner la scène à son contenu minimum. Celà permet d'optimiser la vue après chaque ajout, suppression, changement ou déplacement de boîte. Si vous décochez cette case, la scène grandira sans cesse et vous pouvez chercher vos boîtes au milieu du désert.
 
-* *Navigation sur les bords*: Lors de la connection, du déplacement ou de la sélection des boîtes, la vue se déplace quand le curseur est prêt du bord. Nul besoin d'utiliser la molette de la souris, d'appuyer sur Maj ou de déplacer les barres de défilement. Ça n'a strictement aucun effet quand la scène est entièrement visible dans la vue.
+* *Navigation sur les bords*: Lors de la connexion, du déplacement ou de la sélection des boîtes, la vue se déplace quand le curseur est prêt du bord. Nul besoin d'utiliser la molette de la souris, d'appuyer sur Maj ou de déplacer les barres de défilement. Ça n'a strictement aucun effet quand la scène est entièrement visible dans la vue.
 
 * *Empêcher la superposition des boîtes*: Quand cette option est active, les boîtes sont automatiquement déplacées quand une autre boîte est placée dessus. Décochez cette case si vous aimez chercher des boîtes cachées derrière les autres ou si celà vous permet d'éviter un bug (que vous avez rapporté bien entendu).
 
-* *Sélection automatique des objets*: Sélectionne les boîtes, les ports et les portgroups au survol de la souris. Peut permettre d'identifier plus vite certaines connections.
+* *Sélection automatique des objets*: Sélectionne les boîtes, les ports et les portgroups au survol de la souris. Peut permettre d'identifier plus vite certaines connexions.
 
 * *Zoom par défaut*: La taille des éléments est une question de goût et d'aisance visuelle, aussi elle dépend beaucoup de la taille et de la résolution de votre écran. Un clic droit sur le curseur de zoom vous permettra de revenir à ce zoom par défaut.
 
@@ -220,7 +220,7 @@ Il s'agit ici d'un réglage de la disposition automatique (par défaut). Certain
 ** *Quasiment que des boîtes larges*: Les boîtes auront toutes une disposition large, sauf si la disposition haute permet un gain de place absolument flagrant
 ** *Que des boîtes larges*: Pour celles et ceux qui ne supportent pas la disposition haute
 
-* *Largeur maximale des ports*: Certains programmes écrivent des noms de ports trèèèèès longs, ces noms seront donc tronqués au delà du nombre de points défini pour éviter une largeur de boîte trop importante.
+* *Largeur maximale des ports*: Certains programmes écrivent des noms de ports trèèèèès longs, ces noms seront donc tronqués s'ils excèdent le nombre de points défini pour éviter une largeur de boîte trop importante.
 
 * *grille*: définir en points la largeur et la hauteur de la grille. Plus ces valeurs sont grandes, plus les boîtes seront faciles à aligner verticalement et horizontalement, et plus les boîtes seront un peu plus grandes que nécessaire.
 

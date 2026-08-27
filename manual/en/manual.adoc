@@ -138,3 +138,89 @@ On the other hand, connecting a classic audio output port to a CV input port is 
 You have the possibility to modify theme colors, it is quite easy and fast to do.
 
 For more informations, read link:theme_edit.html[how to edit themes]. 
+
+== Canvas Options
+
+=== General Tab
+
+image:../fr/options_general.png["Onglet General"]
+
+* *Group MIDI hardware ports*: Hardware MIDI ports are those provided by the A2J (ALSA to JACK) bridge or by Pipewire MidiBridge. The actual names of these ports begin with either `a2j:` or `MidiBridge:`, by grouping them, you keep all these ports in the same box (named `a2j` or `MidiBridge`). If you ungroup them, there will be one box per ALSA client (ALSA is the Linux kernel module that communicates with your MIDI hardware).
+
+* *Provide ALSA MIDI ports*: Some audio programs can communicate directly with ALSA ports (created by the kernel) rather than with JACK MIDI ports (created by A2J or PipeWire). These ports transmit their data without applying JACK's latency (which can be an advantage or a disadvantage). In most cases, these ports are not necessary, beginners will not need them.
+
+* *Elastic canvas*: Always resize the scene to its minimum content. This optimizes the view after every addition, deletion, change, or movement of a box. If you uncheck this box, the scene will keep getting bigger and bigger, and you might end up searching for your boxes in the middle of nowhere.
+
+* *Navigate on borders*: When connecting, moving, or selecting boxes, the view moves when the cursor is near the edge. There’s no need to use the mouse wheel, press Shift, or move the scroll bars. This has absolutely no effect when the scene is fully visible in the view.
+
+* *Prevent overlapping of boxes*: When this option is enabled, boxes are automatically moved when another box is placed on top of them. Uncheck this box if you enjoy searching for boxes hidden behind others, or if doing so helps you avoid a bug (which you have reported, of course).
+
+* *Auto-select items*: Highlights boxes, ports, and portgroups when you hover over them with the mouse. This can help you identify certain connections more quickly.
+
+* *Default Zoom*: The size of the elements is a matter of personal preference and visual comfort, so it depends largely on the size and resolution of your screen. Right-clicking on the zoom slider will return you to the default zoom level.
+
+=== Naming Tab
+
+image:../fr/options_nommage.png["Onglet Nommage"]
+
+Boxes and ports can be named based on several pieces of information:
+
+* the actual name provided by JACK or PipeWire
+* the *graceful* name that HoustonPatchbay can assign based on the client's name, by removing unnecessary parts of the actual name to improve readability. For example, you can tell an input port from an output port by their shape, there’s no need for them to contain `input` or `output`
+* the *custom* name is the name that will be used when you rename an element. In RaySession, these names may vary depending on the current session.
+* The *JACK pretty-name*, which is metadata assigned to the client or port in JACK (or PipeWire). This metadata can be written by RaySession, Patchance, the relevant JACK client, or even any other program that uses JACK.
+
+If you want to see all the actual names of clients and ports, you'll need to uncheck the three boxes labeled *JACK pretty names*, *Custom names*, and *Graceful names*. Otherwise, you can access this information by right-clicking on a client or port and selecting *Get Info*.
+
+* *Auto-export custom names to pretty-names*: When this option is enabled, all custom names (created by renaming boxes and ports) will be passed along in JACK's metadata and will become accessible to programs that use JACK. For example, if you rename your hardware input ports, those inputs will be renamed in Ardour, which can be convenient and useful.
++
+This option is not enabled by default because the program could conflict with another instance of the same program or with any other program that behaves similarly (all applications can write to JACK’s metadata). Also, it will not work if another instance of Patchance or RaySession is already using it on the same JACK server.
++
+Even when this option is enabled, a pretty-name may be provided by another program and not saved among the custom names. Normally this isn’t a problem, it’s very likely that the program will rewrite the pretty-name when you reopen it. If you don’t like this pretty-name, rename the element in the patchbay, and the patchbay should be able to rename it after it disappears and reappears. Technically, HoustonPatchbay writes the metadata at least 200 ms after the port appears, it’s usually during this timeframe that the program registering the JACK port provides the pretty-name metadata (which may be overwritten).
+
+* *Custom names -> JACK pretty names*: Export custom box and port names to the JACK metadata for clients and ports. This option is grayed out if automatic export is enabled, or if there are no custom names.
+
+* *JACK pretty names -> Custom names*: Import the JACK pretty names into the custom names. This option is grayed out if there are no JACK pretty name that is different from the custom name.
+
+=== Theme Tab
+
+image:../fr/options_theme.png["Onglet Theme"]
+
+*Theme Selection Box*: Choose the theme you like. The presence of the _user_ icon means that the user has permission to modify the theme folder location.
+
+* *Duplicate*: Copy the current theme so you can edit it, giving it a different name. The theme will be duplicated in the hidden folder `~/.local/share/{PROGRAM}/HoustonPatchbay/themes`, where _{PROGRAM}_ can be `raysession` or `patchance`.
+
+* *Edit*: Open the `theme.conf` file in your text editor, the button will be grayed out if the user does not have permission to edit that file.
+
+* *Boxes have shadows* : A simple aesthetic rendering option that uses a small amount of resources.
+
+* *Grid*: Displays a grid in the background of the scene. The size of the rows and columns depends on the grid size defined in the *Tricks* tab and the minimum grid sizes specified in the theme file.
+
+=== Tricks tab
+
+image:../fr/options_astuces.png["Onglet Astuces"]
+
+This tab could have been called *Miscellaneous* or even *Misc.*, but it reflects the current management trend of using more positive language. With a name like *Tips*, you don't feel like you're wasting your time here, when in reality...
+
+* *Grouped boxes auto layout* : This option applies only to boxes that contain both inputs AND outputs. There are two possible ways to arrange these boxes:
++
+ ** in a large layout:
+ +
+image:box_large.png["Large box"]
+ +
+ ** in a high layout:
+ +
+image:box_high.png["High box"]
++
+This is a setting for the automatic layout (default). Some people much prefer wide boxes, but there are cases where a high box saves a tremendous amount of space, for example, when there is only one input port and ten output ports. The multi-choice box is actually a dosing:
+
+** *Choose the smallest area*: The boxes will be just as likely to be high as they are to be large.  
+** *Prefer large boxes*: The high layout must offer a significant advantage to be chosen
+** *Almost only large boxes*: All the boxes will have a large layout, unless a high layout offers a clearly obvious space-saving advantage
+** *Force large boxes*: For those who can't stand the high layout
+
+* *Maximum port width*: Some programs generate veeeery long port names, so these names will be truncated if they exceed the specified number of points to prevent the box from becoming too large.
+
+* *grid*: Set the width and height of the grid in points. The larger these values are, the easier it will be to align the boxes vertically and horizontally, and the larger the boxes will be—slightly larger than necessary.
+
+* *Export scene to Patchichi* : Saves the contents of the patchbay in a JSON format readable by the *Patchichi* software. This allows you to send the current configuration to the developer in the event of a bug. It is also possible (though not that straightforward) to adjust the positioning of the boxes in *Patchichi* when you don't have access to the hardware, though very few people will ever need to do this.
