@@ -91,8 +91,8 @@ class PatchEngine:
     '''
 
     auto_export_pretty_names = AutoExportPretty.YES
-    '''True if the patchbay option 'Auto-Export pretty names to JACK'
-    is activated (True by default).'''
+    '''YES if the patchbay option 'Auto-Export pretty names to JACK'
+    is activated.'''
 
     one_shot_act = ''
     '''can be an OSC path in case this object is instantiated

@@ -96,7 +96,7 @@ table {
 <li><a href="#_méthode_alternative">Méthode Alternative</a></li>
 </ul>
 </li>
-<li><a href="#_les_options">Les options</a></li>
+<li><a href="#_le_menu_déroulant">Le menu déroulant</a></li>
 <li><a href="#_raccourcis_à_connaître">Raccourcis à connaître</a>
 <ul class="sectlevel2">
 <li><a href="#_connexions_en_rafale">Connexions en rafale</a></li>
@@ -110,6 +110,14 @@ table {
 </ul>
 </li>
 <li><a href="#_éditer_un_thème">Éditer un thème</a></li>
+<li><a href="#_préférences_du_canevas">Préférences du canevas</a>
+<ul class="sectlevel2">
+<li><a href="#_onglet_general">Onglet General</a></li>
+<li><a href="#_onglet_nommage">Onglet Nommage</a></li>
+<li><a href="#_onglet_theme">Onglet Theme</a></li>
+<li><a href="#_onglet_astuces">Onglet Astuces</a></li>
+</ul>
+</li>
 </ul>
 </div>
 </div>
@@ -117,10 +125,10 @@ table {
 <div id="preamble">
 <div class="sectionbody">
 <div class="paragraph text-right">
-<p><span class="image"><a class="image" href="../en/manual.html"><img src="../en/images/flags/en.jpeg" alt="EN" width="30" height="20"></a></span> <span class="image"><a class="image" href="../fr/manual.html"><img src="../en/images/flags/fr.jpeg" alt="FR" width="40" height="30"></a></span></p>
+<p><span class="image"><a class="image" href="../en/manual.html"><img src="images/common/flags/en.jpeg" alt="EN" width="30" height="20"></a></span> <span class="image"><a class="image" href="../fr/manual.html"><img src="images/common/flags/fr.jpeg" alt="FR" width="40" height="30"></a></span></p>
 </div>
 <div class="paragraph">
-<p><span class="image"><img src="../en/images/raysession.svg" alt="icon" width="100" height="100"></span> <span class="image"><img src="../en/images/patchance.svg" alt="icon" width="100" height="100"></span> <span class="image"><img src="../en/images/patchichi.svg" alt="icon" width="100" height="100"></span></p>
+<p><span class="image"><img src="images/common/raysession.svg" alt="icon" width="100" height="100"></span> <span class="image"><img src="images/common/patchance.svg" alt="icon" width="100" height="100"></span> <span class="image"><img src="images/common/patchichi.svg" alt="icon" width="100" height="100"></span></p>
 </div>
 <div class="paragraph">
 <p>Bienvenue sur le manuel de HoustonPatchbay, la baie de brassage pour JACK utilisée dans RaySession, Patchance et Patchichi.</p>
@@ -132,7 +140,7 @@ table {
 <div class="sectionbody">
 <div class="imageblock">
 <div class="content">
-<img src="../en/images/patchbay_base.png" alt="Vue d&#8217;ensemble de la baie de brassage">
+<img src="images/common/patchbay_base.png" alt="Vue d&#8217;ensemble de la baie de brassage">
 </div>
 </div>
 <div class="paragraph">
@@ -244,7 +252,7 @@ Vous observez que 4 de ces boîtes sont entourées d&#8217;une décoration (2 <s
 </div>
 <div class="videoblock">
 <div class="content">
-<video src="../en/images/video/patchbay_simple_connect.mp4" width="640" controls>
+<video src="images/common/video/patchbay_simple_connect.mp4" width="640" controls>
 Your browser does not support the video tag.
 </video>
 </div>
@@ -253,7 +261,7 @@ Your browser does not support the video tag.
 </div>
 </div>
 <div class="sect1">
-<h2 id="_les_options">Les options</h2>
+<h2 id="_le_menu_déroulant">Le menu déroulant</h2>
 <div class="sectionbody">
 <div class="paragraph">
 <p>Un clic droit n&#8217;importe où sur la baie de brassage permet d&#8217;en afficher le menu. Ce menu est également présent dans le menu de RaySession (menu <strong>Baie de brassage</strong>).
@@ -268,7 +276,13 @@ Il vous permettra de :</p>
 <p>chercher une boîte par son nom</p>
 </li>
 <li>
-<p>Filtrer les ports: n&#8217;afficher que les ports AUDIO, MIDI, CV ou les trois</p>
+<p>Filtrer les ports: n&#8217;afficher que les ports AUDIO, MIDI, CV, ALSA ou tous</p>
+</li>
+<li>
+<p>restaurer des boîtes cachées (par vous même)</p>
+</li>
+<li>
+<p>demander un auto-arrangement de la vue, selon la chaîne du signal ou en deux colonnes face à face</p>
 </li>
 <li>
 <p>régler le niveau de zoom</p>
@@ -302,10 +316,10 @@ Tous les changements dans cette fenêtre prennent effet immédiatement. Survolez
 <p>Le bouton de la molette permet de déplacer la vue</p>
 </li>
 <li>
-<p><em>Ctrl+bouton du milieu de la souris</em> permet de couper toutes les connexions passant sous le curseur</p>
+<p><em>Ctrl+F</em> permet de chercher une boîte par son nom</p>
 </li>
 <li>
-<p><em>Ctrl+F</em> permet de chercher une boîte par son nom</p>
+<p><em>Alt+[0-9]</em> permet de changer de vue, par exemple <em>Alt+2</em> permet de passer à la vue 2, la créant si besoin.</p>
 </li>
 </ul>
 </div>
@@ -316,7 +330,7 @@ Tous les changements dans cette fenêtre prennent effet immédiatement. Survolez
 </div>
 <div class="videoblock">
 <div class="content">
-<video src="../en/images/video/patchbay_rafal_connections.mp4" width="640" controls>
+<video src="images/common/video/patchbay_rafal_connections.mp4" width="640" controls>
 Your browser does not support the video tag.
 </video>
 </div>
@@ -342,7 +356,7 @@ Your browser does not support the video tag.
 </div>
 <div class="videoblock">
 <div class="content">
-<video src="../en/images/video/patchbay_fast_cut_paste.mp4" width="640" controls>
+<video src="images/common/video/patchbay_fast_cut_paste.mp4" width="640" controls>
 Your browser does not support the video tag.
 </video>
 </div>
@@ -357,7 +371,7 @@ Les basses et les aigües (<em>Output 1</em> et <em>Output 5</em>) sont envoyés
 </div>
 <div class="videoblock">
 <div class="content">
-<video src="../en/images/video/fast_new_plugin.mp4" width="640" controls>
+<video src="images/common/video/fast_new_plugin.mp4" width="640" controls>
 Your browser does not support the video tag.
 </video>
 </div>
@@ -372,7 +386,7 @@ Your browser does not support the video tag.
 <h3 id="_les_ports_a2j_ou_midi_bridge">Les ports A2J (ou Midi-Bridge)</h3>
 <div class="imageblock">
 <div class="content">
-<img src="../en/images/patchbay_a2j.png" alt="ports a2j">
+<img src="images/common/patchbay_a2j.png" alt="ports a2j">
 </div>
 </div>
 <div class="paragraph">
@@ -383,7 +397,7 @@ Your browser does not support the video tag.
 <h3 id="_les_ports_de_tension_de_contrôle_ports_cv">Les ports de tension de contrôle (ports CV)</h3>
 <div class="imageblock">
 <div class="content">
-<img src="../en/images/patchbay_CV.png" alt="ports CV">
+<img src="images/common/patchbay_CV.png" alt="ports CV">
 </div>
 </div>
 <div class="paragraph">
@@ -408,10 +422,177 @@ Vous ne pourrez pas dire que vous n&#8217;étiez pas prévenu, et il est quasime
 </div>
 </div>
 </div>
+<div class="sect1">
+<h2 id="_préférences_du_canevas">Préférences du canevas</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_onglet_general">Onglet General</h3>
+<div class="paragraph">
+<p><span class="image"><img src="images/fr/options_general.png" alt="Onglet General"></span></p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>grouper les ports MIDI matériels</strong>: Les ports midi matériels sont ceux fournis par le pont A2J (ALSA to JACK) ou par Pipewire MidiBridge. Le nom réel de ces ports commence soit par <code>a2j:</code> soit par <code>MidiBridge:</code>, en les groupant vous gardez tous ces ports dans la même boîte (nommée <code>a2j</code> ou <code>MidiBridge</code>). En les dégroupant il y aura une boîte par client ALSA (ALSA est le module du noyau Linux qui communique avec votre matériel MIDI).</p>
+</li>
+<li>
+<p><strong>Fournir les ports ALSA MIDI</strong>: Certains programmes audio peuvent communiquer directement avec les ports ALSA (créés par le noyau) plutôt qu&#8217;avec les ports JACK MIDI (créés par A2J ou par PipeWire). Ces ports transmettent leur données sans y appliquer la latence de JACK (ça peut être un avantage ou un inconvénient). Dans la majorité des cas, disposer de ces ports n&#8217;est pas nécessaire, les débutants n&#8217;en auront pas besoin.</p>
+</li>
+<li>
+<p><strong>Canevas élastique</strong>: Toujours redimensionner la scène à son contenu minimum. Celà permet d&#8217;optimiser la vue après chaque ajout, suppression, changement ou déplacement de boîte. Si vous décochez cette case, la scène grandira sans cesse et vous pouvez chercher vos boîtes au milieu du désert.</p>
+</li>
+<li>
+<p><strong>Navigation sur les bords</strong>: Lors de la connection, du déplacement ou de la sélection des boîtes, la vue se déplace quand le curseur est prêt du bord. Nul besoin d&#8217;utiliser la molette de la souris, d&#8217;appuyer sur Maj ou de déplacer les barres de défilement. Ça n&#8217;a strictement aucun effet quand la scène est entièrement visible dans la vue.</p>
+</li>
+<li>
+<p><strong>Empêcher la superposition des boîtes</strong>: Quand cette option est active, les boîtes sont automatiquement déplacées quand une autre boîte est placée dessus. Décochez cette case si vous aimez chercher des boîtes cachées derrière les autres ou si celà vous permet d&#8217;éviter un bug (que vous avez rapporté bien entendu).</p>
+</li>
+<li>
+<p><strong>Sélection automatique des objets</strong>: Sélectionne les boîtes, les ports et les portgroups au survol de la souris. Peut permettre d&#8217;identifier plus vite certaines connections.</p>
+</li>
+<li>
+<p><strong>Zoom par défaut</strong>: La taille des éléments est une question de goût et d&#8217;aisance visuelle, aussi elle dépend beaucoup de la taille et de la résolution de votre écran. Un clic droit sur le curseur de zoom vous permettra de revenir à ce zoom par défaut.</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_onglet_nommage">Onglet Nommage</h3>
+<div class="paragraph">
+<p><span class="image"><img src="images/fr/options_nommage.png" alt="Onglet Nommage"></span></p>
+</div>
+<div class="paragraph">
+<p>Les boîtes et les ports peuvent être nommés selon plusieurs informations:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>le nom réel fourni par JACK ou PipeWire</p>
+</li>
+<li>
+<p>le nom <strong>digeste</strong> que HoustonPatchbay peut lui donner selon le nom du client, en éliminant le superflu du nom réel pour améliorer la lisibilité. Par exemple, on reconnait par leur forme un port d&#8217;entrée d&#8217;un port de sortie, nul besoin qu&#8217;il contienne <code>input</code> ou <code>output</code></p>
+</li>
+<li>
+<p>le nom <strong>personnalisé</strong>, c&#8217;est le nom qui va être utilisé lorsque vous renommez un élément. Sous RaySession, il peuvent être différents selon la session en cours.</p>
+</li>
+<li>
+<p>le <strong>joli nom</strong> JACK, qui est une métadonnée affectée au client ou au port dans JACK (ou PipeWire). Cette métadonnée peut être écrite par RaySession, Patchance, le client JACK concerné ou même tout autre programme qui utilise JACK.</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>Si vous souhaitez voir tous les noms réels des clients et des ports, il faudra décocher les trois cases <strong>jolis noms JACK</strong>, <strong>Noms personnalisés</strong> et <strong>Noms digestes</strong>. Sinon, vous pouvez obtenir cette information par clic droit sur un client ou un port, puis <strong>Informations</strong>.</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Exporter automatiquement les noms personnalisées vers les jolis noms JACK</strong>: Quand cette option est activée, tous les noms personnalisés (que l&#8217;on crée en renommant les boîtes et les ports) seront transmis dans les métadonnées de JACK et deviendront accessibles aux programmes qui utilisent JACK. Par exemple, si vous renommez vos ports d&#8217;entrées matérielles, ces entrées seront renommées dans Ardour, ce qui peut être agréable et pratique.</p>
+<div class="paragraph">
+<p>Cette option n&#8217;est pas enclenchée par défaut parce que le programme pourrait rentrer en conflit avec une autre instance du même programme ou avec tout autre programme qui aurait un comportement similaire (toutes les applications peuvent écrire dans les métadonnées de JACK). Aussi, elle ne fonctionnera pas si une autre instance de Patchance ou de RaySession l&#8217;utilise déjà sur le même serveur JACK.</p>
+</div>
+<div class="paragraph">
+<p>Même quand cette option est activée, un joli nom peut être fourni par un autre programme et non enregistré parmi les noms personnalisés. Normalement ce n&#8217;est pas gênant, il est fort probable que ce programme réécrive le joli nom quand vous le rouvrez. Si vous n&#8217;aimez pas ce joli-nom, renommez l&#8217;élément dans la baie de brassage et votre baie de brassage devrait pouvoir le renommer après disparition/réapparition. Techniquement, HoustonPatchbay écrit la métadonnée au moins 200ms après l&#8217;apparition du port, c&#8217;est généralement dans ce laps de temps que le programme qui enregistre le port JACK fournit la métadonnée de joli nom (qui pourra être écrasée).</p>
+</div>
+</li>
+<li>
+<p><strong>Noms personnalisés &#8594; jolis noms JACK</strong>: Exporter les noms personnalisés de boîtes et de ports vers les métadonnées  de joli nom JACK de clients et de ports. C&#8217;est option est grisée si l&#8217;export automatique est enclenché, ou s&#8217;il n&#8217;y a pas de noms personnalisés</p>
+</li>
+<li>
+<p><strong>jolis noms JACK &#8594; Noms personnalisés</strong>: Importer les jolis noms JACK dans les noms personnalisés. Cette option est grisée s&#8217;il n&#8217;y a pas de jolis noms JACK qui ne soit pas identique au nom personnalisé.</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_onglet_theme">Onglet Theme</h3>
+<div class="paragraph">
+<p><span class="image"><img src="images/fr/options_theme.png" alt="Onglet Theme"></span></p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Boîte de choix du theme</strong>: choisissez le thème qui vous plaît. La présence de l&#8217;icône <em>utilisateur</em> signifie que l&#8217;utilisateur a les droits de modification sur l&#8217;emplacement du dossier du thème.</p>
+</li>
+<li>
+<p><strong>Dupliquer</strong>: Copier le thème en cours pour pouvoir l&#8217;éditer, en lui donnant un autre nom. Le thème sera dupliqué dans le dossier caché <code>~/.local/share/{PROGRAM}/HoustonPatchbay/themes</code>, ou <em>{PROGRAM}</em> peut être <code>raysession</code> ou <code>patchance</code>.</p>
+</li>
+<li>
+<p><strong>Éditer</strong>: Ouvrir le fichier du theme <code>theme.conf</code> dans votre éditeur de texte, le bouton est grisé si l&#8217;utilisateur n&#8217;a pas les droits de modification sur le fichier en question.</p>
+</li>
+<li>
+<p><strong>Les boîtes ont des ombres</strong> : Simple option de rendu esthétique, consomme un peu de resources.</p>
+</li>
+<li>
+<p><strong>Grille</strong>: Permet d&#8217;afficher une grille dans le fond de la scène. La taille des lignes et des colonnes dépend de la taille de la grille définie dans l&#8217;onglet <strong>Astuces</strong> et des tailles minimales de grille écrites dans le fichier de thème.</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_onglet_astuces">Onglet Astuces</h3>
+<div class="paragraph">
+<p><span class="image"><img src="images/fr/options_astuces.png" alt="Onglet Astuces"></span></p>
+</div>
+<div class="paragraph">
+<p>Cet onglet aurait pût s&#8217;appeler <strong>Divers</strong>, ou même <strong>Fourre-tout</strong>, mais il embrasse son époque managériale qui rend l&#8217;ensemble du langage plus positif. Avec un nom comme <strong>Astuces</strong>, vous n&#8217;avez pas l&#8217;impression de perdre votre temps ici, alors qu&#8217;en réalité&#8230;&#8203;</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Auto disposition des boîtes groupées</strong> : Cette option ne concerne que les boîtes qui contiennent des entrées ET des sorties. Il peut y avoir deux façons de disposer ces boîtes:</p>
+<div class="ulist">
+<ul>
+<li>
+<p>soit en disposition large:
+<br>
+<span class="image"><img src="images/common/box_large.png" alt="Large box"></span>
+<br></p>
+</li>
+<li>
+<p>soit en disposition haute:
+<br>
+<span class="image"><img src="images/common/box_high.png" alt="High box"></span></p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>Il s&#8217;agit ici d&#8217;un réglage de la disposition automatique (par défaut). Certains et certaines préfèrent largement les boîtes larges, mais il est des cas où le gain de place est énorme en boîte haute, par exemple quand il n&#8217;y a qu&#8217;un port d&#8217;entrée et dix ports de sortie. La boîte a choix multiple est en fait un dosage:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Choisir l&#8217;aire la plus petite</strong>: les boîtes auront autant de chances d&#8217;être hautes que larges.</p>
+</li>
+<li>
+<p><strong>Préférer les boîtes larges</strong>: Il faut que la disposition haute soit sensiblement avantageuse pour être choisie</p>
+</li>
+<li>
+<p><strong>Quasiment que des boîtes larges</strong>: Les boîtes auront toutes une disposition large, sauf si la disposition haute permet un gain de place absolument flagrant</p>
+</li>
+<li>
+<p><strong>Que des boîtes larges</strong>: Pour celles et ceux qui ne supportent pas la disposition haute</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p><strong>Largeur maximale des ports</strong>: Certains programmes écrivent des noms de ports trèèèèès longs, ces noms seront donc tronqués au delà du nombre de points défini pour éviter une largeur de boîte trop importante.</p>
+</li>
+<li>
+<p><strong>grille</strong>: définir en points la largeur et la hauteur de la grille. Plus ces valeurs sont grandes, plus les boîtes seront faciles à aligner verticalement et horizontalement, et plus les boîtes seront un peu plus grandes que nécessaire.</p>
+</li>
+<li>
+<p><strong>Exporter la scène vers Patchichi</strong> : Enregistre le contenu de la baie de brassage au format json lisible par le logiciel <strong>Patchichi</strong>. Celà permet de transmettre au développeur la situation en cas de bogue. Il est également possible (mais pas si évident), de travailler le positionnement des boîtes dans <strong>Patchichi</strong> quand on n&#8217;a pas accès au matériel, rares sont celles et ceux qui auront ce besoin.</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+</div>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2024-08-03 08:07:39 +0200
+Last updated 2026-08-27 08:52:49 +0200
 </div>
 </div>
 </body>

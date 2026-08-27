@@ -2,7 +2,7 @@
 :toc: left
 :toc-title: Table des matières
 :toclevels: 2
-:imagesdir: ../en/images
+:imagesdir: images/common
 :stylesheet: ../en/patchbay_manual.css
 
 [.text-right]
@@ -67,14 +67,16 @@ Faites un clic droit sur un port, celà affichera un menu déroulant, choisissez
 
 video::video/patchbay_simple_connect.mp4[width=640]
 
-== Les options
+== Le menu déroulant
 
 Un clic droit n'importe où sur la baie de brassage permet d'en afficher le menu. Ce menu est également présent dans le menu de RaySession (menu *Baie de brassage*).
 Il vous permettra de :
 
 * basculer la baie de brassage en plein écran
 * chercher une boîte par son nom
-* Filtrer les ports: n'afficher que les ports AUDIO, MIDI, CV ou les trois
+* Filtrer les ports: n'afficher que les ports AUDIO, MIDI, CV, ALSA ou tous
+* restaurer des boîtes cachées (par vous même)
+* demander un auto-arrangement de la vue, selon la chaîne du signal ou en deux colonnes face à face 
 * régler le niveau de zoom
 * rafraîchir le canevas: redemander à JACK la liste des ports existants et leurs connexions
 * Préférences du canevas: afficher une fenêtre d'options +
@@ -86,8 +88,8 @@ Il vous permettra de :
 * __Ctrl+Molette de la souris__ permet de zoomer/dézoomer.
 * __Alt+Molette de la souris__ permet déplacer la vue horizontallement.
 * Le bouton de la molette permet de déplacer la vue
-* __Ctrl+bouton du milieu de la souris__ permet de couper toutes les connexions passant sous le curseur
 * __Ctrl+F__ permet de chercher une boîte par son nom
+* __Alt+[0-9]__ permet de changer de vue, par exemple __Alt+2__ permet de passer à la vue 2, la créant si besoin. 
 
 === Connexions en rafale
 
@@ -137,3 +139,92 @@ En revanche, connecter un port de sortie audio classique vers un port CV d'entr�
 Vous avez la possibilité d'éditer les couleurs d'un thème. C'est plutôt facile et rapide à faire.
 
 Pour plus d'informations, consultez link:../en/theme_edit.html[l'aide sur l'édition des themes].
+
+== Préférences du canevas
+
+=== Onglet General
+
+image:../fr/options_general.png["Onglet General"]
+
+* *grouper les ports MIDI matériels*: Les ports midi matériels sont ceux fournis par le pont A2J (ALSA to JACK) ou par Pipewire MidiBridge. Le nom réel de ces ports commence soit par `a2j:` soit par `MidiBridge:`, en les groupant vous gardez tous ces ports dans la même boîte (nommée `a2j` ou `MidiBridge`). En les dégroupant il y aura une boîte par client ALSA (ALSA est le module du noyau Linux qui communique avec votre matériel MIDI).
+
+* *Fournir les ports ALSA MIDI*: Certains programmes audio peuvent communiquer directement avec les ports ALSA (créés par le noyau) plutôt qu'avec les ports JACK MIDI (créés par A2J ou par PipeWire). Ces ports transmettent leur données sans y appliquer la latence de JACK (ça peut être un avantage ou un inconvénient). Dans la majorité des cas, disposer de ces ports n'est pas nécessaire, les débutants n'en auront pas besoin.
+
+* *Canevas élastique*: Toujours redimensionner la scène à son contenu minimum. Celà permet d'optimiser la vue après chaque ajout, suppression, changement ou déplacement de boîte. Si vous décochez cette case, la scène grandira sans cesse et vous pouvez chercher vos boîtes au milieu du désert.
+
+* *Navigation sur les bords*: Lors de la connection, du déplacement ou de la sélection des boîtes, la vue se déplace quand le curseur est prêt du bord. Nul besoin d'utiliser la molette de la souris, d'appuyer sur Maj ou de déplacer les barres de défilement. Ça n'a strictement aucun effet quand la scène est entièrement visible dans la vue.
+
+* *Empêcher la superposition des boîtes*: Quand cette option est active, les boîtes sont automatiquement déplacées quand une autre boîte est placée dessus. Décochez cette case si vous aimez chercher des boîtes cachées derrière les autres ou si celà vous permet d'éviter un bug (que vous avez rapporté bien entendu).
+
+* *Sélection automatique des objets*: Sélectionne les boîtes, les ports et les portgroups au survol de la souris. Peut permettre d'identifier plus vite certaines connections.
+
+* *Zoom par défaut*: La taille des éléments est une question de goût et d'aisance visuelle, aussi elle dépend beaucoup de la taille et de la résolution de votre écran. Un clic droit sur le curseur de zoom vous permettra de revenir à ce zoom par défaut.
+
+=== Onglet Nommage
+
+image:../fr/options_nommage.png["Onglet Nommage"]
+
+Les boîtes et les ports peuvent être nommés selon plusieurs informations:
+
+* le nom réel fourni par JACK ou PipeWire
+* le nom *digeste* que HoustonPatchbay peut lui donner selon le nom du client, en éliminant le superflu du nom réel pour améliorer la lisibilité. Par exemple, on reconnait par leur forme un port d'entrée d'un port de sortie, nul besoin qu'il contienne `input` ou `output`
+* le nom *personnalisé*, c'est le nom qui va être utilisé lorsque vous renommez un élément. Sous RaySession, il peuvent être différents selon la session en cours.
+* le *joli nom* JACK, qui est une métadonnée affectée au client ou au port dans JACK (ou PipeWire). Cette métadonnée peut être écrite par RaySession, Patchance, le client JACK concerné ou même tout autre programme qui utilise JACK.
+
+Si vous souhaitez voir tous les noms réels des clients et des ports, il faudra décocher les trois cases *jolis noms JACK*, *Noms personnalisés* et *Noms digestes*. Sinon, vous pouvez obtenir cette information par clic droit sur un client ou un port, puis *Informations*.
+
+* *Exporter automatiquement les noms personnalisées vers les jolis noms JACK*: Quand cette option est activée, tous les noms personnalisés (que l'on crée en renommant les boîtes et les ports) seront transmis dans les métadonnées de JACK et deviendront accessibles aux programmes qui utilisent JACK. Par exemple, si vous renommez vos ports d'entrées matérielles, ces entrées seront renommées dans Ardour, ce qui peut être agréable et pratique.
++
+Cette option n'est pas enclenchée par défaut parce que le programme pourrait rentrer en conflit avec une autre instance du même programme ou avec tout autre programme qui aurait un comportement similaire (toutes les applications peuvent écrire dans les métadonnées de JACK). Aussi, elle ne fonctionnera pas si une autre instance de Patchance ou de RaySession l'utilise déjà sur le même serveur JACK.
++
+Même quand cette option est activée, un joli nom peut être fourni par un autre programme et non enregistré parmi les noms personnalisés. Normalement ce n'est pas gênant, il est fort probable que ce programme réécrive le joli nom quand vous le rouvrez. Si vous n'aimez pas ce joli-nom, renommez l'élément dans la baie de brassage et votre baie de brassage devrait pouvoir le renommer après disparition/réapparition. Techniquement, HoustonPatchbay écrit la métadonnée au moins 200ms après l'apparition du port, c'est généralement dans ce laps de temps que le programme qui enregistre le port JACK fournit la métadonnée de joli nom (qui pourra être écrasée).
+
+* *Noms personnalisés -> jolis noms JACK*: Exporter les noms personnalisés de boîtes et de ports vers les métadonnées  de joli nom JACK de clients et de ports. C'est option est grisée si l'export automatique est enclenché, ou s'il n'y a pas de noms personnalisés
+
+* *jolis noms JACK -> Noms personnalisés*: Importer les jolis noms JACK dans les noms personnalisés. Cette option est grisée s'il n'y a pas de jolis noms JACK qui ne soit pas identique au nom personnalisé.
+
+=== Onglet Theme
+
+image:../fr/options_theme.png["Onglet Theme"]
+
+* *Boîte de choix du theme*: choisissez le thème qui vous plaît. La présence de l'icône _utilisateur_ signifie que l'utilisateur a les droits de modification sur l'emplacement du dossier du thème.
+
+* *Dupliquer*: Copier le thème en cours pour pouvoir l'éditer, en lui donnant un autre nom. Le thème sera dupliqué dans le dossier caché `~/.local/share/{PROGRAM}/HoustonPatchbay/themes`, ou _{PROGRAM}_ peut être `raysession` ou `patchance`.
+
+* *Éditer*: Ouvrir le fichier du theme `theme.conf` dans votre éditeur de texte, le bouton est grisé si l'utilisateur n'a pas les droits de modification sur le fichier en question.
+
+* *Les boîtes ont des ombres* : Simple option de rendu esthétique, consomme un peu de resources.
+
+* *Grille*: Permet d'afficher une grille dans le fond de la scène. La taille des lignes et des colonnes dépend de la taille de la grille définie dans l'onglet *Astuces* et des tailles minimales de grille écrites dans le fichier de thème.
+
+=== Onglet Astuces
+
+image:../fr/options_astuces.png["Onglet Astuces"]
+
+Cet onglet aurait pût s'appeler *Divers*, ou même *Fourre-tout*, mais il embrasse son époque managériale qui rend l'ensemble du langage plus positif. Avec un nom comme *Astuces*, vous n'avez pas l'impression de perdre votre temps ici, alors qu'en réalité...
+
+* *Auto disposition des boîtes groupées* : Cette option ne concerne que les boîtes qui contiennent des entrées ET des sorties. Il peut y avoir deux façons de disposer ces boîtes:
++
+ ** soit en disposition large:
+ +
+image:box_large.png["Large box"]
+ +
+ ** soit en disposition haute:
+ +
+image:box_high.png["High box"]
++
+Il s'agit ici d'un réglage de la disposition automatique (par défaut). Certains et certaines préfèrent largement les boîtes larges, mais il est des cas où le gain de place est énorme en boîte haute, par exemple quand il n'y a qu'un port d'entrée et dix ports de sortie. La boîte a choix multiple est en fait un dosage:
+
+** *Choisir l'aire la plus petite*: les boîtes auront autant de chances d'être hautes que larges.  
+** *Préférer les boîtes larges*: Il faut que la disposition haute soit sensiblement avantageuse pour être choisie
+** *Quasiment que des boîtes larges*: Les boîtes auront toutes une disposition large, sauf si la disposition haute permet un gain de place absolument flagrant
+** *Que des boîtes larges*: Pour celles et ceux qui ne supportent pas la disposition haute
+
+* *Largeur maximale des ports*: Certains programmes écrivent des noms de ports trèèèèès longs, ces noms seront donc tronqués au delà du nombre de points défini pour éviter une largeur de boîte trop importante.
+
+* *grille*: définir en points la largeur et la hauteur de la grille. Plus ces valeurs sont grandes, plus les boîtes seront faciles à aligner verticalement et horizontalement, et plus les boîtes seront un peu plus grandes que nécessaire.
+
+* *Exporter la scène vers Patchichi* : Enregistre le contenu de la baie de brassage au format json lisible par le logiciel *Patchichi*. Celà permet de transmettre au développeur la situation en cas de bogue. Il est également possible (mais pas si évident), de travailler le positionnement des boîtes dans *Patchichi* quand on n'a pas accès au matériel, rares sont celles et ceux qui auront ce besoin.
+
+
+

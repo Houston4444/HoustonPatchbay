@@ -1,7 +1,7 @@
 = HoustonPatchbay Manual
 :toc: left
 :toclevels: 2
-:imagesdir: images
+:imagesdir: images/common
 :stylesheet: patchbay_manual.css
 
 [.text-right]
