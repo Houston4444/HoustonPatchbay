@@ -54,7 +54,7 @@ The blue curved lines correspond to the audio connections. You can observe that 
 
 You can establish a connection between 2 ports as long as they meet the following conditions:
 
-* he ports are of the same type (you can't connect an audio port to a MIDI port)
+* the ports are of the same type (you can't connect an audio port to a MIDI port)
 * one is an input port, the other is an output port
 
 === Intuitive Method
@@ -141,9 +141,11 @@ For more informations, read link:theme_edit.html[how to edit themes].
 
 == Canvas Options
 
+You can access to this dialog window with a right click anywhere in the canvas and *Canvas options*.
+
 === General Tab
 
-image:../fr/options_general.png["Onglet General"]
+image:../en/options_general.png["General Tab"]
 
 * *Group MIDI hardware ports*: Hardware MIDI ports are those provided by the A2J (ALSA to JACK) bridge or by Pipewire MidiBridge. The actual names of these ports begin with either `a2j:` or `MidiBridge:`, by grouping them, you keep all these ports in the same box (named `a2j` or `MidiBridge`). If you ungroup them, there will be one box per ALSA client (ALSA is the Linux kernel module that communicates with your MIDI hardware).
 
@@ -161,7 +163,7 @@ image:../fr/options_general.png["Onglet General"]
 
 === Naming Tab
 
-image:../fr/options_nommage.png["Onglet Nommage"]
+image:../en/options_naming.png["Naming Tab"]
 
 Boxes and ports can be named based on several pieces of information:
 
@@ -184,7 +186,7 @@ Even when this option is enabled, a pretty-name may be provided by another progr
 
 === Theme Tab
 
-image:../fr/options_theme.png["Onglet Theme"]
+image:../en/options_theme.png["Theme Tab"]
 
 *Theme Selection Box*: Choose the theme you like. The presence of the _user_ icon means that the user has permission to modify the theme folder location.
 
@@ -198,26 +200,26 @@ image:../fr/options_theme.png["Onglet Theme"]
 
 === Tricks tab
 
-image:../fr/options_astuces.png["Onglet Astuces"]
+image:../en/options_tricks.png["Tricks Tab"]
 
 This tab could have been called *Miscellaneous* or even *Misc.*, but it reflects the current management trend of using more positive language. With a name like *Tips*, you don't feel like you're wasting your time here, when in reality...
 
 * *Grouped boxes auto layout* : This option applies only to boxes that contain both inputs AND outputs. There are two possible ways to arrange these boxes:
 +
- ** in a large layout:
+ ** in a wide layout:
  +
-image:box_large.png["Large box"]
+image:box_wide.png["Large box"]
  +
- ** in a high layout:
+ ** in a tall layout:
  +
-image:box_high.png["High box"]
+image:box_tall.png["High box"]
 +
-This is a setting for the automatic layout (default). Some people much prefer wide boxes, but there are cases where a high box saves a tremendous amount of space, for example, when there is only one input port and ten output ports. The multi-choice box is actually a dosing:
+This is a setting for the automatic layout (default). Some people much prefer wide boxes, but there are cases where a tall box saves a tremendous amount of space, for example, when there is only one input port and ten output ports. The multi-choice box is actually a dosing:
 
-** *Choose the smallest area*: The boxes will be just as likely to be high as they are to be large.  
-** *Prefer large boxes*: The high layout must offer a significant advantage to be chosen
-** *Almost only large boxes*: All the boxes will have a large layout, unless a high layout offers a clearly obvious space-saving advantage
-** *Force large boxes*: For those who can't stand the high layout
+** *Choose the smallest area*: The boxes will be just as likely to be tall as they are to be wide.  
+** *Prefer wide boxes*: The tall layout must offer a significant advantage to be chosen
+** *Almost only wide boxes*: All the boxes will have a wide layout, unless a tall layout offers a clearly obvious space-saving advantage
+** *Force wide boxes*: For those who can't stand the tall layout
 
 * *Maximum port width*: Some programs generate veeeery long port names, so these names will be truncated if they exceed the specified number of points to prevent the box from becoming too large.
 

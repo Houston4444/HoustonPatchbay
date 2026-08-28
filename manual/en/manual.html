@@ -110,6 +110,14 @@ table {
 </ul>
 </li>
 <li><a href="#_edit_theme">Edit Theme</a></li>
+<li><a href="#_canvas_options">Canvas Options</a>
+<ul class="sectlevel2">
+<li><a href="#_general_tab">General Tab</a></li>
+<li><a href="#_naming_tab">Naming Tab</a></li>
+<li><a href="#_theme_tab">Theme Tab</a></li>
+<li><a href="#_tricks_tab">Tricks tab</a></li>
+</ul>
+</li>
 </ul>
 </div>
 </div>
@@ -226,7 +234,7 @@ table {
 <div class="ulist">
 <ul>
 <li>
-<p>he ports are of the same type (you can&#8217;t connect an audio port to a MIDI port)</p>
+<p>the ports are of the same type (you can&#8217;t connect an audio port to a MIDI port)</p>
 </li>
 <li>
 <p>one is an input port, the other is an output port</p>
@@ -413,10 +421,180 @@ You can&#8217;t say you weren&#8217;t warned, and it&#8217;s almost impossible t
 </div>
 </div>
 </div>
+<div class="sect1">
+<h2 id="_canvas_options">Canvas Options</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>You can access to this dialog window with a right click anywhere in the canvas and <strong>Canvas options</strong>.</p>
+</div>
+<div class="sect2">
+<h3 id="_general_tab">General Tab</h3>
+<div class="paragraph">
+<p><span class="image"><img src="images/en/options_general.png" alt="General Tab"></span></p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Group MIDI hardware ports</strong>: Hardware MIDI ports are those provided by the A2J (ALSA to JACK) bridge or by Pipewire MidiBridge. The actual names of these ports begin with either <code>a2j:</code> or <code>MidiBridge:</code>, by grouping them, you keep all these ports in the same box (named <code>a2j</code> or <code>MidiBridge</code>). If you ungroup them, there will be one box per ALSA client (ALSA is the Linux kernel module that communicates with your MIDI hardware).</p>
+</li>
+<li>
+<p><strong>Provide ALSA MIDI ports</strong>: Some audio programs can communicate directly with ALSA ports (created by the kernel) rather than with JACK MIDI ports (created by A2J or PipeWire). These ports transmit their data without applying JACK&#8217;s latency (which can be an advantage or a disadvantage). In most cases, these ports are not necessary, beginners will not need them.</p>
+</li>
+<li>
+<p><strong>Elastic canvas</strong>: Always resize the scene to its minimum content. This optimizes the view after every addition, deletion, change, or movement of a box. If you uncheck this box, the scene will keep getting bigger and bigger, and you might end up searching for your boxes in the middle of nowhere.</p>
+</li>
+<li>
+<p><strong>Navigate on borders</strong>: When connecting, moving, or selecting boxes, the view moves when the cursor is near the edge. There’s no need to use the mouse wheel, press Shift, or move the scroll bars. This has absolutely no effect when the scene is fully visible in the view.</p>
+</li>
+<li>
+<p><strong>Prevent overlapping of boxes</strong>: When this option is enabled, boxes are automatically moved when another box is placed on top of them. Uncheck this box if you enjoy searching for boxes hidden behind others, or if doing so helps you avoid a bug (which you have reported, of course).</p>
+</li>
+<li>
+<p><strong>Auto-select items</strong>: Highlights boxes, ports, and portgroups when you hover over them with the mouse. This can help you identify certain connections more quickly.</p>
+</li>
+<li>
+<p><strong>Default Zoom</strong>: The size of the elements is a matter of personal preference and visual comfort, so it depends largely on the size and resolution of your screen. Right-clicking on the zoom slider will return you to the default zoom level.</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_naming_tab">Naming Tab</h3>
+<div class="paragraph">
+<p><span class="image"><img src="images/en/options_naming.png" alt="Naming Tab"></span></p>
+</div>
+<div class="paragraph">
+<p>Boxes and ports can be named based on several pieces of information:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>the actual name provided by JACK or PipeWire</p>
+</li>
+<li>
+<p>the <strong>graceful</strong> name that HoustonPatchbay can assign based on the client&#8217;s name, by removing unnecessary parts of the actual name to improve readability. For example, you can tell an input port from an output port by their shape, there’s no need for them to contain <code>input</code> or <code>output</code></p>
+</li>
+<li>
+<p>the <strong>custom</strong> name is the name that will be used when you rename an element. In RaySession, these names may vary depending on the current session.</p>
+</li>
+<li>
+<p>The <strong>JACK pretty-name</strong>, which is metadata assigned to the client or port in JACK (or PipeWire). This metadata can be written by RaySession, Patchance, the relevant JACK client, or even any other program that uses JACK.</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>If you want to see all the actual names of clients and ports, you&#8217;ll need to uncheck the three boxes labeled <strong>JACK pretty names</strong>, <strong>Custom names</strong>, and <strong>Graceful names</strong>. Otherwise, you can access this information by right-clicking on a client or port and selecting <strong>Get Info</strong>.</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Auto-export custom names to pretty-names</strong>: When this option is enabled, all custom names (created by renaming boxes and ports) will be passed along in JACK&#8217;s metadata and will become accessible to programs that use JACK. For example, if you rename your hardware input ports, those inputs will be renamed in Ardour, which can be convenient and useful.</p>
+<div class="paragraph">
+<p>This option is not enabled by default because the program could conflict with another instance of the same program or with any other program that behaves similarly (all applications can write to JACK’s metadata). Also, it will not work if another instance of Patchance or RaySession is already using it on the same JACK server.</p>
+</div>
+<div class="paragraph">
+<p>Even when this option is enabled, a pretty-name may be provided by another program and not saved among the custom names. Normally this isn’t a problem, it’s very likely that the program will rewrite the pretty-name when you reopen it. If you don’t like this pretty-name, rename the element in the patchbay, and the patchbay should be able to rename it after it disappears and reappears. Technically, HoustonPatchbay writes the metadata at least 200 ms after the port appears, it’s usually during this timeframe that the program registering the JACK port provides the pretty-name metadata (which may be overwritten).</p>
+</div>
+</li>
+<li>
+<p><strong>Custom names &#8594; JACK pretty names</strong>: Export custom box and port names to the JACK metadata for clients and ports. This option is grayed out if automatic export is enabled, or if there are no custom names.</p>
+</li>
+<li>
+<p><strong>JACK pretty names &#8594; Custom names</strong>: Import the JACK pretty names into the custom names. This option is grayed out if there are no JACK pretty name that is different from the custom name.</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_theme_tab">Theme Tab</h3>
+<div class="paragraph">
+<p><span class="image"><img src="images/en/options_theme.png" alt="Theme Tab"></span></p>
+</div>
+<div class="paragraph">
+<p><strong>Theme Selection Box</strong>: Choose the theme you like. The presence of the <em>user</em> icon means that the user has permission to modify the theme folder location.</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Duplicate</strong>: Copy the current theme so you can edit it, giving it a different name. The theme will be duplicated in the hidden folder <code>~/.local/share/{PROGRAM}/HoustonPatchbay/themes</code>, where <em>{PROGRAM}</em> can be <code>raysession</code> or <code>patchance</code>.</p>
+</li>
+<li>
+<p><strong>Edit</strong>: Open the <code>theme.conf</code> file in your text editor, the button will be grayed out if the user does not have permission to edit that file.</p>
+</li>
+<li>
+<p><strong>Boxes have shadows</strong> : A simple aesthetic rendering option that uses a small amount of resources.</p>
+</li>
+<li>
+<p><strong>Grid</strong>: Displays a grid in the background of the scene. The size of the rows and columns depends on the grid size defined in the <strong>Tricks</strong> tab and the minimum grid sizes specified in the theme file.</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_tricks_tab">Tricks tab</h3>
+<div class="paragraph">
+<p><span class="image"><img src="images/en/options_tricks.png" alt="Tricks Tab"></span></p>
+</div>
+<div class="paragraph">
+<p>This tab could have been called <strong>Miscellaneous</strong> or even <strong>Misc.</strong>, but it reflects the current management trend of using more positive language. With a name like <strong>Tips</strong>, you don&#8217;t feel like you&#8217;re wasting your time here, when in reality&#8230;&#8203;</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Grouped boxes auto layout</strong> : This option applies only to boxes that contain both inputs AND outputs. There are two possible ways to arrange these boxes:</p>
+<div class="ulist">
+<ul>
+<li>
+<p>in a wide layout:
+<br>
+<span class="image"><img src="images/common/box_wide.png" alt="Large box"></span>
+<br></p>
+</li>
+<li>
+<p>in a tall layout:
+<br>
+<span class="image"><img src="images/common/box_tall.png" alt="High box"></span></p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>This is a setting for the automatic layout (default). Some people much prefer wide boxes, but there are cases where a tall box saves a tremendous amount of space, for example, when there is only one input port and ten output ports. The multi-choice box is actually a dosing:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Choose the smallest area</strong>: The boxes will be just as likely to be tall as they are to be wide.</p>
+</li>
+<li>
+<p><strong>Prefer wide boxes</strong>: The tall layout must offer a significant advantage to be chosen</p>
+</li>
+<li>
+<p><strong>Almost only wide boxes</strong>: All the boxes will have a wide layout, unless a tall layout offers a clearly obvious space-saving advantage</p>
+</li>
+<li>
+<p><strong>Force wide boxes</strong>: For those who can&#8217;t stand the tall layout</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p><strong>Maximum port width</strong>: Some programs generate veeeery long port names, so these names will be truncated if they exceed the specified number of points to prevent the box from becoming too large.</p>
+</li>
+<li>
+<p><strong>grid</strong>: Set the width and height of the grid in points. The larger these values are, the easier it will be to align the boxes vertically and horizontally, and the larger the boxes will be—slightly larger than necessary.</p>
+</li>
+<li>
+<p><strong>Export scene to Patchichi</strong> : Saves the contents of the patchbay in a JSON format readable by the <strong>Patchichi</strong> software. This allows you to send the current configuration to the developer in the event of a bug. It is also possible (though not that straightforward) to adjust the positioning of the boxes in <strong>Patchichi</strong> when you don&#8217;t have access to the hardware, though very few people will ever need to do this.</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+</div>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2026-08-27 08:52:03 +0200
+Last updated 2026-08-28 08:14:03 +0200
 </div>
 </div>
 </body>

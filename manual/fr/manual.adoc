@@ -142,6 +142,8 @@ Pour plus d'informations, consultez link:../en/theme_edit.html[l'aide sur l'édi
 
 == Préférences du canevas
 
+Vous pouvez accéder à cette fenêtre en faisant un clic droit n'importe où sur la scène, puis *Préférences du canevas*.
+
 === Onglet General
 
 image:../fr/options_general.png["Onglet General"]
@@ -207,11 +209,11 @@ Cet onglet aurait pût s'appeler *Divers*, ou même *Fourre-tout*, mais il embra
 +
  ** soit en disposition large:
  +
-image:box_large.png["Large box"]
+image:box_wide.png["Large box"]
  +
  ** soit en disposition haute:
  +
-image:box_high.png["High box"]
+image:box_tall.png["High box"]
 +
 Il s'agit ici d'un réglage de la disposition automatique (par défaut). Certains et certaines préfèrent largement les boîtes larges, mais il est des cas où le gain de place est énorme en boîte haute, par exemple quand il n'y a qu'un port d'entrée et dix ports de sortie. La boîte a choix multiple est en fait un dosage:
 
