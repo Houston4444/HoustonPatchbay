@@ -37,9 +37,9 @@ class CanvasOptionsDialog(QDialog):
 
         box_layout_dict = {
             1.0: _translate('box_layout', 'Choose the smallest area'),
-            1.1: _translate('box_layout', 'Prefer large boxes'),
-            1.4: _translate('box_layout', 'Almost only large boxes'),
-            2.0: _translate('box_layout', 'Force large boxes')
+            1.1: _translate('box_layout', 'Prefer wide boxes'),
+            1.4: _translate('box_layout', 'Almost only wide boxes'),
+            2.0: _translate('box_layout', 'Force wide boxes')
         }
 
         grid_style_dict = {
