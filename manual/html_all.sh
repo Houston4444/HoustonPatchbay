@@ -9,9 +9,8 @@ cd `dirname "$0"`
 
 for lang in en fr;do
     cd $lang
-
-    echo "-> html: $lang/manual.adoc"
-    asciidoctor -d book manual.adoc
+    echo "-> html: $lang/index.adoc"  
+    asciidoctor -d book index.adoc
 
     if [[ "$lang" == en ]];then
         echo "-> html: en/theme_edit.adoc"

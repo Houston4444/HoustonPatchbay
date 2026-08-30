@@ -5,7 +5,7 @@
 :stylesheet: patchbay_manual.css
 
 [.text-right]
-image:flags/en.jpeg[EN, 40, 30, link=../en/manual.html] image:flags/fr.jpeg[FR, 30, 20, link=../fr/manual.html]
+image:flags/en.jpeg[EN, 40, 30, link=../en/manual.html] image:flags/fr.jpeg[FR, 30, 20, link=../fr/index.html]
 
 image:raysession.svg["icon", 100, 100] image:patchance.svg["icon", 100, 100] image:patchichi.svg["icon", 100, 100]
 

@@ -370,13 +370,13 @@ class CanvasMenu(QMenu):
             return
 
         locale_str = QLocale.system().name()
-        html_path = manual_dir / locale_str[:2] / 'manual.html'
+        html_path = manual_dir / locale_str[:2] / 'index.html'
 
         if (len(locale_str) > 2 and '_' in locale_str
                 and html_path.is_file()):
             short_locale = locale_str[:2]
 
-        url = QUrl(f"file://{manual_dir}/{short_locale}/manual.html")
+        url = QUrl(f"file://{manual_dir}/{short_locale}/index.html")
         QDesktopServices.openUrl(url)
 
     def showEvent(self, event):
