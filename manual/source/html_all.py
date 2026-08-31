@@ -9,6 +9,8 @@ if __name__ == '__main__':
     source_dir = Path(__file__).parent
     manual_dir = source_dir.parent
     
+    css_path = source_dir / 'patchbay_manual.css'
+    css_mtime = css_path.stat().st_mtime
     langs = set[str]()
     
     # convert .adoc files to .html at the good path
@@ -20,7 +22,9 @@ if __name__ == '__main__':
         adoc_out_rel = Path(*adoc.name[:-5].split('.')) / 'index.html'
         adoc_out = manual_dir / adoc_out_rel
         
-        if adoc_out.exists() and adoc_out.stat().st_mtime > adoc.stat().st_mtime:
+        if (adoc_out.exists()
+                and adoc_out.stat().st_mtime > adoc.stat().st_mtime
+                and adoc_out.stat().st_mtime > css_mtime):
             # target is newer than source, skip it
             continue
 
