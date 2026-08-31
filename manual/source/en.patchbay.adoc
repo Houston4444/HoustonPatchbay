@@ -1,11 +1,11 @@
 = HoustonPatchbay Manual
 :toc: left
 :toclevels: 2
-:imagesdir: ../../images/patchbay/common
+:imagesdir: XXX_IMAGES_XXX/common
 :stylesheet: patchbay_manual.css
 
 [.text-right]
-image:flags/en.jpeg[EN, 40, 30, link=../../en/patchbay/index.html] image:flags/fr.jpeg[FR, 30, 20, link=../../fr/patchbay/index.html]
+image:flags/en.jpeg[EN, 40, 30, link=XXX_LANG_SWITCH_en_XXX] image:flags/fr.jpeg[FR, 30, 20, link=XXX_LANG_SWITCH_fr_XXX]
 
 image:raysession.svg["icon", 100, 100] image:patchance.svg["icon", 100, 100] image:patchichi.svg["icon", 100, 100]
 
@@ -15,7 +15,7 @@ Welcome to the HoustonPatchbay manual, the JACK patchbay used in RaySession, Pat
 
 image::patchbay_base.png[Patchbay overview]
 
-This is what your patchbay can look like. Here there are 7 boxes:
+This is what your patchbay can look like. Here there are 7 boxess:
 
 * a *system* box with your ports corresponding to the hardware inputs (microphone, guitar...)
 * a *system* box with your ports corresponding to the hardware outputs (headphones, speakers...)
@@ -137,7 +137,7 @@ On the other hand, connecting a classic audio output port to a CV input port is 
 
 You have the possibility to modify theme colors, it is quite easy and fast to do.
 
-For more informations, read link:theme_edit.html[how to edit themes]. 
+For more informations, read link:theme_edit/index.html[how to edit themes]. 
 
 == Canvas Options
 

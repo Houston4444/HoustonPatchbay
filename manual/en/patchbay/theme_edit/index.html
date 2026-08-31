@@ -81,6 +81,10 @@ table {
   font-size: 3vw;
 }
 
+details.collapsible-content > .content {
+  max-height: 10em;
+  overflow-y: auto;
+}
 </style>
 </head>
 <body class="book toc2 toc-left">
@@ -458,6 +462,9 @@ If the box has title on top:</p>
 <div class="paragraph">
 <p>The interpretable specific blocks are the following ones:</p>
 </div>
+<details>
+<summary class="title">All interpretable blocks</summary>
+<div class="content">
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code>box
@@ -565,6 +572,8 @@ hardware_rack
 hardware_rack.selected</code></pre>
 </div>
 </div>
+</div>
+</details>
 <div class="paragraph">
 <p>Of course, you don&#8217;t need to specify all of themes.
 If in a block a setting is unspecified, the program will look into the parent block.
@@ -940,7 +949,7 @@ First, image is drawn, then background color is drawn above. This allows to adju
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2026-08-31 12:46:37 +0200
+Last updated 2026-08-31 22:02:33 +0200
 </div>
 </div>
 </body>

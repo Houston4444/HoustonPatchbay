@@ -2,11 +2,11 @@
 :toc: left
 :toc-title: Table des matières
 :toclevels: 2
-:imagesdir: ../../images/patchbay/common
+:imagesdir: XXX_IMAGES_XXX/common
 :stylesheet: patchbay_manual.css
 
 [.text-right]
-image:flags/en.jpeg[EN, 30, 20, link=../../en/patchbay/index.html] image:flags/fr.jpeg[FR, 40, 30, link=../../fr/patchbay/index.html]
+image:flags/en.jpeg[EN, 30, 20, link=XXX_LANG_SWITCH_en_XXX] image:flags/fr.jpeg[FR, 40, 30, link=XXX_LANG_SWITCH_fr_XXX]
 
 image:raysession.svg["icon", 100, 100] image:patchance.svg["icon", 100, 100] image:patchichi.svg["icon", 100, 100]
 

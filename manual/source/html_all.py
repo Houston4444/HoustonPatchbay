@@ -4,8 +4,8 @@ import os
 from pathlib import Path
 import subprocess
 
+
 if __name__ == '__main__':
-    print(f'{__file__=}')
     source_dir = Path(__file__).parent
     manual_dir = source_dir.parent
     
@@ -15,11 +15,28 @@ if __name__ == '__main__':
     for adoc in source_dir.iterdir():
         if not adoc.name.endswith('.adoc'):
             continue
+
         langs.add(adoc.name[:2])
-        adoc_out = manual_dir / Path(adoc.name[:-5].replace('.', '/')) / 'index.html'
+        adoc_out_rel = Path(*adoc.name[:-5].split('.')) / 'index.html'
+        adoc_out = manual_dir / adoc_out_rel
+        
+        if adoc_out.exists() and adoc_out.stat().st_mtime > adoc.stat().st_mtime:
+            # target is newer than source, skip it
+            continue
+
         adoc_out.parent.mkdir(parents=True, exist_ok=True)
         print(f'asciidoctor -d book {adoc} -o {adoc_out}')
         subprocess.run(['asciidoctor', '-d', 'book', adoc, '-o', adoc_out])
+        
+        # substitute variables in html, 
+        # they are used to simplify to file hierarchy.
+        # With them, no need to specify as ../ as deep is the folder
+        # to access images folder or translated html.
+        dots = ''.join(['../' for i in range(1, len(adoc.name.split('.')))])
+        path_no_lang = adoc_out_rel.relative_to(adoc_out_rel.parents[-2])
+        subprocess.run(
+            ['sed', '-i', '-e', f's|XXX_IMAGES_XXX|{dots}images/patchbay|g', '-e',
+             f's|XXX_LANG_SWITCH_\\([a-z]*\\)_XXX|{dots}\\1/{path_no_lang}|g', adoc_out])
 
     # find all english present files
     en_packages = list[Path]()

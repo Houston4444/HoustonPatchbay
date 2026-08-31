@@ -1,8 +1,9 @@
 = Write custom themes for *HoustonPatchbay*
 :toc: left
 :toclevels: 2
-:imagesdir: ../../../images/patchbay/common
+:imagesdir: XXX_IMAGES_XXX/common
 :stylesheet: patchbay_manual.css
+
 
 == Introduction
 
@@ -137,9 +138,6 @@ In each specific block, you can define the following settings:
 * *grid-min-width* : <<number>>, in *grid* block only
 * *grid-min-height* : <<number>>, in *grid* block only
 * *inherits* : only for *portgroup* block, can be _port_ to inherit all *port* settings.
-
-
-
 
 === margins
 
