@@ -1,4 +1,4 @@
-
+import logging
 from typing import TYPE_CHECKING, cast
 
 from qtpy import QT5
@@ -11,13 +11,13 @@ if QT5 and not TYPE_CHECKING:
 else:
     from qtpy.QtGui import QAction
 
+from patshared import PortTypesViewFlag, PortMode
 from resourcer import icon
 from resources import scalables
 
 from ..bases.group import Track
 from .. import patchcanvas
 from ..patchcanvas import utils
-from patshared import PortTypesViewFlag, PortMode
 from .views_menu import ViewsMenu
 from .selected_boxes_menu import SelectedBoxesMenu
 from ..cancel_mng import CancelOp, CancellableAction
@@ -25,7 +25,7 @@ from ..cancel_mng import CancelOp, CancellableAction
 if TYPE_CHECKING:
     from ..patchbay_manager import PatchbayManager
 
-
+_logger = logging.getLogger(__name__)
 _translate = QApplication.translate
 
 
@@ -367,16 +367,17 @@ class CanvasMenu(QMenu):
         short_locale = 'en'
         manual_dir = self.mng._manual_path
         if manual_dir is None:
+            _logger.error('impossible to open manual url, no manual_path')
             return
 
         locale_str = QLocale.system().name()
-        html_path = manual_dir / locale_str[:2] / 'index.html'
+        html_path = manual_dir / locale_str[:2] / 'patchbay' / 'index.html'
 
         if (len(locale_str) > 2 and '_' in locale_str
                 and html_path.is_file()):
             short_locale = locale_str[:2]
 
-        url = QUrl(f"file://{manual_dir}/{short_locale}/index.html")
+        url = QUrl(f"file://{manual_dir}/{short_locale}/patchbay/index.html")
         QDesktopServices.openUrl(url)
 
     def showEvent(self, event):

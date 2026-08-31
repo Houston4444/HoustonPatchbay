@@ -1,7 +1,7 @@
 = Write custom themes for *HoustonPatchbay*
 :toc: left
 :toclevels: 2
-:imagesdir: images
+:imagesdir: ../../../images/patchbay/common
 :stylesheet: patchbay_manual.css
 
 == Introduction
