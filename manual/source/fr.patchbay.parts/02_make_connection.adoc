@@ -1,0 +1,16 @@
+== Faire et défaire une connexion
+
+Vous pouvez établir une connexion entre 2 ports pourvu qu'ils remplissent les conditions suivantes :
+
+* les ports sont du même type (on ne peut pas connecter un port audio à un port MIDI)
+* l'un est un port d'entrée, l'autre est un port de sortie
+
+=== Méthode Intuitive
+
+Pour connecter ou déconnecter deux ports, cliquez sur un port sans relâcher le bouton de la souris, glissez le curseur jusqu'au port désiré puis relachez le bouton de la souris.
+
+=== Méthode Alternative
+
+Faites un clic droit sur un port, celà affichera un menu déroulant, choisissez *Connecter* puis le port désiré. Cliquez ailleurs pour faire disparaître ce menu. L'avantage de cette méthode est qu'elle permet de connecter rapidement un port à plusieurs autres, le menu restant affiché pendant les connexions.
+
+video::video/patchbay_simple_connect.mp4[width=640]

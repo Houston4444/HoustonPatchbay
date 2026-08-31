@@ -1,0 +1,5 @@
+== Éditer un thème
+
+Vous avez la possibilité d'éditer les couleurs d'un thème. C'est plutôt facile et rapide à faire.
+
+Pour plus d'informations, consultez link:theme_edit/index.html[l'aide sur l'édition des themes].

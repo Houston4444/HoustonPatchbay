@@ -1,0 +1,11 @@
+== Préférences du canevas
+
+Vous pouvez accéder à cette fenêtre en faisant un clic droit n'importe où sur la scène, puis *Préférences du canevas*.
+
+include::07A_general_tab.adoc[]
+
+include::07B_naming_tab.adoc[]
+
+include::07C_theme_tab.adoc[]
+
+include::07D_tricks_tab.adoc[]

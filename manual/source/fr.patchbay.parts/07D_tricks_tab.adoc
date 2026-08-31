@@ -1,0 +1,29 @@
+=== Onglet Astuces
+
+image:../fr/options_astuces.png["Onglet Astuces"]
+
+Cet onglet aurait pût s'appeler *Divers*, ou même *Fourre-tout*, mais il embrasse son époque managériale qui rend l'ensemble du langage plus positif. Avec un nom comme *Astuces*, vous n'avez pas l'impression de perdre votre temps ici, alors qu'en réalité...
+
+* *Auto disposition des boîtes groupées* : Cette option ne concerne que les boîtes qui contiennent des entrées ET des sorties. Il peut y avoir deux façons de disposer ces boîtes:
++
+ ** soit en disposition large:
+ +
+image:box_wide.png["Large box"]
+ +
+ ** soit en disposition haute:
+ +
+image:box_tall.png["High box"]
++
+Il s'agit ici d'un réglage de la disposition automatique (par défaut). Certains et certaines préfèrent largement les boîtes larges, mais il est des cas où le gain de place est énorme en boîte haute, par exemple quand il n'y a qu'un port d'entrée et dix ports de sortie. La boîte a choix multiple est en fait un dosage:
+
+** *Choisir l'aire la plus petite*: les boîtes auront autant de chances d'être hautes que larges.  
+** *Préférer les boîtes larges*: Il faut que la disposition haute soit sensiblement avantageuse pour être choisie
+** *Quasiment que des boîtes larges*: Les boîtes auront toutes une disposition large, sauf si la disposition haute permet un gain de place absolument flagrant
+** *Que des boîtes larges*: Pour celles et ceux qui ne supportent pas la disposition haute
+
+* *Largeur maximale des ports*: Certains programmes écrivent des noms de ports trèèèèès longs, ces noms seront donc tronqués s'ils excèdent le nombre de points défini pour éviter une largeur de boîte trop importante.
+
+* *grille*: définir en points la largeur et la hauteur de la grille. Plus ces valeurs sont grandes, plus les boîtes seront faciles à aligner verticalement et horizontalement, et plus les boîtes seront un peu plus grandes que nécessaire.
+
+* *Exporter la scène vers Patchichi* : Enregistre le contenu de la baie de brassage au format json lisible par le logiciel *Patchichi*. Celà permet de transmettre au développeur la situation en cas de bogue. Il est également possible (mais pas si évident), de travailler le positionnement des boîtes dans *Patchichi* quand on n'a pas accès au matériel, rares sont celles et ceux qui auront ce besoin.
+

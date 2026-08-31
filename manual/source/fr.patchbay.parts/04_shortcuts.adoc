@@ -1,0 +1,34 @@
+== Raccourcis à connaître
+
+* Un double clic n'importe où permet de basculer la baie de brassage en plein écran.
+* __Ctrl+Molette de la souris__ permet de zoomer/dézoomer.
+* __Alt+Molette de la souris__ permet déplacer la vue horizontallement.
+* Le bouton de la molette permet de déplacer la vue
+* __Ctrl+F__ permet de chercher une boîte par son nom
+* __Alt+[0-9]__ permet de changer de vue, par exemple __Alt+2__ permet de passer à la vue 2, la créant si besoin. 
+
+=== Connexions en rafale
+
+Il est possible de connecter un port ou un portgroup à différents ports assez rapidement. Il suffit de terminer ses connexions par un clic droit. Une video sera bien plus explicite.
+
+video::video/patchbay_rafal_connections.mp4[width=640]
+
+Ici nous voulons connecter les multiple sorties d'Hydrogen à des tranches de Jack-Mixer. Dans la video les ronds bleus apparaissent avec un clic droit.
+
+=== Passer les connexions d'un port à un autre
+
+Il est parfois moins fastidieux de passer des connexions d'un port à un autre plutôt que de tout défaire pour tout refaire. Pour ce faire, partez du port qui contient les connexions et faites comme si vous vouliez faire une connexion, mais allez vers le port vers lequel vous souhaitez basculer les connexions.
+
+* Celà ne fonctionne que si le port de destination ne contient aucune connexion
+* Celà fonctionne de port à port ou de portgroup à portgroup mais pas de port à portgroup
+
+video::video/patchbay_fast_cut_paste.mp4[width=640]
+
+Dans cette video nous avons un cas assez complexe où la source est branchée dans *3 Band Splitter*.
+Les basses et les aigües (_Output 1_ et _Output 5_) sont envoyés directement dans *EQ6Q Mono* tandis que les medium (_Output 3_) passent d'abord par la distortion *GxTubeScreamer*. Nous voulons insérer la reverb *Dragonfly Room Reverb* avant l'égualisation *EQ6Q Mono*.
+
+'''
+
+Notez qu'avec la connexion par clic droit et le passage de connexions d'un port à l'autre, il est très rapide d'intégrer un nouveau greffon dans une chaîne, comme ici où nous branchons *Plujain Ramp Live* entre *Dragonfly Room Reverb* et *EQ6Q Mono*.
+
+video::video/fast_new_plugin.mp4[width=640]

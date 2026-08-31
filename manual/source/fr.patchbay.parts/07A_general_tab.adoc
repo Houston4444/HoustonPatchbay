@@ -1,0 +1,17 @@
+=== Onglet General
+
+image:../fr/options_general.png["Onglet General"]
+
+* *grouper les ports MIDI matériels*: Les ports midi matériels sont ceux fournis par le pont A2J (ALSA to JACK) ou par Pipewire MidiBridge. Le nom réel de ces ports commence soit par `a2j:` soit par `MidiBridge:`, en les groupant vous gardez tous ces ports dans la même boîte (nommée `a2j` ou `MidiBridge`). En les dégroupant il y aura une boîte par client ALSA (ALSA est le module du noyau Linux qui communique avec votre matériel MIDI).
+
+* *Fournir les ports ALSA MIDI*: Certains programmes audio peuvent communiquer directement avec les ports ALSA (créés par le noyau) plutôt qu'avec les ports JACK MIDI (créés par A2J ou par PipeWire). Ces ports transmettent leur données sans y appliquer la latence de JACK (ça peut être un avantage ou un inconvénient). Dans la majorité des cas, disposer de ces ports n'est pas nécessaire, les débutants n'en auront pas besoin.
+
+* *Canevas élastique*: Toujours redimensionner la scène à son contenu minimum. Celà permet d'optimiser la vue après chaque ajout, suppression, changement ou déplacement de boîte. Si vous décochez cette case, la scène grandira sans cesse et vous pouvez chercher vos boîtes au milieu du désert.
+
+* *Navigation sur les bords*: Lors de la connexion, du déplacement ou de la sélection des boîtes, la vue se déplace quand le curseur est prêt du bord. Nul besoin d'utiliser la molette de la souris, d'appuyer sur Maj ou de déplacer les barres de défilement. Ça n'a strictement aucun effet quand la scène est entièrement visible dans la vue.
+
+* *Empêcher la superposition des boîtes*: Quand cette option est active, les boîtes sont automatiquement déplacées quand une autre boîte est placée dessus. Décochez cette case si vous aimez chercher des boîtes cachées derrière les autres ou si celà vous permet d'éviter un bug (que vous avez rapporté bien entendu).
+
+* *Sélection automatique des objets*: Sélectionne les boîtes, les ports et les portgroups au survol de la souris. Peut permettre d'identifier plus vite certaines connexions.
+
+* *Zoom par défaut*: La taille des éléments est une question de goût et d'aisance visuelle, aussi elle dépend beaucoup de la taille et de la résolution de votre écran. Un clic droit sur le curseur de zoom vous permettra de revenir à ce zoom par défaut.

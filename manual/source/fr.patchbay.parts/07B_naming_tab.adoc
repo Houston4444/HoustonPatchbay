@@ -1,0 +1,22 @@
+=== Onglet Nommage
+
+image:../fr/options_nommage.png["Onglet Nommage"]
+
+Les boîtes et les ports peuvent être nommés selon plusieurs informations:
+
+* le nom réel fourni par JACK ou PipeWire
+* le nom *digeste* que HoustonPatchbay peut lui donner selon le nom du client, en éliminant le superflu du nom réel pour améliorer la lisibilité. Par exemple, on reconnait par leur forme un port d'entrée d'un port de sortie, nul besoin qu'il contienne `input` ou `output`
+* le nom *personnalisé*, c'est le nom qui va être utilisé lorsque vous renommez un élément. Sous RaySession, il peuvent être différents selon la session en cours.
+* le *joli nom* JACK, qui est une métadonnée affectée au client ou au port dans JACK (ou PipeWire). Cette métadonnée peut être écrite par RaySession, Patchance, le client JACK concerné ou même tout autre programme qui utilise JACK.
+
+Si vous souhaitez voir tous les noms réels des clients et des ports, il faudra décocher les trois cases *jolis noms JACK*, *Noms personnalisés* et *Noms digestes*. Sinon, vous pouvez obtenir cette information par clic droit sur un client ou un port, puis *Informations*.
+
+* *Exporter automatiquement les noms personnalisées vers les jolis noms JACK*: Quand cette option est activée, tous les noms personnalisés (que l'on crée en renommant les boîtes et les ports) seront transmis dans les métadonnées de JACK et deviendront accessibles aux programmes qui utilisent JACK. Par exemple, si vous renommez vos ports d'entrées matérielles, ces entrées seront renommées dans Ardour, ce qui peut être agréable et pratique.
++
+Cette option n'est pas enclenchée par défaut parce que le programme pourrait rentrer en conflit avec une autre instance du même programme ou avec tout autre programme qui aurait un comportement similaire (toutes les applications peuvent écrire dans les métadonnées de JACK). Aussi, elle ne fonctionnera pas si une autre instance de Patchance ou de RaySession l'utilise déjà sur le même serveur JACK.
++
+Même quand cette option est activée, un joli nom peut être fourni par un autre programme et non enregistré parmi les noms personnalisés. Normalement ce n'est pas gênant, il est fort probable que ce programme réécrive le joli nom quand vous le rouvrez. Si vous n'aimez pas ce joli-nom, renommez l'élément dans la baie de brassage et votre baie de brassage devrait pouvoir le renommer après disparition/réapparition. Techniquement, HoustonPatchbay écrit la métadonnée au moins 200ms après l'apparition du port, c'est généralement dans ce laps de temps que le programme qui enregistre le port JACK fournit la métadonnée de joli nom (qui pourra être écrasée).
+
+* *Noms personnalisés -> jolis noms JACK*: Exporter les noms personnalisés de boîtes et de ports vers les métadonnées  de joli nom JACK de clients et de ports. C'est option est grisée si l'export automatique est enclenché, ou s'il n'y a pas de noms personnalisés
+
+* *jolis noms JACK -> Noms personnalisés*: Importer les jolis noms JACK dans les noms personnalisés. Cette option est grisée s'il n'y a pas de jolis noms JACK qui ne soit pas identique au nom personnalisé.

@@ -1,0 +1,37 @@
+== Vue d'ensemble
+
+image::patchbay_base.png[Vue d'ensemble de la baie de brassage]
+
+Voilà à quoi peut ressembler votre baie de brassage. Ici il y a 7 boîtes :
+
+* une boîte *system* comprenant vos ports correspondant aux entrées matérielles
+* une boîte *system* comprenant vos ports correspondant aux sorties matérielles (enceintes, casque)
+* une boîte *a2j* comprenant vos ports correspondant aux entrées MIDI
+* une boîte *a2j* comprenant vos ports correspondant aux sorties MIDI
+* une boîte *PulseAudio JACK Source*
+* une boîte *PulseAudio JACK Sink*
+* une boîte *Guitarix*
+
+Ici les ponts A2J et pulse2jack sont lancés.
+Vous observez que 4 de ces boîtes sont entourées d'une décoration (2 *system* et 2 *a2j*), ce sont les boîtes qui contiennent les ports matériels (votre interface audio, votre piano USB, n'importe quel contrôleur...).
+
+'''
+
+Certains ports audios sont regroupés en sous-groupes, que l'on appellera portgroups. Ces portgroups sont pour la plupart des paires stéréo détectées automatiquement par le nom des ports. C'est le cas ici pour :
+
+* system:capture 1/2
+* system:playback 1/2
+* PulseAudio JACK Source:front L/R
+* PulseAudio JACK Sink:front L/R
+* Guitarix:out 0/1
+
+Ces portgroups facilitent les connexions et permettent une meilleur lisibilité générale.
+
+'''
+
+Les lignes incurvées bleues correspondent aux connexions audios. Vous pouvez observer que :
+
+* les ports audio d'entrées matérielles sont connectés à *PulseAudio JACK Source*
+* les ports de *PulseAudio JACK Sink* sont connectés aux sorties matérielles
+* seul le premier port de *system* est connecté à l'entrée (__in 0__) du logiciel *Guitarix*
+* les ports audios de *Guitarix* sont connectés aux sorties matérielles

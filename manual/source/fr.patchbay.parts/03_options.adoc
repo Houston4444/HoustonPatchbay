@@ -1,0 +1,14 @@
+== Le menu déroulant
+
+Un clic droit n'importe où sur la baie de brassage permet d'en afficher le menu. Ce menu est également présent dans le menu de RaySession (menu *Baie de brassage*).
+Il vous permettra de :
+
+* basculer la baie de brassage en plein écran
+* chercher une boîte par son nom
+* Filtrer les ports: n'afficher que les ports AUDIO, MIDI, CV, ALSA ou tous
+* restaurer des boîtes cachées (par vous même)
+* demander un auto-arrangement de la vue, selon la chaîne du signal ou en deux colonnes face à face 
+* régler le niveau de zoom
+* rafraîchir le canevas: redemander à JACK la liste des ports existants et leurs connexions
+* Préférences du canevas: afficher une fenêtre d'options +
+    Tous les changements dans cette fenêtre prennent effet immédiatement. Survolez les cases pour afficher les infobulles.

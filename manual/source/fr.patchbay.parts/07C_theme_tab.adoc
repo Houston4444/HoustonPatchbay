@@ -1,0 +1,13 @@
+=== Onglet Theme
+
+image:../fr/options_theme.png["Onglet Theme"]
+
+* *Boîte de choix du theme*: choisissez le thème qui vous plaît. La présence de l'icône _utilisateur_ signifie que l'utilisateur a les droits de modification sur l'emplacement du dossier du thème.
+
+* *Dupliquer*: Copier le thème en cours pour pouvoir l'éditer, en lui donnant un autre nom. Le thème sera dupliqué dans le dossier caché `~/.local/share/{PROGRAM}/HoustonPatchbay/themes`, ou _{PROGRAM}_ peut être `raysession` ou `patchance`.
+
+* *Éditer*: Ouvrir le fichier du theme `theme.conf` dans votre éditeur de texte, le bouton est grisé si l'utilisateur n'a pas les droits de modification sur le fichier en question.
+
+* *Les boîtes ont des ombres* : Simple option de rendu esthétique, consomme un peu de resources.
+
+* *Grille*: Permet d'afficher une grille dans le fond de la scène. La taille des lignes et des colonnes dépend de la taille de la grille définie dans l'onglet *Astuces* et des tailles minimales de grille écrites dans le fichier de thème.
