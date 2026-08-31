@@ -1,0 +1,22 @@
+=== Naming Tab
+
+image:../en/options_naming.png["Naming Tab"]
+
+Boxes and ports can be named based on several pieces of information:
+
+* the actual name provided by JACK or PipeWire
+* the *graceful* name that HoustonPatchbay can assign based on the client's name, by removing unnecessary parts of the actual name to improve readability. For example, you can tell an input port from an output port by their shape, there’s no need for them to contain `input` or `output`
+* the *custom* name is the name that will be used when you rename an element. In RaySession, these names may vary depending on the current session.
+* The *JACK pretty-name*, which is metadata assigned to the client or port in JACK (or PipeWire). This metadata can be written by RaySession, Patchance, the relevant JACK client, or even any other program that uses JACK.
+
+If you want to see all the actual names of clients and ports, you'll need to uncheck the three boxes labeled *JACK pretty names*, *Custom names*, and *Graceful names*. Otherwise, you can access this information by right-clicking on a client or port and selecting *Get Info*.
+
+* *Auto-export custom names to pretty-names*: When this option is enabled, all custom names (created by renaming boxes and ports) will be passed along in JACK's metadata and will become accessible to programs that use JACK. For example, if you rename your hardware input ports, those inputs will be renamed in Ardour, which can be convenient and useful.
++
+This option is not enabled by default because the program could conflict with another instance of the same program or with any other program that behaves similarly (all applications can write to JACK’s metadata). Also, it will not work if another instance of Patchance or RaySession is already using it on the same JACK server.
++
+Even when this option is enabled, a pretty-name may be provided by another program and not saved among the custom names. Normally this isn’t a problem, it’s very likely that the program will rewrite the pretty-name when you reopen it. If you don’t like this pretty-name, rename the element in the patchbay, and the patchbay should be able to rename it after it disappears and reappears. Technically, HoustonPatchbay writes the metadata at least 200 ms after the port appears, it’s usually during this timeframe that the program registering the JACK port provides the pretty-name metadata (which may be overwritten).
+
+* *Custom names -> JACK pretty names*: Export custom box and port names to the JACK metadata for clients and ports. This option is grayed out if automatic export is enabled, or if there are no custom names.
+
+* *JACK pretty names -> Custom names*: Import the JACK pretty names into the custom names. This option is grayed out if there are no JACK pretty name that is different from the custom name.

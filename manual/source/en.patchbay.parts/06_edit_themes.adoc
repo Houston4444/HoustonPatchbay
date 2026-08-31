@@ -1,0 +1,5 @@
+== Edit Theme
+
+You have the possibility to modify theme colors, it is quite easy and fast to do.
+
+For more informations, read link:theme_edit/index.html[how to edit themes].

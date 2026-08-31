@@ -1,0 +1,12 @@
+== Canvas Options
+
+You can access to this dialog window with a right click anywhere in the canvas and *Canvas options*.
+
+include::07A_general_tab.adoc[]
+
+include::07B_naming_tab.adoc[]
+
+include::07C_theme_tab.adoc[]
+
+include::07D_tricks_tab.adoc[]
+

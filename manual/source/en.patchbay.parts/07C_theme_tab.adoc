@@ -1,0 +1,13 @@
+=== Theme Tab
+
+image:../en/options_theme.png["Theme Tab"]
+
+*Theme Selection Box*: Choose the theme you like. The presence of the _user_ icon means that the user has permission to modify the theme folder location.
+
+* *Duplicate*: Copy the current theme so you can edit it, giving it a different name. The theme will be duplicated in the hidden folder `~/.local/share/{PROGRAM}/HoustonPatchbay/themes`, where _{PROGRAM}_ can be `raysession` or `patchance`.
+
+* *Edit*: Open the `theme.conf` file in your text editor, the button will be grayed out if the user does not have permission to edit that file.
+
+* *Boxes have shadows* : A simple aesthetic rendering option that uses a small amount of resources.
+
+* *Grid*: Displays a grid in the background of the scene. The size of the rows and columns depends on the grid size defined in the *Tricks* tab and the minimum grid sizes specified in the theme file.

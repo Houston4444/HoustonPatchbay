@@ -1,0 +1,27 @@
+=== Tricks tab
+
+image:../en/options_tricks.png["Tricks Tab"]
+
+
+* *Grouped boxes auto layout* : This option applies only to boxes that contain both inputs AND outputs. There are two possible ways to arrange these boxes:
++
+ ** in a wide layout:
+ +
+image:box_wide.png["Large box"]
+ +
+ ** in a tall layout:
+ +
+image:box_tall.png["High box"]
++
+This is a setting for the automatic layout (default). Some people much prefer wide boxes, but there are cases where a tall box saves a tremendous amount of space, for example, when there is only one input port and ten output ports. The multi-choice box is actually a dosing:
+
+** *Choose the smallest area*: The boxes will be just as likely to be tall as they are to be wide.  
+** *Prefer wide boxes*: The tall layout must offer a significant advantage to be chosen
+** *Almost only wide boxes*: All the boxes will have a wide layout, unless a tall layout offers a clearly obvious space-saving advantage
+** *Force wide boxes*: For those who can't stand the tall layout
+
+* *Maximum port width*: Some programs generate veeeery long port names, so these names will be truncated if they exceed the specified number of points to prevent the box from becoming too large.
+
+* *grid*: Set the width and height of the grid in points. The larger these values are, the easier it will be to align the boxes vertically and horizontally, and the larger the boxes will be—slightly larger than necessary.
+
+* *Export scene to Patchichi* : Saves the contents of the patchbay in a JSON format readable by the *Patchichi* software. This allows you to send the current configuration to the developer in the event of a bug. It is also possible (though not that straightforward) to adjust the positioning of the boxes in *Patchichi* when you don't have access to the hardware, though very few people will ever need to do this.

@@ -1,0 +1,16 @@
+== Special ports
+=== A2J or Midi-Bridge ports
+
+image::patchbay_a2j.png[ports a2j]
+
+The MIDI ports provided by the A2J (Alsa To Jack) bridge (or Midi-Bridge with Pipewire) have a hole at the end to identify them. Their real name is a long name, but that's about the only thing that differs from the other MIDI ports.
+
+=== Control Voltage ports (CV ports)
+
+image::patchbay_CV.png[ports CV]
+
+Control voltage ports, commonly called CV ports, work like regular audio ports, however, they can control one or more parameters with much more precision than MIDI ports. As their stream is not meant to be listened to, it is not possible to simply connect a CV output port to a regular audio input, as this could damage your headphones, your speakers, and maybe even your ears. +
+If you still want to do it, right click on one of the ports, then *Connect*, then the *DANGEROUS* menu. +
+You can't say you weren't warned, and it's almost impossible to do this by mistake.
+
+On the other hand, connecting a classic audio output port to a CV input port is perfectly possible, no problem.

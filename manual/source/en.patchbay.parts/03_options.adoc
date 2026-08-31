@@ -1,0 +1,13 @@
+== Options
+
+Right click anywhere on the patchbay to display the menu. This menu is also present in the RaySession menu (*Patchbay* menu).
+It will allow you to :
+
+* switch the patchbay to full screen
+* Find a box with its name
+* Filter ports: show only AUDIO, MIDI, CV ports or all of them
+* adjust the zoom level
+* refresh the canvas: ask JACK again for the list of existing ports and their connections
+* Manual: show this manual in the web browser
+* Canvas Preferences: display a window of options +
+    All changes in this window take effect immediately. Hover over the boxes to see the tooltips.

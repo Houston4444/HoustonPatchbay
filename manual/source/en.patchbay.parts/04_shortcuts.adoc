@@ -1,0 +1,34 @@
+== Shortcuts you should know
+
+* A double click anywhere switches the patchbay to full screen.
+* __Ctrl+Mouse Wheel__ allows you to zoom in/out.
+* __Alt+Mouse wheel__ allows to move the view horizontally.
+* The wheel button is used to move the view
+* __Ctrl+middle mouse button__ cuts all connections passing under the cursor
+* __Ctrl+F__ allows to search a box with its name
+
+=== Burst Connections
+
+It is possible to connect a port or a portgroup to different ports quite quickly. You just have to end your connections with a right click. A video will be much more explicit.
+
+video::video/patchbay_rafal_connections.mp4[width=640]
+
+Here we want to connect the multiple outputs of Hydrogen to the Jack-Mixer tracks. In the video the blue circles appear with a right click.
+
+=== Passing connections from one port to another
+
+Sometimes it is less tedious to switch connections from one port to another than to undo and redo everything. To do this, start from the port that contains the connections and act as if you wanted to make a connection, but go to the port to which you want to switch the connections.
+
+* This only works if the destination port does not contain any connections
+* It works from port to port or from portgroup to portgroup but not from port to portgroup
+
+video::video/patchbay_fast_cut_paste.mp4[width=640]
+
+In this video we have a rather complex case where the source is plugged into *3 Band Splitter*.
+The bass and treble (_Output 1_ and _Output 5_) are sent directly to *EQ6Q Mono* while the midrange (_Output 3_) goes through the distortion *GxTubeScreamer* first. We want to insert the *Dragonfly Room Reverb* before the *EQ6Q Mono* equalization.
+
+'''
+
+Note that with the right-click connection and the switching of connections from one port to another, it is very quick to integrate a new plugin in a chain, as here where we plug *Plujain Ramp Live* between *Dragonfly Room Reverb* and *EQ6Q Mono*.
+
+video::video/fast_new_plugin.mp4[width=640]

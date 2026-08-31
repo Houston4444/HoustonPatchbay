@@ -1,0 +1,17 @@
+== Make and break a connection
+
+You can establish a connection between 2 ports as long as they meet the following conditions:
+
+* the ports are of the same type (you can't connect an audio port to a MIDI port)
+* one is an input port, the other is an output port
+
+=== Intuitive Method
+
+To connect or disconnect two ports, click on a port without releasing the mouse button, drag the cursor to the desired port and release the mouse button.
+
+=== Alternative method
+
+Right click on a port, it will display a drop down menu, choose *Connect* then the desired port. Click elsewhere to make this menu disappear. The advantage of this method is that it allows you to quickly connect a port to several others, the menu remaining displayed during the connections.
+
+video::video/patchbay_simple_connect.mp4[width=640]
+

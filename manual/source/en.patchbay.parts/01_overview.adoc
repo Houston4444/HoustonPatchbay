@@ -1,0 +1,38 @@
+== Overview
+
+image::patchbay_base.png[Patchbay overview]
+
+This is what your patchbay can look like. Here there are 7 boxess:
+
+* a *system* box with your ports corresponding to the hardware inputs (microphone, guitar...)
+* a *system* box with your ports corresponding to the hardware outputs (headphones, speakers...)
+* an *a2j* box with your ports corresponding to the MIDI hardware inputs
+* an *a2j* box with your ports corresponding to the MIDI hardware outputs
+* a *PulseAudio JACK Source* box
+* a *PulseAudio JACK Sink* box, sound from firefox and all non JACK applications comes from theses ports
+* a *Guitarix* box
+
+Here A2J and pulse2jack bridges are launched.
+
+You notice that 4 of these boxes are surrounded by a decoration (2 *system* and 2 *a2j*), these are the boxes that contain the hardware ports (your audio interface, your USB piano, any controller...).
+
+'''
+
+Some audio ports are grouped into subgroups, which we will call portgroups. These portgroups are mostly stereo pairs automatically detected by the port names. This is the case here for :
+
+* system:capture 1/2
+* system:playback 1/2
+* PulseAudio JACK Source:front L/R
+* PulseAudio JACK Sink:front L/R
+* Guitarix:out 0/1
+
+These portgroups facilitate the connections and allow a better general readability.
+
+'''
+
+The blue curved lines correspond to the audio connections. You can observe that :
+
+* hardware input audio ports are connected to *PulseAudio JACK Source*.
+* the *PulseAudio JACK Sink* ports are connected to the hardware outputs
+* only the first port of *system* is connected to the input (__in 0__) of the *Guitarix* software
+* the audio ports of *Guitarix* are connected to the hardware outputs

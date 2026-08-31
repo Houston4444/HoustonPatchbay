@@ -1,0 +1,17 @@
+=== General Tab
+
+image:../en/options_general.png["General Tab"]
+
+* *Group MIDI hardware ports*: Hardware MIDI ports are those provided by the A2J (ALSA to JACK) bridge or by Pipewire MidiBridge. The actual names of these ports begin with either `a2j:` or `MidiBridge:`, by grouping them, you keep all these ports in the same box (named `a2j` or `MidiBridge`). If you ungroup them, there will be one box per ALSA client (ALSA is the Linux kernel module that communicates with your MIDI hardware).
+
+* *Provide ALSA MIDI ports*: Some audio programs can communicate directly with ALSA ports (created by the kernel) rather than with JACK MIDI ports (created by A2J or PipeWire). These ports transmit their data without applying JACK's latency (which can be an advantage or a disadvantage). In most cases, these ports are not necessary, beginners will not need them.
+
+* *Elastic canvas*: Always resize the scene to its minimum content. This optimizes the view after every addition, deletion, change, or movement of a box. If you uncheck this box, the scene will keep getting bigger and bigger, and you might end up searching for your boxes in the middle of nowhere.
+
+* *Navigate on borders*: When connecting, moving, or selecting boxes, the view moves when the cursor is near the edge. There’s no need to use the mouse wheel, press Shift, or move the scroll bars. This has absolutely no effect when the scene is fully visible in the view.
+
+* *Prevent overlapping of boxes*: When this option is enabled, boxes are automatically moved when another box is placed on top of them. Uncheck this box if you enjoy searching for boxes hidden behind others, or if doing so helps you avoid a bug (which you have reported, of course).
+
+* *Auto-select items*: Highlights boxes, ports, and portgroups when you hover over them with the mouse. This can help you identify certain connections more quickly.
+
+* *Default Zoom*: The size of the elements is a matter of personal preference and visual comfort, so it depends largely on the size and resolution of your screen. Right-clicking on the zoom slider will return you to the default zoom level.
