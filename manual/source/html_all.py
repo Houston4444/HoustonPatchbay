@@ -30,8 +30,7 @@ def get_adoc_mtime(adoc: Path) -> float:
     
     return mtime
 
-
-if __name__ == '__main__':
+def process_conversion():
     source_dir = Path(__file__).parent
     manual_dir = source_dir.parent
     
@@ -49,9 +48,7 @@ if __name__ == '__main__':
         adoc_out = manual_dir / adoc_out_rel
         
         if adoc_out.exists():
-            mtime = adoc_out.stat().st_mtime
-            if (mtime > get_adoc_mtime(adoc)
-                    and mtime > css_mtime):
+            if adoc_out.stat().st_mtime > max(get_adoc_mtime(adoc), css_mtime):
                 # target is newer than all sources, skip it
                 continue
 
@@ -60,7 +57,7 @@ if __name__ == '__main__':
         subprocess.run(['asciidoctor', '-d', 'book', adoc, '-o', adoc_out])
         
         # substitute variables in html, 
-        # they are used to simplify to file hierarchy.
+        # they are used to simplify the file hierarchy.
         # With them, no need to specify as ../ as deep is the folder
         # to access images folder or translated html.
         dots = ''.join(['../' for i in range(1, len(adoc.name.split('.')))])
@@ -80,10 +77,13 @@ if __name__ == '__main__':
     for lang in langs:
         if lang == 'en':
             continue
-        
+
         for en_package in en_packages:
             html_file = manual_dir / lang / en_package / 'index.html'
             if not html_file.exists():
                 html_file.parent.mkdir(exist_ok=True, parents=True)
                 html_en_file = manual_dir / 'en' / en_package / 'index.html'
                 subprocess.run(['ln', '-s', '-r', html_en_file, html_file])
+                
+if __name__ == '__main__':
+    process_conversion()
