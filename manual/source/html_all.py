@@ -1,8 +1,34 @@
 #!/bin/env python3
+
+"""
+This executable converts all .adoc files in this 'source' folder
+to .html files with asciidoctor executable.
+All is already built when you download the source code
+to prevent the asciidoctor dependency.
+"""
+
  
 import os
 from pathlib import Path
 import subprocess
+
+
+def get_adoc_mtime(adoc: Path) -> float:
+    '''return the last modification of a .adoc file
+    or its included files. 0 if it does not exists.'''
+    if not adoc.exists():
+        return 0.0
+    mtime = adoc.stat().st_mtime
+    
+    parts_name = '.'.join(adoc.name.split('.')[:-1] + ['parts'])
+    parts_dir = adoc.parent / parts_name
+    if parts_dir.exists():
+        for adoc_sub in parts_dir.iterdir():
+            if not adoc_sub.name.endswith('.adoc'):
+                continue
+            mtime = max(adoc_sub.stat().st_mtime, mtime)
+    
+    return mtime
 
 
 if __name__ == '__main__':
@@ -22,11 +48,12 @@ if __name__ == '__main__':
         adoc_out_rel = Path(*adoc.name[:-5].split('.')) / 'index.html'
         adoc_out = manual_dir / adoc_out_rel
         
-        if (adoc_out.exists()
-                and adoc_out.stat().st_mtime > adoc.stat().st_mtime
-                and adoc_out.stat().st_mtime > css_mtime):
-            # target is newer than source, skip it
-            continue
+        if adoc_out.exists():
+            mtime = adoc_out.stat().st_mtime
+            if (mtime > get_adoc_mtime(adoc)
+                    and mtime > css_mtime):
+                # target is newer than all sources, skip it
+                continue
 
         adoc_out.parent.mkdir(parents=True, exist_ok=True)
         print(f'asciidoctor -d book {adoc} -o {adoc_out}')
