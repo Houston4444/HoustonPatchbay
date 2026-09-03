@@ -45,6 +45,7 @@ def process_conversion():
 
         langs.add(adoc.name[:2])
         adoc_out_rel = Path(*adoc.name[:-5].split('.')) / 'index.html'
+        program_name = adoc.name.split('.')[1]
         adoc_out = manual_dir / adoc_out_rel
         
         if adoc_out.exists():
@@ -63,7 +64,7 @@ def process_conversion():
         dots = ''.join(['../' for i in range(1, len(adoc.name.split('.')))])
         path_no_lang = adoc_out_rel.relative_to(adoc_out_rel.parents[-2])
         subprocess.run(
-            ['sed', '-i', '-e', f's|XXX_IMAGES_XXX|{dots}images/patchbay|g', '-e',
+            ['sed', '-i', '-e', f's|XXX_IMAGES_XXX|{dots}images/{program_name}|g', '-e',
              f's|XXX_LANG_SWITCH_\\([a-z]*\\)_XXX|{dots}\\1/{path_no_lang}|g', adoc_out])
 
     # find all english present files
