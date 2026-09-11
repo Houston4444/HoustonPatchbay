@@ -23,11 +23,11 @@
 
 body{font-family: "Noto Sans",sans-serif;background-color: var(--maincolor);link-color: var(--gold)}
 
-#header{background-color:var(--brown); padding:25px;padding-top:0px;max-width: none;}
+#header{background-image: url("images/patchbay/common/board.png"); padding:25px;padding-top:0px;max-width: none;}
 #footer{background-color: var(--sidebarbackground);}
 /* h1{color:#ffd755 !important;font-family:"Noto Sans",sans-serif;} */
 h1{color:var(--white) !important;font-family:"Noto Sans",sans-serif;}
-h2{background-color:var(--brown);;color:var(--gold) !important;font-family:"Noto Sans",sans-serif;text-decoration:none;padding:10px;border-top-left-radius:10px;border-top-right-radius:10px;}
+h2{background-image: url("../images/patchbay/common/board.png");;color:var(--gold) !important;font-family:"Noto Sans",sans-serif;text-decoration:none;padding:10px;border-top-left-radius:10px;border-top-right-radius:10px;}
 h3{background-color:var(--primarycolor);color:white !important;font-family:"Noto Sans",sans-serif;text-decoration:none;padding:10px;border-top-left-radius:6px;border-top-right-radius:6px;}
 h4,h5,h6{color:var(--primarycolor);}
 .title{color:var(--sidebarbackground) !important;font-family:"Noto Sans",sans-serif;font-style: normal; font-weight: normal;}
