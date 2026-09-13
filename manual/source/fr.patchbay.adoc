@@ -10,7 +10,7 @@ image:flags/en.jpeg[EN, 30, 20, link=XXX_LANG_SWITCH_en_XXX] image:flags/fr.jpeg
 
 image:raysession.svg["icon", 100, 100] image:patchance.svg["icon", 100, 100] image:patchichi.svg["icon", 100, 100]
 
-Bienvenue sur le manuel de HoustonPatchbay, la baie de brassage pour JACK utilisée dans RaySession, Patchance et Patchichi.
+Bienvenue sur le manuel de *HoustonPatchbay*, la baie de brassage pour JACK utilisée dans RaySession, Patchance et Patchichi.
 
 include::fr.patchbay.parts/01_overview.adoc[]
 
@@ -25,4 +25,3 @@ include::fr.patchbay.parts/05_special_ports.adoc[]
 include::fr.patchbay.parts/06_edit_themes.adoc[]
 
 include::fr.patchbay.parts/07_canvas_options.adoc[]
-

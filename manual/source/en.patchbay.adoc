@@ -9,7 +9,7 @@ image:flags/en.jpeg[EN, 40, 30, link=XXX_LANG_SWITCH_en_XXX] image:flags/fr.jpeg
 
 image:raysession.svg["icon", 100, 100] image:patchance.svg["icon", 100, 100] image:patchichi.svg["icon", 100, 100]
 
-Welcome to the HoustonPatchbay manual, the JACK patchbay used in RaySession, Patchance and Patchichi.
+Welcome to the *HoustonPatchbay* manual, the JACK patchbay used in RaySession, Patchance and Patchichi.
 
 include::en.patchbay.parts/01_overview.adoc[]
 

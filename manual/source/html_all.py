@@ -11,6 +11,7 @@ to prevent the asciidoctor dependency.
 import os
 from pathlib import Path
 import subprocess
+import sys
 
 
 def get_adoc_mtime(adoc: Path) -> float:
@@ -30,7 +31,7 @@ def get_adoc_mtime(adoc: Path) -> float:
     
     return mtime
 
-def process_conversion():
+def process_conversion(force=False):
     source_dir = Path(__file__).parent
     manual_dir = source_dir.parent
     
@@ -48,7 +49,7 @@ def process_conversion():
         program_name = adoc.name.split('.')[1]
         adoc_out = manual_dir / adoc_out_rel
         
-        if adoc_out.exists():
+        if not force and adoc_out.exists():
             if adoc_out.stat().st_mtime > max(get_adoc_mtime(adoc), css_mtime):
                 # target is newer than all sources, skip it
                 continue
@@ -65,7 +66,8 @@ def process_conversion():
         path_no_lang = adoc_out_rel.relative_to(adoc_out_rel.parents[-2])
         subprocess.run(
             ['sed', '-i', '-e', f's|XXX_IMAGES_XXX|{dots}images/{program_name}|g', '-e',
-             f's|XXX_LANG_SWITCH_\\([a-z]*\\)_XXX|{dots}\\1/{path_no_lang}|g', adoc_out])
+             f's|XXX_LANG_SWITCH_\\([a-z]*\\)_XXX|{dots}\\1/{path_no_lang}|g', '-e',
+             f's|XXX_BOARD_PNG_XXX|{dots}images/patchbay/common/board.png|g', adoc_out])
 
     # find all english present files
     en_packages = list[Path]()
@@ -87,4 +89,5 @@ def process_conversion():
                 subprocess.run(['ln', '-s', '-r', html_en_file, html_file])
                 
 if __name__ == '__main__':
-    process_conversion()
+    force = bool('--force' in sys.argv)
+    process_conversion(force=force)

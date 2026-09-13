@@ -28,15 +28,16 @@
 --black:#000000;
 --gold:#ffd777;
 --brown:#4e2b10;
+--board: url("../../images/patchbay/common/board.png");
 }
 
 body{font-family: "Noto Sans",sans-serif;background-color: var(--maincolor);link-color: var(--gold)}
 
-#header{background-image: url("images/patchbay/common/board.png"); padding:25px;padding-top:0px;max-width: none;}
+#header{background-image: var(--board); padding:25px;padding-top:0px;max-width: none;}
 #footer{background-color: var(--sidebarbackground);}
 /* h1{color:#ffd755 !important;font-family:"Noto Sans",sans-serif;} */
 h1{color:var(--white) !important;font-family:"Noto Sans",sans-serif;}
-h2{background-image: url("../images/patchbay/common/board.png");;color:var(--gold) !important;font-family:"Noto Sans",sans-serif;text-decoration:none;padding:10px;border-top-left-radius:10px;border-top-right-radius:10px;}
+h2{background-image: var(--board);;color:var(--gold) !important;font-family:"Noto Sans",sans-serif;text-decoration:none;padding:10px;border-top-left-radius:10px;border-top-right-radius:10px;}
 h3{background-color:var(--primarycolor);color:white !important;font-family:"Noto Sans",sans-serif;text-decoration:none;padding:10px;border-top-left-radius:6px;border-top-right-radius:6px;}
 h4,h5,h6{color:var(--primarycolor);}
 .title{color:var(--sidebarbackground) !important;font-family:"Noto Sans",sans-serif;font-style: normal; font-weight: normal;}
@@ -131,7 +132,7 @@ table {
 <p><span class="image"><img src="../../images/patchbay/common/raysession.svg" alt="icon" width="100" height="100"></span> <span class="image"><img src="../../images/patchbay/common/patchance.svg" alt="icon" width="100" height="100"></span> <span class="image"><img src="../../images/patchbay/common/patchichi.svg" alt="icon" width="100" height="100"></span></p>
 </div>
 <div class="paragraph">
-<p>Bienvenue sur le manuel de HoustonPatchbay, la baie de brassage pour JACK utilisée dans RaySession, Patchance et Patchichi.</p>
+<p>Bienvenue sur le manuel de <strong>HoustonPatchbay</strong>, la baie de brassage pour JACK utilisée dans RaySession, Patchance et Patchichi.</p>
 </div>
 </div>
 </div>
@@ -595,7 +596,7 @@ Vous ne pourrez pas dire que vous n&#8217;étiez pas prévenu, et il est quasime
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2026-09-03 21:42:17 +0200
+Last updated 2026-09-11 22:28:22 +0200
 </div>
 </div>
 </body>
